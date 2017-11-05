@@ -33,9 +33,13 @@ export default (env = defaultEnv) => ({
   ],
   module: {
     rules: [
+      { 
+        test: /\.(jpe?g|gif|png|svg|woff|ttf|wav|mp3|frag|vert)$/, 
+        use: [ { loader: "file-loader" } ]
+      },
       {
         test: /.jsx?$/,
-        exclude: /node_modules/,
+        exclude: /node_modules|lib/,
         enforce: 'pre',
         use: [
           {
