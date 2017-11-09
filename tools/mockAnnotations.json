@@ -1,0 +1,26 @@
+{
+	"gene1" : {
+		"id": "gene1",
+		"metadata": {
+			"name": "GENE1",
+			"description" : "This is a mock gene annotation"
+		},
+		"intervals" : [[100,3500], [500,3500], [100,3500]]
+	},
+	"gene2" : {
+		"id": "gene2",
+		"metadata": {
+			"name": "GENE2",
+			"description" : "This is a mock gene annotation"
+		},
+		"intervals" : [[5000, 33500]]
+	},
+	"gene3" : {
+		"id": "gene3",
+		"metadata": {
+			"name": "GENE3",
+			"description" : "This is a mock gene annotation"
+		},
+		"intervals" : [[50100,3500], [5000500,500050000], [100,3500000]]
+	}
+}

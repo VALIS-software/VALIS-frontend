@@ -5,8 +5,22 @@ import json
 
 
 MOCK_DATA = json.loads(open("mockData.json", "r").read())
+MOCK_ANNOTATIONS = json.loads(open("mockAnnotations.json", "r").read())
 
 app = Flask(__name__)
+
+@app.route("/annotations")
+def annotations():
+	"""Return a list of all annotation_ids"""
+	return json.dumps(MOCK_ANNOTATIONS.keys())
+
+@app.route("/annotations/<string:annotation_id>")
+def annotation(annotation_id):
+	"""Return the annotation metadata"""
+	if annotation_id in MOCK_ANNOTATIONS.keys():
+		return json.dumps(MOCK_ANNOTATIONS[annotation_id])
+	else:
+		abort(404, "Annotation %s not found" % annotation_id)
 
 @app.route("/genomes")
 def genomes():
@@ -38,7 +52,7 @@ def get_data(genome_id, track_id, start_bp, end_bp):
 	if genome_id in MOCK_DATA:
 		if  track_id in MOCK_DATA[genome_id]:
 			track = MOCK_DATA[genome_id][track_id]
-			print "HELLO"
+
 			if start_bp < track["start"] or start_bp > track["end"]:
 				abort(500, "Request out of bounds")
 
@@ -52,7 +66,7 @@ def get_data(genome_id, track_id, start_bp, end_bp):
 			# TODO: improve this resemble real data a bit more
 			random.seed(track["id"] + track["type"] + str(start_bp))
 			ret = []
-			print track["type"]
+
 			if track["type"] == "rnaseq":
 				for i in xrange(0, end_bp - start_bp):
 					ret.append(random.random()*10.0)
