@@ -1,0 +1,56 @@
+{
+	"genome1" : {
+		"genome1.1": {
+			"id": "genome1.1",
+			"type" : "sequence",
+			"start": 0,
+			"end": 3000000000
+		},
+		"genome1.2": {
+			"id": "genome1.2",
+			"type" : "rnaseq",
+			"start": 0,
+			"end": 3000000000
+		},
+		"genome1.3": {
+			"id": "genome1.3",
+			"type" : "methylation",
+			"start": 500000,
+			"end": 3000000000
+		}
+	},
+	"genome2" : {
+		"genome2.1": {
+			"id" : "genome2.1",
+			"type" : "sequence",
+			"start": 0,
+			"end": 3000000000
+		},
+		"genome2.2": {
+			"id" : "genome2.2",
+			"type" : "rnaseq",
+			"start": 20000,
+			"end": 5000000
+		},
+		"genome2.3": {
+			"id" : "genome2.3",
+			"type" : "methylation",
+			"start": 500000,
+			"end": 3000000000
+		}
+	},
+	"genome3" : {
+		"genome3.1": {
+			"id": "genome3.1",
+			"type" : "sequence",
+			"start": 0,
+			"end": 3000000000
+		},
+		"genome3.2": {
+			"id": "genome3.2",
+			"type" : "rnaseq",
+			"start": 20000,
+			"end": 5000000
+		}
+	}
+}
