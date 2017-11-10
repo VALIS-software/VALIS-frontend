@@ -4,25 +4,30 @@ import React from 'react';
 import { Igloo } from '../../../lib/igloojs/igloo.js';
 
 // Styles
-import './Content.scss';
+import './MultiTrackViewer.scss';
 
 import vertexShader from './project.vert';
 import fragmentShader from './render.frag';
 
 const panzoom = require('pan-zoom');
 
-class Content extends React.Component {
+const SELECT_MODE_REGIONS = 'regions';
+const SELECT_MODE_TRACKS = 'tracks';
+const SELECT_MODE_NONE = 'none';
+
+class MultiTrackViewer extends React.Component {
   constructor(props) {
     super(props);
-    console.log(props);
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleLoad = this.handleLoad.bind(this);
     this.handleMouse = this.handleMouse.bind(this);
-    // NOTE: this are not stored in the react state since
+    // NOTE: these are not stored in the react state since
     // they are updated via webGL in the render loop.
-    this.zoom = [1.0, 1.0];
+    // should probably fix this
+    this.zoom = [1.0, 0.1];
     this.pan = [0.0, 0.0];
     this.size = [1.0, 1.0];
+    this.selectMode = SELECT_MODE_NONE;
     this.state = {};
   }
 
@@ -35,9 +40,16 @@ class Content extends React.Component {
   }
 
   handleMouse(e) {
-    this.pan = [this.pan[0] + e.dx, this.pan[1] + e.dy];
-    const scale = 1.0 - (e.dz / 1000.0);
-    this.zoom = [scale * this.zoom[0], scale * this.zoom[1]];
+    if (this.selectMode === SELECT_MODE_REGIONS) {
+      // select a region of the x axis
+    } else if (this.selectMode === SELECT_MODE_TRACKS) {
+      // select a set of tracks along the y axis
+    } else {
+      // x pan sets the base pair!
+      this.pan = [this.pan[0], this.pan[1] + e.dy];
+      const scale = 1.0 - (e.dz / 1000.0);
+      this.zoom = [scale * this.zoom[0], scale * this.zoom[1]];
+    }
   }
 
   handleLoad() {
@@ -61,15 +73,16 @@ class Content extends React.Component {
   }
 
   renderGL() {
-    const tint = [Math.sin(this.tick / 13), Math.cos(this.tick / 19), 0];
-    // this.image.bind(0);  // active texture 0
-    this.program.use()
-      .uniform('tint', tint)
-      .uniform('pan', this.pan)
-      .uniform('size', this.size)
-      .uniform('zoom', this.zoom)
-      .attrib('points', this.quad, 2)
-      .draw(this.igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
+    for (let i = 0; i < 10; i++) {
+      this.program.use()
+        .uniform('color', [i / 10.0, i / 20.0, 1.0])
+        .uniform('pan', this.pan)
+        .uniform('size', this.size)
+        .uniform('zoom', this.zoom)
+        .uniform('offset', [0, i * this.size[1]])
+        .attrib('points', this.quad, 2)
+        .draw(this.igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
+    }
     this.tick++;
   }
 
@@ -82,4 +95,4 @@ class Content extends React.Component {
   }
 }
 
-export default Content;
+export default MultiTrackViewer;

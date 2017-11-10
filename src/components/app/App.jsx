@@ -2,7 +2,7 @@
 import React from 'react';
 // Components
 import Header from '../header/Header.jsx';
-import Content from '../content/Content.jsx';
+import MultiTrackViewer from '../MultiTrackViewer/MultiTrackViewer.jsx';
 import Footer from '../footer/Footer.jsx';
 
 // Styles
@@ -13,7 +13,7 @@ function App() {
   return (
     <div className="site-wrapper">
       <Header />
-      <Content />
+      <MultiTrackViewer />
       <Footer />
     </div>
   );
