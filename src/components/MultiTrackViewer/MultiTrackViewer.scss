@@ -10,4 +10,10 @@
     #webgl-canvas {
         width: 100%;
     }
+    .pannable {
+        cursor: -webkit-grab; cursor:-moz-grab;
+    }
+    .pan-active {
+        cursor: -webkit-grabbing; cursor:-moz-grabbing;
+    }
 }

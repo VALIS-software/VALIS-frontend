@@ -3,7 +3,11 @@
   "extends": "airbnb",
   "rules": {
     "react/require-extension": "off",
-    "linebreak-style": "off"
+    "linebreak-style": "off",
+    "no-trailing-spaces": "off",
+    "no-unused-vars": "off",
+    "no-mixed-operators": "warn",
+    "no-else-return": "off",
   },
   "env": {
     "browser": true

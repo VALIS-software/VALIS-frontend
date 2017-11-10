@@ -4,11 +4,12 @@ varying vec2 coord;
 // uniform sampler2D image;
 uniform vec3 color;
 
-uniform vec2 zoom;
-uniform vec2 pan;
-
-uniform vec4 selection;
+uniform vec2 displayedRange;
+uniform vec2 totalRange;
 
 void main() {
-    gl_FragColor = vec4(color.xy, coord.x, 1.0); 
+
+	float currBp = mix(displayedRange.x, displayedRange.y, coord.x);
+	float currUv = currBp / (totalRange.y - totalRange.x);
+    gl_FragColor = vec4((0.5*sin(currUv*3000000000.0) + 0.5) * color * coord.y , 1.0); 
 }
