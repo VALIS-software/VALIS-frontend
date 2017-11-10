@@ -9,33 +9,47 @@ import './Content.scss';
 import vertexShader from './project.vert';
 import fragmentShader from './render.frag';
 
+const panzoom = require('pan-zoom');
+
 class Content extends React.Component {
   constructor(props) {
     super(props);
+    console.log(props);
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleLoad = this.handleLoad.bind(this);
-    this.state = {
-      input: 'World',
-    };
+    this.handleMouse = this.handleMouse.bind(this);
+    // NOTE: this are not stored in the react state since
+    // they are updated via webGL in the render loop.
+    this.zoom = [1.0, 1.0];
+    this.pan = [0.0, 0.0];
+    this.size = [1.0, 1.0];
+    this.state = {};
   }
 
   componentDidMount() {
     // TODO: Need to write componentDidUnmount
     // that handles destruction of WebGL Context when the page changes
     window.addEventListener('load', this.handleLoad);
+    const domElem = document.querySelector('#webgl-canvas');
+    this.size = [domElem.clientWidth, domElem.clientHeight];
+  }
+
+  handleMouse(e) {
+    this.pan = [this.pan[0] + e.dx, this.pan[1] + e.dy];
+    const scale = 1.0 - (e.dz / 1000.0);
+    this.zoom = [scale * this.zoom[0], scale * this.zoom[1]];
   }
 
   handleLoad() {
     // TODO: need to extract dom-elem without hardcoded ID
-    const igloo = this.igloo = new Igloo(document.querySelector('#webgl-canvas'));
+    const domElem = document.querySelector('#webgl-canvas');
+    const igloo = this.igloo = new Igloo(domElem);
     this.quad = igloo.array(Igloo.QUAD2);
-    // this.image   = igloo.texture($('#image')[0]);
-
+    panzoom(domElem, this.handleMouse);
 
     this.program = igloo.program(vertexShader, fragmentShader);
     this.tick = 0;
     const renderFrame = () => {
-      console.log('Rendering frame');
       this.renderGL();
       requestAnimationFrame(renderFrame);
     };
@@ -51,7 +65,9 @@ class Content extends React.Component {
     // this.image.bind(0);  // active texture 0
     this.program.use()
       .uniform('tint', tint)
-      .uniformi('image', 0)
+      .uniform('pan', this.pan)
+      .uniform('size', this.size)
+      .uniform('zoom', this.zoom)
       .attrib('points', this.quad, 2)
       .draw(this.igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
     this.tick++;
@@ -60,7 +76,7 @@ class Content extends React.Component {
   render() {
     return (
       <div className="content">
-        <canvas width="512" height="256" id="webgl-canvas" />
+        <canvas id="webgl-canvas" />
       </div>
     );
   }

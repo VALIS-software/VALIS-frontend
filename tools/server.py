@@ -1,5 +1,5 @@
 
-from flask import Flask, abort
+from flask import Flask, abort, request
 import random
 import json
 
@@ -49,6 +49,11 @@ def track(genome_id, track_id):
 @app.route("/genomes/<string:genome_id>/<string:track_id>/<int:start_bp>/<int:end_bp>")
 def get_data(genome_id, track_id, start_bp, end_bp):
 	"""Return the data for the given track and base pair range"""
+
+	sampling_rate = 1
+	if request.args.get('sampling_rate'):
+		sampling_rate = int(request.args.get('sampling_rate'))
+
 	if genome_id in MOCK_DATA:
 		if  track_id in MOCK_DATA[genome_id]:
 			track = MOCK_DATA[genome_id][track_id]
@@ -64,17 +69,20 @@ def get_data(genome_id, track_id, start_bp, end_bp):
 
 			# generate random data using seed
 			# TODO: improve this resemble real data a bit more
-			random.seed(track["id"] + track["type"] + str(start_bp))
+			
 			ret = []
 
 			if track["type"] == "rnaseq":
-				for i in xrange(0, end_bp - start_bp):
+				for i in xrange(0, end_bp - start_bp, sampling_rate):
+					random.seed(track["id"] + track["type"] + str(start_bp + i))
 					ret.append(random.random()*10.0)
 			elif track["type"] == "methylation":
-				for i in xrange(0, end_bp - start_bp):
+				for i in xrange(0, end_bp - start_bp), sampling_rate:
+					random.seed(track["id"] + track["type"] + str(start_bp + i))
 					ret.append(random.random()*5.0 - 2.5)
 			elif track["type"] == "sequence":
-				for i in xrange(0, end_bp - start_bp):
+				for i in xrange(0, end_bp - start_bp, sampling_rate):
+					random.seed(track["id"] + track["type"] + str(start_bp + i))
 					ret.append(random.randint(0,4))
 			else:
 				abort(500, "Unknown track type : %s", track["type"])
