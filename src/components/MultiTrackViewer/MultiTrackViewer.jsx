@@ -21,18 +21,6 @@ class MultiTrackViewer extends React.Component {
   constructor(props) {
     super(props);
     this.handleLoad = this.handleLoad.bind(this);
-    // NOTE: these are not stored in the react state since
-    // they are updated via webGL in the render loop.
-    // should probably fix this
-    this.trackHeight = 0.1;
-    this.pan = [0.0, 0.0];
-    this.windowSize = [0.0, 0.0];
-    this.selectMode = SELECT_MODE_NONE;
-    this.bpPerPixel = 1.0;
-    this.state = {
-      panPossible: false,
-      panning: false,
-    };
   }
 
   componentDidMount() {
@@ -40,97 +28,73 @@ class MultiTrackViewer extends React.Component {
     // that handles destruction of WebGL Context when the page changes
     window.addEventListener('load', this.handleLoad);
     const domElem = document.querySelector('#webgl-canvas');
-    this.windowSize = [domElem.clientWidth, domElem.clientHeight];
-    this.bpPerPixel = GENOME_LENGTH / (this.windowSize[0]);
+    this.setState({
+      windowSize: [domElem.clientWidth, domElem.clientHeight],
+      basePairsPerPixel: GENOME_LENGTH / domElem.clientWidth,
+      selectMode: SELECT_MODE_NONE,
+      trackHeight: 0.1,
+      startBasePair: 0,
+    });
   }
 
   getClass() {
-    if (this.state.panning) {
-      return 'pan-active';
-    } else if (this.state.panPossible) {
-      return 'pannable';  
-    } else {
-      return '';
-    }
+    return '';
   }
 
   startBasePair() {
-    return -this.pan[0] * this.bpPerPixel;
+    return this.state.startBasePair;
   }
 
   endBasePair() {
-    return (-this.pan[0] + this.windowSize[0]) * this.bpPerPixel;
-  }
-  
-  screenXValueToBasePair(x) {
-    return (x / this.windowSize[0]) * (this.endBasePair() - this.startBasePair());
+    return this.state.startBasePair + this.state.basePairsPerPixel * this.state.windowSize[0];
   }
 
-  screenYValueToTrack(y) {
-    return 0;
-  }
-
-  centerOnBp(x) {
-    startBasePair() + endBasePair() / 2.0 = x;
+  basePairForScreenX(x) {
+    const u = x / this.state.windowSize[0];
+    return this.startBasePair() + u * (this.endBasePair() - this.startBasePair());
   }
 
   handleMouse(e) {
-    if (this.selectMode === SELECT_MODE_REGIONS) {
-      // select a region of the x axis
-      this.selectionEnd = this.screenXValueToBasePair(e.x);
-      console.log(this.selectionStart);
-      console.log(this.selectionEnd);
-    } else if (this.selectMode === SELECT_MODE_TRACKS) {
-      // select a set of tracks along the y axis
-      if (this.startSelectPos) {
-        this.currentSelection = [0.0, this.startSelectPos[1], -1.0, this.startSelectPos[1]];
+    if (this.state.basePairsPerPixel <= GENOME_LENGTH / (this.state.windowSize[0])) {
+      // x pan sets the base pair!
+      if (Math.abs(e.deltaX) > 0) {
+        const newStart = this.state.startBasePair + (e.deltaX * this.state.basePairsPerPixel);
+        this.setState({
+          startBasePair: newStart,
+          panning: true,
+        });
       } else {
-        this.currentSelection = [0.0, 0.0, 0.0, 0.0];
-      }
-    } else {
-      if (this.bpPerPixel <= GENOME_LENGTH / (this.windowSize[0])) {
-        // x pan sets the base pair!
-        if (Math.abs(e.deltaX) > 0) {
-          this.pan = [Math.min(0.0, this.pan[0] - e.deltaX), 0.0];
-          this.setState({
-            panning: true,
-          });
-        } else {
-          this.setState({
-            panning: false,
-          });
-          if (Math.abs(e.deltaY) > 0) {
-            const last = this.bpPerPixel;
-            this.bpPerPixel /= 1.0 - (e.deltaY / 1000.0);  
-            this.bpPerPixel = Math.min(GENOME_LENGTH / (this.windowSize[0]), this.bpPerPixel);
+        this.setState({
+          panning: false,
+        });
+        if (Math.abs(e.deltaY) > 0) {
+          const lastBp = this.basePairForScreenX(e.clientX);
+          
+          let newBpPerPixel = this.state.basePairsPerPixel / (1.0 - (e.deltaY / 1000.0));  
+          newBpPerPixel = Math.min(GENOME_LENGTH / (this.state.windowSize[0]), newBpPerPixel);
+          
+          const rawPixelsBefore = lastBp / this.state.basePairsPerPixel;
+          const rawPixelsAfter = lastBp / newBpPerPixel;
 
-          }
+          const offset = (rawPixelsAfter - e.clientX) * newBpPerPixel;
+          this.setState({
+            startBasePair:  offset,
+            basePairsPerPixel: newBpPerPixel,
+          });
         }
       }
     }
-
   }
 
   handleMouseDown(e) {
-    if (this.state.panPossible) {
-      this.selectMode = SELECT_MODE_NONE;
-    } else {
-      this.selectionStart = this.screenXValueToBasePair(e.clientX);  
-    }
   }
 
   handleMouseUp(e) {
     this.startSelectPos = null;
-    this.setState({
-      panning: false,
-    });
   }
 
   handleKeydown(e) {
     if (e.key === 'Meta') {
-      this.setState({
-        panPossible: true,
-      });
     }
     this.startSelectPos = null;
   }
@@ -138,10 +102,6 @@ class MultiTrackViewer extends React.Component {
   handleKeyup(e) {
     this.startSelectPos = null;
     if (e.key === 'Meta') {
-      this.setState({
-        panning: false,
-        panPossible: false,
-      });
     }
   }
 
@@ -175,12 +135,11 @@ class MultiTrackViewer extends React.Component {
     for (let i = 0; i < 10; i++) {
       this.program.use()
         .uniform('color', [i / 10.0, i / 20.0, 1.0])
-        .uniform('pan', this.pan)
-        .uniform('windowSize', this.windowSize)
-        .uniform('trackHeight', this.trackHeight)
+        .uniform('windowSize', this.state.windowSize)
+        .uniform('trackHeight', this.state.trackHeight)
         .uniform('displayedRange', [this.startBasePair(), this.endBasePair()])
         .uniform('totalRange', [0, GENOME_LENGTH])
-        .uniform('offset', [0, i * this.trackHeight])
+        .uniform('offset', [0, 1.25 * i * this.state.trackHeight])
         .attrib('points', this.quad, 2)
         .draw(this.igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
     }

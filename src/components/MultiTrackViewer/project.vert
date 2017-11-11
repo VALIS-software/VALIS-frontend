@@ -2,7 +2,6 @@ precision mediump float;
 
 attribute vec2 points;
 varying vec2 coord;
-uniform vec2 pan;
 uniform float trackHeight;
 uniform vec2 windowSize;
 uniform vec2 offset;

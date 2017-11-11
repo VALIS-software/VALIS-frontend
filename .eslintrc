@@ -8,6 +8,8 @@
     "no-unused-vars": "off",
     "no-mixed-operators": "warn",
     "no-else-return": "off",
+    "max-len": "warn",
+    "react/no-did-mount-set-state": "warn",
   },
   "env": {
     "browser": true
