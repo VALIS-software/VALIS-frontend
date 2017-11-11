@@ -28,6 +28,11 @@ class MultiTrackViewer extends React.Component {
     // that handles destruction of WebGL Context when the page changes
     window.addEventListener('load', this.handleLoad);
     const domElem = document.querySelector('#webgl-canvas');
+
+    // need to set explicit canvas height to prevent CSS scaling
+    domElem.width = domElem.clientWidth;
+    domElem.height = domElem.clientHeight;
+
     this.setState({
       windowSize: [domElem.clientWidth, domElem.clientHeight],
       basePairsPerPixel: GENOME_LENGTH / domElem.clientWidth,
