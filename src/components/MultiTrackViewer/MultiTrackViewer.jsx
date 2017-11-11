@@ -29,7 +29,7 @@ class MultiTrackViewer extends React.Component {
     window.addEventListener('load', this.handleLoad);
     const domElem = document.querySelector('#webgl-canvas');
 
-    // need to set explicit canvas height to prevent CSS scaling
+    // need to reset explicit canvas dims to prevent canvas stretch scaling
     domElem.width = domElem.clientWidth;
     domElem.height = domElem.clientHeight;
 
@@ -38,12 +38,30 @@ class MultiTrackViewer extends React.Component {
       basePairsPerPixel: GENOME_LENGTH / domElem.clientWidth,
       selectMode: SELECT_MODE_NONE,
       trackHeight: 0.1,
+      trackOffset: 0.0,
       startBasePair: 0,
+      zoomEnabled: false,
+      dragEnabled: false,
+      numTracks: 10,
+      lastDragCoord: null,
     });
   }
 
   getClass() {
-    return '';
+    const classes = [];
+    if (this.state === null) {
+      return '';
+    }
+
+    if (this.state.zoomEnabled) {
+      classes.push('zoom-active');
+    }
+
+    if (this.state.dragEnabled) {
+      classes.push('drag-active');
+    }
+
+    return classes.join(' ');
   }
 
   startBasePair() {
@@ -51,16 +69,62 @@ class MultiTrackViewer extends React.Component {
   }
 
   endBasePair() {
-    return this.state.startBasePair + this.state.basePairsPerPixel * this.state.windowSize[0];
+    return this.state.startBasePair + (this.state.basePairsPerPixel * this.state.windowSize[0]);
   }
 
   basePairForScreenX(x) {
     const u = x / this.state.windowSize[0];
-    return this.startBasePair() + u * (this.endBasePair() - this.startBasePair());
+    return this.startBasePair() + (u * (this.endBasePair() - this.startBasePair()));
+  }
+
+  trackOffsetForScreenY(y) { 
+    const totalH = (this.state.numTracks * this.state.trackHeight) * this.state.windowSize[1];
+    return (y - (this.state.trackOffset * this.state.windowSize[1])) / totalH;
+  }
+
+  handleMouseMove(e) {
+    if (this.state.dragEnabled) {
+      const deltaX = e.clientX - this.state.lastDragCoord[0];
+      const deltaY = e.clientY - this.state.lastDragCoord[1];
+      if (Math.abs(deltaY) > 0) {
+        const delta = this.state.trackOffset + deltaY / this.state.windowSize[1];
+        this.setState({
+          trackOffset: delta,
+        });
+      }
+
+      if (Math.abs(deltaX) > 0) {
+        this.setState({
+          startBasePair: this.state.startBasePair - deltaX * this.state.basePairsPerPixel,
+        });
+      }
+    }
+
+    this.setState({
+      lastDragCoord: [e.clientX, e.clientY],
+    });
   }
 
   handleMouse(e) {
-    if (this.state.basePairsPerPixel <= GENOME_LENGTH / (this.state.windowSize[0])) {
+    if (this.state.dragEnabled) {
+      return;
+    } else if (this.state.zoomEnabled) {
+      if (Math.abs(e.deltaY) > 0) {
+          const lastTrackOffset = this.trackOffsetForScreenY(e.clientY);
+          
+          const trackHeight = this.state.trackHeight / (1.0 - (e.deltaY / this.state.windowSize[1]));  
+          
+          this.setState({
+            trackHeight: trackHeight,
+          });
+
+          const totalH = (this.state.numTracks * this.state.trackHeight) * this.state.windowSize[1];
+          const offset = (e.clientY - (lastTrackOffset * totalH)) / this.state.windowSize[1];
+          this.setState({
+            trackOffset: offset,
+          });
+        }
+    } else if (this.state.basePairsPerPixel <= GENOME_LENGTH / (this.state.windowSize[0])) {
       // x pan sets the base pair!
       if (Math.abs(e.deltaX) > 0) {
         const newStart = this.state.startBasePair + (e.deltaX * this.state.basePairsPerPixel);
@@ -77,10 +141,10 @@ class MultiTrackViewer extends React.Component {
           
           let newBpPerPixel = this.state.basePairsPerPixel / (1.0 - (e.deltaY / 1000.0));  
           newBpPerPixel = Math.min(GENOME_LENGTH / (this.state.windowSize[0]), newBpPerPixel);
-          
-          const rawPixelsBefore = lastBp / this.state.basePairsPerPixel;
-          const rawPixelsAfter = lastBp / newBpPerPixel;
 
+          // compute the new startBasePair so that the cursor remains
+          // centered on the same base pair after scaling:
+          const rawPixelsAfter = lastBp / newBpPerPixel;
           const offset = (rawPixelsAfter - e.clientX) * newBpPerPixel;
           this.setState({
             startBasePair:  offset,
@@ -92,21 +156,32 @@ class MultiTrackViewer extends React.Component {
   }
 
   handleMouseDown(e) {
+    this.setState({
+      dragEnabled: true,
+      lastDragCoord: [e.clientX, e.clientY],
+    });
   }
 
   handleMouseUp(e) {
-    this.startSelectPos = null;
+    this.setState({
+      dragEnabled: false,
+      lastDragCoord: null,
+    });
   }
 
   handleKeydown(e) {
     if (e.key === 'Meta') {
+      this.setState({
+        zoomEnabled: true,
+      });
     }
-    this.startSelectPos = null;
   }
 
   handleKeyup(e) {
-    this.startSelectPos = null;
     if (e.key === 'Meta') {
+      this.setState({
+        zoomEnabled: false,
+      });
     }
   }
 
@@ -118,6 +193,7 @@ class MultiTrackViewer extends React.Component {
     this.quad = igloo.array(Igloo.QUAD2);
 
     domElem.addEventListener('wheel', this.handleMouse.bind(this));
+    domElem.addEventListener('mousemove', this.handleMouseMove.bind(this));
     domElem.addEventListener('mousedown', this.handleMouseDown.bind(this));
     domElem.addEventListener('mouseup', this.handleMouseUp.bind(this));
     document.addEventListener('keydown', this.handleKeydown.bind(this));
@@ -137,14 +213,15 @@ class MultiTrackViewer extends React.Component {
   }
 
   renderGL() {
-    for (let i = 0; i < 10; i++) {
+    const numTracks = this.state.numTracks;
+    for (let i = 0; i < numTracks; i++) {
       this.program.use()
-        .uniform('color', [i / 10.0, i / 20.0, 1.0])
+        .uniform('color', [i / numTracks, i / (numTracks * 2.0), 1.0])
         .uniform('windowSize', this.state.windowSize)
         .uniform('trackHeight', this.state.trackHeight)
         .uniform('displayedRange', [this.startBasePair(), this.endBasePair()])
         .uniform('totalRange', [0, GENOME_LENGTH])
-        .uniform('offset', [0, 1.25 * i * this.state.trackHeight])
+        .uniform('offset', [0, i * this.state.trackHeight + this.state.trackOffset])
         .attrib('points', this.quad, 2)
         .draw(this.igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
     }

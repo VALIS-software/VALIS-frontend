@@ -13,10 +13,11 @@
         width: 100%;
         height: 100%;
     }
-    .pannable {
-        cursor: -webkit-grab; cursor:-moz-grab;
-    }
-    .pan-active {
+    .drag-active {
         cursor: -webkit-grabbing; cursor:-moz-grabbing;
+    }
+
+    .zoom-active {
+        cursor: zoom-in;
     }
 }
