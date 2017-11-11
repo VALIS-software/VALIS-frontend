@@ -11,5 +11,10 @@ void main() {
 
 	float currBp = mix(displayedRange.x, displayedRange.y, coord.x);
 	float currUv = currBp / (totalRange.y - totalRange.x);
-    gl_FragColor = vec4((0.5*sin(currUv*3000000000.0) + 0.5) * color * coord.y , 1.0); 
+	if (currUv < 0.0 || currUv >= 1.0 ) {
+		gl_FragColor = vec4(0.0);
+	} else {
+		gl_FragColor = vec4(1.0/0.05 * mod(currUv, 0.05) * color , 1.0); 	
+	}
+    
 }

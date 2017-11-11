@@ -9,8 +9,6 @@ import './MultiTrackViewer.scss';
 import vertexShader from './project.vert';
 import fragmentShader from './render.frag';
 
-const panzoom = require('pan-zoom');
-
 const SELECT_MODE_REGIONS = 'regions';
 const SELECT_MODE_TRACKS = 'tracks';
 const SELECT_MODE_NONE = 'none';
@@ -72,6 +70,10 @@ class MultiTrackViewer extends React.Component {
     return 0;
   }
 
+  centerOnBp(x) {
+    startBasePair() + endBasePair() / 2.0 = x;
+  }
+
   handleMouse(e) {
     if (this.selectMode === SELECT_MODE_REGIONS) {
       // select a region of the x axis
@@ -85,26 +87,28 @@ class MultiTrackViewer extends React.Component {
       } else {
         this.currentSelection = [0.0, 0.0, 0.0, 0.0];
       }
-    } else if (this.state.panPossible) {
-      // x pan sets the base pair!
-      this.pan = [Math.min(0.0, this.pan[0] + e.dx), Math.min(0.0, this.pan[1] + e.dy)];
-      this.setState({
-        panning: true,
-      });
     } else {
-      this.setState({
-        panning: false,
-      });
+      if (this.bpPerPixel <= GENOME_LENGTH / (this.windowSize[0])) {
+        // x pan sets the base pair!
+        if (Math.abs(e.deltaX) > 0) {
+          this.pan = [Math.min(0.0, this.pan[0] - e.deltaX), 0.0];
+          this.setState({
+            panning: true,
+          });
+        } else {
+          this.setState({
+            panning: false,
+          });
+          if (Math.abs(e.deltaY) > 0) {
+            const last = this.bpPerPixel;
+            this.bpPerPixel /= 1.0 - (e.deltaY / 1000.0);  
+            this.bpPerPixel = Math.min(GENOME_LENGTH / (this.windowSize[0]), this.bpPerPixel);
+
+          }
+        }
+      }
     }
 
-    if (this.bpPerPixel <= GENOME_LENGTH / (this.windowSize[0])) {
-      this.bpPerPixel /= 1.0 - (e.dz / 1000.0);  
-      this.bpPerPixel = Math.min(GENOME_LENGTH / (this.windowSize[0]), this.bpPerPixel);
-    }
-
-    // if (this.) {
-    //   this.trackHeight *= 1.0 - (e.dz / 1000.0);
-    // }
   }
 
   handleMouseDown(e) {
@@ -148,7 +152,7 @@ class MultiTrackViewer extends React.Component {
     const igloo = this.igloo = new Igloo(domElem);
     this.quad = igloo.array(Igloo.QUAD2);
 
-    panzoom(domElem, this.handleMouse.bind(this));
+    domElem.addEventListener('wheel', this.handleMouse.bind(this));
     domElem.addEventListener('mousedown', this.handleMouseDown.bind(this));
     domElem.addEventListener('mouseup', this.handleMouseUp.bind(this));
     document.addEventListener('keydown', this.handleKeydown.bind(this));
