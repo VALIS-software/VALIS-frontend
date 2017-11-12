@@ -1,6 +1,9 @@
 // Dependencies
 import React from 'react';
 
+import GenomeAPI from '../../models/api.js';
+import Track from '../../models/track.js';
+
 import { Igloo } from '../../../lib/igloojs/igloo.js';
 
 // Styles
@@ -21,6 +24,9 @@ class MultiTrackViewer extends React.Component {
   constructor(props) {
     super(props);
     this.handleLoad = this.handleLoad.bind(this);
+    this.api = new GenomeAPI('http://localhost:5000');
+    this.track = new Track(this.api, 'genome1', 'genome1.1');
+
   }
 
   componentDidMount() {
@@ -42,9 +48,18 @@ class MultiTrackViewer extends React.Component {
       startBasePair: 0,
       zoomEnabled: false,
       dragEnabled: false,
-      numTracks: 10,
+      tracks: [1, 2, 3, 4, 5],
       lastDragCoord: null,
     });
+    this.track.loadData(0, 3000000, 3000000/domElem.clientWidth);  
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    // check if we need to fetch more data:
+    if (this.state.startBasePair != prevState.startBasePair) {
+
+    }
+    
   }
 
   getClass() {
@@ -78,7 +93,7 @@ class MultiTrackViewer extends React.Component {
   }
 
   trackOffsetForScreenY(y) { 
-    const totalH = (this.state.numTracks * this.state.trackHeight) * this.state.windowSize[1];
+    const totalH = (this.state.tracks.length * this.state.trackHeight) * this.state.windowSize[1];
     return (y - (this.state.trackOffset * this.state.windowSize[1])) / totalH;
   }
 
@@ -117,8 +132,8 @@ class MultiTrackViewer extends React.Component {
           this.setState({
             trackHeight: trackHeight,
           });
-
-          const totalH = (this.state.numTracks * this.state.trackHeight) * this.state.windowSize[1];
+          // compute the offset so that the y position remains constant after zoom:
+          const totalH = (this.state.tracks.length * this.state.trackHeight) * this.state.windowSize[1];
           const offset = (e.clientY - (lastTrackOffset * totalH)) / this.state.windowSize[1];
           this.setState({
             trackOffset: offset,
@@ -213,7 +228,7 @@ class MultiTrackViewer extends React.Component {
   }
 
   renderGL() {
-    const numTracks = this.state.numTracks;
+    const numTracks = this.state.tracks.length;
     for (let i = 0; i < numTracks; i++) {
       this.program.use()
         .uniform('color', [i / numTracks, i / (numTracks * 2.0), 1.0])

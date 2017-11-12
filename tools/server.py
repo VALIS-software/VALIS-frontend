@@ -1,5 +1,6 @@
 
 from flask import Flask, abort, request
+from flask_cors import CORS
 import random
 import json
 
@@ -8,6 +9,7 @@ MOCK_DATA = json.loads(open("mockData.json", "r").read())
 MOCK_ANNOTATIONS = json.loads(open("mockAnnotations.json", "r").read())
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/annotations")
 def annotations():
@@ -87,7 +89,12 @@ def get_data(genome_id, track_id, start_bp, end_bp):
 			else:
 				abort(500, "Unknown track type : %s", track["type"])
 
-			return json.dumps(ret)
+			return json.dumps({
+				"startBp" : start_bp,
+				"endBp" : end_bp,
+				"samplingRate": sampling_rate,
+				"values": ret
+			})
 		else:
 			abort(404, "Track %s is not in genome %s" % (track_id, genome_id))
 	else:
