@@ -19,8 +19,13 @@ class MultiTrackViewer extends React.Component {
   constructor(props) {
     super(props);
     this.handleLoad = this.handleLoad.bind(this);
+<<<<<<< HEAD
     this.views = {};
     this.overlayElem = null;
+=======
+    this.api = new GenomeAPI('http://localhost:5000');
+    this.track = new Track(this.api, 'genome1', 'genome1.1');
+>>>>>>> 68fd732... minor compile fixes
   }
 
   componentDidMount() {
