@@ -4,6 +4,7 @@ from flask_cors import CORS
 import random
 import json
 import math
+from six.moves import range
 
 
 MOCK_DATA = json.loads(open("mockData.json", "r").read())
@@ -118,7 +119,7 @@ def get_track_data(track_id, start_bp, end_bp):
 		ret = []
 		if track["type"] == "sequence":
 			num_samples = int((end_bp - start_bp) / float(sampling_rate))
-			for i in xrange(0, num_samples):
+			for i in range(0, num_samples):
 				idx = i * sampling_rate + start_bp
 				random.seed(str(idx)+track_id)
 				ret.append(float(idx)/(track["endBp"] - track["startBp"])*0.5 + random.random()*0.5 )
