@@ -23,7 +23,7 @@ class GenomeAPI {
 	}
 
 	getTrack(genomeId, trackId) {
-		return axios.get(`${this.baseUrl}/${genomes}/${genomeId}/${trackId}`);
+		return axios.get(`${this.baseUrl}/genomes/${genomeId}/${trackId}`);
 	}
 
 	getData(genomeId, trackId, startBp, endBp, samplingRate) {

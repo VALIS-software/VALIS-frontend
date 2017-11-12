@@ -50,15 +50,11 @@ class MultiTrackViewer extends React.Component {
       dragEnabled: false,
       tracks: [1, 2, 3, 4, 5],
       lastDragCoord: null,
-    });
-    this.track.loadData(0, 3000000, 3000000/domElem.clientWidth);  
+    }); 
   }
 
   componentDidUpdate(prevProps, prevState) {
     // check if we need to fetch more data:
-    if (this.state.startBasePair != prevState.startBasePair) {
-
-    }
     
   }
 
