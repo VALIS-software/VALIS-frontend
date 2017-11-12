@@ -1,9 +1,10 @@
 // Dependencies
 import React from 'react';
 import PropTypes from 'prop-types';
-
 import Util from '../../helpers/util.js';
 import { GENOME_LENGTH } from '../../helpers/constants.js';
+import StatusTile from '../StatusTile/StatusTile.jsx';
+
 
 import TrackView from '../TrackView/TrackView.jsx';
 
@@ -25,7 +26,15 @@ class MultiTrackViewer extends React.Component {
 =======
     this.api = new GenomeAPI('http://localhost:5000');
     this.track = new Track(this.api, 'genome1', 'genome1.1');
+<<<<<<< HEAD
 >>>>>>> 68fd732... minor compile fixes
+=======
+    this.state = {
+      startBasePair: 0,
+      basePairsPerPixel: 0,
+      trackHeight: 0,
+    };
+>>>>>>> df3bc14... add StatusTile to view current zoom/genome position
   }
 
   componentDidMount() {
@@ -323,6 +332,11 @@ class MultiTrackViewer extends React.Component {
         </div>
         <canvas id="webgl-canvas" className={this.getClass()} />
         <div id="webgl-overlay" />
+        <StatusTile 
+          startBasePair={this.state.startBasePair}
+          basePairsPerPixel={this.state.basePairsPerPixel}
+          trackHeight={this.state.trackHeight}
+        />
       </div>
     );
   }
