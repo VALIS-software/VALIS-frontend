@@ -29,6 +29,11 @@ bool inRange(vec2 range, float bp) {
 	return bp >= range.x && bp <= range.y;
 }
 
+vec4 getTexValue(sampler2D sampler, vec2 uv) {
+	uv.x *= 0.25;
+	return vec4(vec3(texture2D(sampler, uv).r), 1.0);
+}
+
 void main() {
 	float currBp = mix(displayedRange.x, displayedRange.y, coord.x);
 	float currUv = currBp / (totalRange.y - totalRange.x);
@@ -40,32 +45,31 @@ void main() {
 		vec4 finalColor;
 		vec4 colorWithAlpha = vec4(1.0/0.05 * mod(currUv, 0.05) *color, 1.0);
 		if (inRange(range0, currBp)) {
-			uvInTex = 0.25 * vec2((currBp - range0.x) / (range0.y-range0.x), 0.0);
-			finalColor = mix(colorWithAlpha, texture2D(texture0, uvInTex), 0.5);
+			uvInTex = vec2((currBp - range0.x) / (range0.y-range0.x), 0.0);
+			finalColor = mix(vec4(1.0), getTexValue(texture0, uvInTex), 0.5);
 		} else if (inRange(range1, currBp)) {
-			uvInTex = 0.25 * vec2((currBp - range1.x) / (range1.y-range1.x), 0.0);
-			//finalColor = mix(colorWithAlpha, texture2D(texture1, uvInTex), 0.5);
-			finalColor = vec4(1.0, 0.0, 1.0, 1.0); 
+			uvInTex = vec2((currBp - range1.x) / (range1.y-range1.x), 0.0);
+			finalColor = mix(vec4(1.0, 0.0, 1.0, 1.0), getTexValue(texture1, uvInTex), 0.5);
 		} else if (inRange(range2, currBp)) {
-			uvInTex = 0.25 * vec2((currBp - range2.x) / (range2.y-range2.x), 0.0);
-			finalColor = mix(colorWithAlpha, texture2D(texture2, uvInTex), 0.5);
+			uvInTex = vec2((currBp - range2.x) / (range2.y-range2.x), 0.0);
+			finalColor = mix(vec4(1.0, 0.0, 0.0, 1.0), getTexValue(texture2, uvInTex), 0.5);
 		} else if (inRange(range3, currBp)) {
-			uvInTex = 0.25 * vec2((currBp - range3.x) / (range3.y-range3.x), 0.0);
-			finalColor = mix(colorWithAlpha, texture2D(texture3, uvInTex), 0.5);
+			uvInTex = vec2((currBp - range3.x) / (range3.y-range3.x), 0.0);
+			finalColor = mix(colorWithAlpha, getTexValue(texture3, uvInTex), 0.5);
 		} else if (inRange(range4, currBp)) {
-			uvInTex = 0.25 * vec2((currBp - range4.x) / (range4.y-range4.x), 0.0);
-			finalColor = mix(colorWithAlpha, texture2D(texture4, uvInTex), 0.5);
+			uvInTex = vec2((currBp - range4.x) / (range4.y-range4.x), 0.0);
+			finalColor = mix(colorWithAlpha, getTexValue(texture4, uvInTex), 0.5);
 		} else if (inRange(range5, currBp)) {
-			uvInTex = 0.25 * vec2((currBp - range5.x) / (range5.y-range5.x), 0.0);
-			finalColor = mix(colorWithAlpha, texture2D(texture5, uvInTex), 0.5);
+			uvInTex = vec2((currBp - range5.x) / (range5.y-range5.x), 0.0);
+			finalColor = mix(colorWithAlpha, getTexValue(texture5, uvInTex), 0.5);
 		} else if (inRange(range6, currBp)) {
-			uvInTex = 0.25 * vec2((currBp - range6.x) / (range6.y-range6.x), 0.0);
-			finalColor = mix(colorWithAlpha, texture2D(texture6, uvInTex), 0.5);
+			uvInTex = vec2((currBp - range6.x) / (range6.y-range6.x), 0.0);
+			finalColor = mix(colorWithAlpha, getTexValue(texture6, uvInTex), 0.5);
 		} else if (inRange(range7, currBp)) {
-			uvInTex = 0.25 * vec2((currBp - range7.x) / (range7.y-range7.x), 0.0);
-			finalColor = mix(colorWithAlpha, texture2D(texture7, uvInTex), 0.5);
+			uvInTex = vec2((currBp - range7.x) / (range7.y-range7.x), 0.0);
+			finalColor = mix(colorWithAlpha, getTexValue(texture7, uvInTex), 0.5);
 		} else {
-			finalColor = vec4(0.0, 0.0, 1.0, 1.0);
+			finalColor = vec4(0.0, 0.0, 0.0, 1.0);
 		}
 		gl_FragColor = finalColor;
 	}

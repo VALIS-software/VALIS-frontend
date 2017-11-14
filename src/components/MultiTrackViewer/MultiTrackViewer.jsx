@@ -56,8 +56,8 @@ class MultiTrackViewer extends React.Component {
     this.api = new GenomeAPI('http://localhost:5000');
     // load test track:
     this.api.getTrack('genome1', 'genome1.1').then(this.addTrack.bind(this));
-    this.api.getTrack('genome2', 'genome2.1').then(this.addTrack.bind(this));
-    this.api.getTrack('genome3', 'genome3.1').then(this.addTrack.bind(this));
+    // this.api.getTrack('genome2', 'genome2.1').then(this.addTrack.bind(this));
+    // this.api.getTrack('genome3', 'genome3.1').then(this.addTrack.bind(this));
   }
 
   addTrack(track) {
@@ -70,57 +70,6 @@ class MultiTrackViewer extends React.Component {
     this.setState({
       tracks: newTrackList,
     });
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    this.loadDataIfNeeded();
-  }
-
-
-  loadDataIfNeeded() {
-    // skip if we are loading or initializing
-    if (!this.state || this.state.tracks.length === 0 || this.numTilesLoading > 0) return;
-    
-    // TODO: need to cancel old requests!
-
-    let fetchNeeded = false;
-    if (this.state.currentDataResolution === null || this.state.currentDataRange === null) {
-      // no data has loaded!
-      fetchNeeded = true;
-    } else if (this.state.basePairsPerPixel < this.state.currentDataResolution) {
-      // we've zoomed in (need higher resolution data)
-      fetchNeeded = true;
-    } else if (this.state.currentDataRange[0] > this.startBasePair() || this.state.currentDataRange[1] < this.endBasePair()) {
-      // the range has changed
-      fetchNeeded = true;
-    }
-
-    if (fetchNeeded) {
-      this.state.tracks.forEach(track => {
-        const fetch = track.loadData(this.startBasePair(), this.endBasePair(), this.state.basePairsPerPixel);
-        console.log('fetch', this.startBasePair(), this.endBasePair(), this.state.basePairsPerPixel);
-        console.log('sent', fetch);
-        this.setState({
-          currentDataResolution: fetch.samplingRate,
-          currentDataRange: [fetch.startBp, fetch.endBp],
-        });
-
-        this.numTilesLoading = fetch.promises.length;
-
-        // TODO: Need to handle failure conditions when one or more of the promises fail.
-        // we should have a mechanism that resets currentDataResolution, currentDataRange
-        // to null and tries again.
-        fetch.promises.forEach(promise => {
-          promise.then(data => {
-            this.updateTextureData(track, data);
-            this.numTilesLoading--;
-            if (this.numTilesLoading === 0) {
-              // all promises loaded
-            }
-          });
-        });
-      });
-    }
   }
 
   getClass() {
@@ -298,30 +247,29 @@ class MultiTrackViewer extends React.Component {
   }
 
   updateTextureData(track, data) {
-    console.log('received', track, data);
-    const gl = this.glContext();
-    
-    while (this.textures.length >= MAX_TEXTURES) {
-      this.textures.pop();
-    }
-    
+    const gl = this.glContext();    
     // allocate a new texture
-    const newTexture = this.igloo.texture(null, gl.R, gl.CLAMP_TO_EDGE, gl.NEAREST, gl.FLOAT);
+    const newTexture = this.igloo.texture(null, gl.RGBA, gl.CLAMP_TO_EDGE, gl.NEAREST, gl.FLOAT);
     newTexture.set(data.values, 1024, 1);
     this.textures.push({
       track: track,
+      samplingRate: data.samplingRate,
       startBp: data.startBp,
       endBp: data.endBp,
       texture: newTexture,
     });
-    console.log(this.textures);
   }
 
-  setupTextures(track, startBp, endBp) {
+  setupTextures(track, startBp, endBp, samplingRate) {
     let i = 0;
     const uniforms = [];
+    this.textures = [];
+    const tiles = track.getTiles(startBp, endBp, samplingRate);
+    tiles.forEach(tile => {
+      if (tile) this.updateTextureData(track, tile);
+    });
     this.textures.forEach(texture => {
-      if (texture.track === track) {
+      if (texture.track === track && texture.samplingRate <= samplingRate) {
         if (startBp <= texture.endBp && endBp >= texture.startBp) {
           texture.texture.bind(i);
           uniforms.push({
@@ -338,7 +286,7 @@ class MultiTrackViewer extends React.Component {
   renderGL() {
     const numTracks = this.state.tracks.length;
     for (let i = 0; i < numTracks; i++) {
-      const textureArr = this.setupTextures(this.state.tracks[i], this.startBasePair(), this.endBasePair())
+      const textureArr = this.setupTextures(this.state.tracks[i], this.startBasePair(), this.endBasePair(), this.state.basePairsPerPixel)
       const shader = this.program.use()
         .uniform('color', [i / numTracks, i / (numTracks * 2.0), 1.0])
         .uniform('windowSize', this.state.windowSize)
@@ -353,7 +301,7 @@ class MultiTrackViewer extends React.Component {
         shader.uniformi(params.tex[0], params.tex[1]);
         shader.uniform(params.range[0], params.range[1]);
       });
-
+      console.log(textureArr);
       shader.draw(this.igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
     }
     this.tick++;

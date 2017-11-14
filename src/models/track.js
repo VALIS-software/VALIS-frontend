@@ -1,4 +1,4 @@
-
+const _ = require('underscore');
 
 // WebGL requires min 4096 size for float textures. This could be smaller
 // but we'd need to copy tiles into a single large texture.
@@ -21,26 +21,39 @@ class Track {
     this.startBp = startBp;
     this.endBp = endBp;
     this.cache = {}; // TODO: use a real cache here!
+    this.inFlight = {};
+    this.load = _.throttle(this.loadData.bind(this), 250);
   }
 
   getTileSize() {
     return CACHE_TILE_SIZE;
   }
 
-  loadData(startBp, endBp, samplingRate) {
+  getTiles(startBp, endBp, samplingRate) {
+    // return the best tile with this data:
     const samplingRateForRequest = floorToMultiple(samplingRate, CACHE_SAMPLING_STEP_SIZE);
     const basePairsPerTile = CACHE_TILE_SIZE * samplingRateForRequest;
     const startCacheBp = floorToMultiple(startBp, basePairsPerTile);
     const endCacheBp = ceilToMultiple(endBp, basePairsPerTile);
-
-    const promises = [];
-
-    // make a list of tiles 
     const tiles = [];
+    const needToFetch = [];
     for (let i = startCacheBp; i <= endBp; i+= basePairsPerTile) {
-      tiles.push(i);
+      const cacheKey = `${i}_${samplingRateForRequest}`;
+      if (this.cache[cacheKey] === undefined && !this.inFlight[cacheKey]) {
+        needToFetch.push(i);
+        this.inFlight[cacheKey] = true;
+      } else {
+        tiles.push(this.cache[cacheKey]);  
+      }
+      
     }
+    this.load(needToFetch, samplingRateForRequest);
+    return tiles;
+  }
 
+  loadData(tiles, samplingRateForRequest) {
+    const promises = [];
+    const basePairsPerTile = CACHE_TILE_SIZE * samplingRateForRequest;
     tiles.forEach(tile => {
       // TODO: you can downsample existing cached data but for now the samplingRateForRequest must match!
       const cacheKey = `${tile}_${samplingRateForRequest}`;
@@ -58,7 +71,7 @@ class Track {
 
         if (start > end) return;
 
-        const promise = this.api.getData(this.genomeId, this.trackId, start, end, samplingRateForRequest);
+        const promise = this.api.getData(this.genomeId, this.trackId, start, end, Math.round(samplingRateForRequest));
 
         const finalPromise = promise.then(data => {
           console.log('saved to cache: ', cacheKey, data.data);
@@ -68,19 +81,17 @@ class Track {
             endBp: data.data.endBp,
             samplingRate: data.data.samplingRate,
           };
-          this.cache[cacheKey].values = new Float32Array(4*CACHE_TILE_SIZE);
-          this.cache[cacheKey].values.set(rawData);
+          // HACK (should not have to use RGBA textures)
+          this.cache[cacheKey].values = new Float32Array(CACHE_TILE_SIZE*4);
+          for (let i = 0; i < CACHE_TILE_SIZE; i++) {
+            this.cache[cacheKey].values[i*4] = rawData[i];  
+          }
+          
           return this.cache[cacheKey];
         });
         promises.push(finalPromise);
       }
     });
-    return {
-      promises: promises,
-      startBp: startCacheBp,
-      endBp: endCacheBp,
-      samplingRate: samplingRateForRequest,
-    };
   }
 }
 export default Track;
