@@ -1,3 +1,4 @@
+import Track from './track.js';
 
 const axios = require('axios');
 
@@ -23,7 +24,10 @@ class GenomeAPI {
 	}
 
 	getTrack(genomeId, trackId) {
-		return axios.get(`${this.baseUrl}/genomes/${genomeId}/${trackId}`);
+		return axios.get(`${this.baseUrl}/genomes/${genomeId}/${trackId}`).then(data => {
+			const trackData = data.data;
+			return new Track(this, trackData.genomeId, trackData.trackId, trackData.startBp, trackData.endBp);
+		});
 	}
 
 	getData(genomeId, trackId, startBp, endBp, samplingRate) {

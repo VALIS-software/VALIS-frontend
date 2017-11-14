@@ -15,8 +15,6 @@ class Viewer {
 	loadAnnotationRegions(annotationId) {
 		
 	}
-
-
 }
 
-export default Track
+export default Viewer

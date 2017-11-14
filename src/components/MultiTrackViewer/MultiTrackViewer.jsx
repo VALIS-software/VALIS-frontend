@@ -24,9 +24,6 @@ class MultiTrackViewer extends React.Component {
   constructor(props) {
     super(props);
     this.handleLoad = this.handleLoad.bind(this);
-    this.api = new GenomeAPI('http://localhost:5000');
-    this.track = new Track(this.api, 'genome1', 'genome1.1');
-
   }
 
   componentDidMount() {
@@ -48,14 +45,81 @@ class MultiTrackViewer extends React.Component {
       startBasePair: 0,
       zoomEnabled: false,
       dragEnabled: false,
-      tracks: [1, 2, 3, 4, 5],
+      tracks: [],
       lastDragCoord: null,
+      currentDataRange: null,
+      currentDataResolution: null,
     }); 
+    this.numTilesLoading = 0;
+
+    this.api = new GenomeAPI('http://localhost:5000');
+    // load test track:
+    this.api.getTrack('genome1', 'genome1.1').then(this.addTrack.bind(this));
+    this.api.getTrack('genome1', 'genome1.2').then(this.addTrack.bind(this));
+    this.api.getTrack('genome1', 'genome1.3').then(this.addTrack.bind(this));
+  }
+
+  addTrack(track) {
+    const newTrackList = [];
+    this.state.tracks.forEach(oldTrack => {
+      newTrackList.push(oldTrack);
+    });
+    newTrackList.push(track);
+    this.setState({
+      tracks: newTrackList,
+    });
   }
 
   componentDidUpdate(prevProps, prevState) {
-    // check if we need to fetch more data:
+    this.loadDataIfNeeded();
+  }
+
+
+  loadDataIfNeeded() {
+    // skip if we are loading or initializing
+    if (!this.state || this.state.tracks.length === 0 || this.numTilesLoading > 0) return;
     
+    // TODO: need to cancel old requests!
+
+    let fetchNeeded = false;
+    if (this.state.currentDataResolution === null || this.state.currentDataRange === null) {
+      // no data has loaded!
+      fetchNeeded = true;
+    } else if (this.state.basePairsPerPixel < this.state.currentDataResolution) {
+      // we've zoomed in (need higher resolution data)
+      fetchNeeded = true;
+    } else if (this.state.currentDataRange[0] > this.startBasePair() || this.state.currentDataRange[1] < this.endBasePair()) {
+      // the range has changed
+      fetchNeeded = true;
+    }
+
+    if (fetchNeeded) {
+      this.state.tracks.forEach(track => {
+        const fetch = track.loadData(this.startBasePair(), this.endBasePair(), this.state.basePairsPerPixel);
+        console.log('fetch', this.startBasePair(), this.endBasePair(), this.state.basePairsPerPixel);
+        console.log('sent', fetch);
+        this.setState({
+          currentDataResolution: fetch.samplingRate,
+          currentDataRange: [fetch.startBp, fetch.endBp],
+        });
+
+        this.numTilesLoading = fetch.promises.length;
+
+        // TODO: Need to handle failure conditions when one or more of the promises fail.
+        // we should have a mechanism that resets currentDataResolution, currentDataRange
+        // to null and tries again.
+        fetch.promises.forEach(promise => {
+          promise.then(data => {
+            console.log('received', data);
+            this.updateTile(data);
+            this.numTilesLoading--;
+            if (this.numTilesLoading === 0) {
+              // all promises loaded
+            }
+          });
+        });
+      });
+    }
   }
 
   getClass() {
@@ -73,6 +137,11 @@ class MultiTrackViewer extends React.Component {
     }
 
     return classes.join(' ');
+  }
+
+
+  updateTile(data) {
+    
   }
 
   startBasePair() {
