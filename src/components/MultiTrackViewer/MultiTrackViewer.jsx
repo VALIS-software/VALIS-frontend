@@ -56,8 +56,8 @@ class MultiTrackViewer extends React.Component {
     this.api = new GenomeAPI('http://localhost:5000');
     // load test track:
     this.api.getTrack('genome1', 'genome1.1').then(this.addTrack.bind(this));
-    this.api.getTrack('genome1', 'genome1.2').then(this.addTrack.bind(this));
-    this.api.getTrack('genome1', 'genome1.3').then(this.addTrack.bind(this));
+    this.api.getTrack('genome2', 'genome2.1').then(this.addTrack.bind(this));
+    this.api.getTrack('genome3', 'genome3.1').then(this.addTrack.bind(this));
   }
 
   addTrack(track) {
@@ -307,7 +307,7 @@ class MultiTrackViewer extends React.Component {
     
     // allocate a new texture
     const newTexture = this.igloo.texture(null, gl.R, gl.CLAMP_TO_EDGE, gl.NEAREST, gl.FLOAT);
-    newTexture.set(data.values, track.getTileSize(), 1);
+    newTexture.set(data.values, 1024, 1);
     this.textures.push({
       track: track,
       startBp: data.startBp,
