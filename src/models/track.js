@@ -1,6 +1,6 @@
 
 
-const CACHE_TILE_SIZE_BP = 1048576;
+const CACHE_TILE_SIZE = 1048576;
 
 function floorToMultiple(x, k) {
   return (x % k === 0) ? x :  x + k - x % k - k;
@@ -21,14 +21,15 @@ class Track {
 
   loadData(startBp, endBp, samplingRate) {
     const samplingRateForRequest = floorToMultiple(samplingRate, 2);
-    const startCacheKey = floorToMultiple(startBp, CACHE_TILE_SIZE_BP);
-    const endCacheKey = ceilToMultiple(endBp, CACHE_TILE_SIZE_BP);
+    const basePairsPerTile = CACHE_TILE_SIZE * samplingRateForRequest;
+    const startCacheBp = floorToMultiple(startBp, basePairsPerTile);
+    const endCacheBp = ceilToMultiple(endBp, basePairsPerTile);
 
     const promises = [];
 
     // make a list of tiles 
     const tiles = [];
-    for (let i = startCacheKey; i <= endCacheKey; i+= CACHE_TILE_SIZE_BP) {
+    for (let i = startCacheBp; i <= endCacheBp; i+= basePairsPerTile) {
       tiles.push(i);
     }
 
@@ -42,7 +43,7 @@ class Track {
         }));
       } else {
         // fetch via API, store in cache then send to future
-        const promise = this.api.getData(this.genomeId, this.trackId, tile, tile + CACHE_TILE_SIZE_BP, samplingRateForRequest);
+        const promise = this.api.getData(this.genomeId, this.trackId, tile, tile + basePairsPerTile, samplingRateForRequest);
 
         const finalPromise = promise.then(data => {
           const rawData = data.data.values;
@@ -55,7 +56,7 @@ class Track {
         promises.push(finalPromise);
       }
     });
-    return Promise.all(promises);
+    return promises;
   }
 }
 export default Track;
