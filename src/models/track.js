@@ -1,5 +1,7 @@
 
 
+// WebGL requires min 4096 size for float textures. This could be smaller
+// but we'd need to copy tiles into a single large texture.
 const CACHE_TILE_SIZE = 1024;
 const CACHE_SAMPLING_STEP_SIZE = 32;
 
@@ -21,6 +23,9 @@ class Track {
     this.cache = {}; // TODO: use a real cache here!
   }
 
+  getTileSize() {
+    return CACHE_TILE_SIZE;
+  }
 
   loadData(startBp, endBp, samplingRate) {
     const samplingRateForRequest = floorToMultiple(samplingRate, CACHE_SAMPLING_STEP_SIZE);
@@ -45,8 +50,9 @@ class Track {
           resolve(this.cache[cacheKey]);
         }));
       } else {
-        // TODO: this code really needs explicit tests... we can get away with this for a demo
-        // but the tiles should all divide up evenly! re-write this!
+        // TODO: this code really needs explicit tests... 
+        // probably some off-by-one errors in this 
+        // the tiles should all divide up evenly! re-write this!
         const start = Math.floor(Math.max(tile, this.startBp));
         const end = Math.ceil(Math.min(this.endBp, tile + basePairsPerTile));
 
@@ -55,12 +61,15 @@ class Track {
         const promise = this.api.getData(this.genomeId, this.trackId, start, end, samplingRateForRequest);
 
         const finalPromise = promise.then(data => {
-          console.log('saved to cache: ', cacheKey);
-          const rawData = data.data.values;
-          this.cache[cacheKey] = new Float32Array(rawData.length);
-          for (let i = 0; i < rawData; i++) {
-            this.cache[cacheKey][i] = rawData[i];
-          }
+          console.log('saved to cache: ', cacheKey, data.data);
+          const rawData = data.data.values.slice(0, CACHE_TILE_SIZE);
+          this.cache[cacheKey] = {
+            startBp: data.data.startBp,
+            endBp: data.data.endBp,
+            samplingRate: data.data.samplingRate,
+          };
+          this.cache[cacheKey].values = new Float32Array(4*CACHE_TILE_SIZE);
+          this.cache[cacheKey].values.set(rawData);
           return this.cache[cacheKey];
         });
         promises.push(finalPromise);

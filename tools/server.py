@@ -85,7 +85,7 @@ def get_data(genome_id, track_id, start_bp, end_bp):
 			elif track["type"] == "sequence":
 				for i in xrange(0, end_bp - start_bp, sampling_rate):
 					random.seed(track["trackId"] + track["type"] + str(start_bp + i))
-					ret.append(random.randint(0,4))
+					ret.append(random.randint(0,3))
 			else:
 				abort(500, "Unknown track type : %s", track["type"])
 

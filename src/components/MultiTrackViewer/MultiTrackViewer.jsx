@@ -18,12 +18,13 @@ const SELECT_MODE_NONE = 'none';
 
 
 const GENOME_LENGTH = 3000000000;
-
+const MAX_TEXTURES = 8;
 
 class MultiTrackViewer extends React.Component {
   constructor(props) {
     super(props);
     this.handleLoad = this.handleLoad.bind(this);
+    this.textures = [];
   }
 
   componentDidMount() {
@@ -64,6 +65,7 @@ class MultiTrackViewer extends React.Component {
     this.state.tracks.forEach(oldTrack => {
       newTrackList.push(oldTrack);
     });
+
     newTrackList.push(track);
     this.setState({
       tracks: newTrackList,
@@ -110,8 +112,7 @@ class MultiTrackViewer extends React.Component {
         // to null and tries again.
         fetch.promises.forEach(promise => {
           promise.then(data => {
-            console.log('received', data);
-            this.updateTile(data);
+            this.updateTextureData(track, data);
             this.numTilesLoading--;
             if (this.numTilesLoading === 0) {
               // all promises loaded
@@ -137,11 +138,6 @@ class MultiTrackViewer extends React.Component {
     }
 
     return classes.join(' ');
-  }
-
-
-  updateTile(data) {
-    
   }
 
   startBasePair() {
@@ -270,6 +266,11 @@ class MultiTrackViewer extends React.Component {
     // TODO: need to extract dom-elem without hardcoded ID
     const domElem = document.querySelector('#webgl-canvas');
     const igloo = this.igloo = new Igloo(domElem);
+
+    // enable floating point textures
+    igloo.gl.getExtension('OES_texture_float');
+
+    // setup rendering surface:
     this.quad = igloo.array(Igloo.QUAD2);
 
     domElem.addEventListener('wheel', this.handleMouse.bind(this));
@@ -292,18 +293,68 @@ class MultiTrackViewer extends React.Component {
     this.setState({ input: e.target.value });
   }
 
+  glContext() {
+    return this.igloo.gl;
+  }
+
+  updateTextureData(track, data) {
+    console.log('received', track, data);
+    const gl = this.glContext();
+    
+    while (this.textures.length >= MAX_TEXTURES) {
+      this.textures.pop();
+    }
+    
+    // allocate a new texture
+    const newTexture = this.igloo.texture(null, gl.R, gl.CLAMP_TO_EDGE, gl.NEAREST, gl.FLOAT);
+    newTexture.set(data.values, track.getTileSize(), 1);
+    this.textures.push({
+      track: track,
+      startBp: data.startBp,
+      endBp: data.endBp,
+      texture: newTexture,
+    });
+    console.log(this.textures);
+  }
+
+  setupTextures(track, startBp, endBp) {
+    let i = 0;
+    const uniforms = [];
+    this.textures.forEach(texture => {
+      if (texture.track === track) {
+        if (startBp <= texture.endBp && endBp >= texture.startBp) {
+          texture.texture.bind(i);
+          uniforms.push({
+            tex: [`texture${i}`, i],
+            range: [`range${i}`, [texture.startBp, texture.endBp]],
+          });
+          i++;
+        }
+      }
+    });
+    return uniforms;
+  }
+
   renderGL() {
     const numTracks = this.state.tracks.length;
     for (let i = 0; i < numTracks; i++) {
-      this.program.use()
+      const textureArr = this.setupTextures(this.state.tracks[i], this.startBasePair(), this.endBasePair())
+      const shader = this.program.use()
         .uniform('color', [i / numTracks, i / (numTracks * 2.0), 1.0])
         .uniform('windowSize', this.state.windowSize)
         .uniform('trackHeight', this.state.trackHeight)
         .uniform('displayedRange', [this.startBasePair(), this.endBasePair()])
         .uniform('totalRange', [0, GENOME_LENGTH])
         .uniform('offset', [0, i * this.state.trackHeight + this.state.trackOffset])
-        .attrib('points', this.quad, 2)
-        .draw(this.igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
+        .attrib('points', this.quad, 2);
+
+      // TODO: cleanup?
+      textureArr.forEach(params => {
+        shader.uniformi(params.tex[0], params.tex[1]);
+        shader.uniform(params.range[0], params.range[1]);
+      });
+
+      shader.draw(this.igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
     }
     this.tick++;
   }
