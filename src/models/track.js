@@ -6,12 +6,16 @@ const CACHE_TILE_SIZE = 1024;
 const CACHE_SAMPLING_STEP_SIZE = 32;
 
 function floorToMultiple(x, k) {
-  return (x % k === 0) ? x :  x + k - x % k - k;
+  return Math.round((x % k === 0) ? x :  x + k - x % k - k);
 }
 
 function ceilToMultiple(x, k) {
-  return (x % k === 0) ? x :  x + k - x % k;
+  return Math.round((x % k === 0) ? x :  x + k - x % k);
 }
+
+// TODO: all this code really needs explicit tests... 
+// probably some off-by-one errors in this 
+// the tiles should all divide up evenly! re-write this!
 
 class Track {
   constructor(api, genomeId, trackId, startBp, endBp) {
@@ -22,8 +26,9 @@ class Track {
     this.endBp = endBp;
     this.cache = {}; // TODO: use a real cache here!
     this.inFlight = {};
-    this.load = _.throttle(this.loadData.bind(this), 250);
+    this.getTiles = _.throttle(this.getTiles.bind(this), 500);
   }
+
 
   getTileSize() {
     return CACHE_TILE_SIZE;
@@ -45,9 +50,8 @@ class Track {
       } else {
         tiles.push(this.cache[cacheKey]);  
       }
-      
     }
-    this.load(needToFetch, samplingRateForRequest);
+    this.loadData(needToFetch, samplingRateForRequest);
     return tiles;
   }
 
@@ -63,9 +67,6 @@ class Track {
           resolve(this.cache[cacheKey]);
         }));
       } else {
-        // TODO: this code really needs explicit tests... 
-        // probably some off-by-one errors in this 
-        // the tiles should all divide up evenly! re-write this!
         const start = Math.floor(Math.max(tile, this.startBp));
         const end = Math.ceil(Math.min(this.endBp, tile + basePairsPerTile));
 
@@ -74,7 +75,6 @@ class Track {
         const promise = this.api.getData(this.genomeId, this.trackId, start, end, Math.round(samplingRateForRequest));
 
         const finalPromise = promise.then(data => {
-          console.log('saved to cache: ', cacheKey, data.data);
           const rawData = data.data.values.slice(0, CACHE_TILE_SIZE);
           this.cache[cacheKey] = {
             startBp: data.data.startBp,

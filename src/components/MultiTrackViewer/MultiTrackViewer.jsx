@@ -286,7 +286,7 @@ class MultiTrackViewer extends React.Component {
   renderGL() {
     const numTracks = this.state.tracks.length;
     for (let i = 0; i < numTracks; i++) {
-      const textureArr = this.setupTextures(this.state.tracks[i], this.startBasePair(), this.endBasePair(), this.state.basePairsPerPixel)
+      const textureArr = this.setupTextures(this.state.tracks[i], this.startBasePair(), this.endBasePair(), this.state.basePairsPerPixel);
       const shader = this.program.use()
         .uniform('color', [i / numTracks, i / (numTracks * 2.0), 1.0])
         .uniform('windowSize', this.state.windowSize)
@@ -301,7 +301,6 @@ class MultiTrackViewer extends React.Component {
         shader.uniformi(params.tex[0], params.tex[1]);
         shader.uniform(params.range[0], params.range[1]);
       });
-      console.log(textureArr);
       shader.draw(this.igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
     }
     this.tick++;
