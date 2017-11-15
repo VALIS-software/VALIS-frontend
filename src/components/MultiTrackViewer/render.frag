@@ -69,7 +69,7 @@ void main() {
 			uvInTex = vec2((currBp - range7.x) / (range7.y-range7.x), 0.0);
 			finalColor = getTexValue(texture7, uvInTex);
 		} else {
-			finalColor = vec4(0.5, 0.2, 0.2, 1.0);
+			finalColor = vec4(0.2, 0.2, 0.2, 1.0);
 		}
 		gl_FragColor = finalColor;
 	}

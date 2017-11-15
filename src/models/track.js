@@ -27,6 +27,7 @@ class Track {
     this.cache = {}; // TODO: use a real cache here!
     this.inFlight = {};
     this.getTiles = _.throttle(this.getTiles.bind(this), 500);
+    this.color = [Math.random(), Math.random(), Math.random()];
   }
 
 
@@ -43,55 +44,50 @@ class Track {
     const tiles = [];
     for (let i = startCacheBp; i <= endBp; i+= basePairsPerTile) {
       const cacheKey = `${i}_${samplingRateForRequest}`;
-      if (this.cache[cacheKey] === undefined && !this.inFlight[cacheKey]) {
-        this.inFlight[cacheKey] = true;
-        this.loadData(i, samplingRateForRequest);
-        // find the next best cache value:
+      if ((this.cache[i] === undefined || this.cache[i][samplingRateForRequest] === undefined)) {
+        if (!this.inFlight[cacheKey]) {
+          this.loadData(i, samplingRateForRequest);
+          this.inFlight[cacheKey] = true;
+        } else {
+          tiles.push(undefined);
+        }
       } else {
-        tiles.push(this.cache[cacheKey]);  
+        tiles.push(this.cache[i][samplingRateForRequest]);  
       }
     }
     return tiles;
   }
 
   loadData(tile, samplingRateForRequest) {
-    const promises = [];
     const basePairsPerTile = CACHE_TILE_SIZE * samplingRateForRequest;
     
-    // TODO: you can downsample existing cached data but for now the samplingRateForRequest must match!
-    const cacheKey = `${tile}_${samplingRateForRequest}`;
-
     const start = Math.floor(Math.max(tile, this.startBp));
     const end = Math.ceil(Math.min(this.endBp, tile + basePairsPerTile));
 
     if (start > end) return;
 
     const promise = this.api.getData(this.genomeId, this.trackId, start, end, Math.round(samplingRateForRequest));
-
-    const finalPromise = promise.then(data => {
+    promise.then(data => {
       const rawData = data.data.values;
-      console.log('raw data...');
-      console.log('cacheKey', cacheKey);
-      console.log(data.data);
-      console.log(rawData[rawData.length - 1]);
-      console.log('---');
-      this.cache[cacheKey] = {
+      if (!this.cache[tile]) this.cache[tile] = {};
+      let cacheEntry = {
         startBp: data.data.startBp,
-        endBp: data.data.endBp,
+        endBp: data.data.startBp + basePairsPerTile,
         samplingRate: data.data.samplingRate,
       };
       // HACK (should not have to use RGBA textures)
-      this.cache[cacheKey].values = [];
-      console.log(rawData.length);
+      cacheEntry.values = [];
       for (let i = 0; i < CACHE_TILE_SIZE; i++) {
         const value = i < rawData.length ? rawData[i] : 0.0;
-        this.cache[cacheKey].values[i*4] = i < rawData.length ? rawData[i] : 0.1;  
-        this.cache[cacheKey].values[i*4 + 1] = value;
-        this.cache[cacheKey].values[i*4 + 2] = value;
-        this.cache[cacheKey].values[i*4 + 3] = i < rawData.length ? 1.0 : 1.0;
+        cacheEntry.values[i*4] = i < rawData.length ? rawData[i] : 0.0;  
+        cacheEntry.values[i*4 + 1] = value;
+        cacheEntry.values[i*4 + 2] = value;
+        cacheEntry.values[i*4 + 3] = i < rawData.length ? 1.0 : 0.5;
+        cacheEntry.values[i*4] *= this.color[0];
+        cacheEntry.values[i*4 + 1] *= this.color[1];
+        cacheEntry.values[i*4 + 2] *= this.color2;
       }
-      console.log(cacheKey, this.cache[cacheKey]);
-      return this.cache[cacheKey];
+      this.cache[tile][samplingRateForRequest] = cacheEntry;
     });
   }
 }

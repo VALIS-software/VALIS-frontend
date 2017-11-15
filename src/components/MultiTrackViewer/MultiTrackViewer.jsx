@@ -56,8 +56,8 @@ class MultiTrackViewer extends React.Component {
     this.api = new GenomeAPI('http://localhost:5000');
     // load test track:
     this.api.getTrack('genome1', 'genome1.1').then(this.addTrack.bind(this));
-    // this.api.getTrack('genome2', 'genome2.1').then(this.addTrack.bind(this));
-    // this.api.getTrack('genome3', 'genome3.1').then(this.addTrack.bind(this));
+    this.api.getTrack('genome2', 'genome2.1').then(this.addTrack.bind(this));
+    this.api.getTrack('genome3', 'genome3.1').then(this.addTrack.bind(this));
     // this.api.getTrack('genome1', 'genome1.2').then(this.addTrack.bind(this));
     // this.api.getTrack('genome2', 'genome2.2').then(this.addTrack.bind(this));
     // this.api.getTrack('genome3', 'genome3.2').then(this.addTrack.bind(this));
@@ -233,6 +233,9 @@ class MultiTrackViewer extends React.Component {
       this.textures.push(newTexture);
     }
 
+    this.blankTexture = this.igloo.texture(null, gl.RGBA, gl.CLAMP_TO_EDGE, gl.NEAREST, gl.FLOAT);
+    this.blankTexture.blank(1024, 1);
+
     domElem.addEventListener('wheel', this.handleMouse.bind(this));
     domElem.addEventListener('mousemove', this.handleMouseMove.bind(this));
     domElem.addEventListener('mousedown', this.handleMouseDown.bind(this));
@@ -274,8 +277,15 @@ class MultiTrackViewer extends React.Component {
             name: [`texture${i}`, i],
             range: [`range${i}`, [tile.startBp, tile.endBp]],
           });
-          i++;
+          
+        } else {
+          this.blankTexture.bind(i + 1);
+          uniforms.push({
+            name: [`texture${i}`, i],
+            range: [`range${i}`, [0, 0]],
+          });
         }
+        i++;
     });
     return uniforms;
   }
