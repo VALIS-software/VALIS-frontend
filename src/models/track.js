@@ -3,7 +3,7 @@ const _ = require('underscore');
 // WebGL requires min 4096 size for float textures. This could be smaller
 // but we'd need to copy tiles into a single large texture.
 const CACHE_TILE_SIZE = 1024;
-const CACHE_SAMPLING_STEP_SIZE = 256;
+const CACHE_SAMPLING_STEP_SIZE = 1024;
 
 function floorToMultiple(x, k) {
   return Math.round((x % k === 0) ? x :  x + k - x % k - k);
@@ -70,7 +70,7 @@ class Track {
     promise.then(data => {
       const rawData = data.data.values;
       if (!this.cache[tile]) this.cache[tile] = {};
-      let cacheEntry = {
+      const cacheEntry = {
         startBp: data.data.startBp,
         endBp: data.data.startBp + basePairsPerTile,
         samplingRate: data.data.samplingRate,

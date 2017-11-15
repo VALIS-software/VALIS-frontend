@@ -7,6 +7,11 @@ uniform vec3 color;
 uniform vec2 displayedRange;
 uniform vec2 totalRange;
 
+uniform vec2 windowSize;
+uniform vec2 selectionBoundsMin;
+uniform vec2 selectionBoundsMax;
+uniform int showSelection;
+
 uniform sampler2D texture0;
 uniform sampler2D texture1;
 uniform sampler2D texture2;
@@ -71,6 +76,18 @@ void main() {
 		} else {
 			finalColor = vec4(0.2, 0.2, 0.2, 1.0);
 		}
+
+		vec2 bMin = vec2(min(selectionBoundsMin.x, selectionBoundsMax.x), min(selectionBoundsMin.y, selectionBoundsMax.y));
+		vec2 bMax = vec2(max(selectionBoundsMin.x, selectionBoundsMax.x), max(selectionBoundsMin.y, selectionBoundsMax.y));
+
+
+
+		vec2 screenCoord =  gl_FragCoord.xy;
+		screenCoord.y = windowSize.y - screenCoord.y;
+		if (showSelection == 1 && screenCoord.x > bMin.x && screenCoord.x < bMax.x && screenCoord.y > bMin.y && screenCoord.y < bMax.y) {
+			finalColor.xyz *= vec3(1.5);
+		}
+
 		gl_FragColor = finalColor;
 	}
     

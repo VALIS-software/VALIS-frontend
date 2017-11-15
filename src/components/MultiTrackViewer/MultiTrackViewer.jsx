@@ -18,7 +18,7 @@ const SELECT_MODE_NONE = 'none';
 
 
 const GENOME_LENGTH = 3000000000;
-const MAX_TEXTURES = 8;
+const MAX_TEXTURES = 128;
 
 class MultiTrackViewer extends React.Component {
   constructor(props) {
@@ -41,6 +41,7 @@ class MultiTrackViewer extends React.Component {
       windowSize: [domElem.clientWidth, domElem.clientHeight],
       basePairsPerPixel: GENOME_LENGTH / domElem.clientWidth,
       selectMode: SELECT_MODE_NONE,
+      selectEnabled: false,
       trackHeight: 0.1,
       trackOffset: 0.0,
       startBasePair: 0,
@@ -48,8 +49,7 @@ class MultiTrackViewer extends React.Component {
       dragEnabled: false,
       tracks: [],
       lastDragCoord: null,
-      currentDataRange: null,
-      currentDataResolution: null,
+      startDragCoord: null,
     }); 
     this.numTilesLoading = 0;
 
@@ -57,10 +57,6 @@ class MultiTrackViewer extends React.Component {
     // load test track:
     this.api.getTrack('genome1', 'genome1.1').then(this.addTrack.bind(this));
     this.api.getTrack('genome2', 'genome2.1').then(this.addTrack.bind(this));
-    this.api.getTrack('genome3', 'genome3.1').then(this.addTrack.bind(this));
-    // this.api.getTrack('genome1', 'genome1.2').then(this.addTrack.bind(this));
-    // this.api.getTrack('genome2', 'genome2.2').then(this.addTrack.bind(this));
-    // this.api.getTrack('genome3', 'genome3.2').then(this.addTrack.bind(this));
   }
 
   addTrack(track) {
@@ -89,6 +85,10 @@ class MultiTrackViewer extends React.Component {
       classes.push('drag-active');
     }
 
+    if (this.state.selectEnabled) {
+      classes.push('select-active');
+    }
+
     return classes.join(' ');
   }
 
@@ -112,24 +112,28 @@ class MultiTrackViewer extends React.Component {
 
   handleMouseMove(e) {
     if (this.state.dragEnabled) {
-      const deltaX = e.clientX - this.state.lastDragCoord[0];
-      const deltaY = e.clientY - this.state.lastDragCoord[1];
-      if (Math.abs(deltaY) > 0) {
-        const delta = this.state.trackOffset + deltaY / this.state.windowSize[1];
-        this.setState({
-          trackOffset: delta,
-        });
-      }
+      if (this.state.selectEnabled) {
 
-      if (Math.abs(deltaX) > 0) {
-        this.setState({
-          startBasePair: this.state.startBasePair - deltaX * this.state.basePairsPerPixel,
-        });
+      } else {
+        const deltaX = e.offsetX - this.state.lastDragCoord[0];
+        const deltaY = e.offsetY - this.state.lastDragCoord[1];
+        if (Math.abs(deltaY) > 0) {
+          const delta = this.state.trackOffset + deltaY / this.state.windowSize[1];
+          this.setState({
+            trackOffset: delta,
+          });
+        }
+
+        if (Math.abs(deltaX) > 0) {
+          this.setState({
+            startBasePair: this.state.startBasePair - deltaX * this.state.basePairsPerPixel,
+          });
+        }  
       }
     }
 
     this.setState({
-      lastDragCoord: [e.clientX, e.clientY],
+      lastDragCoord: [e.offsetX, e.offsetY],
     });
   }
 
@@ -138,7 +142,7 @@ class MultiTrackViewer extends React.Component {
       return;
     } else if (this.state.zoomEnabled) {
       if (Math.abs(e.deltaY) > 0) {
-          const lastTrackOffset = this.trackOffsetForScreenY(e.clientY);
+          const lastTrackOffset = this.trackOffsetForScreenY(e.offsetY);
           
           const trackHeight = this.state.trackHeight / (1.0 - (e.deltaY / this.state.windowSize[1]));  
           
@@ -147,7 +151,7 @@ class MultiTrackViewer extends React.Component {
           });
           // compute the offset so that the y position remains constant after zoom:
           const totalH = (this.state.tracks.length * this.state.trackHeight) * this.state.windowSize[1];
-          const offset = (e.clientY - (lastTrackOffset * totalH)) / this.state.windowSize[1];
+          const offset = (e.offsetY - (lastTrackOffset * totalH)) / this.state.windowSize[1];
           this.setState({
             trackOffset: offset,
           });
@@ -165,7 +169,7 @@ class MultiTrackViewer extends React.Component {
           panning: false,
         });
         if (Math.abs(e.deltaY) > 0) {
-          const lastBp = this.basePairForScreenX(e.clientX);
+          const lastBp = this.basePairForScreenX(e.offsetX);
           
           let newBpPerPixel = this.state.basePairsPerPixel / (1.0 - (e.deltaY / 1000.0));  
           newBpPerPixel = Math.min(GENOME_LENGTH / (this.state.windowSize[0]), newBpPerPixel);
@@ -173,7 +177,7 @@ class MultiTrackViewer extends React.Component {
           // compute the new startBasePair so that the cursor remains
           // centered on the same base pair after scaling:
           const rawPixelsAfter = lastBp / newBpPerPixel;
-          const offset = (rawPixelsAfter - e.clientX) * newBpPerPixel;
+          const offset = (rawPixelsAfter - e.offsetX) * newBpPerPixel;
           this.setState({
             startBasePair:  offset,
             basePairsPerPixel: newBpPerPixel,
@@ -186,7 +190,8 @@ class MultiTrackViewer extends React.Component {
   handleMouseDown(e) {
     this.setState({
       dragEnabled: true,
-      lastDragCoord: [e.clientX, e.clientY],
+      lastDragCoord: [e.offsetX, e.offsetY],
+      startDragCoord: [e.offsetX, e.offsetY],
     });
   }
 
@@ -194,11 +199,16 @@ class MultiTrackViewer extends React.Component {
     this.setState({
       dragEnabled: false,
       lastDragCoord: null,
+      startDragCoord: null,
     });
   }
 
   handleKeydown(e) {
-    if (e.key === 'Meta') {
+    if (e.key === 'Alt') {
+      this.setState({
+        selectEnabled: true,
+      });
+    } else if (e.key === 'Meta') {
       this.setState({
         zoomEnabled: true,
       });
@@ -206,7 +216,11 @@ class MultiTrackViewer extends React.Component {
   }
 
   handleKeyup(e) {
-    if (e.key === 'Meta') {
+    if (e.key === 'Alt') {
+      this.setState({
+        selectEnabled: false,
+      });
+    } else if (e.key === 'Meta') {
       this.setState({
         zoomEnabled: false,
       });
@@ -303,6 +317,12 @@ class MultiTrackViewer extends React.Component {
         .uniform('offset', [0, i * this.state.trackHeight + this.state.trackOffset])
         .attrib('points', this.quad, 2);
 
+      if (this.state.selectEnabled) {
+        const show = this.state.startDragCoord && this.state.lastDragCoord ? 1 : 0;
+        shader.uniformi('showSelection', show);
+        shader.uniform('selectionBoundsMin', this.state.startDragCoord);
+        shader.uniform('selectionBoundsMax', this.state.lastDragCoord);
+      }
       // TODO: cleanup?
       textureArr.forEach(params => {
         shader.uniformi(params.name[0], params.name[1]);
