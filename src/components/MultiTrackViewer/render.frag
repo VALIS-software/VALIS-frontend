@@ -26,11 +26,12 @@ uniform vec2 range6;
 uniform vec2 range7;
 
 bool inRange(vec2 range, float bp) {
+	if (range.x == range.y) return false;
 	return bp >= range.x && bp <= range.y;
 }
 
 vec4 getTexValue(sampler2D sampler, vec2 uv) {
-	return vec4(vec3(texture2D(sampler, uv).r), 1.0);
+	return texture2D(sampler, uv);
 }
 
 void main() {
@@ -68,7 +69,7 @@ void main() {
 			uvInTex = vec2((currBp - range7.x) / (range7.y-range7.x), 0.0);
 			finalColor = getTexValue(texture7, uvInTex);
 		} else {
-			finalColor = vec4(0.2, 0.2, 0.2, 1.0);
+			finalColor = vec4(0.5, 0.2, 0.2, 1.0);
 		}
 		gl_FragColor = finalColor;
 	}

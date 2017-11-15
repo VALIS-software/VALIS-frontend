@@ -10,14 +10,14 @@
 		"genome1.2": {
 			"genomeId": "genome1",
 			"trackId": "genome1.2",
-			"type" : "rnaseq",
+			"type" : "sequence",
 			"startBp": 0,
 			"endBp": 3000000000
 		},
 		"genome1.3": {
 			"genomeId": "genome1",
 			"trackId": "genome1.3",
-			"type" : "methylation",
+			"type" : "sequence",
 			"startBp": 500000,
 			"endBp": 3000000000
 		}
@@ -33,14 +33,14 @@
 		"genome2.2": {
 			"genomeId": "genome2",
 			"trackId" : "genome2.2",
-			"type" : "rnaseq",
+			"type" : "sequence",
 			"startBp": 20000,
 			"endBp": 5000000
 		},
 		"genome2.3": {
 			"genomeId": "genome2",
 			"trackId" : "genome2.3",
-			"type" : "methylation",
+			"type" : "sequence",
 			"startBp": 500000,
 			"endBp": 3000000000
 		}
@@ -56,7 +56,7 @@
 		"genome3.2": {
 			"genomeId": "genome3",
 			"trackId": "genome3.2",
-			"type" : "rnaseq",
+			"type" : "sequence",
 			"startBp": 20000,
 			"endBp": 5000000
 		}

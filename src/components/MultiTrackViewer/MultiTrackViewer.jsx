@@ -58,6 +58,9 @@ class MultiTrackViewer extends React.Component {
     this.api.getTrack('genome1', 'genome1.1').then(this.addTrack.bind(this));
     // this.api.getTrack('genome2', 'genome2.1').then(this.addTrack.bind(this));
     // this.api.getTrack('genome3', 'genome3.1').then(this.addTrack.bind(this));
+    // this.api.getTrack('genome1', 'genome1.2').then(this.addTrack.bind(this));
+    // this.api.getTrack('genome2', 'genome2.2').then(this.addTrack.bind(this));
+    // this.api.getTrack('genome3', 'genome3.2').then(this.addTrack.bind(this));
   }
 
   addTrack(track) {
@@ -222,6 +225,14 @@ class MultiTrackViewer extends React.Component {
     // setup rendering surface:
     this.quad = igloo.array(Igloo.QUAD2);
 
+
+    const gl = this.igloo.gl;
+    for (let i = 0; i < MAX_TEXTURES; i++) {
+      // allocate a new texture
+      const newTexture = this.igloo.texture(null, gl.RGBA, gl.CLAMP_TO_EDGE, gl.NEAREST, gl.FLOAT);
+      this.textures.push(newTexture);
+    }
+
     domElem.addEventListener('wheel', this.handleMouse.bind(this));
     domElem.addEventListener('mousemove', this.handleMouseMove.bind(this));
     domElem.addEventListener('mousedown', this.handleMouseDown.bind(this));
@@ -246,39 +257,25 @@ class MultiTrackViewer extends React.Component {
     return this.igloo.gl;
   }
 
-  updateTextureData(track, data) {
-    const gl = this.glContext();    
-    // allocate a new texture
-    const newTexture = this.igloo.texture(null, gl.RGBA, gl.CLAMP_TO_EDGE, gl.NEAREST, gl.FLOAT);
-    newTexture.set(data.values, 1024, 1);
-    this.textures.push({
-      track: track,
-      samplingRate: data.samplingRate,
-      startBp: data.startBp,
-      endBp: data.endBp,
-      texture: newTexture,
-    });
-  }
 
   setupTextures(track, startBp, endBp, samplingRate) {
     let i = 0;
     const uniforms = [];
-    this.textures = [];
+
     const tiles = track.getTiles(startBp, endBp, samplingRate);
+
+    const gl = this.glContext();
+
     tiles.forEach(tile => {
-      if (tile) this.updateTextureData(track, tile);
-    });
-    this.textures.forEach(texture => {
-      if (texture.track === track && texture.samplingRate <= samplingRate) {
-        if (startBp <= texture.endBp && endBp >= texture.startBp) {
-          texture.texture.bind(i);
+        if (tile) {
+          this.textures[i].set(tile.values, 1024, 1);
+          this.textures[i].bind(i + 1);
           uniforms.push({
-            tex: [`texture${i}`, i],
-            range: [`range${i}`, [texture.startBp, texture.endBp]],
+            name: [`texture${i}`, i],
+            range: [`range${i}`, [tile.startBp, tile.endBp]],
           });
           i++;
         }
-      }
     });
     return uniforms;
   }
@@ -298,7 +295,7 @@ class MultiTrackViewer extends React.Component {
 
       // TODO: cleanup?
       textureArr.forEach(params => {
-        shader.uniformi(params.tex[0], params.tex[1]);
+        shader.uniformi(params.name[0], params.name[1]);
         shader.uniform(params.range[0], params.range[1]);
       });
       shader.draw(this.igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
