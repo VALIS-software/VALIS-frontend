@@ -62,21 +62,15 @@ def get_data(genome_id, track_id, start_bp, end_bp):
 		if  track_id in MOCK_DATA[genome_id]:
 			track = MOCK_DATA[genome_id][track_id]
 
-			if start_bp < track["startBp"] or start_bp > track["endBp"]:
-				abort(500, "Request out of bounds")
-
-			if end_bp < track["startBp"] or end_bp > track["endBp"]:
-				abort(500, "Request out of bounds")
-
-			if start_bp > end_bp:
-				abort(500, "Start base pair must be less than end base pair")
-
-
+			start_bp = max([start_bp, track["startBp"]])
+			end_bp = min([end_bp, track["endBp"]])
 			ret = []
 			if track["type"] == "sequence":
-				for i in xrange(0, int((end_bp - start_bp) / float(sampling_rate))):
-					idx = i + start_bp
-					ret.append(math.sin(idx)*0.5 + 0.5)
+				num_samples = int((end_bp - start_bp) / float(sampling_rate))
+				for i in xrange(0, num_samples):
+					idx = i * sampling_rate + start_bp
+					random.seed(str(idx)+genome_id+track_id)
+					ret.append(float(idx)/(track["endBp"] - track["startBp"])*0.5 + random.random()*0.5 )
 			else:
 				abort(500, "Unknown track type : %s", track["type"])
 

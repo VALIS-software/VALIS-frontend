@@ -56,19 +56,8 @@ class MultiTrackViewer extends React.Component {
     this.api = new GenomeAPI('http://localhost:5000');
     // load test track:
     this.api.getTrack('genome1', 'genome1.1').then(this.addTrack.bind(this));
-    this.api.getTrack('genome2', 'genome2.1').then(this.addTrack.bind(this));
-  }
-
-  addTrack(track) {
-    const newTrackList = [];
-    this.state.tracks.forEach(oldTrack => {
-      newTrackList.push(oldTrack);
-    });
-
-    newTrackList.push(track);
-    this.setState({
-      tracks: newTrackList,
-    });
+    this.api.getTrack('genome1', 'genome1.2').then(this.addTrack.bind(this));
+    this.api.getTrack('genome1', 'genome1.3').then(this.addTrack.bind(this));
   }
 
   getClass() {
@@ -92,6 +81,18 @@ class MultiTrackViewer extends React.Component {
     return classes.join(' ');
   }
 
+  addTrack(track) {
+    const newTrackList = [];
+    this.state.tracks.forEach(oldTrack => {
+      newTrackList.push(oldTrack);
+    });
+
+    newTrackList.push(track);
+    this.setState({
+      tracks: newTrackList,
+    });
+  }
+
   startBasePair() {
     return this.state.startBasePair;
   }
@@ -112,9 +113,7 @@ class MultiTrackViewer extends React.Component {
 
   handleMouseMove(e) {
     if (this.state.dragEnabled) {
-      if (this.state.selectEnabled) {
-
-      } else {
+      if (!this.state.selectEnabled) {
         const deltaX = e.offsetX - this.state.lastDragCoord[0];
         const deltaY = e.offsetY - this.state.lastDragCoord[1];
         if (Math.abs(deltaY) > 0) {
@@ -266,69 +265,44 @@ class MultiTrackViewer extends React.Component {
     renderFrame();
   }
 
-  handleInputChange(e) {
-    this.setState({ input: e.target.value });
-  }
 
   glContext() {
     return this.igloo.gl;
   }
 
-
-  setupTextures(track, startBp, endBp, samplingRate) {
-    let i = 0;
-    const uniforms = [];
-
-    const tiles = track.getTiles(startBp, endBp, samplingRate);
-
-    const gl = this.glContext();
-
-    tiles.forEach(tile => {
-        if (tile) {
-          this.textures[i].set(tile.values, 1024, 1);
-          this.textures[i].bind(i + 1);
-          uniforms.push({
-            name: [`texture${i}`, i],
-            range: [`range${i}`, [tile.startBp, tile.endBp]],
-          });
-          
-        } else {
-          this.blankTexture.bind(i + 1);
-          uniforms.push({
-            name: [`texture${i}`, i],
-            range: [`range${i}`, [0, 0]],
-          });
-        }
-        i++;
-    });
-    return uniforms;
-  }
-
   renderGL() {
+    const gl = this.glContext();
+    gl.clear(gl.COLOR_BUFFER_BIT);
     const numTracks = this.state.tracks.length;
     for (let i = 0; i < numTracks; i++) {
-      const textureArr = this.setupTextures(this.state.tracks[i], this.startBasePair(), this.endBasePair(), this.state.basePairsPerPixel);
-      const shader = this.program.use()
-        .uniform('color', [i / numTracks, i / (numTracks * 2.0), 1.0])
-        .uniform('windowSize', this.state.windowSize)
-        .uniform('trackHeight', this.state.trackHeight)
-        .uniform('displayedRange', [this.startBasePair(), this.endBasePair()])
-        .uniform('totalRange', [0, GENOME_LENGTH])
-        .uniform('offset', [0, i * this.state.trackHeight + this.state.trackOffset])
-        .attrib('points', this.quad, 2);
+      const track = this.state.tracks[i];
+      const tiles = track.getTiles(this.startBasePair(), this.endBasePair(), this.state.basePairsPerPixel);
+      let j = 0;
+      tiles.forEach(tile => {
+          this.textures[j].bind(1 + j);
+          this.textures[j].set(tile.tile.data, 1024, 1);
+          const shader = this.program.use();
+          shader.uniformi('data', 1 + j);
+          shader.uniform('tile', 0.5 + 0.5 * j / tiles.length);
+          shader.uniform('currentTileDisplayRange', tile.range);
+          shader.uniform('totalTileRange', tile.tile.tileRange);
+          shader.uniform('color', [i / numTracks, i / (numTracks * 2.0), 1.0]);
+          shader.uniform('windowSize', this.state.windowSize);
+          shader.uniform('trackHeight', this.state.trackHeight);
+          shader.uniform('displayedRange', [this.startBasePair(), this.endBasePair()]);
+          shader.uniform('totalRange', [0, GENOME_LENGTH]);
+          shader.uniform('offset', [0, i * this.state.trackHeight + this.state.trackOffset]);
+          shader.attrib('points', this.quad, 2);
 
-      if (this.state.selectEnabled) {
-        const show = this.state.startDragCoord && this.state.lastDragCoord ? 1 : 0;
-        shader.uniformi('showSelection', show);
-        shader.uniform('selectionBoundsMin', this.state.startDragCoord);
-        shader.uniform('selectionBoundsMax', this.state.lastDragCoord);
-      }
-      // TODO: cleanup?
-      textureArr.forEach(params => {
-        shader.uniformi(params.name[0], params.name[1]);
-        shader.uniform(params.range[0], params.range[1]);
+          if (this.state.selectEnabled) {
+            const show = this.state.startDragCoord && this.state.lastDragCoord ? 1 : 0;
+            shader.uniformi('showSelection', show);
+            shader.uniform('selectionBoundsMin', this.state.startDragCoord);
+            shader.uniform('selectionBoundsMax', this.state.lastDragCoord);
+          }
+          shader.draw(this.igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
+          j += 1;
       });
-      shader.draw(this.igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
     }
     this.tick++;
   }

@@ -1,94 +1,66 @@
 precision mediump float;
 
 varying vec2 coord;
-// uniform sampler2D image;
+
 uniform vec3 color;
 
-uniform vec2 displayedRange;
-uniform vec2 totalRange;
+uniform vec2 displayedRange; // range of genome currently displayed
+uniform vec2 totalRange; // total range of the genome
+uniform vec2 currentTileDisplayRange; // range of the tile that is displayed
+uniform vec2 totalTileRange; // total range of the current tile
 
 uniform vec2 windowSize;
 uniform vec2 selectionBoundsMin;
 uniform vec2 selectionBoundsMax;
 uniform int showSelection;
 
-uniform sampler2D texture0;
-uniform sampler2D texture1;
-uniform sampler2D texture2;
-uniform sampler2D texture3;
-uniform sampler2D texture4;
-uniform sampler2D texture5;
-uniform sampler2D texture6;
-uniform sampler2D texture7;
+uniform sampler2D data;
 
-uniform vec2 range0;
-uniform vec2 range1;
-uniform vec2 range2;
-uniform vec2 range3;
-uniform vec2 range4;
-uniform vec2 range5;
-uniform vec2 range6;
-uniform vec2 range7;
+uniform float tile;
 
-bool inRange(vec2 range, float bp) {
-	if (range.x == range.y) return false;
-	return bp >= range.x && bp <= range.y;
-}
+#define TICK_WIDTH 2500000.0
 
-vec4 getTexValue(sampler2D sampler, vec2 uv) {
-	return texture2D(sampler, uv);
-}
+
+
+
 
 void main() {
-	float currBp = mix(displayedRange.x, displayedRange.y, coord.x);
-	float currUv = currBp / (totalRange.y - totalRange.x);
-	if (currUv < 0.0 || currUv >= 1.0 ) {
-		gl_FragColor = vec4(0.0);
-	} else {
-		// Find the correct texture for the current base pair:
-		vec2 uvInTex;
-		vec4 finalColor;
-		vec4 colorWithAlpha = vec4(1.0/0.05 * mod(currUv, 0.05) *color, 1.0);
-		if (inRange(range0, currBp)) {
-			uvInTex = vec2((currBp - range0.x) / (range0.y-range0.x), 0.0);
-			finalColor = getTexValue(texture0, uvInTex);
-		} else if (inRange(range1, currBp)) {
-			uvInTex = vec2((currBp - range1.x) / (range1.y-range1.x), 0.0);
-			finalColor = getTexValue(texture1, uvInTex);
-		} else if (inRange(range2, currBp)) {
-			uvInTex = vec2((currBp - range2.x) / (range2.y-range2.x), 0.0);
-			finalColor = getTexValue(texture2, uvInTex);
-		} else if (inRange(range3, currBp)) {
-			uvInTex = vec2((currBp - range3.x) / (range3.y-range3.x), 0.0);
-			finalColor = getTexValue(texture3, uvInTex);
-		} else if (inRange(range4, currBp)) {
-			uvInTex = vec2((currBp - range4.x) / (range4.y-range4.x), 0.0);
-			finalColor = getTexValue(texture4, uvInTex);
-		} else if (inRange(range5, currBp)) {
-			uvInTex = vec2((currBp - range5.x) / (range5.y-range5.x), 0.0);
-			finalColor = getTexValue(texture5, uvInTex);
-		} else if (inRange(range6, currBp)) {
-			uvInTex = vec2((currBp - range6.x) / (range6.y-range6.x), 0.0);
-			finalColor = getTexValue(texture6, uvInTex);
-		} else if (inRange(range7, currBp)) {
-			uvInTex = vec2((currBp - range7.x) / (range7.y-range7.x), 0.0);
-			finalColor = getTexValue(texture7, uvInTex);
-		} else {
-			finalColor = vec4(0.2, 0.2, 0.2, 1.0);
-		}
+	float currBp = mix(currentTileDisplayRange.x, currentTileDisplayRange.y, coord.x);
+	float locInTile = (currBp - totalTileRange.x) / (totalTileRange.y - totalTileRange.x);
+	vec3 dataValue = vec3(texture2D(data, vec2(locInTile, 0.0)).r);
+	
+	vec2 bMin = vec2(min(selectionBoundsMin.x, selectionBoundsMax.x), min(selectionBoundsMin.y, selectionBoundsMax.y));
+	vec2 bMax = vec2(max(selectionBoundsMin.x, selectionBoundsMax.x), max(selectionBoundsMin.y, selectionBoundsMax.y));
 
-		vec2 bMin = vec2(min(selectionBoundsMin.x, selectionBoundsMax.x), min(selectionBoundsMin.y, selectionBoundsMax.y));
-		vec2 bMax = vec2(max(selectionBoundsMin.x, selectionBoundsMax.x), max(selectionBoundsMin.y, selectionBoundsMax.y));
+	vec2 screenCoord =  gl_FragCoord.xy;
+	screenCoord.y = windowSize.y - screenCoord.y;
 
-
-
-		vec2 screenCoord =  gl_FragCoord.xy;
-		screenCoord.y = windowSize.y - screenCoord.y;
-		if (showSelection == 1 && screenCoord.x > bMin.x && screenCoord.x < bMax.x && screenCoord.y > bMin.y && screenCoord.y < bMax.y) {
-			finalColor.xyz *= vec3(1.5);
-		}
-
-		gl_FragColor = finalColor;
+	float selectionHighlight = 1.0;
+	if (showSelection == 1 && screenCoord.x > bMin.x && screenCoord.x < bMax.x && screenCoord.y > bMin.y && screenCoord.y < bMax.y) {
+		selectionHighlight = 1.5;
 	}
-    
+
+	// add highlights
+
+	vec3 highlights = vec3(0.0);
+	if (mod(currBp, 25000000.0) < TICK_WIDTH) {
+		highlights = vec3(0.5);
+	}
+
+	if (abs(currBp - totalRange.x) < 2.0*TICK_WIDTH || abs(currBp - totalRange.y) < 2.0*TICK_WIDTH) {
+		highlights = vec3(1.0, 0.0, 0.0);
+	}
+
+
+	if (abs(currBp - currentTileDisplayRange.x) < 2.0*TICK_WIDTH || abs(currBp - currentTileDisplayRange.y) < 2.0*TICK_WIDTH) {
+		highlights = vec3(1.0, 1.0, 0.0);
+	}
+
+
+	if (coord.y < 0.05) {
+		gl_FragColor = vec4(highlights, 1.0);
+	} else {
+		gl_FragColor = vec4(dataValue, 1.0);
+	}
+	
 }
