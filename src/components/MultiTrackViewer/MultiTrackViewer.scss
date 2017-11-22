@@ -28,4 +28,12 @@
     .loading-active {
         cursor: crosshair;
     }
+
+    .annotation {
+        background-color: red;
+        width: 100px;
+        height:20px;
+        position: absolute;
+        opacity: 0.5;
+    }
 }

@@ -25,6 +25,7 @@ class MultiTrackViewer extends React.Component {
     super(props);
     this.handleLoad = this.handleLoad.bind(this);
     this.textures = [];
+    this.overlayElem = null;
   }
 
   componentDidMount() {
@@ -36,6 +37,8 @@ class MultiTrackViewer extends React.Component {
     // need to reset explicit canvas dims to prevent canvas stretch scaling
     domElem.width = domElem.clientWidth;
     domElem.height = domElem.clientHeight;
+
+    this.overlayElem = document.querySelector('#webgl-overlay');
 
     this.setState({
       windowSize: [domElem.clientWidth, domElem.clientHeight],
@@ -109,6 +112,11 @@ class MultiTrackViewer extends React.Component {
   trackOffsetForScreenY(y) { 
     const totalH = (this.state.tracks.length * this.state.trackHeight) * this.state.windowSize[1];
     return (y - (this.state.trackOffset * this.state.windowSize[1])) / totalH;
+  }
+
+  pixelForBasePair(bp) {
+    const u = (bp - this.startBasePair()) / (this.endBasePair() - this.startBasePair());
+    return u * this.state.windowSize[0];
   }
 
   handleMouseMove(e) {
@@ -270,39 +278,67 @@ class MultiTrackViewer extends React.Component {
     return this.igloo.gl;
   }
 
+  renderTrack(track, index, numTracks) {
+    const tiles = track.getTiles(this.startBasePair(), this.endBasePair(), this.state.basePairsPerPixel);
+    let j = 0;
+    tiles.forEach(tile => {
+        this.textures[j].bind(1 + j);
+        this.textures[j].set(tile.tile.data, 1024, 1);
+        const shader = this.program.use();
+        shader.uniformi('data', 1 + j);
+        shader.uniform('tile', 0.5 + 0.5 * j / tiles.length);
+        shader.uniform('currentTileDisplayRange', tile.range);
+        shader.uniform('totalTileRange', tile.tile.tileRange);
+        shader.uniform('color', [index / numTracks, index / (numTracks * 2.0), 1.0]);
+        shader.uniform('windowSize', this.state.windowSize);
+        shader.uniform('trackHeight', this.state.trackHeight);
+        shader.uniform('displayedRange', [this.startBasePair(), this.endBasePair()]);
+        shader.uniform('totalRange', [0, GENOME_LENGTH]);
+        shader.uniform('offset', [0, index * this.state.trackHeight + this.state.trackOffset]);
+        shader.attrib('points', this.quad, 2);
+
+        if (this.state.selectEnabled) {
+          const show = this.state.startDragCoord && this.state.lastDragCoord ? 1 : 0;
+          shader.uniformi('showSelection', show);
+          shader.uniform('selectionBoundsMin', this.state.startDragCoord);
+          shader.uniform('selectionBoundsMax', this.state.lastDragCoord);
+        }
+        shader.draw(this.igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
+        j += 1;
+    });
+  }
+
+  getAnnotation(annotation) {
+    return document.querySelector('#annotation' + annotation.id);
+  }
+
+  renderAnnotations(track, index, numTracks) {
+    const annotations = track.getAnnotations(this.startBasePair(), this.endBasePair(), this.state.basePairsPerPixel);
+    annotations.forEach(annotation => {
+      let annotationElem = this.getAnnotation(annotation);
+      if (annotationElem === null) {
+        const node = document.createElement("div");
+        node.setAttribute('id', 'annotation' + annotation.id);
+        node.setAttribute('class', 'annotation');
+        this.overlayElem.appendChild(node);
+        annotationElem = node;
+      }
+      // update the overlay elem:
+      const start = this.pixelForBasePair(annotation.startBp);
+      const end = this.pixelForBasePair(annotation.endBp);
+      annotationElem.style.left = start + "px";
+      annotationElem.style.width = (end-start) + "px";
+    });
+  }
+
   renderGL() {
     const gl = this.glContext();
     gl.clear(gl.COLOR_BUFFER_BIT);
     const numTracks = this.state.tracks.length;
     for (let i = 0; i < numTracks; i++) {
       const track = this.state.tracks[i];
-      const tiles = track.getTiles(this.startBasePair(), this.endBasePair(), this.state.basePairsPerPixel);
-      let j = 0;
-      tiles.forEach(tile => {
-          this.textures[j].bind(1 + j);
-          this.textures[j].set(tile.tile.data, 1024, 1);
-          const shader = this.program.use();
-          shader.uniformi('data', 1 + j);
-          shader.uniform('tile', 0.5 + 0.5 * j / tiles.length);
-          shader.uniform('currentTileDisplayRange', tile.range);
-          shader.uniform('totalTileRange', tile.tile.tileRange);
-          shader.uniform('color', [i / numTracks, i / (numTracks * 2.0), 1.0]);
-          shader.uniform('windowSize', this.state.windowSize);
-          shader.uniform('trackHeight', this.state.trackHeight);
-          shader.uniform('displayedRange', [this.startBasePair(), this.endBasePair()]);
-          shader.uniform('totalRange', [0, GENOME_LENGTH]);
-          shader.uniform('offset', [0, i * this.state.trackHeight + this.state.trackOffset]);
-          shader.attrib('points', this.quad, 2);
-
-          if (this.state.selectEnabled) {
-            const show = this.state.startDragCoord && this.state.lastDragCoord ? 1 : 0;
-            shader.uniformi('showSelection', show);
-            shader.uniform('selectionBoundsMin', this.state.startDragCoord);
-            shader.uniform('selectionBoundsMax', this.state.lastDragCoord);
-          }
-          shader.draw(this.igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
-          j += 1;
-      });
+      this.renderTrack(track, i, numTracks);
+      this.renderAnnotations(track, i, numTracks);
     }
     this.tick++;
   }
@@ -311,6 +347,7 @@ class MultiTrackViewer extends React.Component {
     return (
       <div className="content">
         <canvas id="webgl-canvas" className={this.getClass()} />
+        <div id="webgl-overlay" />
       </div>
     );
   }

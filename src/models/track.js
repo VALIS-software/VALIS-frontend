@@ -130,6 +130,7 @@ class Track {
     this.cache = new SimpleTileCache();
     this.inFlight = {};
     this.loadData = _.throttle(this.loadData.bind(this), REQUEST_THROTTLE_MS);
+    //this.loadAnnotations = _.throttle(this.loadAnnotations.bind(this), REQUEST_THROTTLE_MS);
     this.color = [Math.random(), Math.random(), Math.random()];
   }
 
@@ -172,6 +173,19 @@ class Track {
       }
     }
     return tiles;
+  }
+
+  getAnnotations(startBp, endBp, samplingRate) {
+    return [{
+      id: '1',
+      startBp: 10000,
+      endBp: 1000000000
+    },
+    {
+      id: '2',
+      startBp: 500000,
+      endBp: 100000000
+    }];
   }
 
   loadData(start, end, samplingRateForRequest) {
