@@ -12,6 +12,14 @@
         position: absolute;
         width: 100%;
         height: 100%;
+
+        // disable select:
+        -webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none; /* Safari */
+        -khtml-user-select: none; /* Konqueror HTML */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
     }
     .drag-active {
         cursor: -webkit-grabbing; cursor:-moz-grabbing;
@@ -27,13 +35,5 @@
 
     .loading-active {
         cursor: crosshair;
-    }
-
-    .annotation {
-        background-color: red;
-        width: 100px;
-        height:20px;
-        position: absolute;
-        opacity: 0.5;
     }
 }

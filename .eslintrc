@@ -18,6 +18,7 @@
     "no-underscore-dangle": "off",
     "arrow-body-style": "off",
     "no-param-reassign": "off",
+    "prefer-template": "off",
   },
   "env": {
     "browser": true

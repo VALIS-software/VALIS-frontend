@@ -1,10 +1,10 @@
 // Dependencies
 import React from 'react';
+import { Igloo } from '../../../lib/igloojs/igloo.js';
 
 import GenomeAPI from '../../models/api.js';
 import Track from '../../models/track.js';
-
-import { Igloo } from '../../../lib/igloojs/igloo.js';
+import Annotation from '../Annotation/Annotation.jsx';
 
 // Styles
 import './MultiTrackViewer.scss';
@@ -125,7 +125,7 @@ class MultiTrackViewer extends React.Component {
         const deltaX = e.offsetX - this.state.lastDragCoord[0];
         const deltaY = e.offsetY - this.state.lastDragCoord[1];
         if (Math.abs(deltaY) > 0) {
-          const delta = this.state.trackOffset + deltaY / this.state.windowSize[1];
+          const delta = Math.min(0.0, this.state.trackOffset + deltaY / this.state.windowSize[1]);
           this.setState({
             trackOffset: delta,
           });
@@ -158,7 +158,7 @@ class MultiTrackViewer extends React.Component {
           });
           // compute the offset so that the y position remains constant after zoom:
           const totalH = (this.state.tracks.length * this.state.trackHeight) * this.state.windowSize[1];
-          const offset = (e.offsetY - (lastTrackOffset * totalH)) / this.state.windowSize[1];
+          const offset = Math.min(0.0, (e.offsetY - (lastTrackOffset * totalH)) / this.state.windowSize[1]);
           this.setState({
             trackOffset: offset,
           });
@@ -308,26 +308,15 @@ class MultiTrackViewer extends React.Component {
     });
   }
 
-  getAnnotation(annotation) {
-    return document.querySelector('#annotation' + annotation.id);
-  }
 
   renderAnnotations(track, index, numTracks) {
     const annotations = track.getAnnotations(this.startBasePair(), this.endBasePair(), this.state.basePairsPerPixel);
-    annotations.forEach(annotation => {
-      let annotationElem = this.getAnnotation(annotation);
-      if (annotationElem === null) {
-        const node = document.createElement("div");
-        node.setAttribute('id', 'annotation' + annotation.id);
-        node.setAttribute('class', 'annotation');
-        this.overlayElem.appendChild(node);
-        annotationElem = node;
-      }
+    return annotations.map(annotation => {
       // update the overlay elem:
       const start = this.pixelForBasePair(annotation.startBp);
-      const end = this.pixelForBasePair(annotation.endBp);
-      annotationElem.style.left = start + "px";
-      annotationElem.style.width = (end-start) + "px";
+      const end = Math.min(this.state.windowSize[0], this.pixelForBasePair(annotation.endBp));
+      const top = (index * this.state.trackHeight + this.state.trackOffset) * this.state.windowSize[1];
+      return (<Annotation key={index + annotation.id} left={start} width={end-start} top={top} annotation={annotation} />);
     });
   }
 
@@ -338,16 +327,26 @@ class MultiTrackViewer extends React.Component {
     for (let i = 0; i < numTracks; i++) {
       const track = this.state.tracks[i];
       this.renderTrack(track, i, numTracks);
-      this.renderAnnotations(track, i, numTracks);
     }
     this.tick++;
   }
 
   render() {
+    let annotations = [];
+    if (this.state) {
+      const numTracks = this.state.tracks.length;
+      for (let i = 0; i < numTracks; i++) {
+        const track = this.state.tracks[i];
+        annotations = annotations.concat(this.renderAnnotations(track, i, numTracks));
+      }
+    }
+
     return (
       <div className="content">
         <canvas id="webgl-canvas" className={this.getClass()} />
-        <div id="webgl-overlay" />
+        <div id="webgl-overlay">
+          {annotations}
+        </div>
       </div>
     );
   }
