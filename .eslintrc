@@ -19,6 +19,7 @@
     "arrow-body-style": "off",
     "no-param-reassign": "off",
     "prefer-template": "off",
+    "react/jsx-boolean-value": "off",
   },
   "env": {
     "browser": true

@@ -1,5 +1,7 @@
-header {
-	width: 100%;
-	height: 120px;
-	background-color: gray;
+.header {
+	z-index:999;
+	.search-box {
+		width: 512px;
+		padding-left: 32px;
+	}
 }

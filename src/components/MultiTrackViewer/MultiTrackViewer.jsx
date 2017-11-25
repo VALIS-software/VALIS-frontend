@@ -308,7 +308,6 @@ class MultiTrackViewer extends React.Component {
     });
   }
 
-
   renderAnnotations(track, index, numTracks) {
     const annotations = track.getAnnotations(this.startBasePair(), this.endBasePair(), this.state.basePairsPerPixel);
     return annotations.map(annotation => {

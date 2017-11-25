@@ -21,9 +21,6 @@ uniform float tile;
 #define TICK_WIDTH 2500000.0
 
 
-
-
-
 void main() {
 	float currBp = mix(currentTileDisplayRange.x, currentTileDisplayRange.y, coord.x);
 	float locInTile = (currBp - totalTileRange.x) / (totalTileRange.y - totalTileRange.x);
@@ -57,7 +54,7 @@ void main() {
 	}
 
 
-	if (coord.y < 0.05) {
+	if (false) { //coord.y < 0.05) {
 		gl_FragColor = vec4(highlights, 1.0);
 	} else {
 		gl_FragColor = vec4(dataValue, 1.0);

@@ -9,8 +9,7 @@ class Annotation extends React.Component {
 
   getStyle() {
     return {
-      left: this.props.left + 'px',
-      top: this.props.top + 'px',
+      transform: `translate(${this.props.left}px, ${this.props.top}px)`,
       width: this.props.width + 'px',
     };
   }
@@ -18,8 +17,10 @@ class Annotation extends React.Component {
   render() {
     const style = this.getStyle();
     return (
-      <div style={style} className="annotation">
-        Annotation :)
+      <div className="annotation-wrapper">
+        <div style={style} className="annotation">
+          Annotation :)
+        </div>
       </div>
     );
   }
