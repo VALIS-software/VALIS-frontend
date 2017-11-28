@@ -6,20 +6,14 @@ import { GENOME_LENGTH } from '../../helpers/constants.js';
 
 import vertexShader from './project.vert';
 import fragmentShader from './render.frag';
-import GenomeAPI from '../../models/api.js';
 import Annotation from '../Annotation/Annotation.jsx';
 import TrackHeader from '../TrackHeader/TrackHeader.jsx';
 
 class TrackView {
-  constructor(trackId) {
-    this.trackId = trackId;
-    this.model = null;
-    this.api = new GenomeAPI();
+  constructor(model) {
+    this.model = model;
     this.height = 0.1;
     this.yOffset = 0.0;
-    this.api.getTrack(trackId).then(model => {
-      this.model = model;
-    });
   }
 
   static initializeShader(context) {
@@ -74,13 +68,14 @@ class TrackView {
   }
 
   getTitle() {
-    return this.trackId;
+    return this.model.trackId;
   }
 
   getHeader(windowState) {
     const top = windowState.windowSize[1] * this.yOffset;
     const height = windowState.windowSize[1] * this.height;
-    return (<TrackHeader key={this.trackId} top={top} height={height} track={this} />);
+    const key = this.model.trackGuid;
+    return (<TrackHeader key={key} top={top} height={height} track={this} />);
   }
 
   getAnnotations(windowState) {
@@ -97,7 +92,7 @@ class TrackView {
       let end = Util.pixelForBasePair(annotation.endBp, startBasePair, basePairsPerPixel, windowState.windowSize);
       end = Math.min(windowState.windowSize[0], end);
       const top = (this.yOffset) * windowState.windowSize[1];
-      return (<Annotation key={this.trackId + annotation.id} left={start} width={end-start} top={top} annotation={annotation} />);
+      return (<Annotation key={this.model.trackGuid + annotation.id} left={start} width={end-start} top={top} annotation={annotation} />);
     });
   }
 }

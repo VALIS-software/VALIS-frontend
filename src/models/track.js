@@ -8,6 +8,8 @@ const CACHE_TILE_SIZE = 1024;
 const CACHE_SAMPLING_STEP_SIZE = 1024;
 const REQUEST_THROTTLE_MS = 250;
 
+let NUM_TRACKS = 0;
+
 // TODO: all code in this file really needs explicit tests... 
 // probably some off-by-one errors in this 
 // the tiles should all divide up evenly! re-write this!
@@ -123,6 +125,7 @@ class SimpleTileCache {
 class Track {
   constructor(api, trackId, startBp, endBp) {
     this.api = api;
+    this.trackGuid = NUM_TRACKS++;
     this.trackId = trackId;
     this.startBp = startBp;
     this.endBp = endBp;

@@ -1,5 +1,7 @@
 // Dependencies
 import React from 'react';
+import PropTypes from 'prop-types';
+
 
 import Util from '../../helpers/util.js';
 import { GENOME_LENGTH } from '../../helpers/constants.js';
@@ -9,11 +11,13 @@ import TrackView from '../TrackView/TrackView.jsx';
 // Styles
 import './MultiTrackViewer.scss';
 
+const _ = require('underscore');
+
 class MultiTrackViewer extends React.Component {
   constructor(props) {
     super(props);
     this.handleLoad = this.handleLoad.bind(this);
-    this.textures = [];
+    this.views = [];
     this.overlayElem = null;
   }
 
@@ -38,13 +42,14 @@ class MultiTrackViewer extends React.Component {
       startBasePair: 0,
       zoomEnabled: false,
       dragEnabled: false,
-      tracks: [],
       lastDragCoord: null,
       startDragCoord: null,
     });
   }
 
   getWindowState() {
+    if (!this.state) return {};
+
     const windowState = {
       windowSize: this.state.windowSize,
       basePairsPerPixel: this.state.basePairsPerPixel,
@@ -231,10 +236,6 @@ class MultiTrackViewer extends React.Component {
     document.addEventListener('keydown', this.handleKeydown.bind(this));
     document.addEventListener('keyup', this.handleKeyup.bind(this));
 
-    this.addTrack(new TrackView('genome1.1'));
-    this.addTrack(new TrackView('genome1.2'));
-    this.addTrack(new TrackView('genome1.3'));
-
     const renderFrame = () => {
       this.renderGL();
       requestAnimationFrame(renderFrame);
@@ -246,14 +247,29 @@ class MultiTrackViewer extends React.Component {
     return this.renderContext.gl;
   }
 
+
+  updateViews() {
+    const newViews = [];
+    this.props.tracks.forEach(model => {
+      const idx = _.findIndex(this.views, track => {
+        return track.model.trackGuid === model.trackGuid;
+      });
+      const track = idx >= 0 ? this.views[idx] : new TrackView(model);
+      track.setHeight(this.state.trackHeight);
+      track.setYOffset(newViews.length * this.state.trackHeight + this.state.trackOffset);
+      newViews.push(track);
+    });
+    this.views = newViews;
+  }
+
   renderGL() {
     const gl = this.glContext();
     gl.clear(gl.COLOR_BUFFER_BIT);
     const windowState = this.getWindowState();
-    const numTracks = this.state.tracks.length;
+    const numTracks = this.views.length;
     for (let i = 0; i < numTracks; i++) {
       // setup track position
-      const track = this.state.tracks[i];
+      const track = this.views[i];
       track.setHeight(this.state.trackHeight);
       track.setYOffset(i * this.state.trackHeight + this.state.trackOffset);
       track.render(this.renderContext, this.program, windowState);
@@ -261,16 +277,15 @@ class MultiTrackViewer extends React.Component {
   }
 
   render() {
+    this.updateViews();
     let annotations = [];
     const headers = [];
-    if (this.state) {
-      const numTracks = this.state.tracks.length;
-      const windowState = this.getWindowState();
-      for (let i = 0; i < numTracks; i++) {
-        const track = this.state.tracks[i];
-        annotations = annotations.concat(track.getAnnotations(windowState));
-        headers.push(track.getHeader(windowState));
-      }
+    const numTracks = this.views.length;
+    const windowState = this.getWindowState();
+    for (let i = 0; i < numTracks; i++) {
+      const track = this.views[i];
+      annotations = annotations.concat(track.getAnnotations(windowState));
+      headers.push(track.getHeader(windowState));
     }
 
     return (
@@ -286,5 +301,9 @@ class MultiTrackViewer extends React.Component {
     );
   }
 }
+
+MultiTrackViewer.propTypes = {
+   tracks: PropTypes.array,
+};
 
 export default MultiTrackViewer;

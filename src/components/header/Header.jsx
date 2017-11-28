@@ -1,15 +1,11 @@
 // Dependencies
 import React, { Component } from 'react';
-import AppBar from 'material-ui/AppBar';
+import PropTypes from 'prop-types';
+
 import AutoComplete from 'material-ui/AutoComplete';
-import IconMenu from 'material-ui/IconMenu';
-import IconButton from 'material-ui/IconButton';
-import FontIcon from 'material-ui/FontIcon';
-import NavigationExpandMoreIcon from 'material-ui/svg-icons/navigation/expand-more';
 import MenuItem from 'material-ui/MenuItem';
 import DropDownMenu from 'material-ui/DropDownMenu';
-import RaisedButton from 'material-ui/RaisedButton';
-import { Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle } from 'material-ui/Toolbar';
+import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 
 // Styles
 import './Header.scss';
@@ -32,8 +28,10 @@ class Header extends Component {
     });
   }
 
-  onUpdateSearchQuery(event, index, value) {
-
+  onUpdateSearchQuery(searchText, dataSource, params) {
+    if (params.source === 'click') {
+      this.props.addTrack(searchText);
+    }
   }
 
   render() {
@@ -44,7 +42,7 @@ class Header extends Component {
             <AutoComplete
               hintText="Search Genomes or Variants"
               dataSource={this.state.dataSource}
-              onUpdateInput={this.onUpdateInput}
+              onUpdateInput={this.onUpdateSearchQuery}
               fullWidth={true}
             />
           </div>
@@ -59,5 +57,9 @@ class Header extends Component {
     </div>);
   }
 }
+
+Header.propTypes = {
+   addTrack: PropTypes.func,
+};
 
 export default Header;
