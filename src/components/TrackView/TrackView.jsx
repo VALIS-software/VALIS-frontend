@@ -8,6 +8,7 @@ import vertexShader from './project.vert';
 import fragmentShader from './render.frag';
 import GenomeAPI from '../../models/api.js';
 import Annotation from '../Annotation/Annotation.jsx';
+import TrackHeader from '../TrackHeader/TrackHeader.jsx';
 
 class TrackView {
   constructor(genomeId, trackId) {
@@ -71,6 +72,16 @@ class TrackView {
         context.drawQuad(shader);
         j += 1;
     });
+  }
+
+  getTitle() {
+    return this.trackId;
+  }
+
+  getHeader(windowState) {
+    const top = windowState.windowSize[1] * this.yOffset;
+    const height = windowState.windowSize[1] * this.height;
+    return (<TrackHeader key={this.trackId} top={top} height={height} track={this} />);
   }
 
   getAnnotations(windowState) {

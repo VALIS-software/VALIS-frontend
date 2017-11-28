@@ -1,3 +1,7 @@
+$track-header-width: 250px;
+$browser-width: calc(100% - #{$track-header-width});
+$browser-height: 100%;
+
 .content {
     background-color: #222;
     flex: 1 0 auto;
@@ -7,18 +11,22 @@
     flex-direction: column;
     justify-content: center;
     position: relative;
+    overflow: hidden;
 
     #webgl-overlay {
+        overflow: hidden;
         position: absolute;
-        width: 100%;
-        height: 100%;
+        left: $track-header-width;
+        width: $browser-width;
+        height: $browser-height;
         pointer-events: none;
     }
 
     #webgl-canvas {
         position: absolute;
-        width: 100%;
-        height: 100%;
+        left: $track-header-width;
+        width: $browser-width;
+        height: $browser-height;
 
         // disable select:
         -webkit-touch-callout: none; /* iOS Safari */
@@ -27,6 +35,13 @@
         -moz-user-select: none; /* Firefox */
         -ms-user-select: none; /* Internet Explorer/Edge */
         user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+    }
+
+    #track-headers {
+        position: absolute;
+        width: $track-header-width;
+        height: $browser-height;
+        left: 0px;
     }
     .drag-active {
         cursor: -webkit-grabbing; cursor:-moz-grabbing;

@@ -1,0 +1,9 @@
+.track-header {
+	width: 100%;
+	position: absolute;
+	background-color: blue;
+	border-bottom: 1px solid white;
+	.track-header-contents {
+		padding: 32px;
+	}
+}

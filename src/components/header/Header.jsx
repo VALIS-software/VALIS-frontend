@@ -51,7 +51,7 @@ class Header extends Component {
           <DropDownMenu value={this.state.searchFilter}  onChange={this.onUpdateSearchFilter}>
             <MenuItem value={1} primaryText="Everything" />
             <MenuItem value={2} primaryText="Genomes" />
-            <MenuItem value={2} primaryText="Genes" />
+            <MenuItem value={3} primaryText="Genes" />
             <MenuItem value={4} primaryText="SNPs" />
           </DropDownMenu>
         </ToolbarGroup>

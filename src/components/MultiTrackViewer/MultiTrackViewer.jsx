@@ -1,6 +1,5 @@
 // Dependencies
 import React from 'react';
-import { Igloo } from '../../../lib/igloojs/igloo.js';
 
 import Util from '../../helpers/util.js';
 import { GENOME_LENGTH } from '../../helpers/constants.js';
@@ -263,17 +262,22 @@ class MultiTrackViewer extends React.Component {
 
   render() {
     let annotations = [];
+    const headers = [];
     if (this.state) {
       const numTracks = this.state.tracks.length;
       const windowState = this.getWindowState();
       for (let i = 0; i < numTracks; i++) {
         const track = this.state.tracks[i];
         annotations = annotations.concat(track.getAnnotations(windowState));
+        headers.push(track.getHeader(windowState));
       }
     }
 
     return (
       <div className="content">
+        <div id="track-headers">
+          {headers}
+        </div>
         <canvas id="webgl-canvas" className={this.getClass()} />
         <div id="webgl-overlay">
           {annotations}
