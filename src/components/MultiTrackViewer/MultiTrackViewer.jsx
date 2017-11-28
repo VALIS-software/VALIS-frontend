@@ -2,23 +2,13 @@
 import React from 'react';
 import { Igloo } from '../../../lib/igloojs/igloo.js';
 
-import GenomeAPI from '../../models/api.js';
-import Track from '../../models/track.js';
-import Annotation from '../Annotation/Annotation.jsx';
+import Util from '../../helpers/util.js';
+import { GENOME_LENGTH } from '../../helpers/constants.js';
+
+import TrackView from '../TrackView/TrackView.jsx';
 
 // Styles
 import './MultiTrackViewer.scss';
-
-import vertexShader from './project.vert';
-import fragmentShader from './render.frag';
-
-const SELECT_MODE_REGIONS = 'regions';
-const SELECT_MODE_TRACKS = 'tracks';
-const SELECT_MODE_NONE = 'none';
-
-
-const GENOME_LENGTH = 3000000000;
-const MAX_TEXTURES = 128;
 
 class MultiTrackViewer extends React.Component {
   constructor(props) {
@@ -43,7 +33,6 @@ class MultiTrackViewer extends React.Component {
     this.setState({
       windowSize: [domElem.clientWidth, domElem.clientHeight],
       basePairsPerPixel: GENOME_LENGTH / domElem.clientWidth,
-      selectMode: SELECT_MODE_NONE,
       selectEnabled: false,
       trackHeight: 0.1,
       trackOffset: 0.0,
@@ -53,14 +42,25 @@ class MultiTrackViewer extends React.Component {
       tracks: [],
       lastDragCoord: null,
       startDragCoord: null,
-    }); 
-    this.numTilesLoading = 0;
+    });
+  }
 
-    this.api = new GenomeAPI('http://localhost:5000');
-    // load test track:
-    this.api.getTrack('genome1', 'genome1.1').then(this.addTrack.bind(this));
-    this.api.getTrack('genome1', 'genome1.2').then(this.addTrack.bind(this));
-    this.api.getTrack('genome1', 'genome1.3').then(this.addTrack.bind(this));
+  getWindowState() {
+    const windowState = {
+      windowSize: this.state.windowSize,
+      basePairsPerPixel: this.state.basePairsPerPixel,
+      startBasePair: this.state.startBasePair,
+    };
+
+    if (this.state.selectEnabled) {
+      if (this.state.startDragCoord && this.state.lastDragCoord) {
+        windowState.selection = {
+          min: this.state.startDragCoord,
+          max: this.state.lastDragCoord,
+        };
+      }
+    }
+    return windowState;
   }
 
   getClass() {
@@ -96,27 +96,9 @@ class MultiTrackViewer extends React.Component {
     });
   }
 
-  startBasePair() {
-    return this.state.startBasePair;
-  }
-
-  endBasePair() {
-    return this.state.startBasePair + (this.state.basePairsPerPixel * this.state.windowSize[0]);
-  }
-
-  basePairForScreenX(x) {
-    const u = x / this.state.windowSize[0];
-    return this.startBasePair() + (u * (this.endBasePair() - this.startBasePair()));
-  }
-
   trackOffsetForScreenY(y) { 
     const totalH = (this.state.tracks.length * this.state.trackHeight) * this.state.windowSize[1];
     return (y - (this.state.trackOffset * this.state.windowSize[1])) / totalH;
-  }
-
-  pixelForBasePair(bp) {
-    const u = (bp - this.startBasePair()) / (this.endBasePair() - this.startBasePair());
-    return u * this.state.windowSize[0];
   }
 
   handleMouseMove(e) {
@@ -176,7 +158,10 @@ class MultiTrackViewer extends React.Component {
           panning: false,
         });
         if (Math.abs(e.deltaY) > 0) {
-          const lastBp = this.basePairForScreenX(e.offsetX);
+          const lastBp = Util.basePairForScreenX(e.offsetX, 
+                                                  this.state.startBasePair, 
+                                                  this.state.basePairsPerPixel, 
+                                                  this.state.windowSize);
           
           let newBpPerPixel = this.state.basePairsPerPixel / (1.0 - (e.deltaY / 1000.0));  
           newBpPerPixel = Math.min(GENOME_LENGTH / (this.state.windowSize[0]), newBpPerPixel);
@@ -234,28 +219,11 @@ class MultiTrackViewer extends React.Component {
     }
   }
 
-
   handleLoad() {
     // TODO: need to extract dom-elem without hardcoded ID
     const domElem = document.querySelector('#webgl-canvas');
-    const igloo = this.igloo = new Igloo(domElem);
-
-    // enable floating point textures
-    igloo.gl.getExtension('OES_texture_float');
-
-    // setup rendering surface:
-    this.quad = igloo.array(Igloo.QUAD2);
-
-
-    const gl = this.igloo.gl;
-    for (let i = 0; i < MAX_TEXTURES; i++) {
-      // allocate a new texture
-      const newTexture = this.igloo.texture(null, gl.RGBA, gl.CLAMP_TO_EDGE, gl.NEAREST, gl.FLOAT);
-      this.textures.push(newTexture);
-    }
-
-    this.blankTexture = this.igloo.texture(null, gl.RGBA, gl.CLAMP_TO_EDGE, gl.NEAREST, gl.FLOAT);
-    this.blankTexture.blank(1024, 1);
+    this.renderContext = Util.newRenderContext(domElem);
+    this.program = TrackView.initializeShader(this.renderContext);
 
     domElem.addEventListener('wheel', this.handleMouse.bind(this));
     domElem.addEventListener('mousemove', this.handleMouseMove.bind(this));
@@ -264,8 +232,10 @@ class MultiTrackViewer extends React.Component {
     document.addEventListener('keydown', this.handleKeydown.bind(this));
     document.addEventListener('keyup', this.handleKeyup.bind(this));
 
-    this.program = igloo.program(vertexShader, fragmentShader);
-    this.tick = 0;
+    this.addTrack(new TrackView('genome1', 'genome1.1'));
+    this.addTrack(new TrackView('genome1', 'genome1.2'));
+    this.addTrack(new TrackView('genome1', 'genome1.3'));
+
     const renderFrame = () => {
       this.renderGL();
       requestAnimationFrame(renderFrame);
@@ -273,70 +243,32 @@ class MultiTrackViewer extends React.Component {
     renderFrame();
   }
 
-
   glContext() {
-    return this.igloo.gl;
-  }
-
-  renderTrack(track, index, numTracks) {
-    const tiles = track.getTiles(this.startBasePair(), this.endBasePair(), this.state.basePairsPerPixel);
-    let j = 0;
-    tiles.forEach(tile => {
-        this.textures[j].bind(1 + j);
-        this.textures[j].set(tile.tile.data, 1024, 1);
-        const shader = this.program.use();
-        shader.uniformi('data', 1 + j);
-        shader.uniform('tile', 0.5 + 0.5 * j / tiles.length);
-        shader.uniform('currentTileDisplayRange', tile.range);
-        shader.uniform('totalTileRange', tile.tile.tileRange);
-        shader.uniform('color', [index / numTracks, index / (numTracks * 2.0), 1.0]);
-        shader.uniform('windowSize', this.state.windowSize);
-        shader.uniform('trackHeight', this.state.trackHeight);
-        shader.uniform('displayedRange', [this.startBasePair(), this.endBasePair()]);
-        shader.uniform('totalRange', [0, GENOME_LENGTH]);
-        shader.uniform('offset', [0, index * this.state.trackHeight + this.state.trackOffset]);
-        shader.attrib('points', this.quad, 2);
-
-        if (this.state.selectEnabled) {
-          const show = this.state.startDragCoord && this.state.lastDragCoord ? 1 : 0;
-          shader.uniformi('showSelection', show);
-          shader.uniform('selectionBoundsMin', this.state.startDragCoord);
-          shader.uniform('selectionBoundsMax', this.state.lastDragCoord);
-        }
-        shader.draw(this.igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
-        j += 1;
-    });
-  }
-
-  renderAnnotations(track, index, numTracks) {
-    const annotations = track.getAnnotations(this.startBasePair(), this.endBasePair(), this.state.basePairsPerPixel);
-    return annotations.map(annotation => {
-      // update the overlay elem:
-      const start = this.pixelForBasePair(annotation.startBp);
-      const end = Math.min(this.state.windowSize[0], this.pixelForBasePair(annotation.endBp));
-      const top = (index * this.state.trackHeight + this.state.trackOffset) * this.state.windowSize[1];
-      return (<Annotation key={index + annotation.id} left={start} width={end-start} top={top} annotation={annotation} />);
-    });
+    return this.renderContext.gl;
   }
 
   renderGL() {
     const gl = this.glContext();
     gl.clear(gl.COLOR_BUFFER_BIT);
+    const windowState = this.getWindowState();
     const numTracks = this.state.tracks.length;
     for (let i = 0; i < numTracks; i++) {
+      // setup track position
       const track = this.state.tracks[i];
-      this.renderTrack(track, i, numTracks);
+      track.setHeight(this.state.trackHeight);
+      track.setYOffset(i * this.state.trackHeight + this.state.trackOffset);
+      track.render(this.renderContext, this.program, windowState);
     }
-    this.tick++;
   }
 
   render() {
     let annotations = [];
     if (this.state) {
       const numTracks = this.state.tracks.length;
+      const windowState = this.getWindowState();
       for (let i = 0; i < numTracks; i++) {
         const track = this.state.tracks[i];
-        annotations = annotations.concat(this.renderAnnotations(track, i, numTracks));
+        annotations = annotations.concat(track.getAnnotations(windowState));
       }
     }
 

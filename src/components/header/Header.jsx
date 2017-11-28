@@ -48,26 +48,12 @@ class Header extends Component {
               fullWidth={true}
             />
           </div>
-          <RaisedButton label="Search" primary={true} />
           <DropDownMenu value={this.state.searchFilter}  onChange={this.onUpdateSearchFilter}>
             <MenuItem value={1} primaryText="Everything" />
             <MenuItem value={2} primaryText="Genomes" />
-            <MenuItem value={3} primaryText="Regions" />
-            <MenuItem value={4} primaryText="Variants" />
+            <MenuItem value={2} primaryText="Genes" />
+            <MenuItem value={4} primaryText="SNPs" />
           </DropDownMenu>
-        </ToolbarGroup>
-        <ToolbarGroup>
-          <ToolbarSeparator />
-          <IconMenu
-            iconButtonElement={
-              <IconButton touch={true}>
-                <NavigationExpandMoreIcon />
-              </IconButton>
-            }
-          >
-            <MenuItem primaryText="Download" />
-            <MenuItem primaryText="More Info" />
-          </IconMenu>
         </ToolbarGroup>
       </Toolbar>
     </div>);

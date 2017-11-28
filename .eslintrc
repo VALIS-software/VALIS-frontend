@@ -20,6 +20,8 @@
     "no-param-reassign": "off",
     "prefer-template": "off",
     "react/jsx-boolean-value": "off",
+    "func-names": "off",
+    "space-before-function-paren": "off",
   },
   "env": {
     "browser": true

@@ -174,16 +174,26 @@ class Track {
     return tiles;
   }
 
-  getAnnotations(startBp, endBp, samplingRate) {
+  getAnnotations(startBp, endBp, samplingRate, trackHeightPx) {
     return [{
       id: '1',
+      metadata: {
+        title: 'GENE1',
+      },
       startBp: 10000,
       endBp: 1000000000,
+      yOffsetPx: 0,
+      heightPx: 25,
     },
     {
       id: '2',
+      metadata: {
+        title: 'GENE2',
+      },
       startBp: 500000,
       endBp: 100000000,
+      yOffsetPx: 50,
+      heightPx: 25,
     }];
   }
 

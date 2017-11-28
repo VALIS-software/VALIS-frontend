@@ -1,9 +1,11 @@
+import { LOCAL_API_URL } from '../helpers/constants.js';
 import Track from './track.js';
 
 const axios = require('axios');
 
 class GenomeAPI {
 	constructor(baseUrl) {
+		if (!baseUrl) baseUrl = LOCAL_API_URL;
 		this.baseUrl = baseUrl;
 	}
 

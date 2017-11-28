@@ -57,7 +57,7 @@ void main() {
 	if (false) { //coord.y < 0.05) {
 		gl_FragColor = vec4(highlights, 1.0);
 	} else {
-		gl_FragColor = vec4(dataValue, 1.0);
+		gl_FragColor = vec4(dataValue * selectionHighlight, 1.0);
 	}
 	
 }
