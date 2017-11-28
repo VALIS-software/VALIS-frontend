@@ -20,7 +20,7 @@ class Header extends Component {
     this.onUpdateSearchQuery = this.onUpdateSearchQuery.bind(this);
     this.onUpdateSearchFilter = this.onUpdateSearchFilter.bind(this);
     this.state = {
-      dataSource : ['apples', 'bannanas', 'cherries', 'durian', 'elderberry', 'fruit', 'grapes'],
+      dataSource : ['GENE1', 'GENE2', 'genome1.1', 'genome1.2', 'genome1.3'],
       inputValue : '',
       searchFilter: 1,
     };

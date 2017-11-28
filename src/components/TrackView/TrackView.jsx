@@ -11,14 +11,13 @@ import Annotation from '../Annotation/Annotation.jsx';
 import TrackHeader from '../TrackHeader/TrackHeader.jsx';
 
 class TrackView {
-  constructor(genomeId, trackId) {
-    this.genomeId = genomeId;
+  constructor(trackId) {
     this.trackId = trackId;
     this.model = null;
     this.api = new GenomeAPI();
     this.height = 0.1;
     this.yOffset = 0.0;
-    this.api.getTrack(genomeId, trackId).then(model => {
+    this.api.getTrack(trackId).then(model => {
       this.model = model;
     });
   }

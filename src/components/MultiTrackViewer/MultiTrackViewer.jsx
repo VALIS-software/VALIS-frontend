@@ -231,9 +231,9 @@ class MultiTrackViewer extends React.Component {
     document.addEventListener('keydown', this.handleKeydown.bind(this));
     document.addEventListener('keyup', this.handleKeyup.bind(this));
 
-    this.addTrack(new TrackView('genome1', 'genome1.1'));
-    this.addTrack(new TrackView('genome1', 'genome1.2'));
-    this.addTrack(new TrackView('genome1', 'genome1.3'));
+    this.addTrack(new TrackView('genome1.1'));
+    this.addTrack(new TrackView('genome1.2'));
+    this.addTrack(new TrackView('genome1.3'));
 
     const renderFrame = () => {
       this.renderGL();

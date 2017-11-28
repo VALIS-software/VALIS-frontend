@@ -121,9 +121,8 @@ class SimpleTileCache {
 
 
 class Track {
-  constructor(api, genomeId, trackId, startBp, endBp) {
+  constructor(api, trackId, startBp, endBp) {
     this.api = api;
-    this.genomeId = genomeId;
     this.trackId = trackId;
     this.startBp = startBp;
     this.endBp = endBp;
@@ -200,7 +199,7 @@ class Track {
   loadData(start, end, samplingRateForRequest) {
     const cacheKey = `${start}_${end}_${samplingRateForRequest}`;
     this.inFlight[cacheKey] = true;
-    const promise = this.api.getData(this.genomeId, this.trackId, start, end, samplingRateForRequest);
+    const promise = this.api.getData(this.trackId, start, end, samplingRateForRequest);
     promise.then(data => {
       const result = data.data;
       const rawData = data.data.values;

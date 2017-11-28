@@ -1,71 +1,65 @@
 {
-	"genome1" : {
-		"genome1.1": {
-			"genomeId": "genome1",
-			"trackId": "genome1.1",
-			"type" : "sequence",
-			"startBp": 0,
-			"endBp": 3000000000
-		},
-		"genome1.2": {
-			"genomeId": "genome1",
-			"trackId": "genome1.2",
-			"type" : "sequence",
-			"startBp": 0,
-			"endBp": 3000000000
-		},
-		"genome1.3": {
-			"genomeId": "genome1",
-			"trackId": "genome1.3",
-			"type" : "sequence",
-			"startBp": 0,
-			"endBp": 3000000000
-		}
+	"genome1.1": {
+		"genomeId": "genome1",
+		"trackId": "genome1.1",
+		"type" : "sequence",
+		"startBp": 0,
+		"endBp": 3000000000
 	},
-	"genome2" : {
-		"genome2.1": {
-			"genomeId": "genome2",
-			"trackId" : "genome2.1",
-			"type" : "sequence",
-			"startBp": 0,
-			"endBp": 3000000000
-		},
-		"genome2.2": {
-			"genomeId": "genome2",
-			"trackId" : "genome2.2",
-			"type" : "sequence",
-			"startBp": 0,
-			"endBp": 3000000000
-		},
-		"genome2.3": {
-			"genomeId": "genome2",
-			"trackId" : "genome2.3",
-			"type" : "sequence",
-			"startBp": 0,
-			"endBp": 3000000000
-		}
+	"genome1.2": {
+		"genomeId": "genome1",
+		"trackId": "genome1.2",
+		"type" : "sequence",
+		"startBp": 0,
+		"endBp": 3000000000
 	},
-	"genome3" : {
-		"genome3.1": {
-			"genomeId": "genome3",
-			"trackId": "genome3.1",
-			"type" : "sequence",
-			"startBp": 0,
-			"endBp": 3000000000
-		},
-		"genome3.2": {
-			"genomeId": "genome3",
-			"trackId": "genome3.2",
-			"type" : "sequence",
-			"startBp": 0,
-			"endBp": 3000000000
-		},
-		"genome3.3": {
-			"genomeId": "genome3",
-			"trackId": "genome3.3",
-			"type" : "sequence",
-			"startBp": 0,
-			"endBp": 3000000000
-		}
+	"genome1.3": {
+		"genomeId": "genome1",
+		"trackId": "genome1.3",
+		"type" : "sequence",
+		"startBp": 0,
+		"endBp": 3000000000
+	},
+	"genome2.1": {
+		"genomeId": "genome2",
+		"trackId" : "genome2.1",
+		"type" : "sequence",
+		"startBp": 0,
+		"endBp": 3000000000
+	},
+	"genome2.2": {
+		"genomeId": "genome2",
+		"trackId" : "genome2.2",
+		"type" : "sequence",
+		"startBp": 0,
+		"endBp": 3000000000
+	},
+	"genome2.3": {
+		"genomeId": "genome2",
+		"trackId" : "genome2.3",
+		"type" : "sequence",
+		"startBp": 0,
+		"endBp": 3000000000
+	},
+	"genome3.1": {
+		"genomeId": "genome3",
+		"trackId": "genome3.1",
+		"type" : "sequence",
+		"startBp": 0,
+		"endBp": 3000000000
+	},
+	"genome3.2": {
+		"genomeId": "genome3",
+		"trackId": "genome3.2",
+		"type" : "sequence",
+		"startBp": 0,
+		"endBp": 3000000000
+	},
+	"genome3.3": {
+		"genomeId": "genome3",
+		"trackId": "genome3.3",
+		"type" : "sequence",
+		"startBp": 0,
+		"endBp": 3000000000
 	}
 }
