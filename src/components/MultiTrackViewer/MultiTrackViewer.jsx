@@ -88,20 +88,9 @@ class MultiTrackViewer extends React.Component {
     return classes.join(' ');
   }
 
-  addTrack(track) {
-    const newTrackList = [];
-    this.state.tracks.forEach(oldTrack => {
-      newTrackList.push(oldTrack);
-    });
-
-    newTrackList.push(track);
-    this.setState({
-      tracks: newTrackList,
-    });
-  }
 
   trackOffsetForScreenY(y) { 
-    const totalH = (this.state.tracks.length * this.state.trackHeight) * this.state.windowSize[1];
+    const totalH = (this.props.tracks.length * this.state.trackHeight) * this.state.windowSize[1];
     return (y - (this.state.trackOffset * this.state.windowSize[1])) / totalH;
   }
 

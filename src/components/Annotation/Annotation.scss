@@ -2,11 +2,15 @@
 	position: relative;
 }
 .annotation {
+	border-radius: 4px;
     background-color: red;
     position: absolute;
-    opacity: 0.5;
+    opacity: 0.8;
     text-overflow: ellipsis;
 	overflow: hidden;
     white-space: nowrap;
     max-width: 100%;
+    .annotation-inner {
+    	padding-left: 4px;
+    }
 }

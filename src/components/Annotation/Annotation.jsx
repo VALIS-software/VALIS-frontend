@@ -22,7 +22,7 @@ class Annotation extends React.Component {
     return (
       <div className="annotation-wrapper">
         <div style={style} className="annotation">
-          {title}
+          <span className="annotation-inner">{title}</span>
         </div>
       </div>
     );
