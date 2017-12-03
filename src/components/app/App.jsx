@@ -17,7 +17,7 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.api = new GenomeAPI();
-    this.addTrack = this.addTrack.bind(this);
+    this.addTrack = this.addDataTrack.bind(this);
     this.addTrack('genome1.1');
   }
 
@@ -31,7 +31,7 @@ class App extends React.Component {
     return this.tracks;
   }
 
-  addTrack(trackId) {
+  addDataTrack(trackId) {
     this.api.getTrack(trackId).then(model => {
       this.setState({
         tracks: this.state.tracks.concat([model]),
@@ -39,7 +39,7 @@ class App extends React.Component {
     });
   }
 
-  removeTrack(trackGuid) {
+  removeDataTrack(trackGuid) {
     const arr = this.state.tracks.slice();
     const index = _.findIndex(arr, (item) => {
       return item.guidId === trackGuid;
@@ -51,6 +51,14 @@ class App extends React.Component {
         tracks: arr,
       });      
     }
+  }
+
+  addAnnotationTrack(annotationId) {
+
+  }
+
+  removeAnnotationTrack(trackGuid) {
+
   }
 
   addAnnotationToTrack(annotationId, trackGuid) {

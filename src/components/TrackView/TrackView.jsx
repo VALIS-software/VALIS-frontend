@@ -9,15 +9,35 @@ import fragmentShader from './render.frag';
 import Annotation from '../Annotation/Annotation.jsx';
 import TrackHeader from '../TrackHeader/TrackHeader.jsx';
 
+const uuid = require('uuid/v1');
+
 class TrackView {
-  constructor(model) {
-    this.model = model;
+  constructor() {
+    this.guid = uuid();
     this.height = 0.1;
     this.yOffset = 0.0;
+    this.annotationTrack = null;
+    this.dataTrack = null;
   }
 
   static initializeShader(context) {
     return context.program(vertexShader, fragmentShader);
+  }
+
+  addAnnotationTrack(track) {
+
+  }
+
+  removeAnnotationTrack(track) {
+
+  }
+
+  setDataTrack(track) {
+    this.dataTrack = track;
+  }
+
+  removeDataTrack() {
+
   }
 
   setColor(color) {
@@ -36,10 +56,13 @@ class TrackView {
     const startBasePair = windowState.startBasePair;
     const basePairsPerPixel = windowState.basePairsPerPixel;
     const endBasePair = Util.endBasePair(startBasePair, basePairsPerPixel, windowState.windowSize);
-    if (this.model === null) {
+    const trackHeightPx = windowState.windowSize[1] * this.height;
+    
+    if (this.dataTrack === null) {
       return;
     }
-    const tiles = this.model.getTiles(startBasePair, endBasePair, basePairsPerPixel);
+    
+    const tiles = this.dataTrack.getTiles(startBasePair, endBasePair, basePairsPerPixel, trackHeightPx);
     let j = 0;
     tiles.forEach(tile => {
         context.textures[j].bind(1 + j);
@@ -68,31 +91,33 @@ class TrackView {
   }
 
   getTitle() {
-    return this.model.trackId;
+    return 'Untitled';
   }
 
   getHeader(windowState) {
     const top = windowState.windowSize[1] * this.yOffset;
     const height = windowState.windowSize[1] * this.height;
-    const key = this.model.trackGuid;
+    const key = this.guid;
     return (<TrackHeader key={key} top={top} height={height} track={this} />);
   }
 
   getAnnotations(windowState) {
-    if (this.model === null) {
+    if (this.annotationTrack === null) {
       return [];
     }
     const startBasePair = windowState.startBasePair;
     const basePairsPerPixel = windowState.basePairsPerPixel;
     const endBasePair = Util.endBasePair(startBasePair, basePairsPerPixel, windowState.windowSize);
-    const annotations = this.model.getAnnotations(startBasePair, endBasePair, basePairsPerPixel);
+    const trackHeightPx = windowState.windowSize[1] * this.height;
+    const annotations = this.annotationTrack.getAnnotations(startBasePair, endBasePair, basePairsPerPixel, trackHeightPx);
+
     return annotations.map(annotation => {
       // update the overlay elem:
       const start = Util.pixelForBasePair(annotation.startBp, startBasePair, basePairsPerPixel, windowState.windowSize);
       let end = Util.pixelForBasePair(annotation.endBp, startBasePair, basePairsPerPixel, windowState.windowSize);
       end = Math.min(windowState.windowSize[0], end);
-      const top = (this.yOffset) * windowState.windowSize[1];
-      return (<Annotation key={this.model.trackGuid + annotation.id} left={start} width={end-start} top={top} annotation={annotation} />);
+      const top = this.yOffset * windowState.windowSize[1];
+      return (<Annotation key={this.annotationTrack.guid + annotation.id} left={start} width={end-start} top={top} annotation={annotation} />);
     });
   }
 }

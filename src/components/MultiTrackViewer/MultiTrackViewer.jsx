@@ -2,7 +2,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-
 import Util from '../../helpers/util.js';
 import { GENOME_LENGTH } from '../../helpers/constants.js';
 
@@ -87,7 +86,6 @@ class MultiTrackViewer extends React.Component {
 
     return classes.join(' ');
   }
-
 
   trackOffsetForScreenY(y) { 
     const totalH = (this.props.tracks.length * this.state.trackHeight) * this.state.windowSize[1];
@@ -236,14 +234,14 @@ class MultiTrackViewer extends React.Component {
     return this.renderContext.gl;
   }
 
-
   updateViews() {
     const newViews = [];
     this.props.tracks.forEach(model => {
       const idx = _.findIndex(this.views, track => {
-        return track.model.trackGuid === model.trackGuid;
+        return track.dataTrack === model;
       });
-      const track = idx >= 0 ? this.views[idx] : new TrackView(model);
+      const track = idx >= 0 ? this.views[idx] : new TrackView();
+      track.setDataTrack(model);
       track.setHeight(this.state.trackHeight);
       track.setYOffset(newViews.length * this.state.trackHeight + this.state.trackOffset);
       newViews.push(track);

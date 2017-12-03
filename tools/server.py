@@ -7,34 +7,105 @@ import math
 
 
 MOCK_DATA = json.loads(open("mockData.json", "r").read())
+MOCK_ANNOTATIONS = json.loads(open("mockAnnotations.json", "r").read())
 
 app = Flask(__name__)
 CORS(app)
 
+@app.route("/annotations")
+def annotations():
+	return json.dumps(MOCK_ANNOTATIONS.keys())
+
+@app.route("/annotations/<string:annotation_id>")
+def annotation(annotation_id):
+	"""Return the annotation metadata"""
+	if annotation_id in MOCK_ANNOTATIONS:
+		return json.dumps(MOCK_ANNOTATIONS[annotation_id])
+	else:
+		abort(404, "Annotation not found")
+
+@app.route("/annotations/<string:annotation_id>/<int:start_bp>/<int:end_bp>")
+def get_annotation_data(annotation_id, start_bp, end_bp):
+	start_bp = int(start_bp)
+	end_bp = int(end_bp)
+	
+	sampling_rate = 1
+	if request.args.get('sampling_rate'):
+		sampling_rate = int(request.args.get('sampling_rate'))
+
+	track_height_px = 0
+	if request.args.get('track_height_px'):
+		track_height_px = int(request.args.get('track_height_px'))
+
+	if  annotation_id in MOCK_ANNOTATIONS:
+		annotation = MOCK_ANNOTATIONS[annotation_id]
+		start_bp = max([start_bp, annotation["startBp"]])
+		end_bp = min([end_bp, annotation["endBp"]])
+		annotations = []
+		# add random annotations, keep ones that are > 100px @ curr sampling rate
+		random.seed(start_bp)
+		for i in xrange(0, end_bp):
+			if random.random() > 0.8:
+				sz = int(random.random()*1600) + 200
+			if sz/float(sampling_rate) > 100:
+				annotations.append({
+					"startBp": i,
+      				"endBp": i + sz,
+      				"yOffsetPx": 0,
+      				"heightPx": 25,
+				})
+
+		# move overlaps that fit in track height, discard those that don't
+		ret = []
+		last = None
+		padding = 1000/sampling_rate
+		for annotation in annotations:
+			if last == None or annotation["startBp"] > last["endBp"] + padding:
+				ret.append(annotation)
+				last = annotation
+			elif last["yOffsetPx"] < track_height_px - 25:
+				annotation["yOffsetPx"] = last["yOffsetPx"] + 25
+				ret.append(annotation)
+				last = annotation
+	else:
+		abort(500, "Unknown track type : %s", track["type"])
+
+	return json.dumps({
+		"startBp" : start_bp,
+		"endBp" : end_bp,
+		"samplingRate": sampling_rate,
+		"trackHeightPx": track_height_px,
+		"values": ret
+	})
+
 @app.route("/tracks")
 def tracks():
-	"""Return a list of all genome_ids"""
+	"""Return a list of all track_ids"""
 	return json.dumps(MOCK_DATA.keys())
 
 @app.route("/tracks/<string:track_id>")
 def track(track_id):
-	"""Return the track_id's and track metadata"""
+	"""Return the track metadata"""
 	if track_id in MOCK_DATA:
 		return json.dumps(MOCK_DATA[track_id])
 	else:
 		abort(404, "Track not found")
 
 @app.route("/tracks/<string:track_id>/<int:start_bp>/<int:end_bp>")
-def get_data(track_id, start_bp, end_bp):
+def get_track_data(track_id, start_bp, end_bp):
 	"""Return the data for the given track and base pair range"""
 	start_bp = int(start_bp)
 	end_bp = int(end_bp)
 	sampling_rate = 1
 	if request.args.get('sampling_rate'):
 		sampling_rate = int(request.args.get('sampling_rate'))
+
+	track_height_px = 0
+	if request.args.get('track_height_px'):
+		track_height_px = int(float(request.args.get('track_height_px')))
+
 	if  track_id in MOCK_DATA:
 		track = MOCK_DATA[track_id]
-
 		start_bp = max([start_bp, track["startBp"]])
 		end_bp = min([end_bp, track["endBp"]])
 		ret = []
@@ -51,6 +122,7 @@ def get_data(track_id, start_bp, end_bp):
 			"startBp" : start_bp,
 			"endBp" : end_bp,
 			"samplingRate": sampling_rate,
+			"trackHeightPx": track_height_px,
 			"values": ret
 		})
 	else:

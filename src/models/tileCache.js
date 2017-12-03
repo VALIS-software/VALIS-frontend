@@ -6,19 +6,14 @@ const xspans = require('xspans');
 
 const CACHE_TILE_SIZE = 1024;
 const CACHE_SAMPLING_STEP_SIZE = 1024;
-const REQUEST_THROTTLE_MS = 250;
+const CACHE_THROTTLE_MS = 250;
 
-let NUM_TRACKS = 0;
-
-// TODO: all code in this file really needs explicit tests... 
-// probably some off-by-one errors in this 
-// the tiles should all divide up evenly! re-write this!
-
-class Tile {
-  constructor(tileRange, dataRange, samplingRate, data) {
+export class Tile {
+  constructor(tileRange, dataRange, samplingRate, trackHeightPx, data) {
     this._tileRange = tileRange;
     this._dataRange = dataRange;
     this._samplingRate = samplingRate;
+    this._trackHeightPx = trackHeightPx;
     this._data = data;
   }
 
@@ -39,26 +34,26 @@ class Tile {
   }
 }
 
-
-class SimpleTileCache {
-  constructor() {
+export class TileCache {
+  constructor(minBp, maxBp, tileFetchFn) {
     this.cache = {};
+    this.inFlight = {};
+    this.minBp = minBp;
+    this.maxBp = maxBp;
+    this.tileFetchFn = tileFetchFn;
+    this.get = _.throttle(this.get.bind(this), CACHE_THROTTLE_MS);
   }
 
-  contains(tileRange, tileResolution) {
-    return (this.cache[tileRange] && this.cache[tileRange][tileResolution]);
-  }
-
-  cacheKeyToRange(key) {
+  _cacheKeyToRange(key) {
     const arr = key.split('.');
     return [parseFloat(arr[0]), parseFloat(arr[1])];
   }
 
-  get(tileRange, tileResolution) {
+  _getExact(tileRange, tileResolution) {
     const results = [];
     let intervalNeeded = xspans(tileRange);
     _.keys(this.cache).forEach(key => {
-      const cacheEntryRange = this.cacheKeyToRange(key);
+      const cacheEntryRange = this._cacheKeyToRange(key);
       const intersection = xspans.intersect(intervalNeeded, cacheEntryRange).getData();
       if (intersection.length > 0) {
         if (this.cache[key][tileResolution] !== undefined) {
@@ -77,7 +72,7 @@ class SimpleTileCache {
     return results;
   }
 
-  getAny(tileRange, tileResolution) {
+  _getAny(tileRange, tileResolution) {
     const results = [];
     let intervalNeeded = xspans(tileRange);
 
@@ -85,7 +80,7 @@ class SimpleTileCache {
       .keys()
       .filter(key => {
         // keep only the cache entries that intersect the needed interval
-        const cacheEntryRange = this.cacheKeyToRange(key);
+        const cacheEntryRange = this._cacheKeyToRange(key);
         const intersection = xspans.intersect(intervalNeeded, cacheEntryRange).getData();
         return intersection.length > 0;
       })
@@ -97,7 +92,7 @@ class SimpleTileCache {
 
     // assemble the results greedily:
     sortedKeys.forEach(key => {
-      const cacheEntryRange = this.cacheKeyToRange(key);
+      const cacheEntryRange = this._cacheKeyToRange(key);
       const intersection = xspans.intersect(intervalNeeded, cacheEntryRange).getData();
       if (intersection.length > 0) {
         intervalNeeded = xspans.subtract(intervalNeeded, cacheEntryRange);
@@ -114,33 +109,22 @@ class SimpleTileCache {
     return results;
   }
 
-  put(tileRange, tileResolution, data) {
+  _put(tileRange, tileResolution, trackHeightPx, data) {
     const tileRangeKey = `${tileRange[0]}.${tileRange[1]}`;
     if (!this.cache[tileRangeKey]) this.cache[tileRangeKey] = {};
     this.cache[tileRangeKey][tileResolution] = data;
   }
-}
 
-
-class Track {
-  constructor(api, trackId, startBp, endBp) {
-    this.api = api;
-    this.trackGuid = NUM_TRACKS++;
-    this.trackId = trackId;
-    this.startBp = startBp;
-    this.endBp = endBp;
-    this.cache = new SimpleTileCache();
-    this.inFlight = {};
-    this.loadData = _.throttle(this.loadData.bind(this), REQUEST_THROTTLE_MS);
-    this.color = [Math.random(), Math.random(), Math.random()];
-  }
-
-
-  getTileSize() {
+  get tileSize() {
     return CACHE_TILE_SIZE;
   }
 
-  getTiles(startBp, endBp, samplingRate) {
+  clear() {
+    this.cache = {};
+    this.inFlight = {};
+  }
+
+  get(startBp, endBp, samplingRate, trackHeightPx) {
     startBp = Math.round(startBp);
     endBp = Math.round(endBp);
     samplingRate = Math.round(samplingRate);
@@ -148,13 +132,12 @@ class Track {
     const samplingRateForRequest = Util.floorToMultiple(samplingRate, CACHE_SAMPLING_STEP_SIZE);
     const basePairsPerTile = CACHE_TILE_SIZE * samplingRateForRequest;
     
-
-    let tiles = this.cache.get([startBp, endBp], samplingRateForRequest);
+    let tiles = this._getExact([startBp, endBp], samplingRateForRequest);
 
     // compute all the ranges that are missing:
-    let intervalNeeded = xspans.intersect([this.startBp, this.endBp], [startBp, endBp]);
+    let intervalNeeded = xspans.intersect([this.minBp, this.maxBp], [startBp, endBp]);
     tiles.forEach(tile => {
-      tile.range = xspans.intersect([this.startBp, this.endBp], tile.range).getData();
+      tile.range = xspans.intersect([this.minBp, this.maxBp], tile.range).getData();
       intervalNeeded = xspans.subtract(intervalNeeded, tile.range);
     });
 
@@ -164,60 +147,28 @@ class Track {
       const range = [intervals[i*2], intervals[i*2 + 1]];
       const fetchRange = Util.discreteRangeContainingRange(range, basePairsPerTile);
       // check if we can add a different resolution tile from cache for the time being:
-      tiles = tiles.concat(this.cache.getAny(range, samplingRate));
+      tiles = tiles.concat(this._getAny(range, samplingRate));
 
+      const tileRequests = [];
       for (let j = fetchRange[0]; j < fetchRange[1]; j+= basePairsPerTile) {
-        const cacheKey = `${j}_${j + basePairsPerTile}_${samplingRateForRequest}`;
-        if (!this.inFlight[cacheKey]) {
-          this.loadData(j, j + basePairsPerTile, samplingRateForRequest);
-        }
+        tileRequests.push({
+          start: j,
+          end: j + basePairsPerTile,
+          samplingRate: samplingRateForRequest,
+          trackHeightPx: trackHeightPx,
+        });
       }
+
+      tileRequests.forEach(req => {
+        const cacheKey = `${req.start}_${req.end}_${req.samplingRate}`;
+        if (!this.inFlight[cacheKey]) {
+          this.inFlight[cacheKey] = true;
+          this.tileFetchFn(req.start, req.end, req.samplingRate, req.trackHeightPx).then(tile => {
+            this._put([req.start, req.end], req.samplingRate, req.trackHeightPx, tile);
+          });
+        }
+      });
     }
     return tiles;
   }
-
-  getAnnotations(startBp, endBp, samplingRate, trackHeightPx) {
-    return [{
-      id: '1',
-      metadata: {
-        title: 'GENE1',
-      },
-      startBp: 10000,
-      endBp: 1000000000,
-      yOffsetPx: 0,
-      heightPx: 25,
-    },
-    {
-      id: '2',
-      metadata: {
-        title: 'GENE2',
-      },
-      startBp: 500000,
-      endBp: 100000000,
-      yOffsetPx: 50,
-      heightPx: 25,
-    }];
-  }
-
-  loadData(start, end, samplingRateForRequest) {
-    const cacheKey = `${start}_${end}_${samplingRateForRequest}`;
-    this.inFlight[cacheKey] = true;
-    const promise = this.api.getData(this.trackId, start, end, samplingRateForRequest);
-    promise.then(data => {
-      const result = data.data;
-      const rawData = data.data.values;
-      // HACK (should not have to use RGBA textures)
-      const values = [];
-      for (let i = 0; i < CACHE_TILE_SIZE; i++) {
-        const value = i < rawData.length ? rawData[i] : 0.0;
-        values[i*4] = value;  
-        values[i*4 + 1] = value;
-        values[i*4 + 2] = value;
-        values[i*4 + 3] = i < rawData.length ? 1.0 : 0.5;
-      }
-      const cacheEntry = new Tile([start, end], [result.startBp, result.endBp], result.samplingRate, values);
-      this.cache.put([start, end], samplingRateForRequest, cacheEntry);
-    });
-  }
 }
-export default Track;
