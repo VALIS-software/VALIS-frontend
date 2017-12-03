@@ -16,7 +16,7 @@ class MultiTrackViewer extends React.Component {
   constructor(props) {
     super(props);
     this.handleLoad = this.handleLoad.bind(this);
-    this.views = [];
+    this.views = {};
     this.overlayElem = null;
   }
 
@@ -235,16 +235,26 @@ class MultiTrackViewer extends React.Component {
   }
 
   updateViews() {
-    const newViews = [];
-    this.props.tracks.forEach(model => {
-      const idx = _.findIndex(this.views, track => {
-        return track.dataTrack === model;
-      });
-      const track = idx >= 0 ? this.views[idx] : new TrackView();
-      track.setDataTrack(model);
-      track.setHeight(this.state.trackHeight);
-      track.setYOffset(newViews.length * this.state.trackHeight + this.state.trackOffset);
-      newViews.push(track);
+    const newViews = {};
+    let idx = 0;
+    this.props.tracks.forEach(track => {
+      if (!this.views[track.guid]) {
+        newViews[track.guid] = new TrackView();
+      } else {
+        newViews[track.guid] = this.views[track.guid];
+      }
+      const trackView = newViews[track.guid];
+
+      if (track.dataTrack) {
+        trackView.setDataTrack(track.dataTrack);
+      }
+
+      if (track.annotationTrack) {
+        trackView.setAnnotationTrack(track.annotationTrack);
+      }
+      trackView.setHeight(this.state.trackHeight);
+      trackView.setYOffset(idx * this.state.trackHeight + this.state.trackOffset);
+      idx += 1;
     });
     this.views = newViews;
   }
@@ -253,10 +263,11 @@ class MultiTrackViewer extends React.Component {
     const gl = this.glContext();
     gl.clear(gl.COLOR_BUFFER_BIT);
     const windowState = this.getWindowState();
-    const numTracks = this.views.length;
+    const viewGuids = _.keys(this.views);
+    const numTracks = viewGuids.length;
     for (let i = 0; i < numTracks; i++) {
       // setup track position
-      const track = this.views[i];
+      const track = this.views[viewGuids[i]];
       track.setHeight(this.state.trackHeight);
       track.setYOffset(i * this.state.trackHeight + this.state.trackOffset);
       track.render(this.renderContext, this.program, windowState);
@@ -267,10 +278,11 @@ class MultiTrackViewer extends React.Component {
     this.updateViews();
     let annotations = [];
     const headers = [];
-    const numTracks = this.views.length;
+    const viewGuids = _.keys(this.views);
+    const numTracks = viewGuids.length;
     const windowState = this.getWindowState();
     for (let i = 0; i < numTracks; i++) {
-      const track = this.views[i];
+      const track = this.views[viewGuids[i]];
       annotations = annotations.concat(track.getAnnotations(windowState));
       headers.push(track.getHeader(windowState));
     }

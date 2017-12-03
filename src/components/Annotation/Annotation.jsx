@@ -18,7 +18,7 @@ class Annotation extends React.Component {
 
   render() {
     const style = this.getStyle();
-    const title = this.props.annotation.metadata.title;
+    const title = this.props.annotation.info;
     return (
       <div className="annotation-wrapper">
         <div style={style} className="annotation">

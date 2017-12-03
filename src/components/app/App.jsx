@@ -11,14 +11,16 @@ import GenomeAPI from '../../models/api.js';
 // Styles
 import './App.scss';
 
+const uuid = require('uuid/v1');
 const _ = require('underscore');
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.api = new GenomeAPI();
-    this.addTrack = this.addDataTrack.bind(this);
-    this.addTrack('genome1.1');
+    this.addDataTrack = this.addDataTrack.bind(this);
+    //this.addDataTrack('genome1.1');
+    this.addAnnotationTrack('annotation1.1');
   }
 
   componentDidMount() {
@@ -33,8 +35,13 @@ class App extends React.Component {
 
   addDataTrack(trackId) {
     this.api.getTrack(trackId).then(model => {
+      const track = {
+        guid: uuid(),
+        dataTrack: model,
+        annotationTrack: null,
+      }
       this.setState({
-        tracks: this.state.tracks.concat([model]),
+        tracks: this.state.tracks.concat([track]),
       });
     });
   }
@@ -42,7 +49,7 @@ class App extends React.Component {
   removeDataTrack(trackGuid) {
     const arr = this.state.tracks.slice();
     const index = _.findIndex(arr, (item) => {
-      return item.guidId === trackGuid;
+      return item.guid === trackGuid;
     });
 
     if (index >= 0) {
@@ -54,7 +61,16 @@ class App extends React.Component {
   }
 
   addAnnotationTrack(annotationId) {
-
+    this.api.getAnnotation([annotationId]).then(model => {
+      const track = {
+        guid: uuid(),
+        dataTrack: null,
+        annotationTrack: model,
+      };
+      this.setState({
+        tracks: this.state.tracks.concat([track]),
+      });
+    });
   }
 
   removeAnnotationTrack(trackGuid) {
@@ -75,7 +91,7 @@ class App extends React.Component {
     return (
       <MuiThemeProvider>
         <div className="site-wrapper">
-          <Header addTrack={this.addTrack} />
+          <Header addTrack={this.addDataTrack} />
           <MultiTrackViewer tracks={this.state.tracks} />
         </div>
       </MuiThemeProvider>);

@@ -1,64 +1,47 @@
 {
 	"annotation1.1": {
-		"annotationId": "annotation1",
-		"trackId": "annotation1.1",
-		"type" : "sequence",
+		"annotationId": "annotation1.1",
 		"startBp": 0,
 		"endBp": 3000000000
 	},
 	"annotation1.2": {
-		"annotationId": "annotation1",
-		"trackId": "annotation1.2",
-		"type" : "sequence",
+		"annotationId": "annotation1.2",
 		"startBp": 0,
 		"endBp": 3000000000
 	},
 	"annotation1.3": {
-		"annotationId": "annotation1",
-		"trackId": "annotation1.3",
-		"type" : "sequence",
+		"annotationId": "annotation1.3",
 		"startBp": 0,
 		"endBp": 3000000000
 	},
 	"annotation2.1": {
-		"annotationId": "annotation2",
-		"trackId" : "annotation2.1",
-		"type" : "sequence",
+		"annotationId": "annotation2.1",
 		"startBp": 0,
 		"endBp": 3000000000
 	},
 	"annotation2.2": {
-		"annotationId": "annotation2",
-		"trackId" : "annotation2.2",
-		"type" : "sequence",
+		"annotationId": "annotation2.2",
 		"startBp": 0,
 		"endBp": 3000000000
 	},
 	"annotation2.3": {
-		"annotationId": "annotation2",
-		"trackId" : "annotation2.3",
-		"type" : "sequence",
+		"annotationId": "annotation2.3",
 		"startBp": 0,
 		"endBp": 3000000000
 	},
 	"annotation3.1": {
-		"annotationId": "annotation3",
-		"trackId": "annotation3.1",
-		"type" : "sequence",
+		"annotationId": "annotation3.1",
 		"startBp": 0,
 		"endBp": 3000000000
 	},
 	"annotation3.2": {
-		"annotationId": "annotation3",
-		"trackId": "annotation3.2",
+		"annotationId": "annotation3.2",
 		"type" : "sequence",
 		"startBp": 0,
 		"endBp": 3000000000
 	},
 	"annotation3.3": {
-		"annotationId": "annotation3",
-		"trackId": "annotation3.3",
-		"type" : "sequence",
+		"annotationId": "annotation3.3",
 		"startBp": 0,
 		"endBp": 3000000000
 	}

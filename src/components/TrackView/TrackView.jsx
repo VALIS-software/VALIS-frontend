@@ -24,11 +24,11 @@ class TrackView {
     return context.program(vertexShader, fragmentShader);
   }
 
-  addAnnotationTrack(track) {
-
+  setAnnotationTrack(track) {
+    this.annotationTrack = track;
   }
 
-  removeAnnotationTrack(track) {
+  removeAnnotationTrack() {
 
   }
 
@@ -110,14 +110,13 @@ class TrackView {
     const endBasePair = Util.endBasePair(startBasePair, basePairsPerPixel, windowState.windowSize);
     const trackHeightPx = windowState.windowSize[1] * this.height;
     const annotations = this.annotationTrack.getAnnotations(startBasePair, endBasePair, basePairsPerPixel, trackHeightPx);
-
     return annotations.map(annotation => {
       // update the overlay elem:
       const start = Util.pixelForBasePair(annotation.startBp, startBasePair, basePairsPerPixel, windowState.windowSize);
       let end = Util.pixelForBasePair(annotation.endBp, startBasePair, basePairsPerPixel, windowState.windowSize);
       end = Math.min(windowState.windowSize[0], end);
       const top = this.yOffset * windowState.windowSize[1];
-      return (<Annotation key={this.annotationTrack.guid + annotation.id} left={start} width={end-start} top={top} annotation={annotation} />);
+      return (<Annotation key={this.guid + annotation.id} left={start} width={end-start} top={top} annotation={annotation} />);
     });
   }
 }
