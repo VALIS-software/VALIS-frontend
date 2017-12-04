@@ -19,7 +19,7 @@ class App extends React.Component {
     super(props);
     this.api = new GenomeAPI();
     this.addDataTrack = this.addDataTrack.bind(this);
-    //this.addDataTrack('genome1.1');
+    this.addDataTrack('genome1.1');
     this.addAnnotationTrack('annotation1.1');
   }
 
@@ -39,7 +39,7 @@ class App extends React.Component {
         guid: uuid(),
         dataTrack: model,
         annotationTrack: null,
-      }
+      };
       this.setState({
         tracks: this.state.tracks.concat([track]),
       });

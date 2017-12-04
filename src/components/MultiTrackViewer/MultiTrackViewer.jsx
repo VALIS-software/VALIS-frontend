@@ -33,6 +33,7 @@ class MultiTrackViewer extends React.Component {
     this.overlayElem = document.querySelector('#webgl-overlay');
 
     this.setState({
+      tracks: [],
       windowSize: [domElem.clientWidth, domElem.clientHeight],
       basePairsPerPixel: GENOME_LENGTH / domElem.clientWidth,
       selectEnabled: false,
@@ -214,7 +215,7 @@ class MultiTrackViewer extends React.Component {
     // TODO: need to extract dom-elem without hardcoded ID
     const domElem = document.querySelector('#webgl-canvas');
     this.renderContext = Util.newRenderContext(domElem);
-    this.program = TrackView.initializeShader(this.renderContext);
+    this.shaders = TrackView.initializeShaders(this.renderContext);
 
     domElem.addEventListener('wheel', this.handleMouse.bind(this));
     domElem.addEventListener('mousemove', this.handleMouseMove.bind(this));
@@ -270,20 +271,18 @@ class MultiTrackViewer extends React.Component {
       const track = this.views[viewGuids[i]];
       track.setHeight(this.state.trackHeight);
       track.setYOffset(i * this.state.trackHeight + this.state.trackOffset);
-      track.render(this.renderContext, this.program, windowState);
+      track.render(this.renderContext, this.shaders, windowState);
     }
   }
 
   render() {
     this.updateViews();
-    let annotations = [];
     const headers = [];
     const viewGuids = _.keys(this.views);
     const numTracks = viewGuids.length;
     const windowState = this.getWindowState();
     for (let i = 0; i < numTracks; i++) {
       const track = this.views[viewGuids[i]];
-      annotations = annotations.concat(track.getAnnotations(windowState));
       headers.push(track.getHeader(windowState));
     }
 
@@ -293,9 +292,7 @@ class MultiTrackViewer extends React.Component {
           {headers}
         </div>
         <canvas id="webgl-canvas" className={this.getClass()} />
-        <div id="webgl-overlay">
-          {annotations}
-        </div>
+        <div id="webgl-overlay" />
       </div>
     );
   }

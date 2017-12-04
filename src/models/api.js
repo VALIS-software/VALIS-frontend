@@ -19,7 +19,7 @@ class GenomeAPI {
 	}
 
 	getAnnotation(annotationIds) {
-		const cacheKey = annotationIds.join(",")
+		const cacheKey = annotationIds.join(',');
 		if (ANNOTATION_CACHE[cacheKey]) {
 			return new Promise((resolve, reject) => {
 				resolve(ANNOTATION_CACHE[cacheKey]);
@@ -36,7 +36,7 @@ class GenomeAPI {
 
 	getAnnotationData(annotationIds, startBp, endBp, samplingRate=1, trackHeightPx=0) {
 		const samplingRateQuery = `?sampling_rate=${samplingRate}&track_height_px=${trackHeightPx}`;
-		const requestUrl = `${this.baseUrl}/annotations/${annotationIds.join(",")}/${startBp}/${endBp}${samplingRateQuery}`;
+		const requestUrl = `${this.baseUrl}/annotations/${annotationIds.join(',')}/${startBp}/${endBp}${samplingRateQuery}`;
 		return axios.get(requestUrl);
 	}
 
