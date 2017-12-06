@@ -4,14 +4,17 @@ import { Igloo } from '../../../lib/igloojs/igloo.js';
 import Util from '../../helpers/util.js';
 import { GENOME_LENGTH } from '../../helpers/constants.js';
 
+
+import textFragmentShader from './text.frag';
 import vertexShader from './project.vert';
-import fragmentShader from './render.frag';
+import fragmentShader from './render_signal.frag';
 import annotationShader from './render_annotation.frag';
 
 import Annotation from '../Annotation/Annotation.jsx';
 import TrackHeader from '../TrackHeader/TrackHeader.jsx';
 
-const uuid = require('uuid/v1');
+const createText = require('gl-render-text');
+const uuid = require('uuid/v4');
 
 class TrackView {
   constructor() {
@@ -20,12 +23,14 @@ class TrackView {
     this.yOffset = 0.0;
     this.annotationTrack = null;
     this.dataTrack = null;
+    this.text = {};
   }
 
   static initializeShaders(context) {
     return {
       tileShader: context.program(vertexShader, fragmentShader),
       annotationShader: context.program(vertexShader, annotationShader),
+      textShader: context.program(vertexShader, textFragmentShader),
     };
   }
 
@@ -80,7 +85,7 @@ class TrackView {
           shader.uniform('displayedRange', [startBasePair, endBasePair]);
           shader.uniform('totalRange', [0, GENOME_LENGTH]);
           shader.uniform('offset', [0, this.yOffset]);
-
+          shader.uniform('selectedBasePair', windowState.selectedBasePair);
           if (windowState.selection) {
             shader.uniformi('showSelection', 1);
             shader.uniform('selectionBoundsMin', windowState.selection.min);
@@ -94,27 +99,29 @@ class TrackView {
     if (this.annotationTrack !== null) {
       const annotations = this.annotationTrack.getAnnotations(startBasePair, endBasePair, basePairsPerPixel, trackHeightPx);
       annotations.forEach(annotation => {
+        if (!this.text[annotation.id]) {
+          this.text[annotation.id] = createText(context.gl, 'SNX1032', { size: 16 });  
+        }
         const annotationHeight = annotation.heightPx / windowState.windowSize[1];
         const yOffset = annotation.yOffsetPx / windowState.windowSize[1];
-        const shader = shaders.annotationShader;
-          shader.use();
-          shader.uniform('currentTileDisplayRange', [annotation.startBp, annotation.endBp]);
-          shader.uniform('totalTileRange', [annotation.startBp, annotation.endBp]);
-          shader.uniform('color', [1.0, 0.0, 0.5]);
-          shader.uniform('windowSize', windowState.windowSize);
-          shader.uniform('trackHeight', annotationHeight);
-          shader.uniform('displayedRange', [startBasePair, endBasePair]);
-          shader.uniform('totalRange', [0, GENOME_LENGTH]);
-          shader.uniform('offset', [0, this.yOffset + yOffset]);
-
-          if (windowState.selection) {
-            shader.uniformi('showSelection', 1);
-            shader.uniform('selectionBoundsMin', windowState.selection.min);
-            shader.uniform('selectionBoundsMax', windowState.selection.max);
-          }
-
-          context.drawQuad(shader);
-          // j += 1;
+        const shader = shaders.textShader;
+        this.text[annotation.id].bind(1);
+        shader.use();
+        shader.uniformi('texture', 1);
+        shader.uniform('currentTileDisplayRange', [annotation.startBp, annotation.endBp]);
+        shader.uniform('totalTileRange', [annotation.startBp, annotation.endBp]);
+        shader.uniform('color', [1.0, 0.0, 0.5]);
+        shader.uniform('windowSize', windowState.windowSize);
+        shader.uniform('trackHeight', annotationHeight);
+        shader.uniform('displayedRange', [startBasePair, endBasePair]);
+        shader.uniform('totalRange', [0, GENOME_LENGTH]);
+        shader.uniform('offset', [0, this.yOffset + yOffset]);
+        if (windowState.selection) {
+          shader.uniformi('showSelection', 1);
+          shader.uniform('selectionBoundsMin', windowState.selection.min);
+          shader.uniform('selectionBoundsMax', windowState.selection.max);
+        }
+        context.drawQuad(shader);
       });
     }
   }

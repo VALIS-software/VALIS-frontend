@@ -11,6 +11,7 @@ import TrackView from '../TrackView/TrackView.jsx';
 import './MultiTrackViewer.scss';
 
 const _ = require('underscore');
+const d3 = require('d3');
 
 class MultiTrackViewer extends React.Component {
   constructor(props) {
@@ -50,10 +51,16 @@ class MultiTrackViewer extends React.Component {
   getWindowState() {
     if (!this.state) return {};
 
+    let x = -1;
+    if (this.state.lastDragCoord) {
+      x = Util.basePairForScreenX(this.state.lastDragCoord[0], this.state.startBasePair, this.state.basePairsPerPixel, this.state.windowSize);  
+    }
+    
     const windowState = {
       windowSize: this.state.windowSize,
       basePairsPerPixel: this.state.basePairsPerPixel,
       startBasePair: this.state.startBasePair,
+      selectedBasePair: x,
     };
 
     if (this.state.selectEnabled) {
@@ -184,6 +191,7 @@ class MultiTrackViewer extends React.Component {
       dragEnabled: false,
       lastDragCoord: null,
       startDragCoord: null,
+      selectEnabled: false,
     });
   }
 
@@ -285,11 +293,26 @@ class MultiTrackViewer extends React.Component {
       const track = this.views[viewGuids[i]];
       headers.push(track.getHeader(windowState));
     }
+    const width = windowState.windowSize ? windowState.windowSize[0] : 0;
+    const endBasePair = width ? Util.endBasePair(windowState.startBasePair, windowState.basePairsPerPixel, windowState.windowSize) : 0;
+    const xScale = d3.scaleLinear().range([0, width]).domain([windowState.startBasePair, endBasePair]);
+    const xAxis = d3.axisTop()
+                    .scale(xScale)
+                    .tickSizeOuter(-10)
+                    .ticks(Math.floor(width/100.0))
+                    .tickFormat(Util.roundToHumanReadable);
+
+    const height = '32px';
 
     return (
       <div className="content">
         <div id="track-headers">
           {headers}
+        </div>
+        <div className="track-header-axis">
+          <svg className="x-axis-container" height={height}>
+            <g className="x-axis" ref={node => d3.select(node).call(xAxis)} />
+          </svg>
         </div>
         <canvas id="webgl-canvas" className={this.getClass()} />
         <div id="webgl-overlay" />

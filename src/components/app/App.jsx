@@ -20,7 +20,9 @@ class App extends React.Component {
     this.api = new GenomeAPI();
     this.addDataTrack = this.addDataTrack.bind(this);
     this.addDataTrack('genome1.1');
-    this.addAnnotationTrack('annotation1.1');
+    this.addDataTrack('genome1.2');
+    this.addDataTrack('genome1.3');
+    // this.addAnnotationTrack('annotation1.1');
   }
 
   componentDidMount() {

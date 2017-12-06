@@ -49,6 +49,8 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 		max_annotation_length = 500000
 		z = max_annotation_length - min_annotation_length
 		for i in xrange(start_bp, end_bp, sampling_rate):
+			if random.random() > 0.2:
+				continue
 			sz = int(random.random()*z) + min_annotation_length
 			if sz/float(sampling_rate) > 10:
 				annotations.append({
