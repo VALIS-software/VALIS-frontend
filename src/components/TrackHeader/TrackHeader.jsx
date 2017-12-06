@@ -6,6 +6,8 @@ import './TrackHeader.scss';
 
 const d3 = require('d3');
 
+const TICK_SPACING_PIXELS = 15.0;
+
 class TrackHeader extends Component {
   getStyle() {
     return {
@@ -19,7 +21,7 @@ class TrackHeader extends Component {
     const yAxis = d3.axisLeft()
                     .scale(yScale)
                     .tickSizeOuter(-10)
-                    .ticks(Math.floor(this.props.height/15.0));
+                    .ticks(Math.floor(this.props.height/TICK_SPACING_PIXELS));
     const title = this.props.track.getTitle();
     const style = this.getStyle();
     const height = this.props.height + 'px';

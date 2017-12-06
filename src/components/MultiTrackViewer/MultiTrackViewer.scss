@@ -1,7 +1,7 @@
 $track-header-width: 250px;
 $browser-width: calc(100% - #{$track-header-width});
 $browser-height: 100%;
-
+$axis-height: 32px;
 .content {
     background-color: #222;
     flex: 1 0 auto;
@@ -38,7 +38,7 @@ $browser-height: 100%;
         width: 100%;
         background-color: #ddd;
         .x-axis {
-            transform: translate(0px, 32px);
+            transform: translate(0px, $axis-height);
             g:nth-child(2) {
                 display: none;
             }
@@ -48,7 +48,7 @@ $browser-height: 100%;
         }
     }
     .track-header-axis {
-        height: 32px;
+        height: $axis-height;
         z-index: 999;
     }
     #track-headers {
@@ -57,7 +57,7 @@ $browser-height: 100%;
         width: $track-header-width;
         height: $browser-height;
         left: 0px;
-        margin-top: 32px;
+        margin-top: $axis-height;
     }
     .drag-active {
         cursor: -webkit-grabbing; cursor:-moz-grabbing;

@@ -13,6 +13,8 @@ import './MultiTrackViewer.scss';
 const _ = require('underscore');
 const d3 = require('d3');
 
+const TICK_SPACING_PIXELS = 100.0;
+
 class MultiTrackViewer extends React.Component {
   constructor(props) {
     super(props);
@@ -299,7 +301,7 @@ class MultiTrackViewer extends React.Component {
     const xAxis = d3.axisTop()
                     .scale(xScale)
                     .tickSizeOuter(-10)
-                    .ticks(Math.floor(width/100.0))
+                    .ticks(Math.floor(width/TICK_SPACING_PIXELS))
                     .tickFormat(Util.roundToHumanReadable);
 
     const height = '32px';
