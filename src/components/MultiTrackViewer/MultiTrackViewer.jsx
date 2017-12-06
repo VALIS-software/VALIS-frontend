@@ -1,9 +1,10 @@
 // Dependencies
 import React from 'react';
 import PropTypes from 'prop-types';
-
 import Util from '../../helpers/util.js';
 import { GENOME_LENGTH } from '../../helpers/constants.js';
+import StatusTile from '../StatusTile/StatusTile.jsx';
+
 
 import TrackView from '../TrackView/TrackView.jsx';
 
@@ -21,6 +22,11 @@ class MultiTrackViewer extends React.Component {
     this.handleLoad = this.handleLoad.bind(this);
     this.views = {};
     this.overlayElem = null;
+    this.state = {
+      startBasePair: 0,
+      basePairsPerPixel: 0,
+      trackHeight: 0,
+    };
   }
 
   componentDidMount() {
@@ -318,6 +324,11 @@ class MultiTrackViewer extends React.Component {
         </div>
         <canvas id="webgl-canvas" className={this.getClass()} />
         <div id="webgl-overlay" />
+        <StatusTile 
+          startBasePair={this.state.startBasePair}
+          basePairsPerPixel={this.state.basePairsPerPixel}
+          trackHeight={this.state.trackHeight}
+        />
       </div>
     );
   }
