@@ -1,11 +1,42 @@
+$axis-width: 30px;
+$header-content-width: calc(100% - #{$axis-width});
+
 .track-header {
-	width: 100%;
 	position: absolute;
-	background-color: rgb(90, 90, 90);
+	width: 100%;
 	.track-header-contents {
-		position: relative;
-		text-align: center;
-		top: 50%;
-		transform: translateY(-50%); 
+		float: left;
+		width: $header-content-width;
+		height: 100%;
+		background-color: #ccc;
+		.inner {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			-webkit-transform: translate(-50%, -50%);
+			transform: translate(-50%, -50%);
+		}
+	}
+	.track-header-axis {
+		float: right;
+		width: $axis-width;
+		height: 100%;
+		.y-axis-container {
+			width: 100%;
+			background-color: #ddd;
+			.yAxis {
+				transform : translate($axis-width, 0px);
+				g:nth-child(2) {
+					display: none;
+				}
+				g:last-child {
+					display: none;
+				}
+			}
+		}
+	}
+
+	.clearfix {
+		clear: both;
 	}
 }

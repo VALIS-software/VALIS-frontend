@@ -11,12 +11,15 @@ import TrackView from '../TrackView/TrackView.jsx';
 import './MultiTrackViewer.scss';
 
 const _ = require('underscore');
+const d3 = require('d3');
+
+const TICK_SPACING_PIXELS = 100.0;
 
 class MultiTrackViewer extends React.Component {
   constructor(props) {
     super(props);
     this.handleLoad = this.handleLoad.bind(this);
-    this.views = [];
+    this.views = {};
     this.overlayElem = null;
   }
 
@@ -33,6 +36,7 @@ class MultiTrackViewer extends React.Component {
     this.overlayElem = document.querySelector('#webgl-overlay');
 
     this.setState({
+      tracks: [],
       windowSize: [domElem.clientWidth, domElem.clientHeight],
       basePairsPerPixel: GENOME_LENGTH / domElem.clientWidth,
       selectEnabled: false,
@@ -49,10 +53,16 @@ class MultiTrackViewer extends React.Component {
   getWindowState() {
     if (!this.state) return {};
 
+    let x = -1;
+    if (this.state.lastDragCoord) {
+      x = Util.basePairForScreenX(this.state.lastDragCoord[0], this.state.startBasePair, this.state.basePairsPerPixel, this.state.windowSize);  
+    }
+    
     const windowState = {
       windowSize: this.state.windowSize,
       basePairsPerPixel: this.state.basePairsPerPixel,
       startBasePair: this.state.startBasePair,
+      selectedBasePair: x,
     };
 
     if (this.state.selectEnabled) {
@@ -183,6 +193,7 @@ class MultiTrackViewer extends React.Component {
       dragEnabled: false,
       lastDragCoord: null,
       startDragCoord: null,
+      selectEnabled: false,
     });
   }
 
@@ -214,7 +225,7 @@ class MultiTrackViewer extends React.Component {
     // TODO: need to extract dom-elem without hardcoded ID
     const domElem = document.querySelector('#webgl-canvas');
     this.renderContext = Util.newRenderContext(domElem);
-    this.program = TrackView.initializeShader(this.renderContext);
+    this.shaders = TrackView.initializeShaders(this.renderContext);
 
     domElem.addEventListener('wheel', this.handleMouse.bind(this));
     domElem.addEventListener('mousemove', this.handleMouseMove.bind(this));
@@ -235,16 +246,26 @@ class MultiTrackViewer extends React.Component {
   }
 
   updateViews() {
-    const newViews = [];
-    this.props.tracks.forEach(model => {
-      const idx = _.findIndex(this.views, track => {
-        return track.dataTrack === model;
-      });
-      const track = idx >= 0 ? this.views[idx] : new TrackView();
-      track.setDataTrack(model);
-      track.setHeight(this.state.trackHeight);
-      track.setYOffset(newViews.length * this.state.trackHeight + this.state.trackOffset);
-      newViews.push(track);
+    const newViews = {};
+    let idx = 0;
+    this.props.tracks.forEach(track => {
+      if (!this.views[track.guid]) {
+        newViews[track.guid] = new TrackView();
+      } else {
+        newViews[track.guid] = this.views[track.guid];
+      }
+      const trackView = newViews[track.guid];
+
+      if (track.dataTrack) {
+        trackView.setDataTrack(track.dataTrack);
+      }
+
+      if (track.annotationTrack) {
+        trackView.setAnnotationTrack(track.annotationTrack);
+      }
+      trackView.setHeight(this.state.trackHeight);
+      trackView.setYOffset(idx * this.state.trackHeight + this.state.trackOffset);
+      idx += 1;
     });
     this.views = newViews;
   }
@@ -253,37 +274,50 @@ class MultiTrackViewer extends React.Component {
     const gl = this.glContext();
     gl.clear(gl.COLOR_BUFFER_BIT);
     const windowState = this.getWindowState();
-    const numTracks = this.views.length;
+    const viewGuids = _.keys(this.views);
+    const numTracks = viewGuids.length;
     for (let i = 0; i < numTracks; i++) {
       // setup track position
-      const track = this.views[i];
+      const track = this.views[viewGuids[i]];
       track.setHeight(this.state.trackHeight);
       track.setYOffset(i * this.state.trackHeight + this.state.trackOffset);
-      track.render(this.renderContext, this.program, windowState);
+      track.render(this.renderContext, this.shaders, windowState);
     }
   }
 
   render() {
     this.updateViews();
-    let annotations = [];
     const headers = [];
-    const numTracks = this.views.length;
+    const viewGuids = _.keys(this.views);
+    const numTracks = viewGuids.length;
     const windowState = this.getWindowState();
     for (let i = 0; i < numTracks; i++) {
-      const track = this.views[i];
-      annotations = annotations.concat(track.getAnnotations(windowState));
+      const track = this.views[viewGuids[i]];
       headers.push(track.getHeader(windowState));
     }
+    const width = windowState.windowSize ? windowState.windowSize[0] : 0;
+    const endBasePair = width ? Util.endBasePair(windowState.startBasePair, windowState.basePairsPerPixel, windowState.windowSize) : 0;
+    const xScale = d3.scaleLinear().range([0, width]).domain([windowState.startBasePair, endBasePair]);
+    const xAxis = d3.axisTop()
+                    .scale(xScale)
+                    .tickSizeOuter(-10)
+                    .ticks(Math.floor(width/TICK_SPACING_PIXELS))
+                    .tickFormat(Util.roundToHumanReadable);
+
+    const height = '32px';
 
     return (
       <div className="content">
         <div id="track-headers">
           {headers}
         </div>
-        <canvas id="webgl-canvas" className={this.getClass()} />
-        <div id="webgl-overlay">
-          {annotations}
+        <div className="track-header-axis">
+          <svg className="x-axis-container" height={height}>
+            <g className="x-axis" ref={node => d3.select(node).call(xAxis)} />
+          </svg>
         </div>
+        <canvas id="webgl-canvas" className={this.getClass()} />
+        <div id="webgl-overlay" />
       </div>
     );
   }

@@ -7,7 +7,6 @@ import MenuItem from 'material-ui/MenuItem';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 
-// Styles
 import './Header.scss';
 
 class Header extends Component {

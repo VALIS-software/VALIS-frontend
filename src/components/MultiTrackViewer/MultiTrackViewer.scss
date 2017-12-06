@@ -1,15 +1,11 @@
 $track-header-width: 250px;
 $browser-width: calc(100% - #{$track-header-width});
 $browser-height: 100%;
-
+$axis-height: 32px;
 .content {
     background-color: #222;
     flex: 1 0 auto;
     color: #fff;
-    align-items: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
     position: relative;
     overflow: hidden;
 
@@ -37,11 +33,31 @@ $browser-height: 100%;
         user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
     }
 
+    .x-axis-container {
+        padding-left: $track-header-width;
+        width: 100%;
+        background-color: #ddd;
+        .x-axis {
+            transform: translate(0px, $axis-height);
+            g:nth-child(2) {
+                display: none;
+            }
+            g:last-child {
+                display: none;
+            }
+        }
+    }
+    .track-header-axis {
+        height: $axis-height;
+        z-index: 999;
+    }
     #track-headers {
         position: absolute;
+        overflow: hidden;
         width: $track-header-width;
         height: $browser-height;
         left: 0px;
+        margin-top: $axis-height;
     }
     .drag-active {
         cursor: -webkit-grabbing; cursor:-moz-grabbing;

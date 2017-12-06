@@ -24,37 +24,43 @@ def annotation(annotation_id):
 	else:
 		abort(404, "Annotation not found")
 
-@app.route("/annotations/<string:annotation_id>/<int:start_bp>/<int:end_bp>")
-def get_annotation_data(annotation_id, start_bp, end_bp):
+@app.route("/annotations/<string:annotation_ids>/<int:start_bp>/<int:end_bp>")
+def get_annotation_data(annotation_ids, start_bp, end_bp):
+	annotation_id = annotation_ids.split(",")[0] # mock server doesn't return multiple annotations!
 	start_bp = int(start_bp)
 	end_bp = int(end_bp)
 	
 	sampling_rate = 1
 	if request.args.get('sampling_rate'):
-		sampling_rate = int(request.args.get('sampling_rate'))
+		sampling_rate = int(float(request.args.get('sampling_rate')))
 
 	track_height_px = 0
 	if request.args.get('track_height_px'):
-		track_height_px = int(request.args.get('track_height_px'))
+		track_height_px = int(float(request.args.get('track_height_px')))
 
 	if  annotation_id in MOCK_ANNOTATIONS:
 		annotation = MOCK_ANNOTATIONS[annotation_id]
 		start_bp = max([start_bp, annotation["startBp"]])
 		end_bp = min([end_bp, annotation["endBp"]])
 		annotations = []
-		# add random annotations, keep ones that are > 100px @ curr sampling rate
-		random.seed(start_bp)
-		for i in xrange(0, end_bp):
-			if random.random() > 0.8:
-				sz = int(random.random()*1600) + 200
-			if sz/float(sampling_rate) > 100:
+		# add random annotations, return ones that are > 20px @ curr sampling rate
+		
+		min_annotation_length = 1500
+		max_annotation_length = 500000
+		z = max_annotation_length - min_annotation_length
+		for i in xrange(start_bp, end_bp, sampling_rate):
+			if random.random() > 0.2:
+				continue
+			sz = int(random.random()*z) + min_annotation_length
+			if sz/float(sampling_rate) > 10:
 				annotations.append({
+					"id": random.randint(0,1000000000),
+					"info" : "GENE1",
 					"startBp": i,
       				"endBp": i + sz,
       				"yOffsetPx": 0,
       				"heightPx": 25,
 				})
-
 		# move overlaps that fit in track height, discard those that don't
 		ret = []
 		last = None
@@ -75,6 +81,7 @@ def get_annotation_data(annotation_id, start_bp, end_bp):
 		"endBp" : end_bp,
 		"samplingRate": sampling_rate,
 		"trackHeightPx": track_height_px,
+		"annotationIds": annotation_ids,
 		"values": ret
 	})
 

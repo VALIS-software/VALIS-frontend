@@ -1,5 +1,9 @@
 import { Igloo } from '../../lib/igloojs/igloo.js';
 
+const d3 = require('d3');
+
+const formatSi = d3.format('.6s');
+
 class Util {
   static floorToMultiple(x, k) {
     return Math.round((x % k === 0) ? x :  x + k - x % k - k);
@@ -64,6 +68,14 @@ class Util {
     };
 
     return igloo;
+  }
+
+  static roundToHumanReadable(x) {
+    const s = formatSi(x);
+    switch (s[s.length - 1]) {
+      case 'G': return s.slice(0, -1) + 'B';
+      default: return s;
+    }
   }
 }
 
