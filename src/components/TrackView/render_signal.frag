@@ -31,7 +31,6 @@ bool gridVisible(float currBp, float pixelsPerBp, float spacing, float thickness
 	return ( (d > (1.0 - alpha) || d < alpha) && pixelsPerBp * spacing > minSize);
 }
 
-
 void main() {
 	float currBp = mix(currentTileDisplayRange.x, currentTileDisplayRange.y, coord.x);
 	float locInTile = (currBp - totalTileRange.x) / (totalTileRange.y - totalTileRange.x);
