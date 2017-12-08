@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { AppContainer } from 'react-hot-loader'; // required
 
-import App from './components/app/App.jsx';
+import App from './components/App/App.jsx';
 
 import './index.scss';
 
@@ -19,5 +19,5 @@ renderApp(); // Renders App on init
 
 if (module.hot) {
   // Renders App every time a change in code happens.
-  module.hot.accept('./components/app/App.jsx', renderApp);
+  module.hot.accept('./components/App/App.jsx', renderApp);
 }

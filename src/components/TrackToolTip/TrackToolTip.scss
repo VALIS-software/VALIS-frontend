@@ -1,0 +1,24 @@
+.track-tool-tip {
+    position: absolute;
+
+    .track-tool-tip-inner {
+        position: absolute;
+        overflow: wrap;
+        margin-left: 8px;
+        padding: 8px;
+        border-radius:8px;
+        color: black;
+        background-color: rgba(255.0, 255.0, 255.0, 0.90);
+        transform: translateY(-50%);
+        font-size: 10px;
+        width: auto;
+    }
+
+    .track-tool-tip-arrow {
+        width: 0; 
+        height: 0;
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent; 
+        border-right:8px solid rgba(255.0, 255.0, 255.0, 0.90);
+    }
+}

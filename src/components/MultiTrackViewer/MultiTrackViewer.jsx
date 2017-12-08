@@ -3,10 +3,10 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Util from '../../helpers/util.js';
 import { GENOME_LENGTH } from '../../helpers/constants.js';
+
 import StatusTile from '../StatusTile/StatusTile.jsx';
-
-
 import TrackView from '../TrackView/TrackView.jsx';
+import TrackToolTip from '../TrackToolTip/TrackToolTip.jsx';
 
 // Styles
 import './MultiTrackViewer.scss';
@@ -15,6 +15,8 @@ const _ = require('underscore');
 const d3 = require('d3');
 
 const TICK_SPACING_PIXELS = 100.0;
+const MIN_TRACK_HEIGHT_PIXELS = 32.0;
+const ANNOTATION_OFFSET = 2.0;
 
 class MultiTrackViewer extends React.Component {
   constructor(props) {
@@ -38,11 +40,9 @@ class MultiTrackViewer extends React.Component {
     // need to reset explicit canvas dims to prevent canvas stretch scaling
     domElem.width = domElem.clientWidth;
     domElem.height = domElem.clientHeight;
-
     this.overlayElem = document.querySelector('#webgl-overlay');
 
     this.setState({
-      tracks: [],
       windowSize: [domElem.clientWidth, domElem.clientHeight],
       basePairsPerPixel: GENOME_LENGTH / domElem.clientWidth,
       selectEnabled: false,
@@ -103,10 +103,47 @@ class MultiTrackViewer extends React.Component {
     return classes.join(' ');
   }
 
-  trackOffsetForScreenY(y) { 
-    const totalH = (this.props.tracks.length * this.state.trackHeight) * this.state.windowSize[1];
-    return (y - (this.state.trackOffset * this.state.windowSize[1])) / totalH;
+  getTrackInfoAtCoordinate(coord) {
+      // get base pair: 
+      const start = this.state.startBasePair;
+      const bpp = this.state.basePairsPerPixel;
+      const windowSize = this.state.windowSize;
+      const end = Util.endBasePair(start, bpp, windowSize);
+      const hoveredBasePair = Util.basePairForScreenX(coord[0], start, bpp, windowSize);
+      // get y Offset:
+      const trackOffset = (coord[1] - this.state.trackOffset * windowSize[1]) / windowSize[1];
+      console.log(coord, trackOffset, windowSize[1]);
+      const trackHeightPx = this.state.trackHeight * windowSize[1];
+
+      const numTracks = this.props.tracks.length;
+      const idx = Math.floor(trackOffset / (this.state.trackHeight));
+      if (idx < this.props.tracks.length) {
+        const track = this.props.tracks[idx];
+        let dataTooltip = null;
+        // check that there is a data track
+        if (track.dataTrack) {
+          dataTooltip = track.dataTrack.getTooltipData(hoveredBasePair, trackOffset, start, end, bpp, trackHeightPx);
+          // make sure that the current cursor is on a valid value:
+          if (dataTooltip.value !== null) {
+            return {
+              yOffset: trackOffset,
+              basePair: hoveredBasePair,
+              track: track,
+              tooltip: dataTooltip,
+              trackCenterPx: idx * trackHeightPx + trackHeightPx/2.0 + this.state.trackOffset * windowSize[1],
+            };
+          }
+        }
+      }
+      return {
+        yOffset: trackOffset,
+        basePair: hoveredBasePair,
+        track: null,
+        tooltip: null,
+        trackCenterPx: null,
+      };
   }
+
 
   handleMouseMove(e) {
     if (this.state.dragEnabled) {
@@ -133,6 +170,7 @@ class MultiTrackViewer extends React.Component {
     });
   }
 
+
   handleMouse(e) {
     if (this.state.dragEnabled) {
       return;
@@ -141,16 +179,17 @@ class MultiTrackViewer extends React.Component {
           const lastTrackOffset = this.trackOffsetForScreenY(e.offsetY);
           
           const trackHeight = this.state.trackHeight / (1.0 - (e.deltaY / this.state.windowSize[1]));  
-          
-          this.setState({
-            trackHeight: trackHeight,
-          });
-          // compute the offset so that the y position remains constant after zoom:
-          const totalH = (this.state.tracks.length * this.state.trackHeight) * this.state.windowSize[1];
-          const offset = Math.min(0.0, (e.offsetY - (lastTrackOffset * totalH)) / this.state.windowSize[1]);
-          this.setState({
-            trackOffset: offset,
-          });
+          if (trackHeight * this.state.windowSize[1] > MIN_TRACK_HEIGHT_PIXELS) {
+            this.setState({
+              trackHeight: trackHeight,
+            });
+            // compute the offset so that the y position remains constant after zoom:
+            const newTotalH = (this.props.tracks.length * trackHeight) * this.state.windowSize[1];
+            const offset = Math.min(0.0, (e.offsetY - (lastTrackOffset * newTotalH)) / this.state.windowSize[1]);
+            this.setState({
+              trackOffset: offset,
+            });
+          }
         }
     } else if (this.state.basePairsPerPixel <= GENOME_LENGTH / (this.state.windowSize[0])) {
       // x pan sets the base pair!
@@ -208,7 +247,7 @@ class MultiTrackViewer extends React.Component {
       this.setState({
         selectEnabled: true,
       });
-    } else if (e.key === 'Meta') {
+    } else if (e.key === 'Control') {
       this.setState({
         zoomEnabled: true,
       });
@@ -220,7 +259,7 @@ class MultiTrackViewer extends React.Component {
       this.setState({
         selectEnabled: false,
       });
-    } else if (e.key === 'Meta') {
+    } else if (e.key === 'Control') {
       this.setState({
         zoomEnabled: false,
       });
@@ -230,6 +269,7 @@ class MultiTrackViewer extends React.Component {
   handleLoad() {
     // TODO: need to extract dom-elem without hardcoded ID
     const domElem = document.querySelector('#webgl-canvas');
+    
     this.renderContext = Util.newRenderContext(domElem);
     this.shaders = TrackView.initializeShaders(this.renderContext);
 
@@ -247,8 +287,15 @@ class MultiTrackViewer extends React.Component {
     renderFrame();
   }
 
+
   glContext() {
     return this.renderContext.gl;
+  }
+
+
+  trackOffsetForScreenY(y) { 
+    const totalH = (this.props.tracks.length * this.state.trackHeight) * this.state.windowSize[1];
+    return (y - (this.state.trackOffset * this.state.windowSize[1])) / totalH;
   }
 
   updateViews() {
@@ -310,20 +357,35 @@ class MultiTrackViewer extends React.Component {
                     .ticks(Math.floor(width/TICK_SPACING_PIXELS))
                     .tickFormat(Util.roundToHumanReadable);
 
-    const height = '32px';
-
+    let tooltip = (<div />);
+    if (this.state.lastDragCoord && !this.state.selectEnabled) {
+      const coord = this.state.lastDragCoord.slice();
+      const trackInfo = this.getTrackInfoAtCoordinate(coord);
+      const x = ANNOTATION_OFFSET + Util.pixelForBasePair(trackInfo.basePair, this.state.startBasePair, this.state.basePairsPerPixel, this.state.windowSize);
+      
+      if (trackInfo.track !== null && trackInfo.tooltip !== null) {
+        const trackHeightPx = this.state.trackHeight * this.state.windowSize[1];
+        const y = (-trackInfo.tooltip.value + 0.5) * trackHeightPx + trackInfo.trackCenterPx;
+        tooltip = (<TrackToolTip x={x} y={y}>
+          <div>BP:{Math.round(trackInfo.basePair)}</div>
+          <div>Value:{trackInfo.tooltip.value.toFixed(3)}</div>
+        </TrackToolTip>);
+      }
+    }
     return (
       <div className="content">
         <div id="track-headers">
           {headers}
         </div>
         <div className="track-header-axis">
-          <svg className="x-axis-container" height={height}>
+          <svg className="x-axis-container">
             <g className="x-axis" ref={node => d3.select(node).call(xAxis)} />
           </svg>
         </div>
         <canvas id="webgl-canvas" className={this.getClass()} />
-        <div id="webgl-overlay" />
+        <div id="webgl-overlay">
+          {tooltip}
+        </div>
         <StatusTile 
           startBasePair={this.state.startBasePair}
           basePairsPerPixel={this.state.basePairsPerPixel}

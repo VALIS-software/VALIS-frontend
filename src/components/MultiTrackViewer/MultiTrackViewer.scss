@@ -36,6 +36,7 @@ $axis-height: 32px;
     .x-axis-container {
         padding-left: $track-header-width;
         width: 100%;
+        height: $axis-height;
         background-color: #ddd;
         .x-axis {
             transform: translate(0px, $axis-height);

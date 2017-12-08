@@ -9,11 +9,9 @@ import textFragmentShader from './text.frag';
 import vertexShader from './project.vert';
 import fragmentShader from './render_signal.frag';
 import annotationShader from './render_annotation.frag';
-
-import Annotation from '../Annotation/Annotation.jsx';
 import TrackHeader from '../TrackHeader/TrackHeader.jsx';
 
-const createText = require('gl-render-text');
+const createText = require('../../../lib/gl-render-text/createText.js');
 const uuid = require('uuid/v4');
 
 class TrackView {
@@ -29,7 +27,6 @@ class TrackView {
   static initializeShaders(context) {
     return {
       tileShader: context.program(vertexShader, fragmentShader),
-      annotationShader: context.program(vertexShader, annotationShader),
       textShader: context.program(vertexShader, textFragmentShader),
     };
   }
@@ -91,7 +88,6 @@ class TrackView {
             shader.uniform('selectionBoundsMin', windowState.selection.min);
             shader.uniform('selectionBoundsMax', windowState.selection.max);
           }
-
           context.drawQuad(shader);
           j += 1;
       });
@@ -100,14 +96,16 @@ class TrackView {
       const annotations = this.annotationTrack.getAnnotations(startBasePair, endBasePair, basePairsPerPixel, trackHeightPx);
       annotations.forEach(annotation => {
         if (!this.text[annotation.id]) {
-          this.text[annotation.id] = createText(context.gl, 'SNX1032', { size: 16 });  
+          this.text[annotation.id] = createText(context.gl, 'SNX1032', { size: 16, color: [1.0, 0.0, 255.0] }); 
         }
-        const annotationHeight = annotation.heightPx / windowState.windowSize[1];
+        const annotationHeight = 32 / windowState.windowSize[1];
         const yOffset = annotation.yOffsetPx / windowState.windowSize[1];
         const shader = shaders.textShader;
+        annotation.endBp = annotation.startBp + 128.0 * windowState.basePairsPerPixel;
         this.text[annotation.id].bind(1);
         shader.use();
         shader.uniformi('texture', 1);
+        shader.uniform('textureDimensions', this.text[annotation.id].shape);
         shader.uniform('currentTileDisplayRange', [annotation.startBp, annotation.endBp]);
         shader.uniform('totalTileRange', [annotation.startBp, annotation.endBp]);
         shader.uniform('color', [1.0, 0.0, 0.5]);

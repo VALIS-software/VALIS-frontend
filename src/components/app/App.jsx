@@ -19,17 +19,17 @@ class App extends React.Component {
     super(props);
     this.api = new GenomeAPI();
     this.addDataTrack = this.addDataTrack.bind(this);
-    this.addDataTrack('genome1.1');
-    this.addDataTrack('genome1.2');
-    this.addDataTrack('genome1.3');
-    this.addAnnotationTrack('annotation1.1');
-    this.addAnnotationTrack('annotation1.2');
   }
 
   componentDidMount() {
     this.setState({
       tracks: [],
     });
+    this.addDataTrack('genome1.1');
+    this.addDataTrack('genome1.2');
+    this.addDataTrack('genome1.3');
+    this.addAnnotationTrack('annotation1.1');
+    this.addAnnotationTrack('annotation1.2');
   }
 
   getTracks() {
@@ -43,6 +43,7 @@ class App extends React.Component {
         dataTrack: model,
         annotationTrack: null,
       };
+
       this.setState({
         tracks: this.state.tracks.concat([track]),
       });
