@@ -19,8 +19,6 @@ vec2 GLtoUVCoordinates(vec2 pt) {
 	return (pt * vec2(1, -1) + 1.0) / 2.0; 
 }
 
-
-
 void main() {
 	// coord maps to the range [0, 1] and is sent to the frag shader
     coord = GLtoUVCoordinates(points);

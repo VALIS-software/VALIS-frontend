@@ -111,26 +111,29 @@ class MultiTrackViewer extends React.Component {
       const end = Util.endBasePair(start, bpp, windowSize);
       const hoveredBasePair = Util.basePairForScreenX(coord[0], start, bpp, windowSize);
       // get y Offset:
-      const trackOffset = this.trackOffsetForScreenY(coord[1]);
+      const trackOffset = (coord[1] - this.state.trackOffset * windowSize[1]) / windowSize[1];
+      console.log(coord, trackOffset, windowSize[1]);
       const trackHeightPx = this.state.trackHeight * windowSize[1];
 
       const numTracks = this.props.tracks.length;
-      const idx = Math.floor(trackOffset / (2 * this.state.trackHeight));
+      const idx = Math.floor(trackOffset / (this.state.trackHeight));
       if (idx < this.props.tracks.length) {
         const track = this.props.tracks[idx];
-
         let dataTooltip = null;
+        // check that there is a data track
         if (track.dataTrack) {
           dataTooltip = track.dataTrack.getTooltipData(hoveredBasePair, trackOffset, start, end, bpp, trackHeightPx);
+          // make sure that the current cursor is on a valid value:
+          if (dataTooltip.value !== null) {
+            return {
+              yOffset: trackOffset,
+              basePair: hoveredBasePair,
+              track: track,
+              tooltip: dataTooltip,
+              trackCenterPx: idx * trackHeightPx + trackHeightPx/2.0 + this.state.trackOffset * windowSize[1],
+            };
+          }
         }
-        
-        return {
-          yOffset: trackOffset,
-          basePair: hoveredBasePair,
-          track: track,
-          tooltip: dataTooltip,
-          trackCenterPx: idx * trackHeightPx + trackHeightPx/2.0 + this.state.trackOffset * windowSize[1],
-        };
       }
       return {
         yOffset: trackOffset,
@@ -181,8 +184,8 @@ class MultiTrackViewer extends React.Component {
               trackHeight: trackHeight,
             });
             // compute the offset so that the y position remains constant after zoom:
-            const totalH = (this.props.tracks.length * this.state.trackHeight) * this.state.windowSize[1];
-            const offset = Math.min(0.0, (e.offsetY - (lastTrackOffset * totalH)) / this.state.windowSize[1]);
+            const newTotalH = (this.props.tracks.length * trackHeight) * this.state.windowSize[1];
+            const offset = Math.min(0.0, (e.offsetY - (lastTrackOffset * newTotalH)) / this.state.windowSize[1]);
             this.setState({
               trackOffset: offset,
             });
@@ -355,7 +358,7 @@ class MultiTrackViewer extends React.Component {
                     .tickFormat(Util.roundToHumanReadable);
 
     let tooltip = (<div />);
-    if (this.state.lastDragCoord) {
+    if (this.state.lastDragCoord && !this.state.selectEnabled) {
       const coord = this.state.lastDragCoord.slice();
       const trackInfo = this.getTrackInfoAtCoordinate(coord);
       const x = ANNOTATION_OFFSET + Util.pixelForBasePair(trackInfo.basePair, this.state.startBasePair, this.state.basePairsPerPixel, this.state.windowSize);
@@ -364,8 +367,9 @@ class MultiTrackViewer extends React.Component {
         const trackHeightPx = this.state.trackHeight * this.state.windowSize[1];
         const y = (-trackInfo.tooltip.value + 0.5) * trackHeightPx + trackInfo.trackCenterPx;
         tooltip = (<TrackToolTip x={x} y={y}>
-            <div>Value: {trackInfo.tooltip.value.toFixed(3)}</div>
-          </TrackToolTip>);
+          <div>BP:{Math.round(trackInfo.basePair)}</div>
+          <div>Value:{trackInfo.tooltip.value.toFixed(3)}</div>
+        </TrackToolTip>);
       }
     }
     return (

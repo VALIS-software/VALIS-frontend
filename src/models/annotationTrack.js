@@ -19,12 +19,6 @@ class AnnotationTrack {
     return this.cache.get(startBp, endBp, samplingRate, trackHeightPx);
   }
 
-  getTooltipData(basePair, yOffset, startBp, endBp, samplingRate, trackHeightPx) {
-    return {
-      value: null,
-    };
-  }
-
   getAnnotations(start, end, samplingRate, trackHeightPx) {
     const tiles = this.getTiles(start, end, samplingRate, trackHeightPx);
     let ret = [];
