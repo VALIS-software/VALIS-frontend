@@ -7,12 +7,16 @@ import './TrackToolTip.scss';
 
 
 function TrackToolTip(props) {
-  const style = {
-    transform: `translate(${props.x}px, ${props.y}px)`,
+  const style1 = {
+    transform: `translate(${props.x}px, ${props.y}px) translateY(-50%)`,
+  };
+  const style2 = {
+    transform: `translate(${props.x}px, ${props.y}px) translateY(-100%)`,
   };
   return (
-    <div style={style} className="track-tool-tip">
-      Hello
+    <div className="track-tool-tip">
+      <div style={style1} className="track-tool-tip-arrow" />
+      <div style={style2} className="track-tool-tip-inner">{props.children}</div>
     </div>
   );
 }

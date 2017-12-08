@@ -4,8 +4,8 @@ import Util from '../helpers/util.js';
 const _ = require('underscore');
 const xspans = require('xspans');
 
-const CACHE_TILE_SIZE = 1024;
-const CACHE_SAMPLING_STEP_SIZE = 4096;
+export const CACHE_TILE_SIZE = 1024;
+export const CACHE_SAMPLING_STEP_SIZE = 4096;
 const CACHE_THROTTLE_MS = 250;
 
 export class Tile {

@@ -1,6 +1,6 @@
 
 import Util from '../helpers/util.js';
-import { Tile, TileCache } from './tileCache.js';
+import { Tile, TileCache, CACHE_TILE_SIZE } from './tileCache.js';
 import { GENOME_LENGTH } from '../helpers/constants.js';
 
 class DataTrack {
@@ -24,22 +24,22 @@ class DataTrack {
     const tiles = this.cache.get(startBp, endBp, samplingRate, trackHeightPx);
     
     // find the basePair in the tiles:
-    let ret = null;
+    let ret = {
+      value: null,
+    };
     tiles.forEach(tile => {
       if (basePair >= tile.range[0] && basePair <= tile.range[1]) {
-        if (tile.tile.dataRange[0] > basePair || tile.tile.dataRange[1] < basePair) {
-          ret = {
-            value: null,
-          };
-        } else {
+        if (basePair >= tile.tile.dataRange[0]  && basePair <= tile.tile.dataRange[1]) {
           const totalRange = (tile.tile.dataRange[1] - tile.tile.dataRange[0]);
-          const idx = Math.floor((startBp - tile.tile.dataRange[0]) / totalRange);
+          const idx = Math.floor(CACHE_TILE_SIZE * (basePair - tile.tile.dataRange[0]) / totalRange);
           ret = {
-            value: tile.tile.data[idx],
+            value: tile.tile.data[idx*4],
           };
+          console.log(idx);
         }
       }
     });
+    console.log(basePair, ret);
     return ret;
   }
 

@@ -16,7 +16,6 @@ const d3 = require('d3');
 
 const TICK_SPACING_PIXELS = 100.0;
 const MIN_TRACK_HEIGHT_PIXELS = 32.0;
-const ANNOTATION_HEIGHT = 48.0;
 const ANNOTATION_OFFSET = 2.0;
 
 class MultiTrackViewer extends React.Component {
@@ -254,7 +253,7 @@ class MultiTrackViewer extends React.Component {
       this.setState({
         selectEnabled: true,
       });
-    } else if (e.key === 'Meta') {
+    } else if (e.key === 'Control') {
       this.setState({
         zoomEnabled: true,
       });
@@ -266,7 +265,7 @@ class MultiTrackViewer extends React.Component {
       this.setState({
         selectEnabled: false,
       });
-    } else if (e.key === 'Meta') {
+    } else if (e.key === 'Control') {
       this.setState({
         zoomEnabled: false,
       });
@@ -369,9 +368,13 @@ class MultiTrackViewer extends React.Component {
       const coord = this.state.lastDragCoord.slice();
       const trackInfo = this.getTrackInfoAtCoordinate(coord);
       const x = ANNOTATION_OFFSET + Util.pixelForBasePair(trackInfo.basePair, this.state.startBasePair, this.state.basePairsPerPixel, this.state.windowSize);
-      const y = trackInfo.trackCenterPx - ANNOTATION_HEIGHT/2.0;
-      if (trackInfo.track !== null) {
-        tooltip = (<TrackToolTip x={x} y={y} height={ANNOTATION_HEIGHT} />);
+      const y = trackInfo.trackCenterPx;
+      if (trackInfo.track !== null && trackInfo.dataTooltip !== null) {
+        console.log(trackInfo.dataTooltip);
+        tooltip = (<TrackToolTip x={x} y={y}>
+            <span>Value: {trackInfo.dataTooltip.value}</span>
+            <span></span>
+          </TrackToolTip>);
       }
     }
     return (
