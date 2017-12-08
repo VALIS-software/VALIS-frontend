@@ -35,11 +35,9 @@ class DataTrack {
           ret = {
             value: tile.tile.data[idx*4],
           };
-          console.log(idx);
         }
       }
     });
-    console.log(basePair, ret);
     return ret;
   }
 

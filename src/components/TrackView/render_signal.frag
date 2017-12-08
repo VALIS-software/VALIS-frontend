@@ -36,10 +36,10 @@ void main() {
 	float locInTile = (currBp - totalTileRange.x) / (totalTileRange.y - totalTileRange.x);
 	vec3 dataValue = vec3(texture2D(data, vec2(locInTile, 0.0)).r);
 	float bpPerPixel = (displayedRange.y - displayedRange.x) / windowSize.x;
-	vec3 finalColor = mix(OTHER_BLUE_COLOR, BLUE_COLOR , coord.y);
-
-	if (coord.y < dataValue.r) {
-		finalColor = vec3(0.0);
+	
+	vec3 finalColor = vec3(0.0);
+	if ((1.0 - coord.y) < dataValue.r) {
+		finalColor = mix(OTHER_BLUE_COLOR, BLUE_COLOR , coord.y);
 	}
 	vec3 tintColor = vec3(0.0);
 	float pixelsPerBp = windowSize.x/(displayedRange.y - displayedRange.x);

@@ -115,37 +115,28 @@ class MultiTrackViewer extends React.Component {
       const trackHeightPx = this.state.trackHeight * windowSize[1];
 
       const numTracks = this.props.tracks.length;
-      if (trackOffset >= 0 && trackOffset <= numTracks * this.state.trackHeight * 2) {
-        const idx = Math.floor(trackOffset / (2 * this.state.trackHeight));
-        if (idx < this.props.tracks.length) {
-          const track = this.props.tracks[idx];
-          let dataTooltip = null;
-          let annotationTooltip = null;
+      const idx = Math.floor(trackOffset / (2 * this.state.trackHeight));
+      if (idx < this.props.tracks.length) {
+        const track = this.props.tracks[idx];
 
-          if (track.dataTrack) {
-            dataTooltip = track.dataTrack.getTooltipData(hoveredBasePair, trackOffset, start, end, bpp, trackHeightPx);
-          }
-          
-          if (track.annotationTrack) {
-            annotationTooltip = track.annotationTrack.getTooltipData(hoveredBasePair, trackOffset, start, end, bpp, trackHeightPx);
-          }
-
-          return {
-            yOffset: trackOffset,
-            basePair: hoveredBasePair,
-            track: track,
-            dataTooltip: dataTooltip,
-            annotationTooltip: annotationTooltip,
-            trackCenterPx: idx * trackHeightPx + trackHeightPx/2.0 + this.state.trackOffset * windowSize[1],
-          };
+        let dataTooltip = null;
+        if (track.dataTrack) {
+          dataTooltip = track.dataTrack.getTooltipData(hoveredBasePair, trackOffset, start, end, bpp, trackHeightPx);
         }
+        
+        return {
+          yOffset: trackOffset,
+          basePair: hoveredBasePair,
+          track: track,
+          tooltip: dataTooltip,
+          trackCenterPx: idx * trackHeightPx + trackHeightPx/2.0 + this.state.trackOffset * windowSize[1],
+        };
       }
       return {
         yOffset: trackOffset,
         basePair: hoveredBasePair,
         track: null,
-        dataTooltip: null,
-        annotationTooltip: null,
+        tooltip: null,
         trackCenterPx: null,
       };
   }
@@ -368,12 +359,12 @@ class MultiTrackViewer extends React.Component {
       const coord = this.state.lastDragCoord.slice();
       const trackInfo = this.getTrackInfoAtCoordinate(coord);
       const x = ANNOTATION_OFFSET + Util.pixelForBasePair(trackInfo.basePair, this.state.startBasePair, this.state.basePairsPerPixel, this.state.windowSize);
-      const y = trackInfo.trackCenterPx;
-      if (trackInfo.track !== null && trackInfo.dataTooltip !== null) {
-        console.log(trackInfo.dataTooltip);
+      
+      if (trackInfo.track !== null && trackInfo.tooltip !== null) {
+        const trackHeightPx = this.state.trackHeight * this.state.windowSize[1];
+        const y = (-trackInfo.tooltip.value + 0.5) * trackHeightPx + trackInfo.trackCenterPx;
         tooltip = (<TrackToolTip x={x} y={y}>
-            <span>Value: {trackInfo.dataTooltip.value}</span>
-            <span></span>
+            <div>Value: {trackInfo.tooltip.value.toFixed(3)}</div>
           </TrackToolTip>);
       }
     }
