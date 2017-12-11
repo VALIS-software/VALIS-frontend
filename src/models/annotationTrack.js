@@ -15,6 +15,10 @@ class AnnotationTrack {
     this.cache.clear();
   }
 
+  get title() {
+    return this.annotationIds.join(',');
+  }
+
   getTiles(startBp, endBp, samplingRate, trackHeightPx) {
     return this.cache.get(startBp, endBp, samplingRate, trackHeightPx);
   }

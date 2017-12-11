@@ -11,7 +11,7 @@ void main() {
 		color.r = color.r;
 		color.g = color.g;
 		color.b = color.b;
-		color.a = 1.0 - color.a;
+		color.a = color.a;
 	}
 	gl_FragColor = color;
 }

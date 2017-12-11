@@ -50,17 +50,21 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 		max_annotation_length = 500000
 		z = max_annotation_length - min_annotation_length
 		for i in xrange(start_bp, end_bp, sampling_rate):
+			color = [random.random()*0.5, random.random()*0.5, random.random()*0.5, 1.0]
 			if random.random() > 0.2:
 				continue
 			sz = int(random.random()*z) + min_annotation_length
 			if sz/float(sampling_rate) > 10:
 				annotations.append({
 					"id": random.randint(0,1000000000),
-					"info" : "GENE1",
-					"startBp": i,
-      				"endBp": i + sz,
+					# label format: text, True = render text inside, False= render outside?, position: 0-left, 1-top, 2-right, 3-below, offset-x, offset-y
+					"labels" : [["GENE" + str(random.randint(0, 100000)), True, 0,0,0]],
+					"startBp": int(i),
+      				"endBp": int(i + sz),
       				"yOffsetPx": 0,
       				"heightPx": 25,
+      				# segment format: startBp, endBp, textureName, [R,G,B,A], height
+      				"segments": [[0, sz/3, None, color, 20], [sz/2, sz, None, color, 20], [0, sz, None, color, 4]]
 				})
 		# move overlaps that fit in track height, discard those that don't
 		ret = []
@@ -70,8 +74,8 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 			if last == None or annotation["startBp"] > last["endBp"] + padding:
 				ret.append(annotation)
 				last = annotation
-			elif last["yOffsetPx"] < track_height_px - 25:
-				annotation["yOffsetPx"] = last["yOffsetPx"] + 25
+			elif last["yOffsetPx"] <= track_height_px - 26:
+				annotation["yOffsetPx"] = last["yOffsetPx"] + 26
 				ret.append(annotation)
 				last = annotation
 	else:

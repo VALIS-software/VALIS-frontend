@@ -11,6 +11,10 @@ class DataTrack {
     this.cache = new TileCache(0, GENOME_LENGTH, this.loadData);
   }
 
+  get title() {
+    return this.trackId;
+  }
+
   clearCache() {
     this.cache.clear();
   }

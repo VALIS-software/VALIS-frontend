@@ -2,7 +2,7 @@ precision mediump float;
 
 varying vec2 coord;
 
-uniform vec3 color;
+uniform vec4 color;
 
 uniform vec2 displayedRange; // range of genome currently displayed
 uniform vec2 totalRange; // total range of the genome
@@ -13,6 +13,8 @@ uniform vec2 windowSize;
 uniform vec2 selectionBoundsMin;
 uniform vec2 selectionBoundsMax;
 uniform int showSelection;
+uniform int showHover;
+uniform float selectedBasePair;
 
 void main() {	
 	vec2 bMin = vec2(min(selectionBoundsMin.x, selectionBoundsMax.x), min(selectionBoundsMin.y, selectionBoundsMax.y));
@@ -25,5 +27,10 @@ void main() {
 	if (showSelection == 1 && screenCoord.x > bMin.x && screenCoord.x < bMax.x && screenCoord.y > bMin.y && screenCoord.y < bMax.y) {
 		selectionHighlight = 1.5;
 	}
-	gl_FragColor = vec4(color * selectionHighlight, 1.0);
+
+	if (showHover == 1) {
+		selectionHighlight = 1.5;
+	}
+
+	gl_FragColor = vec4(color.rgb * selectionHighlight, color.a);
 }
