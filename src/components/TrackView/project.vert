@@ -2,7 +2,7 @@ precision mediump float;
 
 attribute vec2 points;
 varying vec2 coord;
-uniform float trackHeight;
+uniform float tileHeight;
 uniform vec2 windowSize;
 uniform vec2 offset;
 
@@ -26,7 +26,7 @@ void main() {
     // shrink the ROI to just the current tile:
     coord.x *= (currentTileDisplayRange.y - currentTileDisplayRange.x) / (displayedRange.y - displayedRange.x);
     coord.x += (currentTileDisplayRange.x - displayedRange.x) / (displayedRange.y - displayedRange.x);
-    vec2 transformed = coord * vec2(1.0, trackHeight) + vec2(offset.x, offset.y);
+    vec2 transformed = coord * vec2(1.0, tileHeight) + vec2(offset.x, offset.y);
 
     coord = GLtoUVCoordinates(points);
     gl_Position = vec4(UVtoGLCoordinates(transformed), 0.0, 1.0);

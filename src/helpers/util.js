@@ -50,7 +50,9 @@ class Util {
     const textures = [];
     
     gl.getExtension('OES_texture_float');
-
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.disable(gl.DEPTH_TEST);
     for (let i = 0; i < MAX_TEXTURES; i++) {
       const newTexture = igloo.texture(null, gl.RGBA, gl.CLAMP_TO_EDGE, gl.NEAREST, gl.FLOAT);
       textures.push(newTexture);

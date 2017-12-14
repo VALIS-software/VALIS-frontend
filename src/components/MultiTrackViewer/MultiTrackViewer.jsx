@@ -53,15 +53,19 @@ class MultiTrackViewer extends React.Component {
       dragEnabled: false,
       lastDragCoord: null,
       startDragCoord: null,
+      hoverEnabled: false,
     });
   }
 
   getWindowState() {
-    if (!this.state) return {};
+    if (!this.state || !this.state.windowSize) return {};
 
-    let x = -1;
+    let x = null;
+    let y = null;
+    const windowHeight = this.state.windowSize[1];
     if (this.state.lastDragCoord) {
       x = Util.basePairForScreenX(this.state.lastDragCoord[0], this.state.startBasePair, this.state.basePairsPerPixel, this.state.windowSize);  
+      y = (this.state.lastDragCoord[1] - this.state.trackOffset * windowHeight) / windowHeight;
     }
     
     const windowState = {
@@ -69,6 +73,7 @@ class MultiTrackViewer extends React.Component {
       basePairsPerPixel: this.state.basePairsPerPixel,
       startBasePair: this.state.startBasePair,
       selectedBasePair: x,
+      selectedTrackOffset: y,
     };
 
     if (this.state.selectEnabled) {
@@ -100,6 +105,10 @@ class MultiTrackViewer extends React.Component {
       classes.push('select-active');
     }
 
+    if (this.state.hoverEnabled) {
+      classes.push('hover-active');
+    }
+
     return classes.join(' ');
   }
 
@@ -112,7 +121,6 @@ class MultiTrackViewer extends React.Component {
       const hoveredBasePair = Util.basePairForScreenX(coord[0], start, bpp, windowSize);
       // get y Offset:
       const trackOffset = (coord[1] - this.state.trackOffset * windowSize[1]) / windowSize[1];
-      console.log(coord, trackOffset, windowSize[1]);
       const trackHeightPx = this.state.trackHeight * windowSize[1];
 
       const numTracks = this.props.tracks.length;
@@ -124,7 +132,7 @@ class MultiTrackViewer extends React.Component {
         if (track.dataTrack) {
           dataTooltip = track.dataTrack.getTooltipData(hoveredBasePair, trackOffset, start, end, bpp, trackHeightPx);
           // make sure that the current cursor is on a valid value:
-          if (dataTooltip.value !== null) {
+          if (dataTooltip && dataTooltip.value !== null) {
             return {
               yOffset: trackOffset,
               basePair: hoveredBasePair,
@@ -176,21 +184,21 @@ class MultiTrackViewer extends React.Component {
       return;
     } else if (this.state.zoomEnabled) {
       if (Math.abs(e.deltaY) > 0) {
-          const lastTrackOffset = this.trackOffsetForScreenY(e.offsetY);
-          
-          const trackHeight = this.state.trackHeight / (1.0 - (e.deltaY / this.state.windowSize[1]));  
-          if (trackHeight * this.state.windowSize[1] > MIN_TRACK_HEIGHT_PIXELS) {
-            this.setState({
-              trackHeight: trackHeight,
-            });
-            // compute the offset so that the y position remains constant after zoom:
-            const newTotalH = (this.props.tracks.length * trackHeight) * this.state.windowSize[1];
-            const offset = Math.min(0.0, (e.offsetY - (lastTrackOffset * newTotalH)) / this.state.windowSize[1]);
-            this.setState({
-              trackOffset: offset,
-            });
-          }
+        const lastTrackOffset = this.trackOffsetForScreenY(e.offsetY);
+        
+        const trackHeight = this.state.trackHeight / (1.0 - (e.deltaY / this.state.windowSize[1]));  
+        if (trackHeight * this.state.windowSize[1] > MIN_TRACK_HEIGHT_PIXELS) {
+          this.setState({
+            trackHeight: trackHeight,
+          });
+          // compute the offset so that the y position remains constant after zoom:
+          const newTotalH = (this.props.tracks.length * trackHeight) * this.state.windowSize[1];
+          const offset = Math.min(0.0, (e.offsetY - (lastTrackOffset * newTotalH)) / this.state.windowSize[1]);
+          this.setState({
+            trackOffset: offset,
+          });
         }
+      }
     } else if (this.state.basePairsPerPixel <= GENOME_LENGTH / (this.state.windowSize[0])) {
       // x pan sets the base pair!
       if (Math.abs(e.deltaX) > 0) {
@@ -329,12 +337,20 @@ class MultiTrackViewer extends React.Component {
     const windowState = this.getWindowState();
     const viewGuids = _.keys(this.views);
     const numTracks = viewGuids.length;
+    this.setState({
+        hoverEnabled: false,
+    });
     for (let i = 0; i < numTracks; i++) {
       // setup track position
       const track = this.views[viewGuids[i]];
       track.setHeight(this.state.trackHeight);
       track.setYOffset(i * this.state.trackHeight + this.state.trackOffset);
       track.render(this.renderContext, this.shaders, windowState);
+      if (track.hoverEnabled && !this.state.hoverEnabled) {
+        this.setState({
+          hoverEnabled: true,
+        });
+      }
     }
   }
 
