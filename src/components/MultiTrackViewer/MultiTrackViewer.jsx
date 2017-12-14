@@ -381,7 +381,7 @@ class MultiTrackViewer extends React.Component {
       
       if (trackInfo.track !== null && trackInfo.tooltip !== null) {
         const trackHeightPx = this.state.trackHeight * this.state.windowSize[1];
-        const y = (-trackInfo.tooltip.value + 0.5) * trackHeightPx + trackInfo.trackCenterPx;
+        const y = (-trackInfo.tooltip.valueNormalized + 0.5) * trackHeightPx + trackInfo.trackCenterPx;
         tooltip = (<TrackToolTip x={x} y={y}>
           <div>BP:{Math.round(trackInfo.basePair)}</div>
           <div>Value:{trackInfo.tooltip.value.toFixed(3)}</div>

@@ -80,10 +80,17 @@ class TrackView {
   }
 
   getHeader(windowState) {
+    let min = null;
+    let max = null;
+    if (this.dataTrack !== null) {
+      min = this.dataTrack.min;
+      max = this.dataTrack.max;
+    }
+    const title = this.getTitle();
     const top = windowState.windowSize[1] * this.yOffset;
     const height = windowState.windowSize[1] * this.height;
     const key = this.guid;
-    return (<TrackHeader key={key} top={top} height={height} track={this} />);
+    return (<TrackHeader key={key} top={top} height={height} min={min} max={max} title={title} />);
   }
 }
 

@@ -12,7 +12,6 @@ export default class DataTrackRenderer {
     const basePairsPerPixel = windowState.basePairsPerPixel;
     const endBasePair = Util.endBasePair(startBasePair, basePairsPerPixel, windowState.windowSize);
     const trackHeightPx = windowState.windowSize[1] * height;
-    
     const tiles = dataTrack.getTiles(startBasePair, endBasePair, basePairsPerPixel, trackHeightPx);
     let j = 0;
     tiles.forEach(tile => {
@@ -21,6 +20,8 @@ export default class DataTrackRenderer {
         const shader = shaders.tileShader;
         shader.use();
         shader.uniformi('data', 1 + j);
+        shader.uniform('dataMin', dataTrack.min);
+        shader.uniform('dataMax', dataTrack.max);
         shader.uniform('tile', 0.5 + 0.5 * j / tiles.length);
         shader.uniform('currentTileDisplayRange', tile.range);
         shader.uniform('totalTileRange', tile.tile.tileRange);
