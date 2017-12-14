@@ -1,6 +1,7 @@
 // Dependencies
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+
 // Styles
 import './TrackHeader.scss';
 
@@ -9,10 +10,55 @@ const d3 = require('d3');
 const TICK_SPACING_PIXELS = 15.0;
 
 class TrackHeader extends Component {
+  constructor(props) {
+    super(props);
+    this.onDragStart = this.onDragStart.bind(this);
+    this.onDragOver = this.onDragOver.bind(this);
+    this.onDragLeave = this.onDragLeave.bind(this);
+    this.onDrop = this.onDrop.bind(this);
+    this.onDragStart = this.onDragStart.bind(this);
+  }
+
+  componentDidMount() {
+    this.setState({
+      borderTop: false,
+    });
+  }
+
+  onDragStart(evt) {
+    evt.dataTransfer.setData('guid', this.props.guid);
+  }
+
+  onDragOver(evt) {
+    this.setState({
+      borderTop: true,
+    });
+    evt.dataTransfer.dropEffect = 'move';
+    evt.preventDefault();
+  }
+
+  onDragLeave(evt) {
+    this.setState({
+      borderTop: false,
+    });
+  }
+
+  onDrop(evt) {
+    this.setState({
+      borderTop: false,
+    });
+    const toIdx = this.props.appModel.indexOfTrack(this.props.guid);
+    this.props.appModel.moveTrack(evt.dataTransfer.getData('guid'), toIdx);
+  }
+
   getStyle() {
+    if (!this.state) return {};
+    const border = this.state.borderTop ? '1px solid black' : 'none';
+    const delta = this.state.borderTop ? -1 : 0;
     return {
+      borderTop: border,
       transform: `translate(0px, ${this.props.top}px)`,
-      height: Math.ceil(this.props.height) + 'px',
+      height: Math.ceil(this.props.height + delta) + 'px',
     };
   }
 
@@ -41,8 +87,20 @@ class TrackHeader extends Component {
     const style = this.getStyle();
     const axis = this.renderAxis();
     const height = this.props.height + 'px';
+    const onDragOver = this.onDragOver;
+    const onDragLeave = this.onDragLeave;
+    const onDrop = this.onDrop;
+    const onDragStart = this.onDragStart;
+
     return (<div style={style} className="track-header">
-      <div className="track-header-contents">
+      <div 
+        className="track-header-contents"
+        draggable="true" 
+        onDragStart={onDragStart} 
+        onDrop={onDrop} 
+        onDragLeave={onDragLeave} 
+        onDragOver={onDragOver}
+      >
         <div className="inner">
           {title}
         </div>
@@ -59,6 +117,8 @@ TrackHeader.propTypes = {
    min: PropTypes.number,
    max: PropTypes.number,
    title: PropTypes.string,
+   appModel: PropTypes.object,
+   guid: PropTypes.string,
 };
 
 export default TrackHeader;

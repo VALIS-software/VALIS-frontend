@@ -12,11 +12,11 @@ import DataTrackRenderer from '../../renderers/DataTrackRenderer.jsx';
 
 import TrackHeader from '../TrackHeader/TrackHeader.jsx';
 
-const uuid = require('uuid/v4');
 
 class TrackView {
-  constructor() {
-    this.guid = uuid();
+  constructor(guid, appModel) {
+    this.guid = guid;
+    this.appModel = appModel;
     this.height = 0.1;
     this.yOffset = 0.0;
     this.annotationTrack = null;
@@ -90,7 +90,8 @@ class TrackView {
     const top = windowState.windowSize[1] * this.yOffset;
     const height = windowState.windowSize[1] * this.height;
     const key = this.guid;
-    return (<TrackHeader key={key} top={top} height={height} min={min} max={max} title={title} />);
+    const model = this.appModel;
+    return (<TrackHeader key={key} guid={key} top={top} height={height} min={min} max={max} title={title} appModel={model} />);
   }
 }
 

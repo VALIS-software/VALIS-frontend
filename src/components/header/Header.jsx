@@ -15,7 +15,7 @@ class Header extends Component {
     this.onUpdateSearchQuery = this.onUpdateSearchQuery.bind(this);
     this.onUpdateSearchFilter = this.onUpdateSearchFilter.bind(this);
     this.state = {
-      dataSource : ['GENE1', 'GENE2', 'genome1.1', 'genome1.2', 'genome1.3'],
+      dataSource : ['annotation1.1', 'annotation1.2', 'annotation1.3', 'genome1.1', 'genome1.2', 'genome1.3'],
       inputValue : '',
       searchFilter: 1,
     };
@@ -29,7 +29,11 @@ class Header extends Component {
 
   onUpdateSearchQuery(searchText, dataSource, params) {
     if (params.source === 'click') {
-      this.props.addTrack(searchText);
+      if (searchText[0] === 'a') {
+        this.props.model.addAnnotationTrack(searchText);
+      } else {
+        this.props.model.addDataTrack(searchText);  
+      }
     }
   }
 
@@ -58,7 +62,7 @@ class Header extends Component {
 }
 
 Header.propTypes = {
-   addTrack: PropTypes.func,
+   model: PropTypes.object,
 };
 
 export default Header;

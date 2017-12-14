@@ -22,6 +22,7 @@
     "react/jsx-boolean-value": "off",
     "func-names": "off",
     "space-before-function-paren": "off",
+    "react/sort-comp": "off",
   },
   "env": {
     "browser": true

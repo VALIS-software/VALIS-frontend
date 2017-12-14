@@ -4,11 +4,16 @@ $header-content-width: calc(100% - #{$axis-width});
 .track-header {
 	position: absolute;
 	width: 100%;
+	cursor: grab; cursor:-webkit-grab; cursor:-moz-grab;
+
 	.track-header-contents {
 		float: left;
 		width: $header-content-width;
 		height: 100%;
 		background-color: #ccc;
+		&:hover {
+			background-color: #bbb;
+		}
 		.inner {
 			position: absolute;
 			left: 50%;
@@ -46,4 +51,12 @@ $header-content-width: calc(100% - #{$axis-width});
 	.clearfix {
 		clear: both;
 	}
+
+	// disable select:
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
 }

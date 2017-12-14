@@ -6,7 +6,7 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 // Components
 import Header from '../Header/Header.jsx';
 import MultiTrackViewer from '../MultiTrackViewer/MultiTrackViewer.jsx';
-import GenomeAPI from '../../models/api.js';
+import AppModel from '../../models/appModel.js';
 
 // Styles
 import './App.scss';
@@ -17,77 +17,27 @@ const _ = require('underscore');
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.api = new GenomeAPI();
-    this.addDataTrack = this.addDataTrack.bind(this);
+    this.updateTracks = this.updateTracks.bind(this);
   }
 
   componentDidMount() {
     this.setState({
       tracks: [],
     });
-    this.addDataTrack('genome1.1');
-    this.addDataTrack('genome1.2');
-    this.addDataTrack('genome1.3');
-    this.addAnnotationTrack('annotation1.1');
-    this.addAnnotationTrack('annotation1.2');
-    this.addAnnotationTrack('annotation1.3');
+    this.appModel = new AppModel();
+    this.appModel.addDataTrack('genome1.1');
+    this.appModel.addDataTrack('genome1.2');
+    this.appModel.addDataTrack('genome1.3');
+    this.appModel.addAnnotationTrack('annotation1.1');
+    this.appModel.addAnnotationTrack('annotation1.2');
+    this.appModel.addAnnotationTrack('annotation1.3');
+    this.appModel.addListener(this.updateTracks);
   }
 
-  getTracks() {
-    return this.tracks;
-  }
-
-  addDataTrack(trackId) {
-    this.api.getTrack(trackId).then(model => {
-      const track = {
-        guid: uuid(),
-        dataTrack: model,
-        annotationTrack: null,
-      };
-
-      this.setState({
-        tracks: this.state.tracks.concat([track]),
-      });
+  updateTracks(evt) {
+    this.setState({
+      tracks: evt.tracks,
     });
-  }
-
-  removeDataTrack(trackGuid) {
-    const arr = this.state.tracks.slice();
-    const index = _.findIndex(arr, (item) => {
-      return item.guid === trackGuid;
-    });
-
-    if (index >= 0) {
-      arr.splice(index, 1); 
-      this.setState({
-        tracks: arr,
-      });      
-    }
-  }
-
-  addAnnotationTrack(annotationId) {
-    this.api.getAnnotation([annotationId]).then(model => {
-      const track = {
-        guid: uuid(),
-        dataTrack: null,
-        annotationTrack: model,
-      };
-      this.setState({
-        tracks: this.state.tracks.concat([track]),
-      });
-    });
-  }
-
-  removeAnnotationTrack(trackGuid) {
-
-  }
-
-  addAnnotationToTrack(annotationId, trackGuid) {
-
-  }
-
-  removeAnnotationFromTrack(annotationId, trackGuid) {
-    
   }
 
   render() {
@@ -96,8 +46,8 @@ class App extends React.Component {
     return (
       <MuiThemeProvider>
         <div className="site-wrapper">
-          <Header addTrack={this.addDataTrack} />
-          <MultiTrackViewer tracks={this.state.tracks} />
+          <Header model={this.appModel} />
+          <MultiTrackViewer model={this.appModel} />
         </div>
       </MuiThemeProvider>);
   }

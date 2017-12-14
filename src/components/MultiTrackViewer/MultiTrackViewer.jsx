@@ -29,6 +29,12 @@ class MultiTrackViewer extends React.Component {
       basePairsPerPixel: 0,
       trackHeight: 0,
     };
+    this.tracks = [];
+    this.updateViews = this.updateViews.bind(this);
+    props.model.addListener(this.updateViews);
+    this.onDrop = this.onDrop.bind(this);
+    this.onDragOver = this.onDragOver.bind(this);
+    this.onDragLeave = this.onDragLeave.bind(this);
   }
 
   componentDidMount() {
@@ -54,6 +60,7 @@ class MultiTrackViewer extends React.Component {
       lastDragCoord: null,
       startDragCoord: null,
       hoverEnabled: false,
+      removeTooltipVisible: false,
     });
   }
 
@@ -112,6 +119,27 @@ class MultiTrackViewer extends React.Component {
     return classes.join(' ');
   }
 
+  onDrop(evt) {
+    this.props.model.removeTrack(evt.dataTransfer.getData('guid'));
+    this.setState({
+      removeTooltipVisible: false,
+    });
+  }
+
+  onDragOver(evt) {
+    evt.dataTransfer.dropEffect = 'move';
+    evt.preventDefault();
+    this.setState({
+      removeTooltipVisible: true,
+    });
+  }
+
+  onDragLeave(evt) {
+    this.setState({
+      removeTooltipVisible: false,
+    });
+  }
+
   getTrackInfoAtCoordinate(coord) {
       // get base pair: 
       const start = this.state.startBasePair;
@@ -123,10 +151,10 @@ class MultiTrackViewer extends React.Component {
       const trackOffset = (coord[1] - this.state.trackOffset * windowSize[1]) / windowSize[1];
       const trackHeightPx = this.state.trackHeight * windowSize[1];
 
-      const numTracks = this.props.tracks.length;
+      const numTracks = this.tracks.length;
       const idx = Math.floor(trackOffset / (this.state.trackHeight));
-      if (idx < this.props.tracks.length) {
-        const track = this.props.tracks[idx];
+      if (idx < this.tracks.length) {
+        const track = this.tracks[idx];
         let dataTooltip = null;
         // check that there is a data track
         if (track.dataTrack) {
@@ -192,7 +220,7 @@ class MultiTrackViewer extends React.Component {
             trackHeight: trackHeight,
           });
           // compute the offset so that the y position remains constant after zoom:
-          const newTotalH = (this.props.tracks.length * trackHeight) * this.state.windowSize[1];
+          const newTotalH = (this.tracks.length * trackHeight) * this.state.windowSize[1];
           const offset = Math.min(0.0, (e.offsetY - (lastTrackOffset * newTotalH)) / this.state.windowSize[1]);
           this.setState({
             trackOffset: offset,
@@ -300,18 +328,18 @@ class MultiTrackViewer extends React.Component {
     return this.renderContext.gl;
   }
 
-
   trackOffsetForScreenY(y) { 
-    const totalH = (this.props.tracks.length * this.state.trackHeight) * this.state.windowSize[1];
+    const totalH = (this.tracks.length * this.state.trackHeight) * this.state.windowSize[1];
     return (y - (this.state.trackOffset * this.state.windowSize[1])) / totalH;
   }
 
-  updateViews() {
+  updateViews(evt) {
     const newViews = {};
     let idx = 0;
-    this.props.tracks.forEach(track => {
+    this.tracks = evt.tracks;
+    evt.tracks.forEach(track => {
       if (!this.views[track.guid]) {
-        newViews[track.guid] = new TrackView();
+        newViews[track.guid] = new TrackView(track.guid, this.props.model);
       } else {
         newViews[track.guid] = this.views[track.guid];
       }
@@ -355,7 +383,6 @@ class MultiTrackViewer extends React.Component {
   }
 
   render() {
-    this.updateViews();
     const headers = [];
     const viewGuids = _.keys(this.views);
     const numTracks = viewGuids.length;
@@ -388,8 +415,14 @@ class MultiTrackViewer extends React.Component {
         </TrackToolTip>);
       }
     }
+    const onDrop = this.onDrop;
+    const onDragOver = this.onDragOver;
+    const onDragLeave = this.onDragLeave;
+
+    const removeTooltip = this.state.removeTooltipVisible ? (<div className="remove-hint">Remove Track</div>) : undefined;
     return (
       <div className="content">
+        {removeTooltip}
         <div id="track-headers">
           {headers}
         </div>
@@ -398,7 +431,7 @@ class MultiTrackViewer extends React.Component {
             <g className="x-axis" ref={node => d3.select(node).call(xAxis)} />
           </svg>
         </div>
-        <canvas id="webgl-canvas" className={this.getClass()} />
+        <canvas id="webgl-canvas" className={this.getClass()} onDragOver={onDragOver} onDrop={onDrop} onDragLeave={onDragLeave} />
         <div id="webgl-overlay">
           {tooltip}
         </div>
@@ -413,7 +446,7 @@ class MultiTrackViewer extends React.Component {
 }
 
 MultiTrackViewer.propTypes = {
-   tracks: PropTypes.array,
+   model: PropTypes.object,
 };
 
 export default MultiTrackViewer;
