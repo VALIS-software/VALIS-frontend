@@ -23,7 +23,7 @@ $header-content-width: calc(100% - #{$axis-width});
 		height: 100%;
 		.y-axis-container {
 			width: 100%;
-			background-color: #ddd;
+			background-color: #ccc;
 			.yAxis {
 				transform : translate($axis-width, 0px);
 				g:nth-child(2) {
@@ -34,6 +34,13 @@ $header-content-width: calc(100% - #{$axis-width});
 				}
 			}
 		}
+	}
+
+	.empty-track-header-axis {
+		float: right;
+		width: $axis-width;
+		height: 100%;
+		background-color: #ccc;
 	}
 
 	.clearfix {

@@ -16,6 +16,9 @@ uniform int showSelection;
 
 uniform sampler2D data;
 
+uniform float dataMin;
+uniform float dataMax;
+
 uniform float tile;
 uniform float selectedBasePair;
 
@@ -33,7 +36,12 @@ bool gridVisible(float currBp, float pixelsPerBp, float spacing, float thickness
 void main() {
 	float currBp = mix(currentTileDisplayRange.x, currentTileDisplayRange.y, coord.x);
 	float locInTile = (currBp - totalTileRange.x) / (totalTileRange.y - totalTileRange.x);
-	vec3 dataValue = vec3(texture2D(data, vec2(locInTile, 0.0)).r);
+
+	// load and normalize data value:
+	float d = texture2D(data, vec2(locInTile, 0.0)).r;
+	d = (d - dataMin) / (dataMax - dataMin);
+	vec3 dataValue = vec3(d);
+
 	float bpPerPixel = (displayedRange.y - displayedRange.x) / windowSize.x;
 	
 	vec3 finalColor = vec3(0.0);
