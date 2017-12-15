@@ -51,7 +51,6 @@ class MultiTrackViewer extends React.Component {
       windowSize: [domElem.clientWidth, domElem.clientHeight],
       basePairsPerPixel: GENOME_LENGTH / domElem.clientWidth,
       selectEnabled: false,
-      trackHeight: 0.1,
       trackOffset: 0.0,
       startBasePair: 0,
       zoomEnabled: false,
@@ -181,6 +180,16 @@ class MultiTrackViewer extends React.Component {
               trackCenterPx: finalDelta - trackHeightPx/2.0 + this.state.trackOffset * windowSize[1],
             };
           }
+        } else {
+          // no tooltip for annotation track
+          return {
+            yOffset: trackOffset,
+            basePair: hoveredBasePair,
+            track: track,
+            tooltip: null,
+            trackHeightPx: trackHeightPx,
+            trackCenterPx: finalDelta - trackHeightPx/2.0 + this.state.trackOffset * windowSize[1],
+          };
         }
       }
       return {
@@ -210,7 +219,9 @@ class MultiTrackViewer extends React.Component {
           this.setState({
             startBasePair: this.state.startBasePair - deltaX * this.state.basePairsPerPixel,
           });
-        }  
+        }
+        // otherwise the update lags slightly!
+        this.forceUpdate();
       }
     }
 
@@ -233,7 +244,6 @@ class MultiTrackViewer extends React.Component {
       return;
     } else if (this.state.zoomEnabled) {
       if (Math.abs(e.deltaY) > 0) {
-        const lastTrackOffset = this.trackOffsetForScreenY(e.offsetY);
         // get track at position:
         const track = this.getTrackInfoAtCoordinate([e.offsetX, e.offsetY]).track;
         if (track) {
@@ -247,6 +257,8 @@ class MultiTrackViewer extends React.Component {
             });
           }
         }
+        // otherwise the update lags slightly!
+        this.forceUpdate();
       }
     } else if (this.state.basePairsPerPixel <= GENOME_LENGTH / (this.state.windowSize[0])) {
       // x pan sets the base pair!
@@ -347,11 +359,6 @@ class MultiTrackViewer extends React.Component {
 
   glContext() {
     return this.renderContext.gl;
-  }
-
-  trackOffsetForScreenY(y) { 
-    const totalH = (this.tracks.length * this.state.trackHeight) * this.state.windowSize[1];
-    return (y - (this.state.trackOffset * this.state.windowSize[1])) / totalH;
   }
 
   updateViews(evt) {
@@ -458,7 +465,7 @@ class MultiTrackViewer extends React.Component {
         <StatusTile 
           startBasePair={this.state.startBasePair}
           basePairsPerPixel={this.state.basePairsPerPixel}
-          trackHeight={this.state.trackHeight}
+          trackHeight={0}
         />
       </div>
     );
