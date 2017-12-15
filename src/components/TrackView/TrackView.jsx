@@ -57,6 +57,10 @@ class TrackView {
     this.height = height;
   }
 
+  getHeight() {
+    return this.height;
+  }
+
   setYOffset(offset) {
     this.yOffset = offset;
   }
