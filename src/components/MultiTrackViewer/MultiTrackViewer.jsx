@@ -27,7 +27,6 @@ class MultiTrackViewer extends React.Component {
     this.state = {
       startBasePair: 0,
       basePairsPerPixel: 0,
-      trackHeight: 0,
     };
     this.tracks = [];
     this.updateViews = this.updateViews.bind(this);
@@ -72,7 +71,7 @@ class MultiTrackViewer extends React.Component {
     const windowHeight = this.state.windowSize[1];
     if (this.state.lastDragCoord) {
       x = Util.basePairForScreenX(this.state.lastDragCoord[0], this.state.startBasePair, this.state.basePairsPerPixel, this.state.windowSize);  
-      y = (this.state.lastDragCoord[1] - this.state.trackOffset * windowHeight) / windowHeight;
+      y = this.state.lastDragCoord[1] / windowHeight;
     }
     
     const windowState = {
