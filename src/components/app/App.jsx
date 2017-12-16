@@ -28,9 +28,7 @@ class App extends React.Component {
     this.appModel.addDataTrack('genome1.1');
     this.appModel.addDataTrack('genome1.2');
     this.appModel.addDataTrack('genome1.3');
-    this.appModel.addAnnotationTrack('annotation1.1');
-    this.appModel.addAnnotationTrack('annotation1.2');
-    this.appModel.addAnnotationTrack('annotation1.3');
+    this.appModel.addAnnotationTrack('GRCh38_genes');
     this.appModel.addListener(this.updateTracks);
   }
 
