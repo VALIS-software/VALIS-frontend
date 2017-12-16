@@ -25,9 +25,10 @@ class App extends React.Component {
       tracks: [],
     });
     this.appModel = new AppModel();
-    this.appModel.addDataTrack('genome1.1');
-    this.appModel.addDataTrack('genome1.2');
-    this.appModel.addDataTrack('genome1.3');
+    this.appModel.addDataTrack('sequence');
+    this.appModel.addDataTrack('GM12878-DNase');
+    this.appModel.addDataTrack('K562-DNase');
+    this.appModel.addDataTrack('MCF7-DNase');
     this.appModel.addAnnotationTrack('GRCh38_genes');
     this.appModel.addListener(this.updateTracks);
   }

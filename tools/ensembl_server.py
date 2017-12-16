@@ -1,6 +1,7 @@
 from pyensembl import EnsemblRelease
 from flask import Flask, abort, request
 from flask_cors import CORS
+import genomedata
 import random
 import json
 import math
@@ -112,8 +113,6 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 
 		if annotation_id == "GRCh38_genes":
 			# get chromosomes in range
-			print find_chromosome(start_bp)
-			print find_chromosome(end_bp)
 			cStart = chromosome_to_idx(find_chromosome(start_bp))
 			cEnd = chromosome_to_idx(find_chromosome(end_bp))
 
@@ -125,7 +124,7 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 					start = ch_range[0] + gene.start
 					end = ch_range[0] + gene.end
 					sz = end - start
-					if sz/float(sampling_rate) > 100:
+					if sz/float(sampling_rate) > 50:
 						annotation_results.append((name, start, end))
 		annotations = []
 		for annotation_name, annotation_start, annotation_end in annotation_results:
@@ -197,14 +196,17 @@ def get_track_data(track_id, start_bp, end_bp):
 		start_bp = max([start_bp, track["startBp"]])
 		end_bp = min([end_bp, track["endBp"]])
 		ret = []
-		if track["type"] == "sequence":
-			num_samples = int((end_bp - start_bp) / float(sampling_rate))
-			for i in range(0, num_samples):
-				idx = i * sampling_rate + start_bp
-				random.seed(str(idx)+track_id)
-				ret.append(float(idx)/(track["endBp"] - track["startBp"])*0.5 + random.random()*0.5 )
-		else:
-			abort(500, "Unknown track type : %s", track["type"])
+		
+		data_key = track_id
+		num_samples = int((end_bp - start_bp) / float(sampling_rate))
+		for i in range(0, num_samples):
+			idx = i * sampling_rate + start_bp
+			chrom = 'chr' + find_chromosome(idx)
+			if chrom != 'chr1':
+				d = 0.0
+			else:
+				d = genomedata.get(data_key, chrom, idx, idx + 1)[0]
+			ret.append(float(d))
 
 		return json.dumps({
 			"startBp" : start_bp,

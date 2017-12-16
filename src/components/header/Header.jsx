@@ -9,16 +9,33 @@ import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 
 import './Header.scss';
 
+import GenomeAPI from '../../models/api.js';
+
 class Header extends Component {
   constructor(props) {
     super(props);
     this.onUpdateSearchQuery = this.onUpdateSearchQuery.bind(this);
     this.onUpdateSearchFilter = this.onUpdateSearchFilter.bind(this);
+    this.api = new GenomeAPI();
     this.state = {
-      dataSource : ['GRCh38_genes', 'genome1.2', 'genome1.3'],
+      dataSource : [],
       inputValue : '',
       searchFilter: 1,
     };
+  }
+
+  componentDidMount() {
+    this.api.getAnnotations().then(result => {
+      this.setState({
+        dataSource: this.state.dataSource.concat(result),
+      });
+    });
+
+    this.api.getTracks().then(result => {
+      this.setState({
+        dataSource: this.state.dataSource.concat(result),
+      });
+    });
   }
 
   onUpdateSearchFilter(event, index, value) {

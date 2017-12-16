@@ -15,7 +15,9 @@ class GenomeAPI {
 	}
 
 	getAnnotations() {
-		return axios.get(`${this.baseUrl}/annotations`);
+		return axios.get(`${this.baseUrl}/annotations`).then(data => {
+			return data.data;
+		});
 	}
 
 	getAnnotation(annotationIds) {
@@ -41,7 +43,9 @@ class GenomeAPI {
 	}
 
 	getTracks() {
-		return axios.get(`${this.baseUrl}/tracks`);
+		return axios.get(`${this.baseUrl}/tracks`).then(data => {
+			return data.data;
+		});
 	}
 
 	getTrack(trackId) {
