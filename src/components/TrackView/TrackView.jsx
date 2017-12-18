@@ -37,6 +37,10 @@ class TrackView {
     return this.annotationRenderer.hoverEnabled;
   }
 
+  get hoverElement() {
+    return this.annotationRenderer.hoverElement;
+  }
+
   setAnnotationTrack(track) {
     this.annotationTrack = track;
   }

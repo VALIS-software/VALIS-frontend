@@ -10,12 +10,14 @@ const APP_EVENT_ADD_TRACK = 'ADD_TRACK';
 const APP_EVENT_REMOVE_TRACK = 'REMOVE_TRACK';
 const APP_EVENT_REORDER_TRACKS = 'REORDER_TRACKS';
 const APP_EVENT_LOADING_STATE_CHANGED = 'LOADING_CHANGED';
+const APP_EVENT_FOCUS_CHANGED = 'FOCUS_CHANGED';
 
 export { 
   APP_EVENT_ADD_TRACK,
   APP_EVENT_REMOVE_TRACK,
   APP_EVENT_REORDER_TRACKS,
   APP_EVENT_LOADING_STATE_CHANGED,
+  APP_EVENT_FOCUS_CHANGED,
 };
 
 class AppModel extends EventCreator {
@@ -45,6 +47,10 @@ class AppModel extends EventCreator {
     if (wasLoading !== isLoading) {
       this.notifyListeners(APP_EVENT_LOADING_STATE_CHANGED, isLoading);
     }
+  }
+
+  setFocus(element) {
+    this.notifyListeners(APP_EVENT_FOCUS_CHANGED, element);
   }
 
   addAnnotationTrack(annotationId) {

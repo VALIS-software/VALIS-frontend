@@ -60,6 +60,7 @@ class MultiTrackViewer extends React.Component {
     this.lastDragCoord = null;
     this.startDragCoord = null;
     this.hoverEnabled = false;
+    this.hoverElement = null;
     this.removeTooltipVisible = false;
   }
 
@@ -282,6 +283,7 @@ class MultiTrackViewer extends React.Component {
   }
 
   handleMouseUp(e) {
+    this.props.model.setFocus(this.hoverElement);
     this.dragEnabled = false;
     this.lastDragCoord = null;
     this.startDragCoord = null;
@@ -362,6 +364,7 @@ class MultiTrackViewer extends React.Component {
     const viewGuids = _.keys(this.views);
     const numTracks = viewGuids.length;
     this.hoverEnabled = false;
+    this.hoverElement = null;
     let currOffset = 0.0;
     for (let i = 0; i < numTracks; i++) {
       // setup track position
@@ -371,6 +374,7 @@ class MultiTrackViewer extends React.Component {
       track.render(this.renderContext, this.shaders, windowState);
       if (track.hoverEnabled && !this.hoverEnabled) {
         this.hoverEnabled = true;
+        this.hoverElement = track.hoverElement;
       }
     }
     this.forceUpdate();
