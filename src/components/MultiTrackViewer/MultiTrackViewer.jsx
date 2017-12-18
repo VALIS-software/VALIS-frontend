@@ -24,10 +24,6 @@ class MultiTrackViewer extends React.Component {
     this.handleLoad = this.handleLoad.bind(this);
     this.views = {};
     this.overlayElem = null;
-    this.state = {
-      startBasePair: 0,
-      basePairsPerPixel: 0,
-    };
     this.tracks = [];
     this.updateViews = this.updateViews.bind(this);
     props.model.addListener(this.updateViews);
@@ -47,45 +43,43 @@ class MultiTrackViewer extends React.Component {
     domElem.height = domElem.clientHeight;
     this.overlayElem = document.querySelector('#webgl-overlay');
 
-    this.setState({
-      windowSize: [domElem.clientWidth, domElem.clientHeight],
-      basePairsPerPixel: GENOME_LENGTH / domElem.clientWidth,
-      selectEnabled: false,
-      trackOffset: 0.0,
-      startBasePair: 0,
-      zoomEnabled: false,
-      dragEnabled: false,
-      lastDragCoord: null,
-      startDragCoord: null,
-      hoverEnabled: false,
-      removeTooltipVisible: false,
-    });
+    this.basePairsPerPixel = GENOME_LENGTH / domElem.clientWidth;
+    this.startBasePair = 0;
+    this.windowSize = [domElem.clientWidth, domElem.clientHeight];
+    this.selectEnabled = false;
+    this.trackOffset = 0.0;
+    this.zoomEnabled = false;
+    this.dragEnabled = false;
+    this.lastDragCoord = null;
+    this.startDragCoord = null;
+    this.hoverEnabled = false;
+    this.removeTooltipVisible = false;
   }
 
   getWindowState() {
-    if (!this.state || !this.state.windowSize) return {};
+    if (!this || !this.windowSize) return {};
 
     let x = null;
     let y = null;
-    const windowHeight = this.state.windowSize[1];
-    if (this.state.lastDragCoord) {
-      x = Util.basePairForScreenX(this.state.lastDragCoord[0], this.state.startBasePair, this.state.basePairsPerPixel, this.state.windowSize);  
-      y = this.state.lastDragCoord[1] / windowHeight;
+    const windowHeight = this.windowSize[1];
+    if (this.lastDragCoord) {
+      x = Util.basePairForScreenX(this.lastDragCoord[0], this.startBasePair, this.basePairsPerPixel, this.windowSize);  
+      y = this.lastDragCoord[1] / windowHeight;
     }
     
     const windowState = {
-      windowSize: this.state.windowSize,
-      basePairsPerPixel: this.state.basePairsPerPixel,
-      startBasePair: this.state.startBasePair,
+      windowSize: this.windowSize,
+      basePairsPerPixel: this.basePairsPerPixel,
+      startBasePair: this.startBasePair,
       selectedBasePair: x,
       selectedTrackOffset: y,
     };
 
-    if (this.state.selectEnabled) {
-      if (this.state.startDragCoord && this.state.lastDragCoord) {
+    if (this.selectEnabled) {
+      if (this.startDragCoord && this.lastDragCoord) {
         windowState.selection = {
-          min: this.state.startDragCoord,
-          max: this.state.lastDragCoord,
+          min: this.startDragCoord,
+          max: this.lastDragCoord,
         };
       }
     }
@@ -94,23 +88,23 @@ class MultiTrackViewer extends React.Component {
 
   getClass() {
     const classes = [];
-    if (this.state === null) {
+    if (this === null) {
       return '';
     }
 
-    if (this.state.zoomEnabled) {
+    if (this.zoomEnabled) {
       classes.push('zoom-active');
     }
 
-    if (this.state.dragEnabled) {
+    if (this.dragEnabled) {
       classes.push('drag-active');
     }
 
-    if (this.state.selectEnabled) {
+    if (this.selectEnabled) {
       classes.push('select-active');
     }
 
-    if (this.state.hoverEnabled) {
+    if (this.hoverEnabled) {
       classes.push('hover-active');
     }
 
@@ -119,34 +113,28 @@ class MultiTrackViewer extends React.Component {
 
   onDrop(evt) {
     this.props.model.removeTrack(evt.dataTransfer.getData('guid'));
-    this.setState({
-      removeTooltipVisible: false,
-    });
+    this.removeTooltipVisible = false;
   }
 
   onDragOver(evt) {
     evt.dataTransfer.dropEffect = 'move';
     evt.preventDefault();
-    this.setState({
-      removeTooltipVisible: true,
-    });
+    this.removeTooltipVisible = true;
   }
 
   onDragLeave(evt) {
-    this.setState({
-      removeTooltipVisible: false,
-    });
+    this.removeTooltipVisible = false;
   }
 
   getTrackInfoAtCoordinate(coord) {
       // get base pair: 
-      const start = this.state.startBasePair;
-      const bpp = this.state.basePairsPerPixel;
-      const windowSize = this.state.windowSize;
+      const start = this.startBasePair;
+      const bpp = this.basePairsPerPixel;
+      const windowSize = this.windowSize;
       const end = Util.endBasePair(start, bpp, windowSize);
       const hoveredBasePair = Util.basePairForScreenX(coord[0], start, bpp, windowSize);
       // get y Offset:
-      const trackOffset = (coord[1] - this.state.trackOffset * windowSize[1]) / windowSize[1];
+      const trackOffset = (coord[1] - this.trackOffset * windowSize[1]) / windowSize[1];
 
       let delta = 0.0;
       let idx = null;
@@ -177,7 +165,7 @@ class MultiTrackViewer extends React.Component {
               track: track,
               tooltip: dataTooltip,
               trackHeightPx: trackHeightPx,
-              trackCenterPx: finalDelta - trackHeightPx/2.0 + this.state.trackOffset * windowSize[1],
+              trackCenterPx: finalDelta - trackHeightPx/2.0 + this.trackOffset * windowSize[1],
             };
           }
         } else {
@@ -188,7 +176,7 @@ class MultiTrackViewer extends React.Component {
             track: track,
             tooltip: null,
             trackHeightPx: trackHeightPx,
-            trackCenterPx: finalDelta - trackHeightPx/2.0 + this.state.trackOffset * windowSize[1],
+            trackCenterPx: finalDelta - trackHeightPx/2.0 + this.trackOffset * windowSize[1],
           };
         }
       }
@@ -204,30 +192,25 @@ class MultiTrackViewer extends React.Component {
 
 
   handleMouseMove(e) {
-    if (this.state.dragEnabled) {
-      if (!this.state.selectEnabled) {
-        const deltaX = e.offsetX - this.state.lastDragCoord[0];
-        const deltaY = e.offsetY - this.state.lastDragCoord[1];
+    if (this.dragEnabled) {
+      if (!this.selectEnabled) {
+        const deltaX = e.offsetX - this.lastDragCoord[0];
+        const deltaY = e.offsetY - this.lastDragCoord[1];
         if (Math.abs(deltaY) > 0) {
-          const delta = Math.min(0.0, this.state.trackOffset + deltaY / this.state.windowSize[1]);
-          this.setState({
-            trackOffset: delta,
-          });
+          const delta = Math.min(0.0, this.trackOffset + deltaY / this.windowSize[1]);
+          this.trackOffset = delta;
         }
 
         if (Math.abs(deltaX) > 0) {
-          this.setState({
-            startBasePair: this.state.startBasePair - deltaX * this.state.basePairsPerPixel,
-          });
+          this.startBasePair = this.startBasePair - deltaX * this.basePairsPerPixel;
         }
         // otherwise the update lags slightly!
         this.forceUpdate();
       }
     }
 
-    this.setState({
-      lastDragCoord: [e.offsetX, e.offsetY],
-    });
+
+    this.lastDragCoord = [e.offsetX, e.offsetY];
   }
 
   totalTrackHeight() {
@@ -240,98 +223,77 @@ class MultiTrackViewer extends React.Component {
   }
 
   handleMouse(e) {
-    if (this.state.dragEnabled) {
+    if (this.dragEnabled) {
       return;
-    } else if (this.state.zoomEnabled) {
+    } else if (this.zoomEnabled) {
       if (Math.abs(e.deltaY) > 0) {
         // get track at position:
         const track = this.getTrackInfoAtCoordinate([e.offsetX, e.offsetY]).track;
         if (track) {
           const currTrackHeight = this.views[track.guid].getHeight();
-          const newTrackHeight = currTrackHeight / (1.0 - (e.deltaY / this.state.windowSize[1]));  
-          if (newTrackHeight * this.state.windowSize[1] > MIN_TRACK_HEIGHT_PIXELS) {
+          const newTrackHeight = currTrackHeight / (1.0 - (e.deltaY / this.windowSize[1]));  
+          if (newTrackHeight * this.windowSize[1] > MIN_TRACK_HEIGHT_PIXELS) {
             this.views[track.guid].setHeight(newTrackHeight);
             // compute the offset so that the y position remains constant after zoom:
-            this.setState({
-              trackOffset: this.state.trackOffset + (currTrackHeight - newTrackHeight)/2.0,
-            });
+            this.trackOffset = this.trackOffset + (currTrackHeight - newTrackHeight)/2.0;
           }
         }
         // otherwise the update lags slightly!
         this.forceUpdate();
       }
-    } else if (this.state.basePairsPerPixel <= GENOME_LENGTH / (this.state.windowSize[0])) {
+    } else if (this.basePairsPerPixel <= GENOME_LENGTH / (this.windowSize[0])) {
       // x pan sets the base pair!
       if (Math.abs(e.deltaX) > 0) {
-        const newStart = this.state.startBasePair + (e.deltaX * this.state.basePairsPerPixel);
-        this.setState({
-          startBasePair: newStart,
-          panning: true,
-        });
+        const newStart = this.startBasePair + (e.deltaX * this.basePairsPerPixel);
+        this.startBasePair = newStart;
+        this.panning = true;
       } else {
-        this.setState({
-          panning: false,
-        });
+        this.panning = false;
         if (Math.abs(e.deltaY) > 0) {
           const lastBp = Util.basePairForScreenX(e.offsetX, 
-                                                  this.state.startBasePair, 
-                                                  this.state.basePairsPerPixel, 
-                                                  this.state.windowSize);
+                                                  this.startBasePair, 
+                                                  this.basePairsPerPixel, 
+                                                  this.windowSize);
           
-          let newBpPerPixel = this.state.basePairsPerPixel / (1.0 - (e.deltaY / 1000.0));  
-          newBpPerPixel = Math.min(GENOME_LENGTH / (this.state.windowSize[0]), newBpPerPixel);
+          let newBpPerPixel = this.basePairsPerPixel / (1.0 - (e.deltaY / 1000.0));  
+          newBpPerPixel = Math.min(GENOME_LENGTH / (this.windowSize[0]), newBpPerPixel);
 
           // compute the new startBasePair so that the cursor remains
           // centered on the same base pair after scaling:
           const rawPixelsAfter = lastBp / newBpPerPixel;
-          const offset = (rawPixelsAfter - e.offsetX) * newBpPerPixel;
-          this.setState({
-            startBasePair:  offset,
-            basePairsPerPixel: newBpPerPixel,
-          });
+          this.startBasePair = (rawPixelsAfter - e.offsetX) * newBpPerPixel;
+          this.basePairsPerPixel = Math.max(0.25, newBpPerPixel);
         }
       }
     }
   }
 
   handleMouseDown(e) {
-    this.setState({
-      dragEnabled: true,
-      lastDragCoord: [e.offsetX, e.offsetY],
-      startDragCoord: [e.offsetX, e.offsetY],
-    });
+    this.dragEnabled = true;
+    this.lastDragCoord = [e.offsetX, e.offsetY];
+    this.startDragCoord = [e.offsetX, e.offsetY];
   }
 
   handleMouseUp(e) {
-    this.setState({
-      dragEnabled: false,
-      lastDragCoord: null,
-      startDragCoord: null,
-      selectEnabled: false,
-    });
+    this.dragEnabled = false;
+    this.lastDragCoord = null;
+    this.startDragCoord = null;
+    this.selectEnabled = false;
   }
 
   handleKeydown(e) {
     if (e.key === 'Alt') {
-      this.setState({
-        selectEnabled: true,
-      });
+      this.selectEnabled = true;
     } else if (e.key === 'Control') {
-      this.setState({
-        zoomEnabled: true,
-      });
+      this.zoomEnabled = true;
     }
   }
 
   handleKeyup(e) {
     if (e.key === 'Alt') {
-      this.setState({
-        selectEnabled: false,
-      });
+      this.selectEnabled = false;
     } else if (e.key === 'Control') {
-      this.setState({
-        zoomEnabled: false,
-      });
+      this.zoomEnabled = false;
     }
   }
 
@@ -392,22 +354,19 @@ class MultiTrackViewer extends React.Component {
     const windowState = this.getWindowState();
     const viewGuids = _.keys(this.views);
     const numTracks = viewGuids.length;
-    this.setState({
-        hoverEnabled: false,
-    });
+    this.hoverEnabled = false;
     let currOffset = 0.0;
     for (let i = 0; i < numTracks; i++) {
       // setup track position
       const track = this.views[viewGuids[i]];
-      track.setYOffset(currOffset + this.state.trackOffset);
+      track.setYOffset(currOffset + this.trackOffset);
       currOffset += track.getHeight();
       track.render(this.renderContext, this.shaders, windowState);
-      if (track.hoverEnabled && !this.state.hoverEnabled) {
-        this.setState({
-          hoverEnabled: true,
-        });
+      if (track.hoverEnabled && !this.hoverEnabled) {
+        this.hoverEnabled = true;
       }
     }
+    this.forceUpdate();
   }
 
   render() {
@@ -429,10 +388,10 @@ class MultiTrackViewer extends React.Component {
                     .tickFormat(Util.roundToHumanReadable);
 
     let tooltip = (<div />);
-    if (this.state.lastDragCoord && !this.state.selectEnabled) {
-      const coord = this.state.lastDragCoord.slice();
+    if (this.lastDragCoord && !this.selectEnabled) {
+      const coord = this.lastDragCoord.slice();
       const trackInfo = this.getTrackInfoAtCoordinate(coord);
-      const x = ANNOTATION_OFFSET + Util.pixelForBasePair(trackInfo.basePair, this.state.startBasePair, this.state.basePairsPerPixel, this.state.windowSize);
+      const x = ANNOTATION_OFFSET + Util.pixelForBasePair(trackInfo.basePair, this.startBasePair, this.basePairsPerPixel, this.windowSize);
       
       if (trackInfo.track !== null && trackInfo.tooltip !== null) {
         const y = (-trackInfo.tooltip.valueNormalized + 0.5) * trackInfo.trackHeightPx + trackInfo.trackCenterPx;
@@ -446,7 +405,7 @@ class MultiTrackViewer extends React.Component {
     const onDragOver = this.onDragOver;
     const onDragLeave = this.onDragLeave;
 
-    const removeTooltip = this.state.removeTooltipVisible ? (<div className="remove-hint">Remove Track</div>) : undefined;
+    const removeTooltip = this.removeTooltipVisible ? (<div className="remove-hint">Remove Track</div>) : undefined;
     return (
       <div className="content">
         {removeTooltip}
@@ -462,11 +421,6 @@ class MultiTrackViewer extends React.Component {
         <div id="webgl-overlay">
           {tooltip}
         </div>
-        <StatusTile 
-          startBasePair={this.state.startBasePair}
-          basePairsPerPixel={this.state.basePairsPerPixel}
-          trackHeight={0}
-        />
       </div>
     );
   }

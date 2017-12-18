@@ -13,13 +13,15 @@ export default class DataTrackRenderer {
     const endBasePair = Util.endBasePair(startBasePair, basePairsPerPixel, windowState.windowSize);
     const trackHeightPx = windowState.windowSize[1] * height;
     const tiles = dataTrack.getTiles(startBasePair, endBasePair, basePairsPerPixel, trackHeightPx);
+
     let j = 0;
+
     tiles.forEach(tile => {
-        context.textures[j].bind(1 + j);
-        context.textures[j].set(tile.tile.data, 1024, 1);
+        const texId = context.bindTexture(tile.tile.data.guid, tile.tile.data, 1024, 1);
         const shader = shaders.tileShader;
         shader.use();
-        shader.uniformi('data', 1 + j);
+        shader.uniformi('data', texId);
+        shader.uniformi('isApproximate', tile.isApproximate ? 1 : 0);
         shader.uniform('dataMin', dataTrack.min);
         shader.uniform('dataMax', dataTrack.max);
         shader.uniform('tile', 0.5 + 0.5 * j / tiles.length);

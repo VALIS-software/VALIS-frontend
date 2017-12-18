@@ -13,6 +13,7 @@ uniform vec2 windowSize;
 uniform vec2 selectionBoundsMin;
 uniform vec2 selectionBoundsMax;
 uniform int showSelection;
+uniform int isApproximate;
 
 uniform sampler2D data;
 
@@ -46,7 +47,12 @@ void main() {
 	
 	vec3 finalColor = vec3(0.0);
 	if ((1.0 - coord.y) < dataValue.r) {
-		finalColor = mix(OTHER_BLUE_COLOR, BLUE_COLOR , coord.y);
+		if (isApproximate == 1) {
+			finalColor = mix(OTHER_BLUE_COLOR.bgr, BLUE_COLOR.bgr, coord.y);	
+		} else {
+			finalColor = mix(OTHER_BLUE_COLOR, BLUE_COLOR , coord.y);		
+		}
+		
 	}
 	vec3 tintColor = vec3(0.0);
 	float pixelsPerBp = windowSize.x/(displayedRange.y - displayedRange.x);

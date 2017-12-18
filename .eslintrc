@@ -23,6 +23,7 @@
     "func-names": "off",
     "space-before-function-paren": "off",
     "react/sort-comp": "off",
+    "new-cap": "off",
   },
   "env": {
     "browser": true

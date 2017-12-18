@@ -22,12 +22,12 @@ class DataTrack {
   }
 
   getTiles(startBp, endBp, samplingRate, trackHeightPx) {
-    return this.cache.get(startBp, endBp, samplingRate, trackHeightPx);
+    return this.cache.get(startBp, endBp, samplingRate, 0);
   }
 
   getTooltipData(basePair, yOffset, startBp, endBp, samplingRate, trackHeightPx) {
     if (basePair < startBp || basePair > endBp) return null;
-    const tiles = this.cache.get(startBp, endBp, samplingRate, trackHeightPx);
+    const tiles = this.cache.get(startBp, endBp, samplingRate, 0);
     
     // find the basePair in the tiles:
     let ret = {
@@ -63,7 +63,7 @@ class DataTrack {
       const result = data.data;
       const rawData = data.data.values;
       // HACK (should not have to use RGBA textures)
-      const values = [];
+      const values = new Float32Array(this.cache.tileSize * 4);
       let min = null;
       let max = null;
       for (let i = 0; i < this.cache.tileSize; i++) {
@@ -75,6 +75,7 @@ class DataTrack {
         min = Math.min(value, min);
         max = max === null ? value : Math.max(value, max);
       }
+
       this._min = Math.min(min, this._min);
       this._max = this._max === null ? max : Math.max(max, this._max);
 

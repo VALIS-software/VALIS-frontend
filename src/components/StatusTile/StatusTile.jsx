@@ -28,18 +28,18 @@ function StatusTile(props) {
       <div id="statustile-title">
         <h4>Status</h4>
       </div>
-      <StatusTileStatus name="startBasePair" status={props.startBasePair} />
-      <StatusTileStatus name="basePairsPerPixel" status={props.basePairsPerPixel} />
-      <StatusTileStatus name="trackHeight" status={props.trackHeight} />
+      <StatusTileStatus name="framesPerSecond" status={props.framesPerSecond} />
+      <StatusTileStatus name="cacheEntryCount" status={props.cacheEntryCount} />
+      <StatusTileStatus name="displayedTileCount" status={props.displayedTileCount} />
     </div>
   );
 }
 
 
 StatusTile.propTypes = {
-  startBasePair: PropTypes.number.isRequired,
-  basePairsPerPixel: PropTypes.number.isRequired,
-  trackHeight: PropTypes.number.isRequired,
+  framesPerSecond: PropTypes.number.isRequired,
+  cacheEntryCount: PropTypes.number.isRequired,
+  displayedTileCount: PropTypes.number.isRequired,
 };
 
 export default StatusTile;
