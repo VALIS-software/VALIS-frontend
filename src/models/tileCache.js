@@ -3,9 +3,9 @@ import Util from '../helpers/util.js';
 
 const _ = require('underscore');
 const xspans = require('xspans');
+const uuid = require('uuid/v4');
 
 export const CACHE_TILE_SIZE = 1024;
-export const CACHE_SAMPLING_STEP_SIZE = 4096;
 const CACHE_THROTTLE_MS = 250;
 
 export class Tile {
@@ -15,6 +15,7 @@ export class Tile {
     this._samplingRate = samplingRate;
     this._trackHeightPx = trackHeightPx;
     this._data = data;
+    data.guid = uuid();
   }
 
   get data() {
@@ -32,87 +33,90 @@ export class Tile {
   get samplingRate() {
     return this._samplingRate;
   }
+
+  get trackHeightPx() {
+    return this._trackHeightPx;
+  }
+}
+
+export function ExponentialCacheSampler(k=4, min=1) {
+  // samples the cache dimension using powers of k
+  return (x) => {
+    return Math.max(min, Util.floorToClosestPower(x, k));
+  };
+}
+
+export function FixedCacheSampler(k=0) {
+  // samples the cache dimension using a constant k
+  return (x) => {
+    return k;
+  };
+}
+
+export function LinearCacheSampler(k=4096, min=4096) {
+  // samples the cache dimension using multiples of k
+  return (x) => {
+    return Math.max(min, Util.floorToMultiple(x, k));
+  };
 }
 
 export class TileCache {
-  constructor(minBp, maxBp, tileFetchFn) {
+  constructor(minBp, maxBp, tileFetchFn, xSampler=ExponentialCacheSampler(), ySampler=ExponentialCacheSampler()) {
     this.cache = {};
     this.inFlight = {};
+    this.xSampler = xSampler;
+    this.ySampler = ySampler;
     this.minBp = minBp;
     this.maxBp = maxBp;
     this.tileFetchFn = tileFetchFn;
     this.get = _.throttle(this.get.bind(this), CACHE_THROTTLE_MS);
+    this.entryCount = 0;
   }
 
-  _cacheKeyToRange(key) {
-    const arr = key.split('.');
-    return [parseFloat(arr[0]), parseFloat(arr[1])];
-  }
+  _getExact(startBp, endBp, samplingRate, heightPx=0) {
+    const finalSamplingRate = this.xSampler(samplingRate);
+    const finalHeightPx = this.ySampler(heightPx);
+    if (this.cache[finalHeightPx] === undefined) {
+      this.cache[finalHeightPx] = {};
+    }
 
-  _getExact(tileRange, tileResolution) {
-    const results = [];
-    let intervalNeeded = xspans(tileRange);
-    _.keys(this.cache).forEach(key => {
-      const cacheEntryRange = this._cacheKeyToRange(key);
-      const intersection = xspans.intersect(intervalNeeded, cacheEntryRange).getData();
-      if (intersection.length > 0) {
-        if (this.cache[key][tileResolution] !== undefined) {
-          intervalNeeded = xspans.subtract(intervalNeeded, cacheEntryRange);
-          const curr = this.cache[key][tileResolution];
-          for (let i = 0; i < intersection.length / 2; i++) {
-            const range = [intersection[i*2], intersection[i*2 + 1]];
-            results.push({
-              range: range,
-              tile: curr,
-            });
-          }
-        }
+    const entries = this.cache[finalHeightPx];
+
+    if (this.cache[finalHeightPx][finalSamplingRate] === undefined) {
+      this.cache[finalHeightPx][finalSamplingRate] = {};
+    }
+
+    const tiles = this.cache[finalHeightPx][finalSamplingRate];
+
+    const bpPerTile = CACHE_TILE_SIZE * finalSamplingRate;
+    const startIdx = Math.floor(startBp/bpPerTile);
+    const numTiles = Math.ceil((endBp - startBp)/bpPerTile);
+    const tilesFound = [];
+    const tilesNeeded = [];
+    
+    for (let i = 0; i <= numTiles; i++) {
+      let range = [(startIdx + i) * bpPerTile, (startIdx + i + 1) * bpPerTile];
+      range = xspans.intersect([this.minBp, this.maxBp], range).getData();
+      if (tiles[startIdx + i] !== undefined) {
+        tilesFound.push({
+          heightPx: finalHeightPx,
+          samplingRate: finalSamplingRate,
+          range: range,
+          tile: tiles[startIdx + i],
+        });
+      } else if (range.length) {
+        tilesNeeded.push({
+          heightPx: finalHeightPx,
+          samplingRate: finalSamplingRate,
+          range: range,
+        });
       }
-    });
-    return results;
-  }
+    }
 
-  _getAny(tileRange, tileResolution) {
-    const results = [];
-    let intervalNeeded = xspans(tileRange);
-
-    const sortedKeys = _.chain(this.cache)
-      .keys()
-      .filter(key => {
-        // keep only the cache entries that intersect the needed interval
-        const cacheEntryRange = this._cacheKeyToRange(key);
-        const intersection = xspans.intersect(intervalNeeded, cacheEntryRange).getData();
-        return intersection.length > 0;
-      })
-      .sortBy(key => {
-        // return the difference between target resolution and actual
-        return Math.abs(_.keys(this.cache[key])[0] - tileResolution);
-      })
-      .value();
-
-    // assemble the results greedily:
-    sortedKeys.forEach(key => {
-      const cacheEntryRange = this._cacheKeyToRange(key);
-      const intersection = xspans.intersect(intervalNeeded, cacheEntryRange).getData();
-      if (intersection.length > 0) {
-        intervalNeeded = xspans.subtract(intervalNeeded, cacheEntryRange);
-        const curr = _.keys(this.cache[key])[0];
-        for (let i = 0; i < intersection.length / 2; i++) {
-          const range = [intersection[i*2], intersection[i*2 + 1]];
-          results.push({
-            range: range,
-            tile: this.cache[key][curr],
-          });
-        }
-      }
-    });
-    return results;
-  }
-
-  _put(tileRange, tileResolution, trackHeightPx, data) {
-    const tileRangeKey = `${tileRange[0]}.${tileRange[1]}`;
-    if (!this.cache[tileRangeKey]) this.cache[tileRangeKey] = {};
-    this.cache[tileRangeKey][tileResolution] = data;
+    return {
+      tiles: tilesFound,
+      needed: tilesNeeded,
+    };
   }
 
   get tileSize() {
@@ -124,51 +128,37 @@ export class TileCache {
     this.inFlight = {};
   }
 
-  get(startBp, endBp, samplingRate, trackHeightPx) {
+  _put(tileRange, samplingRate, trackHeightPx, data) {
+    if (this.cache[trackHeightPx][samplingRate] === undefined) {
+      this.cache[trackHeightPx][samplingRate] = {};
+    }
+
+    const tiles = this.cache[trackHeightPx][samplingRate];
+    const bpPerTile = CACHE_TILE_SIZE * samplingRate;
+    tiles[Math.floor(tileRange[0]/(bpPerTile))] = data;
+  }
+
+  get(startBp, endBp, samplingRate, trackHeightPx=0) {
     startBp = Math.round(startBp);
     endBp = Math.round(endBp);
     samplingRate = Math.round(samplingRate);
-    // return the best tile with this data:
-    const samplingRateForRequest = Util.floorToMultiple(samplingRate, CACHE_SAMPLING_STEP_SIZE);
-    const basePairsPerTile = CACHE_TILE_SIZE * samplingRateForRequest;
-    
-    let tiles = this._getExact([startBp, endBp], samplingRateForRequest);
+    trackHeightPx = Math.round(trackHeightPx);
 
-    // compute all the ranges that are missing:
-    let intervalNeeded = xspans.intersect([this.minBp, this.maxBp], [startBp, endBp]);
-    tiles.forEach(tile => {
-      tile.range = xspans.intersect([this.minBp, this.maxBp], tile.range).getData();
-      intervalNeeded = xspans.subtract(intervalNeeded, tile.range);
-    });
+    const intervalNeeded = xspans.intersect([this.minBp, this.maxBp], [startBp, endBp]);
+    const results = this._getExact(startBp, endBp, samplingRate, trackHeightPx);
+    const tiles = results.tiles;
 
-    // send requests to fetch these tiles:
-    const intervals = intervalNeeded.getData();
-    for (let i = 0; i < intervals.length / 2; i++) {
-      const range = [intervals[i*2], intervals[i*2 + 1]];
-      const fetchRange = Util.discreteRangeContainingRange(range, basePairsPerTile);
-      // check if we can add a different resolution tile from cache for the time being:
-      tiles = tiles.concat(this._getAny(range, samplingRate));
-
-      const tileRequests = [];
-      for (let j = fetchRange[0]; j < fetchRange[1]; j+= basePairsPerTile) {
-        tileRequests.push({
-          start: j,
-          end: j + basePairsPerTile,
-          samplingRate: samplingRateForRequest,
-          trackHeightPx: trackHeightPx,
+    const needed = results.needed;
+    needed.forEach(req => {
+      const cacheKey = JSON.stringify(req);
+      if (!this.inFlight[cacheKey]) {
+        this.inFlight[cacheKey] = true;
+        this.tileFetchFn(req.range[0], req.range[1], req.samplingRate, req.heightPx).then(tile => {
+          this._put(req.range, req.samplingRate, req.heightPx, tile);
+          this.entryCount++;
         });
       }
-
-      tileRequests.forEach(req => {
-        const cacheKey = `${req.start}_${req.end}_${req.samplingRate}`;
-        if (!this.inFlight[cacheKey]) {
-          this.inFlight[cacheKey] = true;
-          this.tileFetchFn(req.start, req.end, req.samplingRate, req.trackHeightPx).then(tile => {
-            this._put([req.start, req.end], req.samplingRate, req.trackHeightPx, tile);
-          });
-        }
-      });
-    }
+    });
     return tiles;
   }
 }

@@ -1,6 +1,7 @@
 import { Igloo } from '../../lib/igloojs/igloo.js';
 
 const d3 = require('d3');
+const _ = require('underscore');
 
 const formatSi = d3.format('.6s');
 
@@ -11,6 +12,10 @@ class Util {
 
   static ceilToMultiple(x, k) {
     return Math.round((x % k === 0) ? x :  x + k - x % k);
+  }
+
+  static floorToClosestPower(x, k) {
+    return Math.floor(Math.pow(k, Math.floor(Math.log(x)/Math.log(k))));
   }
 
   static discreteRangeContainingRange(range, discretizationSize) {
@@ -60,13 +65,34 @@ class Util {
 
     // monkey patch igloo... 
     igloo.textures = textures;
-    igloo.shaders = {};
+    igloo.boundTextures = {};
     igloo.quad = igloo.array(Igloo.QUAD2);
 
     // handle quad rendering:
     igloo.drawQuad = function(shader) {
         shader.attrib('points', igloo.quad, 2);
         shader.draw(igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
+    };
+
+    igloo.bindTexture = function(texDataGuid, texData, width, height) {
+      if (!igloo.boundTextures[texDataGuid]) {
+        const keys = _.keys(igloo.boundTextures);
+        let idx = keys.length;
+        if (idx >= igloo.textures.length) {
+          // free a random texture:
+          const toFree = keys[Math.floor(Math.random() * igloo.textures.length)];
+          idx = igloo.boundTextures[toFree];
+          delete igloo.boundTextures[toFree];
+          igloo.boundTextures[texDataGuid] = idx;
+        }
+        igloo.textures[idx].bind(idx + 1);
+        igloo.textures[idx].set(texData, width, height);
+        return idx + 1;
+      } else {
+        const idx = igloo.boundTextures[texDataGuid];
+        igloo.textures[idx].bind(idx + 1);
+        return idx + 1;
+      }
     };
 
     return igloo;

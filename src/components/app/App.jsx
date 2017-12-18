@@ -11,7 +11,6 @@ import AppModel from '../../models/appModel.js';
 // Styles
 import './App.scss';
 
-const uuid = require('uuid/v1');
 const _ = require('underscore');
 
 class App extends React.Component {

@@ -1,6 +1,6 @@
 
 import Util from '../helpers/util.js';
-import { Tile, TileCache } from './tileCache.js';
+import { Tile, TileCache, LinearCacheSampler, FixedCacheSampler } from './tileCache.js';
 import { GENOME_LENGTH } from '../helpers/constants.js';
 
 class AnnotationTrack {
@@ -8,7 +8,7 @@ class AnnotationTrack {
     this.api = api;
     this.annotationIds = annotationIds;
     this.loadData = this.loadData.bind(this);
-    this.cache = new TileCache(0, GENOME_LENGTH, this.loadData);
+    this.cache = new TileCache(0, GENOME_LENGTH, this.loadData, LinearCacheSampler(), FixedCacheSampler());
   }
 
   clearCache() {

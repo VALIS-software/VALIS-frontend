@@ -26,10 +26,6 @@ class AppModel {
     this.listeners.delete(listener);
   }
 
-  getTracks() {
-    return this.tracks;
-  }
-
   notifyListeners(eventType, data) {
     this.listeners.forEach(evtTarget => {
       evtTarget({
@@ -38,6 +34,10 @@ class AppModel {
         eventData: data,
       });
     });
+  }
+
+  getTracks() {
+    return this.tracks;
   }
 
   addAnnotationTrack(annotationId) {
