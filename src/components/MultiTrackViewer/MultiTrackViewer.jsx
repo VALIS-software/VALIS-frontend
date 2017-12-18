@@ -3,6 +3,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Util from '../../helpers/util.js';
 import { GENOME_LENGTH } from '../../helpers/constants.js';
+import { 
+  APP_EVENT_ADD_TRACK,
+  APP_EVENT_REMOVE_TRACK,
+  APP_EVENT_REORDER_TRACKS,
+} from '../../models/appModel.js';
 
 import StatusTile from '../StatusTile/StatusTile.jsx';
 import TrackView from '../TrackView/TrackView.jsx';
@@ -26,7 +31,9 @@ class MultiTrackViewer extends React.Component {
     this.overlayElem = null;
     this.tracks = [];
     this.updateViews = this.updateViews.bind(this);
-    props.model.addListener(this.updateViews);
+    props.model.addListener(this.updateViews, [APP_EVENT_ADD_TRACK, 
+                                               APP_EVENT_REORDER_TRACKS, 
+                                               APP_EVENT_REMOVE_TRACK]);
     this.onDrop = this.onDrop.bind(this);
     this.onDragOver = this.onDragOver.bind(this);
     this.onDragLeave = this.onDragLeave.bind(this);
@@ -323,11 +330,11 @@ class MultiTrackViewer extends React.Component {
     return this.renderContext.gl;
   }
 
-  updateViews(evt) {
+  updateViews(event) {
     const newViews = {};
     let idx = 0;
-    this.tracks = evt.tracks;
-    evt.tracks.forEach(track => {
+    this.tracks = event.sender.tracks;
+    event.sender.tracks.forEach(track => {
       if (!this.views[track.guid]) {
         newViews[track.guid] = new TrackView(track.guid, this.props.model);
         newViews[track.guid].setHeight(0.1);
