@@ -1,5 +1,7 @@
 
 import GenomeAPI from './api.js';
+import EventCreator from './eventCreator.js';
+import { TRACK_EVENT_LOADING } from './track.js';
 
 const uuid = require('uuid/v4');
 const _ = require('underscore');
@@ -7,37 +9,42 @@ const _ = require('underscore');
 const APP_EVENT_ADD_TRACK = 'ADD_TRACK';
 const APP_EVENT_REMOVE_TRACK = 'REMOVE_TRACK';
 const APP_EVENT_REORDER_TRACKS = 'REORDER_TRACKS';
+const APP_EVENT_LOADING_STATE_CHANGED = 'LOADING_CHANGED';
 
-class AppModel {
+export { 
+  APP_EVENT_ADD_TRACK,
+  APP_EVENT_REMOVE_TRACK,
+  APP_EVENT_REORDER_TRACKS,
+  APP_EVENT_LOADING_STATE_CHANGED,
+};
+
+class AppModel extends EventCreator {
   constructor() {
+    super();
     this.api = new GenomeAPI();
     this.addDataTrack = this.addDataTrack.bind(this);
     this.addAnnotationTrack = this.addAnnotationTrack.bind(this);
     this.removeTrack = this.removeTrack.bind(this);
     this.tracks = [];
-    this.listeners = new Set();
-  }
-
-  addListener(listener) {
-    this.listeners.add(listener);
-  }
-
-  removeListener(listener) {
-    this.listeners.delete(listener);
-  }
-
-  notifyListeners(eventType, data) {
-    this.listeners.forEach(evtTarget => {
-      evtTarget({
-        tracks: this.tracks,
-        eventType: eventType,
-        eventData: data,
-      });
-    });
+    this.tracksLoading = 0;
+    this.loadingStarted = this.loadingStarted.bind(this);
   }
 
   getTracks() {
     return this.tracks;
+  }
+
+  loadingStarted(event) {
+    const wasLoading = this.tracksLoading > 0;
+    if (event.data === true) {
+      this.tracksLoading++;
+    } else {
+      this.tracksLoading--;
+    }
+    const isLoading = this.tracksLoading > 0;
+    if (wasLoading !== isLoading) {
+      this.notifyListeners(APP_EVENT_LOADING_STATE_CHANGED, isLoading);
+    }
   }
 
   addAnnotationTrack(annotationId) {
@@ -47,6 +54,7 @@ class AppModel {
         dataTrack: null,
         annotationTrack: model,
       };
+      model.addListener(this.loadingStarted, TRACK_EVENT_LOADING);
       this.tracks = this.tracks.concat([track]);
       this.notifyListeners(APP_EVENT_ADD_TRACK, track);
     });
@@ -75,6 +83,7 @@ class AppModel {
         dataTrack: model,
         annotationTrack: null,
       };
+      model.addListener(this.loadingStarted, TRACK_EVENT_LOADING);
       this.tracks = this.tracks.concat([track]);
       this.notifyListeners(APP_EVENT_ADD_TRACK, track);
     });
@@ -87,7 +96,7 @@ class AppModel {
     });
 
     const removed = arr[index];
-
+    removed.removeListener(this.loadingStarted);
     if (index >= 0) {
       arr.splice(index, 1); 
       this.tracks = arr;
@@ -95,11 +104,5 @@ class AppModel {
     }
   }
 }
-
-export { 
-  APP_EVENT_ADD_TRACK,
-  APP_EVENT_REMOVE_TRACK,
-  APP_EVENT_REORDER_TRACKS,
-};
 
 export default AppModel;

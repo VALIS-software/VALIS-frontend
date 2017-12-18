@@ -2,9 +2,11 @@
 import Util from '../helpers/util.js';
 import { Tile, TileCache, CACHE_TILE_SIZE } from './tileCache.js';
 import { GENOME_LENGTH } from '../helpers/constants.js';
+import Track, { TRACK_EVENT_LOADING } from './track.js';
 
-class DataTrack {
+class DataTrack extends Track {
   constructor(api, trackId) {
+    super();
     this.api = api;
     this.trackId = trackId;
     this.loadData = this.loadData.bind(this);
@@ -15,14 +17,6 @@ class DataTrack {
 
   get title() {
     return this.trackId;
-  }
-
-  clearCache() {
-    this.cache.clear();
-  }
-
-  getTiles(startBp, endBp, samplingRate, trackHeightPx) {
-    return this.cache.get(startBp, endBp, samplingRate, 0);
   }
 
   getTooltipData(basePair, yOffset, startBp, endBp, samplingRate, trackHeightPx) {
@@ -58,6 +52,7 @@ class DataTrack {
   }
 
   loadData(start, end, samplingRate, trackHeightPx) {
+    this.notifyListeners(TRACK_EVENT_LOADING, true);
     const promise = this.api.getData(this.trackId, start, end, samplingRate, trackHeightPx);
     return promise.then(data => {
       const result = data.data;
@@ -78,8 +73,10 @@ class DataTrack {
 
       this._min = Math.min(min, this._min);
       this._max = this._max === null ? max : Math.max(max, this._max);
-
+      this.notifyListeners(TRACK_EVENT_LOADING, false);
       return new Tile([start, end], [result.startBp, result.endBp], result.samplingRate, result.trackHeightPx, values);
+    }, failure => {
+      this.notifyListeners(TRACK_EVENT_LOADING, false);
     });
   }
 }
