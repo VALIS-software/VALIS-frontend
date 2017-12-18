@@ -10,10 +10,15 @@ export default class AnnotationTrackRenderer {
   constructor() {
     this.textures = {};
     this._hoverEnabled = false;
+    this._hoverElement = null;
   }
 
   get hoverEnabled() {
     return this._hoverEnabled;
+  }
+
+  get hoverElement() {
+    return this._hoverElement;
   }
 
   render(annotationTrack, height, yOffset, context, shaders, windowState) {
@@ -23,6 +28,7 @@ export default class AnnotationTrackRenderer {
     const trackHeightPx = windowState.windowSize[1] * height;
     const annotations = annotationTrack.getAnnotations(startBasePair, endBasePair, basePairsPerPixel, trackHeightPx);
     this._hoverEnabled = false;
+    this._hoverElement = null;
     annotations.forEach(annotation => {
       let enableHover = 0;
       const annotationYOffset = annotation.yOffsetPx / windowState.windowSize[1];
@@ -37,6 +43,7 @@ export default class AnnotationTrackRenderer {
             windowState.selectedTrackOffset <= (yOffset + annotationYOffset + annotationHeight)) {
             enableHover = 1;
             this._hoverEnabled = true;
+            this._hoverElement = annotation;
         }
       }
 
