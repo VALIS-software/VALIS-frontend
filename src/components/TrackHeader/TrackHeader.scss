@@ -1,5 +1,8 @@
 $axis-width: 30px;
 $header-content-width: calc(100% - #{$axis-width});
+$white-color: #fbf8f5;
+$dark-color: #242321;
+$darker-color: #181614;
 
 .track-header {
 	position: absolute;
@@ -10,9 +13,12 @@ $header-content-width: calc(100% - #{$axis-width});
 		float: left;
 		width: $header-content-width;
 		height: 100%;
-		background-color: #ccc;
+		background-color: $dark-color;
+		color: $white-color;
+		font-size: 12px;
 		&:hover {
-			background-color: #bbb;
+			background: linear-gradient(to right, $darker-color, $dark-color);
+			color: $white-color;
 		}
 		.inner {
 			position: absolute;
@@ -28,7 +34,13 @@ $header-content-width: calc(100% - #{$axis-width});
 		height: 100%;
 		.y-axis-container {
 			width: 100%;
-			background-color: #ccc;
+			background-color: $dark-color;
+            text {
+                fill: #fbf8f5;
+            }
+            line {
+                stroke: #fbf8f5;
+            }
 			.yAxis {
 				transform : translate($axis-width, 0px);
 				g:nth-child(2) {
@@ -45,7 +57,7 @@ $header-content-width: calc(100% - #{$axis-width});
 		float: right;
 		width: $axis-width;
 		height: 100%;
-		background-color: #ccc;
+		background-color: $dark-color;
 	}
 
 	.clearfix {

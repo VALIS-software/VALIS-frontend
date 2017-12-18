@@ -46,6 +46,7 @@ class App extends React.Component {
   hideSideBar() {
     this.setState({
       showInfo: false,
+      info: null,
     });
   }
 

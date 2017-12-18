@@ -1,11 +1,11 @@
-$track-header-width: 250px;
+$track-header-width: 200px;
 $browser-width: calc(100% - #{$track-header-width});
 $browser-height: 100%;
 $axis-height: 32px;
 .content {
     background-color: #222;
     flex: 1 0 auto;
-    color: #fff;
+    color: #222;
     position: relative;
     overflow: hidden;
 
@@ -37,8 +37,14 @@ $axis-height: 32px;
         padding-left: $track-header-width;
         width: 100%;
         height: $axis-height;
-        background-color: #ddd;
+        background: linear-gradient(black, #242321);
         .x-axis {
+            text {
+                fill: #fbf8f5;
+            }
+            line {
+                stroke: #fbf8f5;
+            }
             transform: translate(0px, $axis-height);
             g:nth-child(2) {
                 display: none;
