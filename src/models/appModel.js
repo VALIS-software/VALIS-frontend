@@ -101,7 +101,8 @@ class AppModel extends EventCreator {
       return item.guid === trackGuid;
     });
 
-    const removed = arr[index];
+    // TODO: modify this if we have both data & annotation track
+    const removed = arr[index].dataTrack || arr[index].annotationTrack;
     removed.removeListener(this.loadingStarted);
     if (index >= 0) {
       arr.splice(index, 1); 

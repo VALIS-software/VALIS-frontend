@@ -32,7 +32,7 @@ export default class DataTrackRenderer {
         shader.uniform('displayedRange', [startBasePair, endBasePair]);
         shader.uniform('totalRange', [0, GENOME_LENGTH]);
         shader.uniform('offset', [0, yOffset]);
-        shader.uniform('selectedBasePair', windowState.selectedBasePair);
+        shader.uniform('selectedBasePair', windowState.selectedBasePair + windowState.trackBasePairOffset);
         if (windowState.selection) {
           shader.uniformi('showSelection', 1);
           shader.uniform('selectionBoundsMin', windowState.selection.min);

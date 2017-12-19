@@ -23,6 +23,7 @@ class TrackView {
     this.dataTrack = null;
     this.dataRenderer = new DataTrackRenderer();
     this.annotationRenderer = new AnnotationTrackRenderer();
+    this.basePairOffset = 0;
   }
 
   static initializeShaders(context) {
@@ -69,12 +70,24 @@ class TrackView {
     this.yOffset = offset;
   }
 
+  setBasePairOffset(offset) {
+    this.basePairOffset = offset;
+  }
+
+  getBasePairOffset() {
+    return this.basePairOffset;
+  }
+
   render(context, shaders, windowState) {
+    // copy window state and apply track specific offsets:
+    const trackWindowState = Object.assign({}, windowState);
+    trackWindowState.startBasePair += this.basePairOffset;
+    trackWindowState.trackBasePairOffset = this.basePairOffset;
     if (this.annotationTrack !== null) {
-      this.annotationRenderer.render(this.annotationTrack, this.height, this.yOffset, context, shaders, windowState);
+      this.annotationRenderer.render(this.annotationTrack, this.height, this.yOffset, context, shaders, trackWindowState);
     }
     if (this.dataTrack !== null) {
-      this.dataRenderer.render(this.dataTrack, this.height, this.yOffset, context, shaders, windowState);
+      this.dataRenderer.render(this.dataTrack, this.height, this.yOffset, context, shaders, trackWindowState);
     }
   }
 
@@ -99,7 +112,8 @@ class TrackView {
     const height = windowState.windowSize[1] * this.height;
     const key = this.guid;
     const model = this.appModel;
-    return (<TrackHeader key={key} guid={key} top={top} height={height} min={min} max={max} title={title} appModel={model} />);
+    const offset = this.getBasePairOffset();
+    return (<TrackHeader key={key} offset={offset} guid={key} top={top} height={height} min={min} max={max} title={title} appModel={model} />);
   }
 }
 
