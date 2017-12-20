@@ -110,12 +110,13 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 		start_bp = max([start_bp, annotation["startBp"]])
 		end_bp = min([end_bp, annotation["endBp"]])
 		annotation_results = []
-
+		ANNOTATION_HEIGHT_PX = 25
 		if annotation_id == "GRCh38_genes":
 			# get chromosomes in range
 			cStart = chromosome_to_idx(find_chromosome(start_bp))
 			cEnd = chromosome_to_idx(find_chromosome(end_bp))
-
+			last_gene_start = None
+			gene_count = 0
 			for ch_idx in xrange(cStart, cEnd + 1):
 				ch = idx_to_chromosome(ch_idx)
 				ch_range = chromosome_range(ch)
@@ -126,6 +127,19 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 					sz = end - start
 					if sz/float(sampling_rate) > 50:
 						annotation_results.append((name, start, end))
+						last_gene_start = None
+						gene_count = 0
+					elif not last_gene_start:
+						last_gene_start = start
+						gene_count = 1
+					elif (end-last_gene_start)/float(sampling_rate) > 150:
+						gene_count += 1
+						annotation_results.append(("%d Genes" % gene_count, last_gene_start, end))
+						gene_count = 0
+						last_gene_start = None
+					else:
+						gene_count += 1
+
 		annotations = []
 		for annotation_name, annotation_start, annotation_end in annotation_results:
 			random.seed(annotation_name)
@@ -137,14 +151,14 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 				"startBp": annotation_start,
   				"endBp": annotation_end,
   				"yOffsetPx": 0,
-  				"heightPx": 25,
+  				"heightPx": ANNOTATION_HEIGHT_PX,
   				# segment format: startBp, endBp, textureName, [R,G,B,A], height
   				"segments": [[0, annotation_end - annotation_start, None, color, 20]]
 			})
 		# move overlaps that fit in track height, discard those that don't
 		ret = []
 		last = None
-		padding = 1000/sampling_rate
+		padding = 20/sampling_rate
 		for annotation in annotations:
 			if last == None or annotation["startBp"] > last["endBp"] + padding:
 				ret.append(annotation)

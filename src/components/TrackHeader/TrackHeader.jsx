@@ -1,6 +1,7 @@
 // Dependencies
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import Util from '../../helpers/util.js';
 
 // Styles
 import './TrackHeader.scss';
@@ -27,6 +28,7 @@ class TrackHeader extends Component {
 
   onDragStart(evt) {
     evt.dataTransfer.setData('guid', this.props.guid);
+    evt.dataTransfer.effectAllowed = 'all';
   }
 
   onDragOver(evt) {
@@ -91,6 +93,8 @@ class TrackHeader extends Component {
     const onDragLeave = this.onDragLeave;
     const onDrop = this.onDrop;
     const onDragStart = this.onDragStart;
+    const bpStr = (this.props.offset > 0 ? '+' : '-') + Util.roundToHumanReadable(this.props.offset) + ' bp';
+    const offset = this.props.offset !== 0.0 ? bpStr : '';
 
     return (<div style={style} className="track-header">
       <div 
@@ -103,6 +107,8 @@ class TrackHeader extends Component {
       >
         <div className="inner">
           {title}
+          <br />
+          {offset}
         </div>
       </div>
       {axis}
@@ -117,6 +123,7 @@ TrackHeader.propTypes = {
    min: PropTypes.number,
    max: PropTypes.number,
    title: PropTypes.string,
+   offset: PropTypes.number,
    appModel: PropTypes.object,
    guid: PropTypes.string,
 };

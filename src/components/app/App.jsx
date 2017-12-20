@@ -52,15 +52,14 @@ class App extends React.Component {
 
   updateFocus(event) {
     if (event.data !== null) {
-      if (event.data.labels[0] === this.state.info) {
+      if (event.data.labels[0][0] === this.state.info) {
         this.hideSideBar();
       } else {
         this.setState({
           showInfo: true,
-          info: event.data.labels[0],
+          info: event.data.labels[0][0],
         });          
       }
-
     }
   }
 

@@ -61,7 +61,7 @@ class MultiTrackViewer extends React.Component {
     this.startDragCoord = null;
     this.hoverEnabled = false;
     this.hoverElement = null;
-    this.removeTooltipVisible = false;
+    this.removeTrackHintVisible = false;
   }
 
   getWindowState() {
@@ -78,6 +78,7 @@ class MultiTrackViewer extends React.Component {
     const windowState = {
       windowSize: this.windowSize,
       basePairsPerPixel: this.basePairsPerPixel,
+      trackBasePairOffset: 0,
       startBasePair: this.startBasePair,
       selectedBasePair: x,
       selectedTrackOffset: y,
@@ -121,27 +122,26 @@ class MultiTrackViewer extends React.Component {
 
   onDrop(evt) {
     this.props.model.removeTrack(evt.dataTransfer.getData('guid'));
-    this.removeTooltipVisible = false;
+    this.removeTrackHintVisible = false;
   }
 
   onDragOver(evt) {
     evt.dataTransfer.dropEffect = 'move';
     evt.preventDefault();
-    this.removeTooltipVisible = true;
+    this.removeTrackHintVisible = true;
   }
 
   onDragLeave(evt) {
-    this.removeTooltipVisible = false;
+    this.removeTrackHintVisible = false;
   }
 
   getTrackInfoAtCoordinate(coord) {
+      // TODO: Clean up this code... it's a mess!
       // get base pair: 
       const start = this.startBasePair;
       const bpp = this.basePairsPerPixel;
       const windowSize = this.windowSize;
       const end = Util.endBasePair(start, bpp, windowSize);
-      const hoveredBasePair = Util.basePairForScreenX(coord[0], start, bpp, windowSize);
-      // get y Offset:
       const trackOffset = (coord[1] - this.trackOffset * windowSize[1]) / windowSize[1];
 
       let delta = 0.0;
@@ -149,27 +149,33 @@ class MultiTrackViewer extends React.Component {
       let i = 0;
       let trackHeightPx = null; 
       let finalDelta = null;
-      this.tracks.forEach(track => {
-        delta += this.views[track.guid].getHeight();
+      let trackBasePairOffset = 0;
+      let track = null;
+      const hoveredBasePair = Util.basePairForScreenX(coord[0], start, bpp, windowSize);
+
+      this.tracks.forEach(currTrack => {
+        delta += this.views[currTrack.guid].getHeight();
         if (trackOffset <= delta && idx === null) {
           idx = i;
           trackHeightPx = this.views[this.tracks[i].guid].getHeight() * windowSize[1];
+          trackBasePairOffset = this.views[this.tracks[i].guid].getBasePairOffset();
           finalDelta = delta * windowSize[1];
         }
         i++;
       });
 
       if (idx !== null) {
-        const track = this.tracks[idx];
+        track = this.tracks[idx];
         let dataTooltip = null;
         // check that there is a data track
         if (track.dataTrack) {
-          dataTooltip = track.dataTrack.getTooltipData(hoveredBasePair, trackOffset, start, end, bpp, trackHeightPx);
+          dataTooltip = track.dataTrack.getTooltipData(hoveredBasePair + trackBasePairOffset, trackOffset, start, end, bpp, trackHeightPx);
           // make sure that the current cursor is on a valid value:
           if (dataTooltip && dataTooltip.value !== null) {
             return {
               yOffset: trackOffset,
               basePair: hoveredBasePair,
+              basePairOffset: trackBasePairOffset,
               track: track,
               tooltip: dataTooltip,
               trackHeightPx: trackHeightPx,
@@ -181,6 +187,7 @@ class MultiTrackViewer extends React.Component {
           return {
             yOffset: trackOffset,
             basePair: hoveredBasePair,
+            basePairOffset: 0,
             track: track,
             tooltip: null,
             trackHeightPx: trackHeightPx,
@@ -191,7 +198,7 @@ class MultiTrackViewer extends React.Component {
       return {
         yOffset: trackOffset,
         basePair: hoveredBasePair,
-        track: null,
+        track: track,
         tooltip: null,
         trackCenterPx: null,
         trackHeightPx: null,
@@ -210,7 +217,16 @@ class MultiTrackViewer extends React.Component {
         }
 
         if (Math.abs(deltaX) > 0) {
-          this.startBasePair = this.startBasePair - deltaX * this.basePairsPerPixel;
+          const delta = -deltaX * this.basePairsPerPixel;
+          if (this.modifySingleTrack) {
+            const trackInfo = this.getTrackInfoAtCoordinate(this.startDragCoord);
+            if (trackInfo.track) {
+              const last = this.views[trackInfo.track.guid].getBasePairOffset();
+              this.views[trackInfo.track.guid].setBasePairOffset(last + delta);
+            }
+          } else {
+            this.startBasePair += delta;
+          }
         }
         // otherwise the update lags slightly!
         this.forceUpdate();
@@ -252,8 +268,16 @@ class MultiTrackViewer extends React.Component {
     } else if (this.basePairsPerPixel <= GENOME_LENGTH / (this.windowSize[0])) {
       // x pan sets the base pair!
       if (Math.abs(e.deltaX) > 0) {
-        const newStart = this.startBasePair + (e.deltaX * this.basePairsPerPixel);
-        this.startBasePair = newStart;
+        const delta = (e.deltaX * this.basePairsPerPixel);
+        if (this.modifySingleTrack) {
+          const trackInfo = this.getTrackInfoAtCoordinate([e.offsetX, e.offsetY]);
+          if (trackInfo.track) {
+            const last = this.views[trackInfo.track.guid].getBasePairOffset();
+            this.views[trackInfo.track.guid].setBasePairOffset(last + delta);
+          }
+        } else {
+          this.startBasePair += delta;
+        }
         this.panning = true;
       } else {
         this.panning = false;
@@ -295,6 +319,8 @@ class MultiTrackViewer extends React.Component {
       this.selectEnabled = true;
     } else if (e.key === 'Control') {
       this.zoomEnabled = true;
+    } else if (e.key === 'Shift') {
+      this.modifySingleTrack = true;
     }
   }
 
@@ -303,6 +329,8 @@ class MultiTrackViewer extends React.Component {
       this.selectEnabled = false;
     } else if (e.key === 'Control') {
       this.zoomEnabled = false;
+    } else if (e.key === 'Shift') {
+      this.modifySingleTrack = false;
     }
   }
 
@@ -407,7 +435,7 @@ class MultiTrackViewer extends React.Component {
       if (trackInfo.track !== null && trackInfo.tooltip !== null) {
         const y = (-trackInfo.tooltip.valueNormalized + 0.5) * trackInfo.trackHeightPx + trackInfo.trackCenterPx;
         tooltip = (<TrackToolTip x={x} y={y}>
-          <div>BP:{Math.round(trackInfo.basePair)}</div>
+          <div>BP:{Math.round(trackInfo.basePair + trackInfo.basePairOffset)}</div>
           <div>Value:{trackInfo.tooltip.value.toFixed(3)}</div>
         </TrackToolTip>);
       }
@@ -416,10 +444,10 @@ class MultiTrackViewer extends React.Component {
     const onDragOver = this.onDragOver;
     const onDragLeave = this.onDragLeave;
 
-    const removeTooltip = this.removeTooltipVisible ? (<div className="remove-hint">Remove Track</div>) : undefined;
+    const removeTrackHint = this.removeTrackHintVisible ? (<div className="remove-hint">Remove Track</div>) : undefined;
     return (
       <div className="content">
-        {removeTooltip}
+        {removeTrackHint}
         <div id="track-headers">
           {headers}
         </div>
