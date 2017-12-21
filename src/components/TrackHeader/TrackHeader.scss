@@ -1,8 +1,8 @@
 $axis-width: 30px;
-$header-content-width: calc(100% - #{$axis-width});
-$white-color: #fbf8f5;
+$margin-width: 8px;
+$header-content-width: calc(100% - #{$axis-width} - #{$margin-width});
+$white-color: #e8e8e8;
 $dark-color: #242321;
-$darker-color: #181614;
 
 .track-header {
 	position: absolute;
@@ -12,12 +12,14 @@ $darker-color: #181614;
 	.track-header-contents {
 		float: left;
 		width: $header-content-width;
+		margin-left: $margin-width;
+		border-radius: 8px 0px 0px 8px;
 		height: 100%;
 		background-color: $dark-color;
 		color: $white-color;
 		font-size: 12px;
 		&:hover {
-			background: linear-gradient(to right, $darker-color, $dark-color);
+			background: linear-gradient(to right, darken($dark-color, 25%), $dark-color);
 			color: $white-color;
 		}
 		.inner {
@@ -26,6 +28,10 @@ $darker-color: #181614;
 			top: 50%;
 			-webkit-transform: translate(-50%, -50%);
 			transform: translate(-50%, -50%);
+		}
+
+		.bp-offset {
+			color: lighten($dark-color, 25%);
 		}
 	}
 	.track-header-axis {

@@ -1,11 +1,14 @@
 $track-header-width: 200px;
-$browser-width: calc(100% - #{$track-header-width});
+$padding-right: 16px;
+$browser-width: calc(100% - #{$track-header-width} - #{$padding-right});
 $browser-height: 100%;
 $axis-height: 32px;
+$bg-color: #e8e8e8;
+
 .content {
-    background-color: #222;
+    background-color: $bg-color;
     flex: 1 0 auto;
-    color: #222;
+    color: $bg-color;
     position: relative;
     overflow: hidden;
 
@@ -37,13 +40,13 @@ $axis-height: 32px;
         padding-left: $track-header-width;
         width: 100%;
         height: $axis-height;
-        background: linear-gradient(black, #242321);
+        background: linear-gradient(darken($bg-color, 25%), $bg-color);
         .x-axis {
             text {
-                fill: #fbf8f5;
+                fill: #242321;
             }
             line {
-                stroke: #fbf8f5;
+                stroke: #242321;
             }
             transform: translate(0px, $axis-height);
             g:nth-child(2) {
@@ -64,6 +67,15 @@ $axis-height: 32px;
         width: $track-header-width;
         height: $browser-height;
         left: 0px;
+        margin-top: $axis-height;
+    }
+    #track-backgrounds {
+        position: absolute;
+        overflow: hidden;
+        background-color: transparent;
+        width: calc(100% - #{$track-header-width});
+        height: $browser-height;
+        left: $track-header-width;
         margin-top: $axis-height;
     }
     .drag-active {

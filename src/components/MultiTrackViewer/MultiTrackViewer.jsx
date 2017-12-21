@@ -22,6 +22,7 @@ const d3 = require('d3');
 const TICK_SPACING_PIXELS = 100.0;
 const MIN_TRACK_HEIGHT_PIXELS = 32.0;
 const ANNOTATION_OFFSET = 2.0;
+const TRACK_PADDING_PX = 16;
 
 class MultiTrackViewer extends React.Component {
   constructor(props) {
@@ -154,7 +155,7 @@ class MultiTrackViewer extends React.Component {
       const hoveredBasePair = Util.basePairForScreenX(coord[0], start, bpp, windowSize);
 
       this.tracks.forEach(currTrack => {
-        delta += this.views[currTrack.guid].getHeight();
+        delta = this.views[currTrack.guid].getYOffset() + this.views[currTrack.guid].getHeight();
         if (trackOffset <= delta && idx === null) {
           idx = i;
           trackHeightPx = this.views[this.tracks[i].guid].getHeight() * windowSize[1];
@@ -171,7 +172,7 @@ class MultiTrackViewer extends React.Component {
         if (track.dataTrack) {
           dataTooltip = track.dataTrack.getTooltipData(hoveredBasePair + trackBasePairOffset, trackOffset, start, end, bpp, trackHeightPx);
           // make sure that the current cursor is on a valid value:
-          if (dataTooltip && dataTooltip.value !== null) {
+          if (dataTooltip && dataTooltip.value) {
             return {
               yOffset: trackOffset,
               basePair: hoveredBasePair,
@@ -391,14 +392,15 @@ class MultiTrackViewer extends React.Component {
     const windowState = this.getWindowState();
     const viewGuids = _.keys(this.views);
     const numTracks = viewGuids.length;
+    const padding = TRACK_PADDING_PX / windowState.windowSize[1];
     this.hoverEnabled = false;
     this.hoverElement = null;
-    let currOffset = 0.0;
+    let currOffset = padding;
     for (let i = 0; i < numTracks; i++) {
       // setup track position
       const track = this.views[viewGuids[i]];
       track.setYOffset(currOffset + this.trackOffset);
-      currOffset += track.getHeight();
+      currOffset += track.getHeight() + padding;
       track.render(this.renderContext, this.shaders, windowState);
       if (track.hoverEnabled && !this.hoverEnabled) {
         this.hoverEnabled = true;
@@ -410,12 +412,14 @@ class MultiTrackViewer extends React.Component {
 
   render() {
     const headers = [];
+    const backgrounds = [];
     const viewGuids = _.keys(this.views);
     const numTracks = viewGuids.length;
     const windowState = this.getWindowState();
     for (let i = 0; i < numTracks; i++) {
       const track = this.views[viewGuids[i]];
       headers.push(track.getHeader(windowState));
+      backgrounds.push(track.getBackground(windowState));
     }
     const width = windowState.windowSize ? windowState.windowSize[0] : 0;
     const endBasePair = width ? Util.endBasePair(windowState.startBasePair, windowState.basePairsPerPixel, windowState.windowSize) : 0;
@@ -450,6 +454,9 @@ class MultiTrackViewer extends React.Component {
         {removeTrackHint}
         <div id="track-headers">
           {headers}
+        </div>
+        <div id="track-backgrounds">
+          {backgrounds}
         </div>
         <div className="track-header-axis">
           <svg className="x-axis-container">

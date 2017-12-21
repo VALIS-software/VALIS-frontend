@@ -55,7 +55,7 @@ class TrackHeader extends Component {
 
   getStyle() {
     if (!this.state) return {};
-    const border = this.state.borderTop ? '1px solid black' : 'none';
+    const border = this.state.borderTop ? '2px solid red' : 'none';
     const delta = this.state.borderTop ? -1 : 0;
     return {
       borderTop: border,
@@ -108,7 +108,7 @@ class TrackHeader extends Component {
         <div className="inner">
           {title}
           <br />
-          {offset}
+          <span className="bp-offset"> {offset} </span>
         </div>
       </div>
       {axis}

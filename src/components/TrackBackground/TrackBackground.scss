@@ -1,0 +1,7 @@
+$padding-right: 8px;
+.track-background {
+	position: absolute;
+	width: calc(100% - #{$padding-right});
+	border-radius: 0px 8px 8px 0px;
+	background-color: black;
+}
