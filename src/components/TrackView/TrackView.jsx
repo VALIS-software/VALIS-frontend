@@ -11,7 +11,9 @@ import AnnotationTrackRenderer from '../../renderers/AnnotationTrackRenderer.jsx
 import DataTrackRenderer from '../../renderers/DataTrackRenderer.jsx';
 
 import TrackHeader from '../TrackHeader/TrackHeader.jsx';
+import TrackBackground from '../TrackBackground/TrackBackground.jsx';
 
+import Util from '../../helpers/util.js';
 
 class TrackView {
   constructor(guid, appModel) {
@@ -70,6 +72,10 @@ class TrackView {
     this.yOffset = offset;
   }
 
+  getYOffset() {
+    return this.yOffset;
+  }
+
   setBasePairOffset(offset) {
     this.basePairOffset = offset;
   }
@@ -83,11 +89,14 @@ class TrackView {
     const trackWindowState = Object.assign({}, windowState);
     trackWindowState.startBasePair += this.basePairOffset;
     trackWindowState.trackBasePairOffset = this.basePairOffset;
+
+    const roundedHeight = Util.floorToPixel(this.height, windowState.windowSize[1]);
+    
     if (this.annotationTrack !== null) {
-      this.annotationRenderer.render(this.annotationTrack, this.height, this.yOffset, context, shaders, trackWindowState);
+      this.annotationRenderer.render(this.annotationTrack, roundedHeight, this.yOffset, context, shaders, trackWindowState);
     }
     if (this.dataTrack !== null) {
-      this.dataRenderer.render(this.dataTrack, this.height, this.yOffset, context, shaders, trackWindowState);
+      this.dataRenderer.render(this.dataTrack, roundedHeight, this.yOffset, context, shaders, trackWindowState);
     }
   }
 
@@ -109,11 +118,18 @@ class TrackView {
     }
     const title = this.getTitle();
     const top = windowState.windowSize[1] * this.yOffset;
-    const height = windowState.windowSize[1] * this.height;
+    const height = Math.floor(windowState.windowSize[1] * this.height);
     const key = this.guid;
     const model = this.appModel;
     const offset = this.getBasePairOffset();
     return (<TrackHeader key={key} offset={offset} guid={key} top={top} height={height} min={min} max={max} title={title} appModel={model} />);
+  }
+
+  getBackground(windowState) {
+    const top = windowState.windowSize[1] * this.yOffset;
+    const height = Math.floor(windowState.windowSize[1] * this.height);
+    const key = this.guid;
+    return (<TrackBackground key={key} top={top} height={height} />);
   }
 }
 

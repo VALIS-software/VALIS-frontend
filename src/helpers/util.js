@@ -48,6 +48,10 @@ class Util {
     return u * windowSize[0];
   }
 
+  static floorToPixel(u, px) {
+    return Math.floor(u*px) / px;
+  }
+
   static newRenderContext(domElem) {
     const MAX_TEXTURES = 128;
     const igloo = new Igloo(domElem);
