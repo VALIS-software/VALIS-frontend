@@ -26,6 +26,10 @@ class TrackHeader extends Component {
     });
   }
 
+  onDoubleClick(evt) {
+    console.log('hello');
+  }
+
   onDragStart(evt) {
     evt.dataTransfer.setData('guid', this.props.guid);
     evt.dataTransfer.effectAllowed = 'all';
@@ -99,7 +103,7 @@ class TrackHeader extends Component {
     return (<div style={style} className="track-header">
       <div 
         className="track-header-contents"
-        draggable="true" 
+        draggable="true"
         onDragStart={onDragStart} 
         onDrop={onDrop} 
         onDragLeave={onDragLeave} 

@@ -1,10 +1,17 @@
 .track-tool-tip {
     position: absolute;
 
+    .legend {
+        width: 8px;
+        height: 8px;
+        border-radius: 4px;
+    }
+
     .track-tool-tip-inner {
         position: absolute;
         overflow: wrap;
         margin-left: 8px;
+        margin-right: 8px;
         padding: 8px;
         border-radius:8px;
         color: black;

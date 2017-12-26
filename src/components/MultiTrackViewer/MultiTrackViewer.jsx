@@ -172,7 +172,7 @@ class MultiTrackViewer extends React.Component {
         if (track.dataTrack) {
           dataTooltip = track.dataTrack.getTooltipData(hoveredBasePair + trackBasePairOffset, trackOffset, start, end, bpp, trackHeightPx);
           // make sure that the current cursor is on a valid value:
-          if (dataTooltip && dataTooltip.value) {
+          if (dataTooltip && dataTooltip.values) {
             return {
               yOffset: trackOffset,
               basePair: hoveredBasePair,
@@ -437,11 +437,10 @@ class MultiTrackViewer extends React.Component {
       const x = ANNOTATION_OFFSET + Util.pixelForBasePair(trackInfo.basePair, this.startBasePair, this.basePairsPerPixel, this.windowSize);
       
       if (trackInfo.track !== null && trackInfo.tooltip !== null) {
-        const y = (-trackInfo.tooltip.valueNormalized + 0.5) * trackInfo.trackHeightPx + trackInfo.trackCenterPx;
-        tooltip = (<TrackToolTip x={x} y={y}>
-          <div>BP:{Math.round(trackInfo.basePair + trackInfo.basePairOffset)}</div>
-          <div>Value:{trackInfo.tooltip.value.toFixed(3)}</div>
-        </TrackToolTip>);
+        const y = (-trackInfo.tooltip.positionNormalized + 0.5) * trackInfo.trackHeightPx + trackInfo.trackCenterPx;
+        const basePair = trackInfo.basePair + trackInfo.basePairOffset;
+        const values = trackInfo.tooltip.values;
+        tooltip = (<TrackToolTip x={x} y={y} basePair={basePair} values={values} />);
       }
     }
     const onDrop = this.onDrop;

@@ -63,9 +63,10 @@ class GenomeAPI {
 		}
 	}
 
-	getData(trackId, startBp, endBp, samplingRate=1, trackHeightPx=0) {
-		const samplingRateQuery = `?sampling_rate=${samplingRate}&track_height_px=${trackHeightPx}`;
-		const requestUrl = `${this.baseUrl}/tracks/${trackId}/${startBp}/${endBp}${samplingRateQuery}`;
+	getData(trackId, startBp, endBp, samplingRate=1, trackHeightPx=0, aggregations=[]) {
+		const aggregationStr = aggregations.join(',');
+		const query = `?sampling_rate=${samplingRate}&track_height_px=${trackHeightPx}&aggregations=${aggregationStr}`;
+		const requestUrl = `${this.baseUrl}/tracks/${trackId}/${startBp}/${endBp}${query}`;
 		return axios.get(requestUrl);
 	}
 }
