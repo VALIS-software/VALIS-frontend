@@ -4,6 +4,7 @@ import Util from '../helpers/util.js';
 const _ = require('underscore');
 const xspans = require('xspans');
 const uuid = require('uuid/v4');
+const itree = require('interval-tree2');
 
 export const CACHE_TILE_SIZE = 1024;
 const CACHE_THROTTLE_MS = 250;
@@ -63,6 +64,7 @@ export function LinearCacheSampler(k=4096, min=4096) {
 export class TileCache {
   constructor(minBp, maxBp, tileFetchFn, xSampler=ExponentialCacheSampler(), ySampler=ExponentialCacheSampler()) {
     this.cache = {};
+    this.itree = new itree((maxBp-minBp) / 2.0);
     this.inFlight = {};
     this.xSampler = xSampler;
     this.ySampler = ySampler;
@@ -87,7 +89,6 @@ export class TileCache {
     }
 
     const tiles = this.cache[finalHeightPx][finalSamplingRate];
-
     const bpPerTile = CACHE_TILE_SIZE * finalSamplingRate;
     const startIdx = Math.floor(startBp/bpPerTile);
     const numTiles = Math.ceil((endBp - startBp)/bpPerTile);
@@ -119,6 +120,32 @@ export class TileCache {
     };
   }
 
+  _getApproximate(samplingRate, range) {
+    const matches = this.itree.search(range[0], range[1]);
+    const sorted = _.sortBy(matches, match => {
+      return Math.abs(match.id[1] - samplingRate);
+    });
+
+    let neededRange = range;
+    const ret = [];
+    for (let i = 0; i < sorted.length; i++) {
+      const key = sorted[i].id;
+      const matchRange = [sorted[i].start, sorted[i].end];
+      const isect = xspans.intersect(matchRange, neededRange).getData();
+      const tile = this.cache[key[0]][key[1]][key[2]];
+      if (isect.length > 0) {
+        neededRange = xspans.subtract(neededRange, isect);
+        ret.push({
+          heightPx: key[0],
+          samplingRate: key[1],
+          range: isect,
+          tile: tile,
+        });
+      }
+    }
+    return ret;
+  }
+
   get tileSize() {
     return CACHE_TILE_SIZE;
   }
@@ -135,7 +162,9 @@ export class TileCache {
 
     const tiles = this.cache[trackHeightPx][samplingRate];
     const bpPerTile = CACHE_TILE_SIZE * samplingRate;
-    tiles[Math.floor(tileRange[0]/(bpPerTile))] = data;
+    const idx = Math.floor(tileRange[0]/(bpPerTile));
+    this.itree.add(tileRange[0], tileRange[1], [trackHeightPx, samplingRate, idx]);
+    tiles[idx] = data;
   }
 
   get(startBp, endBp, samplingRate, trackHeightPx=0) {
@@ -146,7 +175,7 @@ export class TileCache {
 
     const intervalNeeded = xspans.intersect([this.minBp, this.maxBp], [startBp, endBp]);
     const results = this._getExact(startBp, endBp, samplingRate, trackHeightPx);
-    const tiles = results.tiles;
+    let tiles = results.tiles;
 
     const needed = results.needed;
     needed.forEach(req => {
@@ -158,6 +187,7 @@ export class TileCache {
           this.entryCount++;
         });
       }
+      tiles = tiles.concat(this._getApproximate(req.samplingRate, req.range));
     });
     return tiles;
   }

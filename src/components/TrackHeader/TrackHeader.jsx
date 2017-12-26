@@ -26,10 +26,6 @@ class TrackHeader extends Component {
     });
   }
 
-  onDoubleClick(evt) {
-    console.log('hello');
-  }
-
   onDragStart(evt) {
     evt.dataTransfer.setData('guid', this.props.guid);
     evt.dataTransfer.effectAllowed = 'all';
