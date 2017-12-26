@@ -1,14 +1,81 @@
-
+from pyensembl import EnsemblRelease
 from flask import Flask, abort, request
 from flask_cors import CORS
+import genomedata
 import random
 import json
+import numpy as np
 import math
 from six.moves import range
 
 
-MOCK_DATA = json.loads(open("mockData.json", "r").read())
+CHROMOSOME_SIZES = [
+	248956422, 
+	242193529, 
+	198295559, 
+	190214555, 
+	181538259, 
+	170805979,
+	159345973,
+	145138636,
+	138394717,
+	133797422,
+	135086622,
+	133275309,
+	114364328,
+	107043718,
+	101991189,
+	90338345,
+	83257441,
+	80373285,
+	58617616,
+	64444167,
+	46709983,
+	50818468,
+	156040895,
+	57227415
+]
+
+def chromosome_range(chr_str):
+	idx = chromosome_to_idx(chr_str)
+	if idx == 0:
+		return [0, CHROMOSOME_SIZES[0]]
+	else:
+		start = sum(CHROMOSOME_SIZES[0:idx])
+		end = start + CHROMOSOME_SIZES[idx]
+		return [start, end]
+
+def idx_to_chromosome(idx):
+	if idx <= 21:
+		return str(idx + 1)
+	elif idx == 22:
+		return "X"
+	elif idx == 23: 
+		return "Y"
+
+def chromosome_to_idx(chr_str):
+	if chr_str == "X":
+		return 22
+	elif chr_str == "Y":
+		return 23
+	else:
+		return int(chr_str) - 1
+
+def find_chromosome(bp):
+	curr = 0
+	idx = None
+	for ch, sz in enumerate(CHROMOSOME_SIZES):
+		curr += sz
+		if curr >= bp:
+			idx = ch
+			break
+	if idx != None:
+		return idx_to_chromosome(idx)
+
+# release 76 uses human reference genome GRCh38
+ENSEMBL_DATA = EnsemblRelease(76)
 MOCK_ANNOTATIONS = json.loads(open("mockAnnotations.json", "r").read())
+MOCK_DATA = json.loads(open("mockData.json", "r").read())
 
 app = Flask(__name__)
 CORS(app)
@@ -43,33 +110,56 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 		annotation = MOCK_ANNOTATIONS[annotation_id]
 		start_bp = max([start_bp, annotation["startBp"]])
 		end_bp = min([end_bp, annotation["endBp"]])
+		annotation_results = []
+		ANNOTATION_HEIGHT_PX = 25
+		if annotation_id == "GRCh38_genes":
+			# get chromosomes in range
+			cStart = chromosome_to_idx(find_chromosome(start_bp))
+			cEnd = chromosome_to_idx(find_chromosome(end_bp))
+			last_gene_start = None
+			gene_count = 0
+			for ch_idx in xrange(cStart, cEnd + 1):
+				ch = idx_to_chromosome(ch_idx)
+				ch_range = chromosome_range(ch)
+				for gene in ENSEMBL_DATA.genes(ch):
+					name = gene.gene_name
+					start = ch_range[0] + gene.start
+					end = ch_range[0] + gene.end
+					sz = end - start
+					if sz/float(sampling_rate) > 50:
+						annotation_results.append((name, start, end))
+						last_gene_start = None
+						gene_count = 0
+					elif not last_gene_start:
+						last_gene_start = start
+						gene_count = 1
+					elif (end-last_gene_start)/float(sampling_rate) > 150:
+						gene_count += 1
+						annotation_results.append(("%d Genes" % gene_count, last_gene_start, end))
+						gene_count = 0
+						last_gene_start = None
+					else:
+						gene_count += 1
+
 		annotations = []
-		# add random annotations, return ones that are > 20px @ curr sampling rate
-		
-		min_annotation_length = 1500
-		max_annotation_length = 500000
-		z = max_annotation_length - min_annotation_length
-		for i in xrange(start_bp, end_bp, sampling_rate):
+		for annotation_name, annotation_start, annotation_end in annotation_results:
+			random.seed(annotation_name)
 			color = [random.random()*0.5, random.random()*0.5, random.random()*0.5, 1.0]
-			if random.random() > 0.2:
-				continue
-			sz = int(random.random()*z) + min_annotation_length
-			if sz/float(sampling_rate) > 10:
-				annotations.append({
-					"id": random.randint(0,1000000000),
-					# label format: text, True = render text inside, False= render outside?, position: 0-left, 1-top, 2-right, 3-below, offset-x, offset-y
-					"labels" : [["GENE" + str(random.randint(0, 100000)), True, 0,0,0]],
-					"startBp": int(i),
-      				"endBp": int(i + sz),
-      				"yOffsetPx": 0,
-      				"heightPx": 25,
-      				# segment format: startBp, endBp, textureName, [R,G,B,A], height
-      				"segments": [[0, sz/3, None, color, 20], [sz/2, sz, None, color, 20], [0, sz, None, color, 4]]
-				})
+			annotations.append({
+				"id": random.randint(0,1000000000),
+				# label format: text, True = render text inside, False= render outside?, position: 0-left, 1-top, 2-right, 3-below, offset-x, offset-y
+				"labels" : [[annotation_name, True, 0,0,0]],
+				"startBp": annotation_start,
+  				"endBp": annotation_end,
+  				"yOffsetPx": 0,
+  				"heightPx": ANNOTATION_HEIGHT_PX,
+  				# segment format: startBp, endBp, textureName, [R,G,B,A], height
+  				"segments": [[0, annotation_end - annotation_start, None, color, 20]]
+			})
 		# move overlaps that fit in track height, discard those that don't
 		ret = []
 		last = None
-		padding = 1000/sampling_rate
+		padding = 20/sampling_rate
 		for annotation in annotations:
 			if last == None or annotation["startBp"] > last["endBp"] + padding:
 				ret.append(annotation)
@@ -109,9 +199,15 @@ def get_track_data(track_id, start_bp, end_bp):
 	start_bp = int(start_bp)
 	end_bp = int(end_bp)
 	sampling_rate = 1
+	aggregations = ['none']
+
 	if request.args.get('sampling_rate'):
 		sampling_rate = int(request.args.get('sampling_rate'))
 
+	if request.args.get('aggregations'):
+		aggregations = request.args.get('aggregations').split(',')
+		if len(aggregations) == 0:
+			aggregations = ['none']
 	track_height_px = 0
 	if request.args.get('track_height_px'):
 		track_height_px = int(float(request.args.get('track_height_px')))
@@ -121,21 +217,40 @@ def get_track_data(track_id, start_bp, end_bp):
 		start_bp = max([start_bp, track["startBp"]])
 		end_bp = min([end_bp, track["endBp"]])
 		ret = []
-		if track["type"] == "sequence":
-			num_samples = int((end_bp - start_bp) / float(sampling_rate))
-			for i in range(0, num_samples):
-				idx = i * sampling_rate + start_bp
-				random.seed(str(idx)+track_id)
-				ret.append(float(idx)/(track["endBp"] - track["startBp"])*0.5 + random.random()*0.5 )
-		else:
-			abort(500, "Unknown track type : %s", track["type"])
+		
+		data_key = track_id
+		num_samples = int((end_bp - start_bp) / float(sampling_rate))
 
+		for i in range(0, num_samples):
+			idx = i * sampling_rate + start_bp
+			chrom = 'chr' + find_chromosome(idx)
+			if chrom != 'chr1':
+				d = 0.0
+				for aggregation in aggregations:
+					ret.append(float(d))
+			else:
+				if aggregations[0] == 'none':
+					# just sample linearly
+					ret.append(float(genomedata.get(data_key, chrom, idx, idx + 1)[0]))
+				else:
+					d = float(genomedata.get(data_key, chrom, idx, idx + 1)[0])
+					for aggregation in aggregations:
+						if aggregation == 'max':
+							ret.append(d*2.0)
+						elif aggregation == 'mean':
+							ret.append(d)
+						elif aggregation == 'min':
+							ret.append(d * 0.8)
+						elif aggregation == 'median':
+							ret.append(d * 1.5)
 		return json.dumps({
 			"startBp" : start_bp,
 			"endBp" : end_bp,
 			"samplingRate": sampling_rate,
+			"numSamples": num_samples,
 			"trackHeightPx": track_height_px,
-			"values": ret
+			"values": ret,
+			"aggregations": aggregations
 		})
 	else:
 		abort(404, "Track not found")

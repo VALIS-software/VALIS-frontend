@@ -2,7 +2,10 @@ precision mediump float;
 
 varying vec2 coord;
 
-uniform vec3 color;
+uniform vec3 color1;
+uniform vec3 color2;
+uniform vec3 color3;
+uniform vec3 color4;
 
 uniform vec2 displayedRange; // range of genome currently displayed
 uniform vec2 totalRange; // total range of the genome
@@ -14,6 +17,7 @@ uniform vec2 selectionBoundsMin;
 uniform vec2 selectionBoundsMax;
 uniform int showSelection;
 uniform int isApproximate;
+uniform int dimensions;
 
 uniform sampler2D data;
 
@@ -24,8 +28,6 @@ uniform float tile;
 uniform float selectedBasePair;
 
 #define TICK_WIDTH 2500000.0
-#define OTHER_BLUE_COLOR vec3(14.0/255.0, 116.0/255.0, 132.0/255.0)
-#define BLUE_COLOR  vec3(0.0/255.0, 207.0/255.0, 251.0/255.0)
 #define SMALL_TICK_HEIGHT 0.1
 
 bool gridVisible(float currBp, float pixelsPerBp, float spacing, float thickness, float minSize) {
@@ -35,25 +37,42 @@ bool gridVisible(float currBp, float pixelsPerBp, float spacing, float thickness
 }
 
 void main() {
+
 	float currBp = mix(currentTileDisplayRange.x, currentTileDisplayRange.y, coord.x);
 	float locInTile = (currBp - totalTileRange.x) / (totalTileRange.y - totalTileRange.x);
 
 	// load and normalize data value:
-	float d = texture2D(data, vec2(locInTile, 0.0)).r;
-	d = (d - dataMin) / (dataMax - dataMin);
-	vec3 dataValue = vec3(d);
+	vec4 rawData = texture2D(data, vec2(locInTile, 0.0));
+
+	float minValue = 0.0;
+	int minIdx = -1;
+	for (int i = 0; i < 4; i++) {
+		if (i >= dimensions) break;
+		float d = rawData[i];
+		d = (d - dataMin) / (dataMax - dataMin);
+		if ((minIdx < 0 || d < minValue) && (1.0 - coord.y) < d) {
+			minValue = d;
+			minIdx = i;
+		}
+	}
+	
 
 	float bpPerPixel = (displayedRange.y - displayedRange.x) / windowSize.x;
 	
 	vec3 finalColor = vec3(0.0);
-	if ((1.0 - coord.y) < dataValue.r) {
-		if (isApproximate == 1) {
-			finalColor = mix(OTHER_BLUE_COLOR.bgr, BLUE_COLOR.bgr, coord.y);	
-		} else {
-			finalColor = mix(OTHER_BLUE_COLOR, BLUE_COLOR , coord.y);		
+	if ((1.0 - coord.y) < minValue) {
+		if (minIdx == 0) {
+			finalColor = color1;
+		} else if (minIdx == 1) {
+			finalColor = color2;
+		} else if (minIdx == 2) {
+			finalColor = color3;
+		} else if (minIdx == 3) {
+			finalColor = color4;
 		}
-		
 	}
+	finalColor *= 1.0/255.0;
+
 	vec3 tintColor = vec3(0.0);
 	float pixelsPerBp = windowSize.x/(displayedRange.y - displayedRange.x);
 	

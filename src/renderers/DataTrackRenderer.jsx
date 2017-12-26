@@ -1,5 +1,11 @@
 import Util from '../helpers/util.js';
-import { GENOME_LENGTH } from '../helpers/constants.js';
+import { 
+    GENOME_LENGTH,
+    COLOR1,
+    COLOR2,
+    COLOR3,
+    COLOR4, 
+} from '../helpers/constants.js';
 
 export default class DataTrackRenderer {
 
@@ -17,13 +23,20 @@ export default class DataTrackRenderer {
     let j = 0;
 
     tiles.forEach(tile => {
-        const texId = context.bindTexture(tile.tile.data.guid, tile.tile.data, 1024, 1);
+        const texData = tile.tile.data.values;
+        const dimensions = tile.tile.data.aggregations.length;
+        const texId = context.bindTexture(tile.tile.data.guid, texData, 1024, 1);
         const shader = shaders.tileShader;
         shader.use();
         shader.uniformi('data', texId);
         shader.uniformi('isApproximate', tile.isApproximate ? 1 : 0);
+        shader.uniformi('dimensions', dimensions);
         shader.uniform('dataMin', dataTrack.min);
         shader.uniform('dataMax', dataTrack.max);
+        shader.uniform('color1', COLOR1);
+        shader.uniform('color2', COLOR2);
+        shader.uniform('color3', COLOR3);
+        shader.uniform('color4', COLOR4);
         shader.uniform('tile', 0.5 + 0.5 * j / tiles.length);
         shader.uniform('currentTileDisplayRange', tile.range);
         shader.uniform('totalTileRange', tile.tile.tileRange);
