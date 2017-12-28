@@ -38,6 +38,7 @@ class MultiTrackViewer extends React.Component {
     this.onDrop = this.onDrop.bind(this);
     this.onDragOver = this.onDragOver.bind(this);
     this.onDragLeave = this.onDragLeave.bind(this);
+    this.onDoubleClick = this.onDoubleClick.bind(this);
   }
 
   componentDidMount() {
@@ -134,6 +135,17 @@ class MultiTrackViewer extends React.Component {
 
   onDragLeave(evt) {
     this.removeTrackHintVisible = false;
+  }
+
+  onDoubleClick(evt) {
+    const coord = [evt.nativeEvent.offsetX, evt.nativeEvent.offsetY];
+    const windowSize = this.windowSize;
+    const hoveredBasePair = Util.basePairForScreenX(coord[0], this.startBasePair, this.basePairsPerPixel, windowSize);
+    const pixel = coord[0];
+    Util.animate(this.basePairsPerPixel, this.basePairsPerPixel / 4.0, (alpha, start, end) => {
+      this.basePairsPerPixel = alpha * start + (1.0 - alpha) * end;
+      this.centerBasePairOnPixel(hoveredBasePair, pixel);
+    }, 1.0);
   }
 
   getTrackInfoAtCoordinate(coord) {
@@ -247,6 +259,14 @@ class MultiTrackViewer extends React.Component {
     return total;
   }
 
+  centerOnBasePair(basePair) {
+    this.startBasePair = basePair - this.basePairsPerPixel * this.windowSize[0] / 2.0;
+  }
+
+  centerBasePairOnPixel(basePair, pixel) {
+    this.startBasePair = basePair - pixel * this.basePairsPerPixel;
+  }
+
   handleMouse(e) {
     if (this.dragEnabled) {
       return;
@@ -322,6 +342,15 @@ class MultiTrackViewer extends React.Component {
       this.zoomEnabled = true;
     } else if (e.key === 'Shift') {
       this.modifySingleTrack = true;
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      const x = this.basePairsPerPixel * 128;
+      const delta = (e.key === 'ArrowLeft') ? x : -x;
+      this.startBasePair += delta;
+    } else if (e.key === '=' || e.key === 'ArrowUp') {
+      const startCenter = this.startBasePair + this.basePairsPerPixel * this.windowSize[0] / 2.0;
+      this.basePairsPerPixel /= 1.2;
+    } else if (e.key === '-' || e.key === 'ArrowDown') {
+      this.basePairsPerPixel *= 1.2;
     }
   }
 
@@ -446,6 +475,7 @@ class MultiTrackViewer extends React.Component {
     const onDrop = this.onDrop;
     const onDragOver = this.onDragOver;
     const onDragLeave = this.onDragLeave;
+    const onDoubleClick = this.onDoubleClick;
 
     const removeTrackHint = this.removeTrackHintVisible ? (<div className="remove-hint">Remove Track</div>) : undefined;
     return (
@@ -462,7 +492,14 @@ class MultiTrackViewer extends React.Component {
             <g className="x-axis" ref={node => d3.select(node).call(xAxis)} />
           </svg>
         </div>
-        <canvas id="webgl-canvas" className={this.getClass()} onDragOver={onDragOver} onDrop={onDrop} onDragLeave={onDragLeave} />
+        <canvas 
+          id="webgl-canvas" 
+          className={this.getClass()} 
+          onDragOver={onDragOver} 
+          onDrop={onDrop} 
+          onDragLeave={onDragLeave} 
+          onDoubleClick={onDoubleClick}
+        />
         <div id="webgl-overlay">
           {tooltip}
         </div>

@@ -56,6 +56,24 @@ class Util {
     return Math.floor(u*px) / px;
   }
 
+  static easeInOutQuadratic(t) {
+    return t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+  }
+  static easeInOutCubic(t) {
+    return t < 0.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1;
+  }
+
+  static animate(start, end, callback, totalTime=1.0, delta=1.0/24.0, elapsed=0.0, easingFunction=Util.easeInOutCubic) {
+    window.setTimeout(() => {
+      const alpha = 1.0 - easingFunction(elapsed / totalTime);
+      callback(alpha, start, end);
+      elapsed += delta;
+      if (elapsed < totalTime) {
+        Util.animate(start, end, callback, totalTime, delta, elapsed);
+      }
+    }, delta);
+  }
+
   static newRenderContext(domElem) {
     const MAX_TEXTURES = 128;
     const igloo = new Igloo(domElem);
