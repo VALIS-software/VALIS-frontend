@@ -48,6 +48,10 @@ class Util {
     return u * windowSize[0];
   }
 
+  static multiplyColor(color, d) {
+    return color.map(val => Math.min(255, val * d));
+  }
+
   static floorToPixel(u, px) {
     return Math.floor(u*px) / px;
   }

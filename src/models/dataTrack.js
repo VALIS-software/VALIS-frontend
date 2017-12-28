@@ -1,7 +1,13 @@
 
 import Util from '../helpers/util.js';
 import { Tile, TileCache, CACHE_TILE_SIZE } from './tileCache.js';
-import { GENOME_LENGTH } from '../helpers/constants.js';
+import { 
+  BASE_PAIR_COLORS,
+  GENOME_LENGTH, 
+  SIGNAL_COLORS,
+  TRACK_DATA_TYPE_BASE_PAIRS, 
+  TRACK_DATA_TYPE_GBANDS,
+} from '../helpers/constants.js';
 import Track, { TRACK_EVENT_LOADING } from './track.js';
 
 const _ = require('underscore');
@@ -15,16 +21,21 @@ class DataTrack extends Track {
     this.cache = new TileCache(0, GENOME_LENGTH, this.loadData);
     this._min = null;
     this._max = null;
-    this.aggregations = ['max', 'mean', 'median', 'min'];
+    this.aggregations = trackId === 'sequence' ? ['none'] : ['max', 'mean', 'median', 'min'];
   }
 
   get title() {
     return this.trackId;
   }
 
+  get showAxis() {
+    return this.trackId !== 'sequence';
+  }
+
   getTooltipData(basePair, yOffset, startBp, endBp, samplingRate, trackHeightPx) {
     if (basePair < startBp || basePair > endBp) return null;
-    const tiles = this.cache.get(startBp, endBp, samplingRate, 0);
+
+    const tiles = this.getTiles(startBp, endBp, samplingRate, trackHeightPx);
     
     // find the basePair in the tiles:
     let ret = {
@@ -33,23 +44,48 @@ class DataTrack extends Track {
     };
     tiles.forEach(tile => {
       if (basePair >= tile.range[0] && basePair <= tile.range[1]) {
-        if (basePair >= tile.tile.dataRange[0]  && basePair <= tile.tile.dataRange[1]) {
-          const totalRange = (tile.tile.dataRange[1] - tile.tile.dataRange[0]);
-          const idx = Math.floor(CACHE_TILE_SIZE * (basePair - tile.tile.dataRange[0]) / totalRange);
+        if (basePair >= tile.tile.tileRange[0]  && basePair <= tile.tile.tileRange[1]) {
+          const totalRange = (tile.tile.tileRange[1] - tile.tile.tileRange[0]);
+          const idx = Math.round(CACHE_TILE_SIZE * (basePair - tile.tile.tileRange[0]) / totalRange);
           const values = tile.tile.data.values;
-          const aggregations = tile.tile.data.aggregations;
+          const dimensions = tile.tile.data.dimensions;
           const curr = [];
           const currNormalized = [];
-          for (let i = 0; i < aggregations.length; i++) {
-            const d = values[aggregations.length * idx + i];
+          let colors = SIGNAL_COLORS;
+          if (tile.tile.data.dataType === TRACK_DATA_TYPE_BASE_PAIRS) {
+            const currValue = values[4 * idx];
+            if (currValue <= 0.0) {
+              curr.push('A');
+              colors = [BASE_PAIR_COLORS[0]];
+            } else if (currValue <=0.25) {
+              curr.push('T');
+              colors = [BASE_PAIR_COLORS[1]];
+            } else if (currValue <=0.5) {
+              curr.push('C');
+              colors = [BASE_PAIR_COLORS[2]];
+            } else if (currValue <=0.75) {
+              curr.push('G');
+              colors = [BASE_PAIR_COLORS[3]];
+            }
+            currNormalized.push(0.5);
+          } else if (tile.tile.data.dataType === TRACK_DATA_TYPE_GBANDS) {
+            const d = values[idx];
+            colors = [Util.multiplyColor([255, 255, 255], d)];
             curr.push(d);
-            currNormalized.push((d-this.min) / (this.max - this.min));
+            currNormalized.push(0.5);
+          } else {
+            for (let i = 0; i < dimensions.length; i++) {
+              const d = values[dimensions.length * idx + i];
+              curr.push(d);
+              currNormalized.push((d-this.min) / (this.max - this.min));
+            }
           }
           ret = {
             values: curr,
-            aggregations: aggregations,
+            dimensions: dimensions,
             valuesNormalized: currNormalized,
             positionNormalized: _.max(currNormalized),
+            colors: colors,
           };
         }
       }
@@ -72,7 +108,7 @@ class DataTrack extends Track {
       const result = data.data;
       const rawData = result.values;
       const numSamples = result.numSamples;
-      const dimensions = result.aggregations.length;
+      const dimensions = result.dimensions.length;
 
       const values = new Float32Array(this.cache.tileSize * 4);
       let min = null;
@@ -89,10 +125,11 @@ class DataTrack extends Track {
       this._max = this._max === null ? max : Math.max(max, this._max);
       this.notifyListeners(TRACK_EVENT_LOADING, false);
       const tileData = {
+        dataType: result.dataType,
         values: values,
-        aggregations: this.aggregations,
+        dimensions: result.dimensions,
       };
-      return new Tile([start, end], [result.startBp, result.endBp], result.samplingRate, result.trackHeightPx, tileData);
+      return new Tile([start, end], [start, end], result.samplingRate, result.trackHeightPx, tileData);
     }, failure => {
       this.notifyListeners(TRACK_EVENT_LOADING, false);
     });

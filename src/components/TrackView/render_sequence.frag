@@ -15,6 +15,7 @@ uniform vec2 totalTileRange; // total range of the current tile
 uniform vec2 windowSize;
 uniform vec2 selectionBoundsMin;
 uniform vec2 selectionBoundsMax;
+uniform vec2 tileRoi;
 uniform int showSelection;
 uniform int isApproximate;
 uniform int dimensions;
@@ -25,61 +26,47 @@ uniform float dataMin;
 uniform float dataMax;
 
 uniform float tile;
+uniform float tileHeight;
 uniform float selectedBasePair;
 
-#define TICK_WIDTH 2500000.0
-#define SMALL_TICK_HEIGHT 0.1
+#define BORDER_HEIGHT_PX 4.0
 
-bool gridVisible(float currBp, float pixelsPerBp, float spacing, float thickness, float minSize) {
-	float d = fract(currBp/spacing);
-	float alpha = thickness / pixelsPerBp  / spacing;
-	return ( (d > (1.0 - alpha) || d < alpha) && pixelsPerBp * spacing > minSize);
+vec3 hsv2rgb(vec3 c) {
+  vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+  vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+  return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
 void main() {
-
+	float bpPerPixel = (displayedRange.y - displayedRange.x) / windowSize.x;
+	float delta = 0.5 / (totalTileRange.y - totalTileRange.x);
 	float currBp = mix(currentTileDisplayRange.x, currentTileDisplayRange.y, coord.x);
-	float locInTile = (currBp - totalTileRange.x) / (totalTileRange.y - totalTileRange.x);
+	float locInTile = mix(tileRoi.x, tileRoi.y, coord.x + delta);
 
 	// load and normalize data value:
-	vec4 rawData = texture2D(data, vec2(coord.x, 0.0));
+	vec4 currData = texture2D(data, vec2(locInTile, 0.0));
+	float val = currData.r;
+	float chr = currData.g;
+	float locInChr = currData.b;
+	vec3 chrColor = hsv2rgb(vec3(chr/25.0, 0.7, 1.0));
 
-	float minValue = 0.0;
-	int minIdx = -1;
-	for (int i = 0; i < 4; i++) {
-		if (i >= dimensions) break;
-		float d = rawData[i];
-		d = (d - dataMin) / (dataMax - dataMin);
-		if ((minIdx < 0 || d < minValue) && (1.0 - coord.y) < d) {
-			minValue = d;
-			minIdx = i;
-		}
-	}
-	
-
-	float bpPerPixel = (displayedRange.y - displayedRange.x) / windowSize.x;
-	
 	vec3 finalColor = vec3(0.0);
-	if ((1.0 - coord.y) < minValue) {
-		if (minIdx == 0) {
-			finalColor = color1;
-		} else if (minIdx == 1) {
-			finalColor = color2;
-		} else if (minIdx == 2) {
-			finalColor = color3;
-		} else if (minIdx == 3) {
-			finalColor = color4;
-		}
+	
+	if (val == 0.0) {
+		finalColor = vec3(250, 192, 94); //  A = yellow
+	} else if (val == 0.25) {
+		finalColor = vec3(89, 205, 144); // T = green
+	} else if (val == 0.5) {
+		finalColor = vec3(25, 147, 251); // C = blue
+	} else if (val == 0.75) {
+		finalColor = vec3(209, 17, 73); // G = red
 	}
+	
 	finalColor *= 1.0/255.0;
 
 	vec3 tintColor = vec3(0.0);
 	float pixelsPerBp = windowSize.x/(displayedRange.y - displayedRange.x);
 	
-	if (abs(selectedBasePair - currBp) < 1.0  / pixelsPerBp) {
-		tintColor += vec3(0.5, 0.5, 0.5);
-	}
-
 	vec2 bMin = vec2(min(selectionBoundsMin.x, selectionBoundsMax.x), min(selectionBoundsMin.y, selectionBoundsMax.y));
 	vec2 bMax = vec2(max(selectionBoundsMin.x, selectionBoundsMax.x), max(selectionBoundsMin.y, selectionBoundsMax.y));
 
@@ -90,6 +77,15 @@ void main() {
 	if (showSelection == 1 && screenCoord.x > bMin.x && screenCoord.x < bMax.x && screenCoord.y > bMin.y && screenCoord.y < bMax.y) {
 		selectionHighlight = 1.5;
 	}
+ 
+	float trackHeightPx = tileHeight * windowSize.y;
+	if (coord.y < BORDER_HEIGHT_PX/trackHeightPx) {
+		finalColor = chrColor;
+	}
+	if (coord.y > (1.0 -  BORDER_HEIGHT_PX/trackHeightPx)) {
+		finalColor = vec3(locInChr);
+	}
 
-	gl_FragColor = vec4(tintColor + finalColor * selectionHighlight, 1.0);	
+	gl_FragColor = vec4(tintColor + finalColor * selectionHighlight, 1.0);
+	
 }

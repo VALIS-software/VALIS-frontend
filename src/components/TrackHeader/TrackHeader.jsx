@@ -66,7 +66,7 @@ class TrackHeader extends Component {
 
   renderAxis() {
     const height = this.props.height + 'px';
-    if (this.props.max === null || this.props.min === null) {
+    if (this.props.showAxis === false) {
       return (<div  height={height} className="empty-track-header-axis" />);
     }
     const min = this.props.min;
@@ -122,6 +122,7 @@ TrackHeader.propTypes = {
    height: PropTypes.number,
    min: PropTypes.number,
    max: PropTypes.number,
+   showAxis: PropTypes.bool,
    title: PropTypes.string,
    offset: PropTypes.number,
    appModel: PropTypes.object,

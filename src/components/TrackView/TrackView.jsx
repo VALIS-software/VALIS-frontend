@@ -3,7 +3,9 @@ import React from 'react';
 // import shaders
 import textFragmentShader from './text.frag';
 import vertexShader from './project.vert';
-import fragmentShader from './render_signal.frag';
+import signalShader from './render_signal.frag';
+import sequenceShader from './render_sequence.frag';
+import gbandShader from './render_gband.frag';
 import annotationShader from './render_annotation.frag';
 
 // import renderers
@@ -31,7 +33,9 @@ class TrackView {
   static initializeShaders(context) {
     return {
       annotationShader: context.program(vertexShader, annotationShader),
-      tileShader: context.program(vertexShader, fragmentShader),
+      signalShader: context.program(vertexShader, signalShader),
+      sequenceShader: context.program(vertexShader, sequenceShader),
+      gbandShader: context.program(vertexShader, gbandShader),
       textShader: context.program(vertexShader, textFragmentShader),
     };
   }
@@ -112,9 +116,11 @@ class TrackView {
   getHeader(windowState) {
     let min = null;
     let max = null;
+    let showAxis = false;
     if (this.dataTrack !== null) {
       min = this.dataTrack.min;
       max = this.dataTrack.max;
+      showAxis = this.dataTrack.showAxis;
     }
     const title = this.getTitle();
     const top = windowState.windowSize[1] * this.yOffset;
@@ -122,7 +128,8 @@ class TrackView {
     const key = this.guid;
     const model = this.appModel;
     const offset = this.getBasePairOffset();
-    return (<TrackHeader key={key} offset={offset} guid={key} top={top} height={height} min={min} max={max} title={title} appModel={model} />);
+
+    return (<TrackHeader key={key} showAxis={showAxis} offset={offset} guid={key} top={top} height={height} min={min} max={max} title={title} appModel={model} />);
   }
 
   getBackground(windowState) {
