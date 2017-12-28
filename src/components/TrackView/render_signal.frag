@@ -42,7 +42,7 @@ void main() {
 	float locInTile = (currBp - totalTileRange.x) / (totalTileRange.y - totalTileRange.x);
 
 	// load and normalize data value:
-	vec4 rawData = texture2D(data, vec2(coord.x, 0.0));
+	vec4 rawData = texture2D(data, vec2(locInTile, 0.0));
 
 	float minValue = 0.0;
 	int minIdx = -1;
