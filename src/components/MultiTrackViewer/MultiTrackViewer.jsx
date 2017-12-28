@@ -295,7 +295,7 @@ class MultiTrackViewer extends React.Component {
           // centered on the same base pair after scaling:
           const rawPixelsAfter = lastBp / newBpPerPixel;
           this.startBasePair = (rawPixelsAfter - e.offsetX) * newBpPerPixel;
-          this.basePairsPerPixel = Math.max(0.25, newBpPerPixel);
+          this.basePairsPerPixel = newBpPerPixel;
         }
       }
     }
@@ -440,7 +440,7 @@ class MultiTrackViewer extends React.Component {
         const y = (-trackInfo.tooltip.positionNormalized + 0.5) * trackInfo.trackHeightPx + trackInfo.trackCenterPx;
         const basePair = trackInfo.basePair + trackInfo.basePairOffset;
         const values = trackInfo.tooltip.values;
-        tooltip = (<TrackToolTip x={x} y={y} basePair={basePair} values={values} />);
+        tooltip = (<TrackToolTip x={x} y={y} colors={trackInfo.tooltip.colors} basePair={basePair} values={values} />);
       }
     }
     const onDrop = this.onDrop;

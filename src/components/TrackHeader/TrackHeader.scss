@@ -2,7 +2,7 @@ $axis-width: 30px;
 $margin-width: 8px;
 $header-content-width: calc(100% - #{$axis-width} - #{$margin-width});
 $white-color: #e8e8e8;
-$dark-color: #242321;
+$dark-color: darken(#242321, 5%);
 
 .track-header {
 	position: absolute;

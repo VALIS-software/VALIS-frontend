@@ -5,6 +5,9 @@ import {
     COLOR2,
     COLOR3,
     COLOR4, 
+    TRACK_DATA_TYPE_BASE_PAIRS,
+    TRACK_DATA_TYPE_GBANDS,
+    TRACK_DATA_TYPE_SIGNAL,
 } from '../helpers/constants.js';
 
 export default class DataTrackRenderer {
@@ -24,9 +27,18 @@ export default class DataTrackRenderer {
 
     tiles.forEach(tile => {
         const texData = tile.tile.data.values;
-        const dimensions = tile.tile.data.aggregations.length;
+        const dimensions = tile.tile.data.dimensions.length;
+        const dataType = tile.tile.data.dataType;
         const texId = context.bindTexture(tile.tile.data.guid, texData, 1024, 1);
-        const shader = shaders.tileShader;
+        let shader = shaders.signalShader;
+        if (dataType === TRACK_DATA_TYPE_GBANDS) {
+            shader = shaders.gbandShader;
+        } else if (dataType === TRACK_DATA_TYPE_BASE_PAIRS) {
+            shader = shaders.sequenceShader;
+        }
+        const tileExtents = tile.tile.tileRange[1] - tile.tile.tileRange[0];
+        const tileMin = tile.tile.tileRange[0];
+        const roi = [(tile.range[0] - tileMin) / tileExtents, (tile.range[1] - tileMin)/ tileExtents];
         shader.use();
         shader.uniformi('data', texId);
         shader.uniformi('isApproximate', tile.isApproximate ? 1 : 0);
@@ -38,6 +50,7 @@ export default class DataTrackRenderer {
         shader.uniform('color3', COLOR3);
         shader.uniform('color4', COLOR4);
         shader.uniform('tile', 0.5 + 0.5 * j / tiles.length);
+        shader.uniform('tileRoi', roi);
         shader.uniform('currentTileDisplayRange', tile.range);
         shader.uniform('totalTileRange', tile.tile.tileRange);
         shader.uniform('windowSize', windowState.windowSize);

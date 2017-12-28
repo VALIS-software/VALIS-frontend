@@ -56,7 +56,7 @@ class GenomeAPI {
 		} else {
 			return axios.get(`${this.baseUrl}/tracks/${trackId}`).then(data => {
 				const trackData = data.data;
-				const track = new DataTrack(this, trackData.trackId, trackData.startBp, trackData.endBp);
+				const track = new DataTrack(this, trackData.trackId, trackData.dataType);
 				TRACK_CACHE[trackId] = track;
 				return track;
 			});	

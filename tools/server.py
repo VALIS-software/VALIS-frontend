@@ -74,18 +74,24 @@ def find_chromosome(bp):
 
 # release 76 uses human reference genome GRCh38
 ENSEMBL_DATA = EnsemblRelease(76)
-MOCK_ANNOTATIONS = json.loads(open("mockAnnotations.json", "r").read())
-MOCK_DATA = json.loads(open("mockData.json", "r").read())
+
+def getMockAnnotations():
+	return json.loads(open("mockAnnotations.json", "r").read())
+
+def getMockData():
+	return json.loads(open("mockData.json", "r").read())
 
 app = Flask(__name__)
 CORS(app)
 
 @app.route("/annotations")
 def annotations():
+	MOCK_ANNOTATIONS = getMockAnnotations()
 	return json.dumps(MOCK_ANNOTATIONS.keys())
 
 @app.route("/annotations/<string:annotation_id>")
 def annotation(annotation_id):
+	MOCK_ANNOTATIONS = getMockAnnotations()
 	"""Return the annotation metadata"""
 	if annotation_id in MOCK_ANNOTATIONS:
 		return json.dumps(MOCK_ANNOTATIONS[annotation_id])
@@ -94,6 +100,8 @@ def annotation(annotation_id):
 
 @app.route("/annotations/<string:annotation_ids>/<int:start_bp>/<int:end_bp>")
 def get_annotation_data(annotation_ids, start_bp, end_bp):
+	MOCK_DATA = getMockData()
+	MOCK_ANNOTATIONS = getMockAnnotations()
 	annotation_id = annotation_ids.split(",")[0] # mock server doesn't return multiple annotations!
 	start_bp = int(start_bp)
 	end_bp = int(end_bp)
@@ -183,10 +191,12 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 @app.route("/tracks")
 def tracks():
 	"""Return a list of all track_ids"""
+	MOCK_DATA = getMockData()
 	return json.dumps(MOCK_DATA.keys())
 
 @app.route("/tracks/<string:track_id>")
 def track(track_id):
+	MOCK_DATA = getMockData()
 	"""Return the track metadata"""
 	if track_id in MOCK_DATA:
 		return json.dumps(MOCK_DATA[track_id])
@@ -195,12 +205,13 @@ def track(track_id):
 
 @app.route("/tracks/<string:track_id>/<int:start_bp>/<int:end_bp>")
 def get_track_data(track_id, start_bp, end_bp):
+	MOCK_DATA = getMockData()
 	"""Return the data for the given track and base pair range"""
 	start_bp = int(start_bp)
 	end_bp = int(end_bp)
 	sampling_rate = 1
 	aggregations = ['none']
-
+	track_data_type = 'signal'
 	if request.args.get('sampling_rate'):
 		sampling_rate = int(request.args.get('sampling_rate'))
 
@@ -220,19 +231,49 @@ def get_track_data(track_id, start_bp, end_bp):
 		
 		data_key = track_id
 		num_samples = int((end_bp - start_bp) / float(sampling_rate))
-
+		dimensions = aggregations
 		for i in range(0, num_samples):
 			idx = i * sampling_rate + start_bp
 			chrom = 'chr' + find_chromosome(idx)
 			if chrom != 'chr1':
 				d = 0.0
-				for aggregation in aggregations:
-					ret.append(float(d))
+				if data_key == 'sequence':
+					track_data_type = 'gbands'
+					ret.append(0.0)
+					curr = find_chromosome(idx)
+					ret.append(chromosome_to_idx(curr))
+					chr_range = chromosome_range(curr)
+					ret.append(float(idx - chr_range[0]) / (chr_range[1] - chr_range[0]))
+				else:
+					for aggregation in aggregations:
+						ret.append(float(d))
 			else:
 				if aggregations[0] == 'none':
 					# just sample linearly
-					ret.append(float(genomedata.get(data_key, chrom, idx, idx + 1)[0]))
+					if data_key == 'sequence':
+						if sampling_rate == 1:
+							track_data_type = 'basepairs'
+							d = genomedata.get(data_key, chrom, idx, idx + 1)
+							if float(d[0]) > 0.0 :
+								ret.append(0.0)
+							elif float(d[1]) > 0.0:
+								ret.append(0.25)
+							elif float(d[2]) > 0.0:
+								ret.append(0.5)
+							elif float(d[3]) > 0.0:
+								ret.append(0.75)
+						else:
+							track_data_type = 'gbands'
+							# TODO: should be computing g-band here
+							ret.append(random.random())
+						curr = find_chromosome(idx)
+						ret.append(chromosome_to_idx(curr))
+						chr_range = chromosome_range(curr)
+						ret.append(float(idx - chr_range[0]) / (chr_range[1] - chr_range[0]))
+					else:
+						ret.append(float(genomedata.get(data_key, chrom, idx, idx + 1)[0]))
 				else:
+
 					d = float(genomedata.get(data_key, chrom, idx, idx + 1)[0])
 					for aggregation in aggregations:
 						if aggregation == 'max':
@@ -243,6 +284,13 @@ def get_track_data(track_id, start_bp, end_bp):
 							ret.append(d * 0.8)
 						elif aggregation == 'median':
 							ret.append(d * 1.5)
+		
+		if track_data_type == 'basepairs':
+			dimensions = ['symbol', 'chromsome_index', 'chromosome_location']
+
+		if track_data_type == 'gbands':
+			dimensions = ['gvalue', 'chromsome_index', 'chromosome_location']
+
 		return json.dumps({
 			"startBp" : start_bp,
 			"endBp" : end_bp,
@@ -250,7 +298,8 @@ def get_track_data(track_id, start_bp, end_bp):
 			"numSamples": num_samples,
 			"trackHeightPx": track_height_px,
 			"values": ret,
-			"aggregations": aggregations
+			"dimensions": dimensions,
+			"dataType": track_data_type
 		})
 	else:
 		abort(404, "Track not found")

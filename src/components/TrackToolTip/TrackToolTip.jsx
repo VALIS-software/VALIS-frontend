@@ -5,8 +5,6 @@ import PropTypes from 'prop-types';
 // Styles
 import './TrackToolTip.scss';
 
-import { COLORS } from '../../helpers/constants.js';
-
 function TrackToolTip(props) {
   const style = {
     transform: `translate(${props.x}px, ${props.y}px) translateY(-50%)`,
@@ -16,9 +14,10 @@ function TrackToolTip(props) {
   props.values.forEach(value => {
     const colorIdx = dataValues.length;
     const colorStyle = {
-      backgroundColor: 'rgb(' + COLORS[colorIdx].join(',') + ')',
+      backgroundColor: 'rgb(' + props.colors[colorIdx].join(',') + ')',
     };
-    dataValues.push((<tr key={colorIdx}><td><div style={colorStyle} className="legend" /></td><td>{value.toFixed(3)}</td></tr>));
+    const formattedValue = typeof value === 'number' ? value.toFixed(3) : value;
+    dataValues.push((<tr key={colorIdx}><td><div style={colorStyle} className="legend" /></td><td>{formattedValue}</td></tr>));
   });
   return (
     <div className="track-tool-tip">
@@ -42,6 +41,7 @@ TrackToolTip.propTypes = {
   y: PropTypes.number.isRequired,
   basePair: PropTypes.number.isRequired,
   values: PropTypes.array.isRequired,
+  colors: PropTypes.array.isRequired,
 };
 
 export default TrackToolTip;
