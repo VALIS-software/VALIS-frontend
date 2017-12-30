@@ -12,7 +12,7 @@ import IconButton from 'material-ui/IconButton';
 import Header from '../Header/Header.jsx';
 import MultiTrackViewer from '../MultiTrackViewer/MultiTrackViewer.jsx';
 import AppModel, { APP_EVENT_LOADING_STATE_CHANGED, APP_EVENT_FOCUS_CHANGED } from '../../models/appModel.js';
-
+import ViewModel from '../../models/viewModel.js';
 // Styles
 import './App.scss';
 
@@ -33,6 +33,7 @@ class App extends React.Component {
       showInfo: false,
       info: null,
     });
+    this.viewModel = new ViewModel();
     this.appModel = new AppModel();
     this.appModel.addDataTrack('sequence');
     this.appModel.addDataTrack('GM12878-DNase');
@@ -78,9 +79,9 @@ class App extends React.Component {
     return (
       <MuiThemeProvider>
         <div className="site-wrapper">
-          <Header model={this.appModel} />
+          <Header model={this.appModel} viewModel={this.viewModel} />
           {progress}
-          <MultiTrackViewer model={this.appModel} />
+          <MultiTrackViewer model={this.appModel} viewModel={this.viewModel} />
           <Drawer width={450} openSecondary={true} open={this.state.showInfo}>
             <AppBar
               title={title}

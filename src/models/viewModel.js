@@ -14,10 +14,10 @@ export {
 };
 
 class ViewModel extends EventCreator {
-  constructor(basePairsPerPixel, windowSize) {
+  constructor() {
     super();
-    this.basePairsPerPixel = basePairsPerPixel;
-    this.windowSize = windowSize;
+    this.basePairsPerPixel = 1;
+    this.windowSize = [0, 0]; 
     this.startBasePair = 0;
     this.trackOffset = 0.0;
     this.lastDragCoord = null;
@@ -36,6 +36,11 @@ class ViewModel extends EventCreator {
     this.handleDoubleClick = this.handleDoubleClick.bind(this);
     document.addEventListener('keydown', this.handleKeydown);
     document.addEventListener('keyup', this.handleKeyup);
+  }
+
+  init(basePairsPerPixel, windowSize) {
+    this.basePairsPerPixel = basePairsPerPixel;
+    this.windowSize = windowSize;
   }
 
   bindListeners(domElem) {
@@ -74,6 +79,7 @@ class ViewModel extends EventCreator {
       selectedBasePair: x,
       selectedTrackOffset: y,
       panning: this.panning,
+      dragEnabled: this.dragEnabled,
       selectEnabled: this.selectEnabled,
       zoomEnabled: this.zoomEnabled,
       lastDragCoord: this.lastDragCoord,
@@ -89,6 +95,12 @@ class ViewModel extends EventCreator {
       }
     }
     return viewState;
+  }
+
+  setViewRegion(startBasePair, basePairsPerPixel) {
+    this.startBasePair = startBasePair;
+    this.basePairsPerPixel = basePairsPerPixel;
+    this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
   }
 
   centerOnBasePair(basePair) {
@@ -118,7 +130,6 @@ class ViewModel extends EventCreator {
       }
     }
     this.lastDragCoord = [e.offsetX, e.offsetY];
-    console.log(this.lastDragCoord);
     this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
   }
 
@@ -189,15 +200,15 @@ class ViewModel extends EventCreator {
     } else if (e.key === 'Control') {
       this.zoomEnabled = true;
       this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
-    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-      const delta = ((e.key === 'ArrowLeft') ? 128 : -128) * this.basePairsPerPixel;
+    } else if (e.key === 'a' || e.key === 'd') {
+      const delta = ((e.key === 'a') ? 128 : -128) * this.basePairsPerPixel;
       this.startBasePair += delta;
       this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
-    } else if (e.key === '=' || e.key === 'ArrowUp') {
+    } else if (e.key === '=' || e.key === 'w') {
       const startCenter = this.startBasePair + this.basePairsPerPixel * this.windowSize[0] / 2.0;
       this.basePairsPerPixel /= 1.2;
       this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
-    } else if (e.key === '-' || e.key === 'ArrowDown') {
+    } else if (e.key === '-' || e.key === 's') {
       this.basePairsPerPixel *= 1.2;
       this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
     }

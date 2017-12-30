@@ -10,9 +10,8 @@ import {
 } from '../../models/appModel.js';
 
 
-import ViewModel, { VIEW_EVENT_STATE_CHANGED } from '../../models/viewModel.js';
+import { VIEW_EVENT_STATE_CHANGED } from '../../models/viewModel.js';
 
-import StatusTile from '../StatusTile/StatusTile.jsx';
 import TrackView from '../TrackView/TrackView.jsx';
 import TrackToolTip from '../TrackToolTip/TrackToolTip.jsx';
 import XAxis from '../XAxis/XAxis.jsx';
@@ -40,7 +39,7 @@ class MultiTrackViewer extends React.Component {
     props.model.addListener(this.updateViews, [APP_EVENT_ADD_TRACK, 
                                                APP_EVENT_REORDER_TRACKS, 
                                                APP_EVENT_REMOVE_TRACK]);
-
+    this.viewModel = props.viewModel;
     this.onDrop = this.onDrop.bind(this);
     this.onDragOver = this.onDragOver.bind(this);
     this.onDragLeave = this.onDragLeave.bind(this);
@@ -56,7 +55,7 @@ class MultiTrackViewer extends React.Component {
       const bpp = GENOME_LENGTH / domElem.clientWidth;
       const windowSize = [domElem.clientWidth, domElem.clientHeight];
 
-      this.viewModel = new ViewModel(bpp, windowSize);
+      this.viewModel.init(bpp, windowSize);
       this.viewModel.bindListeners(domElem);
 
       this.viewModel.addListener(this.updateViewState, VIEW_EVENT_STATE_CHANGED);
@@ -141,13 +140,13 @@ class MultiTrackViewer extends React.Component {
     const classes = [];
     const viewState = this.viewModel.getViewState();
     if (viewState.selectEnabled) {
-      classes.push('select-active')
+      classes.push('select-active');
     }
     if (viewState.zoomEnabled) {
-      classes.push('zoom-active')
+      classes.push('zoom-active');
     }
-    if (viewState.panning) {
-      classes.push('drag-active')
+    if (viewState.dragEnabled) {
+      classes.push('drag-active');
     }
     this.classNames = classes.join(' ');
     this.forceUpdate();
@@ -258,7 +257,6 @@ class MultiTrackViewer extends React.Component {
         <div id="webgl-overlay">
           {tooltip}
         </div>
-        <StatusTile viewModel={this.viewModel} />
       </div>
     );
   }
@@ -266,6 +264,7 @@ class MultiTrackViewer extends React.Component {
 
 MultiTrackViewer.propTypes = {
    model: PropTypes.object,
+   viewModel: PropTypes.object,
 };
 
 export default MultiTrackViewer;
