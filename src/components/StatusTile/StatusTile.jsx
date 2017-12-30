@@ -1,45 +1,40 @@
 // Dependencies
-import React from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-
+import InputRange from 'react-input-range';
+import 'react-input-range/lib/css/index.css';
 // Styles
 import './StatusTile.scss';
 
-function StatusTileStatus(props) {
-  let s = props.status;
-  if (typeof s === 'number') {
-    s = Number(s.toFixed(1));
+class StatusTile extends Component {
+  constructor(props) {
+    super(props);
+    this.value = { min: 0, max: 24 };
+    this.setValue = this.setValue.bind(this);
   }
-  return (
-    <div className="statustile-status">
-      <h4>{props.name}: {s}</h4>
-    </div>
-  );
-}
 
-StatusTileStatus.propTypes = {
-  name: PropTypes.string.isRequired,
-  status: PropTypes.any.isRequired,
-};
+  setValue(value) {
+    this.value = value;
+  }
 
-function StatusTile(props) {
-  return (
-    <div id="statustile">
-      <div id="statustile-title">
-        <h4>Status</h4>
+  render() {
+    return (
+      <div id="statustile">
+        <div className="status-wrapper">
+          <InputRange
+            maxValue={24}
+            minValue={0}
+            value={this.value}
+            onChange={this.setValue} 
+          />
+        </div>
       </div>
-      <StatusTileStatus name="framesPerSecond" status={props.framesPerSecond} />
-      <StatusTileStatus name="cacheEntryCount" status={props.cacheEntryCount} />
-      <StatusTileStatus name="displayedTileCount" status={props.displayedTileCount} />
-    </div>
-  );
-}
+    );
+  }
 
+}
 
 StatusTile.propTypes = {
-  framesPerSecond: PropTypes.number.isRequired,
-  cacheEntryCount: PropTypes.number.isRequired,
-  displayedTileCount: PropTypes.number.isRequired,
 };
 
 export default StatusTile;
