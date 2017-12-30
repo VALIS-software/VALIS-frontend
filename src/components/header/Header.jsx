@@ -6,6 +6,7 @@ import AutoComplete from 'material-ui/AutoComplete';
 import MenuItem from 'material-ui/MenuItem';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
+import { CHROMOSOME_SIZES } from '../../helpers/constants.js';
 
 import './Header.scss';
 
@@ -14,11 +15,30 @@ import GenomeAPI from '../../models/api.js';
 class Header extends Component {
   constructor(props) {
     super(props);
-    this.onUpdateSearchQuery = this.onUpdateSearchQuery.bind(this);
+    this.onNewRequest = this.onNewRequest.bind(this);
     this.onUpdateSearchFilter = this.onUpdateSearchFilter.bind(this);
     this.api = new GenomeAPI();
+    const chromosomes = [];
+    let start = 0;
+    for (let i = 0; i < 23; i++) {
+      let name = '';
+      if (i <= 20) {
+        name = 'Chromosome ' + (i+1);
+      } else if (i === 21) {
+        name = 'X Chromosome';
+      } else if (i === 22) {
+        name = 'Y Chromosome';
+      }
+      const end = start + CHROMOSOME_SIZES[i];
+      chromosomes.push({
+        resultType: 'location',
+        name: name,
+        range: [start, end],
+      });
+      start += CHROMOSOME_SIZES[i];
+    }
     this.state = {
-      dataSource : [],
+      dataSource : chromosomes,
       inputValue : '',
       searchFilter: 1,
     };
@@ -26,14 +46,16 @@ class Header extends Component {
 
   componentDidMount() {
     this.api.getAnnotations().then(result => {
+      const tracks = result.map(d => { return { name: d, resultType: 'annotation' }; });
       this.setState({
-        dataSource: this.state.dataSource.concat(result),
+        dataSource: this.state.dataSource.concat(tracks),
       });
     });
 
     this.api.getTracks().then(result => {
+      const dataTracks = result.map(d => { return { name: d, resultType: 'data' }; });
       this.setState({
-        dataSource: this.state.dataSource.concat(result),
+        dataSource: this.state.dataSource.concat(dataTracks),
       });
     });
   }
@@ -44,17 +66,25 @@ class Header extends Component {
     });
   }
 
-  onUpdateSearchQuery(searchText, dataSource, params) {
-    if (params.source === 'click') {
-      if (searchText[0] === 'a') {
-        this.props.model.addAnnotationTrack(searchText);
-      } else {
-        this.props.model.addDataTrack(searchText);  
+  onNewRequest(chosen, index) {
+    if (index > -1) {
+      if (chosen.resultType === 'data') {
+        this.props.model.addDataTrack(chosen.name);  
+      } else if (chosen.resultType === 'annotation') {
+        this.props.model.addAnnotationTrack(chosen.name);
+      } else if (chosen.resultType === 'location') {
+        const viewState = this.props.viewModel.getViewState();
+        const bpp = (chosen.range[1] - chosen.range[0]) / viewState.windowSize[0];
+        this.props.viewModel.setViewRegion(chosen.range[0], bpp);
       }
     }
   }
 
   render() {
+    const dataSourceConfig = {
+      text: 'name',
+      value: 'name',
+    };
     return (<div className="header">
       <Toolbar>
         <ToolbarGroup firstChild={true}>
@@ -62,7 +92,10 @@ class Header extends Component {
             <AutoComplete
               hintText="Search Genomes or Variants"
               dataSource={this.state.dataSource}
-              onUpdateInput={this.onUpdateSearchQuery}
+              onNewRequest={this.onNewRequest}
+              dataSourceConfig={dataSourceConfig}
+              filter={AutoComplete.caseInsensitiveFilter}
+              maxSearchResults={8}
               fullWidth={true}
             />
           </div>
@@ -80,6 +113,7 @@ class Header extends Component {
 
 Header.propTypes = {
    model: PropTypes.object,
+   viewModel: PropTypes.object,
 };
 
 export default Header;
