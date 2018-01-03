@@ -27,6 +27,9 @@ $bg-color: #e8e8e8;
         width: $browser-width;
         height: $browser-height;
 
+        &:focus {
+            outline: none;
+        }
         // disable select:
         -webkit-touch-callout: none; /* iOS Safari */
         -webkit-user-select: none; /* Safari */

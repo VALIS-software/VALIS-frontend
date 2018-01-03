@@ -34,8 +34,6 @@ class ViewModel extends EventCreator {
     this.handleMouseDown = this.handleMouseDown.bind(this);
     this.handleMouseUp = this.handleMouseUp.bind(this);
     this.handleDoubleClick = this.handleDoubleClick.bind(this);
-    document.addEventListener('keydown', this.handleKeydown);
-    document.addEventListener('keyup', this.handleKeyup);
   }
 
   init(basePairsPerPixel, windowSize) {
@@ -44,6 +42,8 @@ class ViewModel extends EventCreator {
   }
 
   bindListeners(domElem) {
+    domElem.addEventListener('keydown', this.handleKeydown);
+    domElem.addEventListener('keyup', this.handleKeyup);
     domElem.addEventListener('wheel', this.handleMouse);
     domElem.addEventListener('mousemove', this.handleMouseMove);
     domElem.addEventListener('mousedown', this.handleMouseDown);
@@ -52,6 +52,8 @@ class ViewModel extends EventCreator {
   }
 
   removeListeners(domElem) {
+    domElem.removeEventListener('keydown', this.handleKeydown);
+    domElem.removeEventListener('keyup', this.handleKeyup);
     domElem.removeEventListener('wheel', this.handleMouse);
     domElem.removeEventListener('mousemove', this.handleMouseMove);
     domElem.removeEventListener('mousedown', this.handleMouseDown);
@@ -168,7 +170,9 @@ class ViewModel extends EventCreator {
     this.dragEnabled = true;
     this.lastDragCoord = [evt.offsetX, evt.offsetY];
     this.startDragCoord = [evt.offsetX, evt.offsetY];
-
+    // set focus on canvas:
+    evt.currentTarget.setAttribute('tabindex', '0');
+    evt.currentTarget.focus();
     // send the drag started event:
     this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
   }
@@ -183,7 +187,7 @@ class ViewModel extends EventCreator {
   }
 
   handleDoubleClick(evt) {
-    const coord = [evt.nativeEvent.offsetX, evt.nativeEvent.offsetY];
+    const coord = [evt.offsetX, evt.offsetY];
     const windowSize = this.windowSize;
     const hoveredBasePair = Util.basePairForScreenX(coord[0], this.startBasePair, this.basePairsPerPixel, windowSize);
     const pixel = coord[0];
