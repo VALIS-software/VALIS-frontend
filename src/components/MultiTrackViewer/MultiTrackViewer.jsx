@@ -7,6 +7,7 @@ import {
   APP_EVENT_ADD_TRACK,
   APP_EVENT_REMOVE_TRACK,
   APP_EVENT_REORDER_TRACKS,
+  APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED,
 } from '../../models/appModel.js';
 
 
@@ -38,6 +39,7 @@ class MultiTrackViewer extends React.Component {
     // listen to track change updates
     props.model.addListener(this.updateViews, [APP_EVENT_ADD_TRACK, 
                                                APP_EVENT_REORDER_TRACKS, 
+                                               APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED,
                                                APP_EVENT_REMOVE_TRACK]);
     this.viewModel = props.viewModel;
     this.onDrop = this.onDrop.bind(this);
@@ -157,8 +159,7 @@ class MultiTrackViewer extends React.Component {
     this.tracks = event.sender.tracks;
     event.sender.tracks.forEach(track => {
       if (!this.views[track.guid]) {
-        newViews[track.guid] = new TrackView(track.guid, this.props.model);
-        newViews[track.guid].setHeight(0.1);
+        newViews[track.guid] = new TrackView(track.guid, this.props.model, track.height, track.basePairOffset);
       } else {
         newViews[track.guid] = this.views[track.guid];
       }
@@ -171,6 +172,9 @@ class MultiTrackViewer extends React.Component {
       if (track.annotationTrack) {
         trackView.setAnnotationTrack(track.annotationTrack);
       }
+
+      trackView.setBasePairOffset(track.basePairOffset);
+      trackView.setHeight(track.height);
     });
     this.views = newViews;
   }

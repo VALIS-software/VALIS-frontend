@@ -171,8 +171,8 @@ class ViewModel extends EventCreator {
     this.lastDragCoord = [evt.offsetX, evt.offsetY];
     this.startDragCoord = [evt.offsetX, evt.offsetY];
     // set focus on canvas:
-    evt.currentTarget.setAttribute('tabindex', '0');
-    evt.currentTarget.focus();
+    // evt.currentTarget.setAttribute('tabindex', '1');
+    // evt.currentTarget.focus();
     // send the drag started event:
     this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
   }
@@ -191,7 +191,7 @@ class ViewModel extends EventCreator {
     const windowSize = this.windowSize;
     const hoveredBasePair = Util.basePairForScreenX(coord[0], this.startBasePair, this.basePairsPerPixel, windowSize);
     const pixel = coord[0];
-    Util.animate(this.basePairsPerPixel, this.basePairsPerPixel / 4.0, (alpha, start, end) => {
+    Util.animate(this.basePairsPerPixel, this.basePairsPerPixel/4.0, (alpha, start, end) => {
       this.basePairsPerPixel = alpha * start + (1.0 - alpha) * end;
       this.centerBasePairOnPixel(hoveredBasePair, pixel);
     }, 1.0);

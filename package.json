@@ -17,7 +17,7 @@
     "gl-sprite-text": "^2.3.1",
     "interval-tree2": "^1.1.0",
     "lru-cache": "^4.1.1",
-    "material-ui": "^0.19.4",
+    "material-ui": "^0.20.0",
     "prop-types": "^15.6.0",
     "react": "^15.3.1",
     "react-dom": "^15.3.1",
