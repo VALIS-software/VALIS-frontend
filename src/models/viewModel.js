@@ -7,10 +7,12 @@ const _ = require('underscore');
 
 const VIEW_EVENT_STATE_CHANGED = 'view_event_state_changed';
 const VIEW_EVENT_CLICK = 'view_event_click';
+const VIEW_EVENT_SELECTION = 'view_event_selection';
 
 export { 
   VIEW_EVENT_STATE_CHANGED,
   VIEW_EVENT_CLICK,
+  VIEW_EVENT_SELECTION,
 };
 
 class ViewModel extends EventCreator {
@@ -25,7 +27,7 @@ class ViewModel extends EventCreator {
     this.panning = false;
     this.zoomEnabled = false;
     this.selectEnabled = false;
-
+    this.lastViewState = null;
     
     this.handleKeydown = this.handleKeydown.bind(this);
     this.handleKeyup = this.handleKeyup.bind(this);
@@ -59,6 +61,25 @@ class ViewModel extends EventCreator {
     domElem.removeEventListener('mousedown', this.handleMouseDown);
     domElem.removeEventListener('mouseup', this.handleMouseUp);
     domElem.removeEventListener('dblclick', this.handleDoubleClick);
+  }
+
+  notifyViewStateChange() {
+    const currentViewState = this.getViewState();
+    
+    let previousStateCopy = null;
+    if (this.previousViewState) {
+      // return copy, not original
+      previousStateCopy = Object.assign({}, this.previousViewState);
+      if (this.previousViewState.selection) {
+        previousStateCopy.selection = Object.assign({}, this.previousViewState.selection);
+      }
+    }
+    const eventData = {
+      currentViewState: currentViewState,
+      previousViewState: previousStateCopy,
+    };
+    this.notifyListeners(VIEW_EVENT_STATE_CHANGED, eventData);
+    this.previousViewState = currentViewState;
   }
 
   getViewState() {
@@ -102,37 +123,39 @@ class ViewModel extends EventCreator {
   setViewRegion(startBasePair, basePairsPerPixel) {
     this.startBasePair = startBasePair;
     this.basePairsPerPixel = basePairsPerPixel;
-    this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
+    this.notifyViewStateChange();
+  }
+
+  setViewRegionUsingRange(startBasePair, endBasePair) {
+    const basePairsPerPixel = (endBasePair - startBasePair) / this.windowSize[0];
+    this.setViewRegion(startBasePair, basePairsPerPixel);
   }
 
   centerOnBasePair(basePair) {
     this.startBasePair = basePair - this.basePairsPerPixel * this.windowSize[0] / 2.0;
-    this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
+    this.notifyViewStateChange();
   }
 
   centerBasePairOnPixel(basePair, pixel) {
     this.startBasePair = basePair - pixel * this.basePairsPerPixel;
-    this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
+    this.notifyViewStateChange();
   }
 
   handleMouseMove(e) {
     if (this.dragEnabled) {
-      if (!this.selectEnabled) {
-        const deltaX = e.offsetX - this.lastDragCoord[0];
-        const deltaY = e.offsetY - this.lastDragCoord[1];
-        if (Math.abs(deltaY) > 0) {
-          const delta = Math.min(0.0, this.trackOffset + deltaY / this.windowSize[1]);
-          this.trackOffset = delta;
-        }
+      const deltaX = e.offsetX - this.lastDragCoord[0];
+      const deltaY = e.offsetY - this.lastDragCoord[1];
+      if (Math.abs(deltaY) > 0 && !this.selectEnabled) {
+        const delta = Math.min(0.0, this.trackOffset + deltaY / this.windowSize[1]);
+        this.trackOffset = delta;
+      }
 
-        if (Math.abs(deltaX) > 0) {
-          const delta = -deltaX * this.basePairsPerPixel;
-          this.startBasePair += delta;
-        }
+      if (Math.abs(e.offsetX - this.startDragCoord[0]) > 10) {
+        this.selectEnabled = true;
       }
     }
     this.lastDragCoord = [e.offsetX, e.offsetY];
-    this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
+    this.notifyViewStateChange();
   }
 
   handleMouse(e) {
@@ -162,7 +185,7 @@ class ViewModel extends EventCreator {
           this.basePairsPerPixel = newBpPerPixel;
         }
       }
-      this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
+      this.notifyViewStateChange();
     }
   }
 
@@ -174,16 +197,25 @@ class ViewModel extends EventCreator {
     // evt.currentTarget.setAttribute('tabindex', '1');
     // evt.currentTarget.focus();
     // send the drag started event:
-    this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
+    this.notifyViewStateChange();
   }
 
   handleMouseUp(evt) {
+    if (this.selectEnabled) {
+      const windowSize = this.windowSize;
+      const start = Math.min(this.startDragCoord[0], this.lastDragCoord[0]);
+      const end = Math.max(this.startDragCoord[0], this.lastDragCoord[0]);
+      const startBp = Util.basePairForScreenX(start, this.startBasePair, this.basePairsPerPixel, windowSize);
+      const endBp = Util.basePairForScreenX(end, this.startBasePair, this.basePairsPerPixel, windowSize);
+      this.notifyListeners(VIEW_EVENT_SELECTION, { startBp, endBp });
+    } else {
+      this.notifyListeners(VIEW_EVENT_CLICK, this.lastDragCoord);
+    }
     this.dragEnabled = false;
     this.lastDragCoord = null;
     this.startDragCoord = null;
     this.selectEnabled = false;
-    this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
-    this.notifyListeners(VIEW_EVENT_CLICK, this.getViewState());
+    this.notifyViewStateChange();
   }
 
   handleDoubleClick(evt) {
@@ -200,31 +232,31 @@ class ViewModel extends EventCreator {
   handleKeydown(e) {
     if (e.key === 'Alt') {
       this.selectEnabled = true;
-      this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
+      this.notifyViewStateChange();
     } else if (e.key === 'Control') {
       this.zoomEnabled = true;
-      this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
+      this.notifyViewStateChange();
     } else if (e.key === 'a' || e.key === 'd') {
       const delta = ((e.key === 'a') ? 128 : -128) * this.basePairsPerPixel;
       this.startBasePair += delta;
-      this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
+      this.notifyViewStateChange();
     } else if (e.key === '=' || e.key === 'w') {
       const startCenter = this.startBasePair + this.basePairsPerPixel * this.windowSize[0] / 2.0;
       this.basePairsPerPixel /= 1.2;
-      this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
+      this.notifyViewStateChange();
     } else if (e.key === '-' || e.key === 's') {
       this.basePairsPerPixel *= 1.2;
-      this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
+      this.notifyViewStateChange();
     }
   }
 
   handleKeyup(e) {
     if (e.key === 'Alt') {
       this.selectEnabled = false;
-      this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
+      this.notifyViewStateChange();
     } else if (e.key === 'Control') {
       this.zoomEnabled = false;
-      this.notifyListeners(VIEW_EVENT_STATE_CHANGED, this.getViewState());
+      this.notifyViewStateChange();
     }
   }
 }

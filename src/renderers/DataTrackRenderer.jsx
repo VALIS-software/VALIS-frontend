@@ -63,6 +63,8 @@ export default class DataTrackRenderer {
           shader.uniformi('showSelection', 1);
           shader.uniform('selectionBoundsMin', windowState.selection.min);
           shader.uniform('selectionBoundsMax', windowState.selection.max);
+        } else {
+          shader.uniformi('showSelection', 0);
         }
         context.drawQuad(shader);
         j += 1;

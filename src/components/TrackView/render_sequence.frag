@@ -73,9 +73,9 @@ void main() {
 	vec2 screenCoord =  gl_FragCoord.xy;
 	screenCoord.y = windowSize.y - screenCoord.y;
 
-	float selectionHighlight = 1.0;
-	if (showSelection == 1 && screenCoord.x > bMin.x && screenCoord.x < bMax.x && screenCoord.y > bMin.y && screenCoord.y < bMax.y) {
-		selectionHighlight = 1.5;
+	vec3 selectionHighlight = vec3(0.0);
+	if (showSelection == 1 && screenCoord.x > bMin.x && screenCoord.x < bMax.x) {
+		selectionHighlight = vec3(0.3);
 	}
  
 	float trackHeightPx = tileHeight * windowSize.y;
@@ -86,6 +86,6 @@ void main() {
 		finalColor = vec3(locInChr);
 	}
 
-	gl_FragColor = vec4(tintColor + finalColor * selectionHighlight, 1.0);
+	gl_FragColor = vec4(tintColor + finalColor + selectionHighlight, 1.0);
 	
 }
