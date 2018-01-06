@@ -11,7 +11,7 @@ import {
 } from '../../models/appModel.js';
 
 
-import { VIEW_EVENT_STATE_CHANGED } from '../../models/viewModel.js';
+import { VIEW_EVENT_STATE_CHANGED, VIEW_EVENT_SELECTION } from '../../models/viewModel.js';
 
 import TrackView from '../TrackView/TrackView.jsx';
 import TrackToolTip from '../TrackToolTip/TrackToolTip.jsx';
@@ -34,6 +34,7 @@ class MultiTrackViewer extends React.Component {
     this.tracks = [];
     this.updateViews = this.updateViews.bind(this);
     this.updateViewState = this.updateViewState.bind(this);
+    this.updateSelection = this.updateSelection.bind(this);
     this.classNames = '';
 
     // listen to track change updates
@@ -61,6 +62,7 @@ class MultiTrackViewer extends React.Component {
       this.viewModel.bindListeners(domElem);
 
       this.viewModel.addListener(this.updateViewState, VIEW_EVENT_STATE_CHANGED);
+      this.viewModel.addListener(this.updateSelection, VIEW_EVENT_SELECTION);
 
       this.renderContext = Util.newRenderContext(domElem);
       this.shaders = TrackView.initializeShaders(this.renderContext);
@@ -140,7 +142,7 @@ class MultiTrackViewer extends React.Component {
 
   updateViewState(event) {
     const classes = [];
-    const viewState = this.viewModel.getViewState();
+    const viewState = event.data.currentViewState;
     if (viewState.selectEnabled) {
       classes.push('select-active');
     }
@@ -152,6 +154,10 @@ class MultiTrackViewer extends React.Component {
     }
     this.classNames = classes.join(' ');
     this.forceUpdate();
+  }
+
+  updateSelection(event) {
+    this.viewModel.setViewRegionUsingRange(event.data.startBp, event.data.endBp);
   }
 
   updateViews(event) {
