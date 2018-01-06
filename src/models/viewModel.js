@@ -27,7 +27,8 @@ class ViewModel extends EventCreator {
     this.panning = false;
     this.zoomEnabled = false;
     this.selectEnabled = false;
-    this.lastViewState = null;
+    this.viewStateHistory = [];
+    this.historyOffset = 0;
     
     this.handleKeydown = this.handleKeydown.bind(this);
     this.handleKeyup = this.handleKeyup.bind(this);
@@ -41,6 +42,7 @@ class ViewModel extends EventCreator {
   init(basePairsPerPixel, windowSize) {
     this.basePairsPerPixel = basePairsPerPixel;
     this.windowSize = windowSize;
+    this.notifyViewStateChange(true);
   }
 
   bindListeners(domElem) {
@@ -63,23 +65,44 @@ class ViewModel extends EventCreator {
     domElem.removeEventListener('dblclick', this.handleDoubleClick);
   }
 
-  notifyViewStateChange() {
+  notifyViewStateChange(saveHistory=false) {
     const currentViewState = this.getViewState();
-    
-    let previousStateCopy = null;
-    if (this.previousViewState) {
-      // return copy, not original
-      previousStateCopy = Object.assign({}, this.previousViewState);
-      if (this.previousViewState.selection) {
-        previousStateCopy.selection = Object.assign({}, this.previousViewState.selection);
-      }
-    }
     const eventData = {
       currentViewState: currentViewState,
-      previousViewState: previousStateCopy,
     };
     this.notifyListeners(VIEW_EVENT_STATE_CHANGED, eventData);
-    this.previousViewState = currentViewState;
+    if (saveHistory) {
+      const spanToSave = this.viewStateHistory.length + this.historyOffset + 1;
+      this.historyOffset = -1;
+      this.viewStateHistory = this.viewStateHistory.slice(0, spanToSave);
+      this.viewStateHistory.push(currentViewState);
+    }
+  }
+
+  loadViewHistory() {
+    const idx = this.viewStateHistory.length + this.historyOffset;
+    const state = this.viewStateHistory[idx];
+    this.windowSize = state.windowSize;
+    this.basePairsPerPixel = state.basePairsPerPixel;
+    this.trackOffset = state.trackOffset;
+    this.startBasePair = state.startBasePair;
+    this.panning = false;
+    this.dragEnabled = false;
+    this.selectEnabled = false;
+    this.zoomEnabled = false;
+    this.lastDragCoord = null;
+    this.startDragCoord = null;
+    this.notifyViewStateChange();
+  }
+
+  back() {
+    this.historyOffset = Math.max(-this.viewStateHistory.length, this.historyOffset - 1);
+    this.loadViewHistory();
+  }
+
+  forward() {
+    this.historyOffset = Math.min(-1, this.historyOffset + 1);
+    this.loadViewHistory();
   }
 
   getViewState() {
@@ -215,7 +238,7 @@ class ViewModel extends EventCreator {
     this.lastDragCoord = null;
     this.startDragCoord = null;
     this.selectEnabled = false;
-    this.notifyViewStateChange();
+    this.notifyViewStateChange(true);
   }
 
   handleDoubleClick(evt) {
@@ -232,21 +255,21 @@ class ViewModel extends EventCreator {
   handleKeydown(e) {
     if (e.key === 'Alt') {
       this.selectEnabled = true;
-      this.notifyViewStateChange();
+      this.notifyViewStateChange(true);
     } else if (e.key === 'Control') {
       this.zoomEnabled = true;
-      this.notifyViewStateChange();
+      this.notifyViewStateChange(true);
     } else if (e.key === 'a' || e.key === 'd') {
       const delta = ((e.key === 'a') ? 128 : -128) * this.basePairsPerPixel;
       this.startBasePair += delta;
-      this.notifyViewStateChange();
+      this.notifyViewStateChange(true);
     } else if (e.key === '=' || e.key === 'w') {
       const startCenter = this.startBasePair + this.basePairsPerPixel * this.windowSize[0] / 2.0;
       this.basePairsPerPixel /= 1.2;
-      this.notifyViewStateChange();
+      this.notifyViewStateChange(true);
     } else if (e.key === '-' || e.key === 's') {
       this.basePairsPerPixel *= 1.2;
-      this.notifyViewStateChange();
+      this.notifyViewStateChange(true);
     }
   }
 

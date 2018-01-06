@@ -6,6 +6,10 @@ import AutoComplete from 'material-ui/AutoComplete';
 import MenuItem from 'material-ui/MenuItem';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
+import IconButton from 'material-ui/IconButton';
+import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
+import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
+
 import { CHROMOSOME_SIZES } from '../../helpers/constants.js';
 
 import './Header.scss';
@@ -87,7 +91,14 @@ class Header extends Component {
     };
     return (<div className="header">
       <Toolbar>
+
         <ToolbarGroup firstChild={true}>
+          <IconButton onClick={() => this.props.viewModel.back()}>
+            <NavigationArrowBack />
+          </IconButton>
+          <IconButton onClick={() => this.props.viewModel.forward()}>
+            <NavigationArrowForward />
+          </IconButton>
           <div className="search-box">
             <AutoComplete
               hintText="Search Genomes or Variants"
