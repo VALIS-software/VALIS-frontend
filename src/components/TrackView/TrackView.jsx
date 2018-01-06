@@ -18,16 +18,16 @@ import TrackBackground from '../TrackBackground/TrackBackground.jsx';
 import Util from '../../helpers/util.js';
 
 class TrackView {
-  constructor(guid, appModel) {
+  constructor(guid, appModel, height=0.1, basePairOffset=0) {
     this.guid = guid;
     this.appModel = appModel;
-    this.height = 0.1;
+    this.height = height;
     this.yOffset = 0.0;
     this.annotationTrack = null;
     this.dataTrack = null;
     this.dataRenderer = new DataTrackRenderer();
     this.annotationRenderer = new AnnotationTrackRenderer();
-    this.basePairOffset = 0;
+    this.basePairOffset = basePairOffset;
   }
 
   static initializeShaders(context) {

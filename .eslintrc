@@ -24,6 +24,7 @@
     "space-before-function-paren": "off",
     "react/sort-comp": "off",
     "new-cap": "off",
+    "import/imports-first": "off",
   },
   "env": {
     "browser": true

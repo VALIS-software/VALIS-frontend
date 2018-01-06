@@ -10,14 +10,19 @@ const APP_EVENT_ADD_TRACK = 'ADD_TRACK';
 const APP_EVENT_REMOVE_TRACK = 'REMOVE_TRACK';
 const APP_EVENT_REORDER_TRACKS = 'REORDER_TRACKS';
 const APP_EVENT_LOADING_STATE_CHANGED = 'LOADING_CHANGED';
-const APP_EVENT_FOCUS_CHANGED = 'FOCUS_CHANGED';
+const APP_EVENT_EDIT_TRACK_VIEW_SETTINGS = 'EDIT_TRACK_VIEW';
+const APP_EVENT_SHOW_ENTITY_DETAIL = 'SHOW_ENTITY_DETAIL';
+const APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED = 'TRACK_VIEW_SETTINGS_UPDATED';
+
 
 export { 
   APP_EVENT_ADD_TRACK,
   APP_EVENT_REMOVE_TRACK,
   APP_EVENT_REORDER_TRACKS,
   APP_EVENT_LOADING_STATE_CHANGED,
-  APP_EVENT_FOCUS_CHANGED,
+  APP_EVENT_SHOW_ENTITY_DETAIL,
+  APP_EVENT_EDIT_TRACK_VIEW_SETTINGS,
+  APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED,
 };
 
 class AppModel extends EventCreator {
@@ -49,14 +54,20 @@ class AppModel extends EventCreator {
     }
   }
 
-  setFocus(element) {
-    this.notifyListeners(APP_EVENT_FOCUS_CHANGED, element);
+  editTrackViewSettings(viewGuid) {
+    this.notifyListeners(APP_EVENT_EDIT_TRACK_VIEW_SETTINGS, viewGuid);
+  }
+
+  showEntityDetails(element) {
+    this.notifyListeners(APP_EVENT_SHOW_ENTITY_DETAIL, element);
   }
 
   addAnnotationTrack(annotationId) {
     this.api.getAnnotation([annotationId]).then(model => {
       const track = {
         guid: uuid(),
+        height: 0.1,
+        basePairOffset: 0,
         dataTrack: null,
         annotationTrack: model,
       };
@@ -66,26 +77,50 @@ class AppModel extends EventCreator {
     });
   }
 
-  indexOfTrack(trackGuid) {
+  indexOfTrack(trackViewGuid) {
     const index = _.findIndex(this.tracks, (item) => {
-      return item.guid === trackGuid;
+      return item.guid === trackViewGuid;
     });
     return index;
   }
 
-  moveTrack(trackGuid, toIdx) {
+  moveTrack(trackViewGuid, toIdx) {
     const arr = this.tracks.slice();
-    const index = this.indexOfTrack(trackGuid);
+    const index = this.indexOfTrack(trackViewGuid);
     const trackMoved = arr[index];
     arr.splice(toIdx, 0, arr.splice(index, 1)[0]);
     this.tracks = arr;
     this.notifyListeners(APP_EVENT_REORDER_TRACKS, trackMoved);
   }
 
+  setTrackHeight(trackViewGuid, height) {
+    const index = this.indexOfTrack(trackViewGuid);
+    this.tracks[index].height = height;
+    this.notifyListeners(APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED, this.tracks[index]);
+  }
+
+  getTrackHeight(trackViewGuid) {
+    const index = this.indexOfTrack(trackViewGuid);
+    return this.tracks[index].height;
+  }
+
+  getTrackBasePairOffset(trackViewGuid) {
+    const index = this.indexOfTrack(trackViewGuid);
+    return this.tracks[index].basePairOffset;
+  }
+
+  setTrackBasePairOffset(trackViewGuid, bpOffset) {
+    const index = this.indexOfTrack(trackViewGuid);
+    this.tracks[index].basePairOffset = bpOffset;
+    this.notifyListeners(APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED, this.tracks[index]);
+  }
+
   addDataTrack(trackId) {
     this.api.getTrack(trackId).then(model => {
       const track = {
         guid: uuid(),
+        height: 0.1,
+        basePairOffset: 0,
         dataTrack: model,
         annotationTrack: null,
       };
@@ -95,10 +130,10 @@ class AppModel extends EventCreator {
     });
   }
 
-  removeTrack(trackGuid) {
+  removeTrack(trackViewGuid) {
     const arr = this.tracks.slice();
     const index = _.findIndex(arr, (item) => {
-      return item.guid === trackGuid;
+      return item.guid === trackViewGuid;
     });
 
     // TODO: modify this if we have both data & annotation track

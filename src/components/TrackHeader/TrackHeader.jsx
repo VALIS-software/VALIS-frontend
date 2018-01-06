@@ -18,12 +18,17 @@ class TrackHeader extends Component {
     this.onDragLeave = this.onDragLeave.bind(this);
     this.onDrop = this.onDrop.bind(this);
     this.onDragStart = this.onDragStart.bind(this);
+    this.onClick = this.onClick.bind(this);
   }
 
   componentDidMount() {
     this.setState({
       borderTop: false,
     });
+  }
+
+  onClick(evt) {
+    this.props.appModel.editTrackViewSettings(this.props.guid);
   }
 
   onDragStart(evt) {
@@ -89,6 +94,7 @@ class TrackHeader extends Component {
     const style = this.getStyle();
     const axis = this.renderAxis();
     const height = this.props.height + 'px';
+    const onClick = this.onClick;
     const onDragOver = this.onDragOver;
     const onDragLeave = this.onDragLeave;
     const onDrop = this.onDrop;
@@ -104,6 +110,7 @@ class TrackHeader extends Component {
         onDrop={onDrop} 
         onDragLeave={onDragLeave} 
         onDragOver={onDragOver}
+        onClick={onClick}
       >
         <div className="inner">
           {title}
