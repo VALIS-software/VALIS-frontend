@@ -5,6 +5,10 @@ import {
     COLOR2,
     COLOR3,
     COLOR4, 
+    COLOR5,
+    COLOR6,
+    COLOR7,
+    COLOR8, 
     TRACK_DATA_TYPE_BASE_PAIRS,
     TRACK_DATA_TYPE_GBANDS,
     TRACK_DATA_TYPE_SIGNAL,
@@ -31,8 +35,16 @@ export default class DataTrackRenderer {
         const dataType = tile.tile.data.dataType;
         const texId = context.bindTexture(tile.tile.data.guid, texData, 1024, 1);
         let shader = shaders.signalShader;
+        let c1 = COLOR1;
+        let c2 = COLOR2;
+        let c3 = COLOR3;
+        let c4 = COLOR4;
         if (dataType === TRACK_DATA_TYPE_GBANDS) {
             shader = shaders.gbandShader;
+            c1 = COLOR5;
+            c2 = COLOR6;
+            c3 = COLOR7;
+            c4 = COLOR8;
         } else if (dataType === TRACK_DATA_TYPE_BASE_PAIRS) {
             shader = shaders.sequenceShader;
         }
@@ -45,10 +57,10 @@ export default class DataTrackRenderer {
         shader.uniformi('dimensions', dimensions);
         shader.uniform('dataMin', dataTrack.min);
         shader.uniform('dataMax', dataTrack.max);
-        shader.uniform('color1', COLOR1);
-        shader.uniform('color2', COLOR2);
-        shader.uniform('color3', COLOR3);
-        shader.uniform('color4', COLOR4);
+        shader.uniform('color1', c1);
+        shader.uniform('color2', c2);
+        shader.uniform('color3', c3);
+        shader.uniform('color4', c4);
         shader.uniform('tile', 0.5 + 0.5 * j / tiles.length);
         shader.uniform('tileRoi', roi);
         shader.uniform('currentTileDisplayRange', tile.range);

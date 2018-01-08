@@ -48,7 +48,27 @@ void main() {
 	float chr = currData.g;
 	float locInChr = currData.b;
 	vec3 chrColor = hsv2rgb(vec3(chr/25.0, 0.7, 1.0));
+	
 	vec3 finalColor = vec3(val);
+
+	float alpha = 0.0;
+	vec3 a;
+	vec3 b;
+	if (val <= 0.33) {
+		alpha = val * 3.0;
+		a = color1;
+		b = color2;
+	} else if (val <= 0.66) {
+		alpha = (val - 0.33) * 3.0;
+		a = color2;
+		b = color3;
+	} else {
+		alpha = (val - 0.66) * 3.0;
+		a = color3;
+		b = color4;
+	}
+
+	finalColor = mix(a, b, alpha) / 255.0;
 
 	vec3 tintColor = vec3(0.0);
 	float pixelsPerBp = windowSize.x/(displayedRange.y - displayedRange.x);
