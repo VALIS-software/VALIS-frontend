@@ -52,6 +52,12 @@ class Util {
     return color.map(val => Math.min(255, val * d));
   }
 
+  static blendColors(color1, color2, alpha) {
+    const c1 = Util.multiplyColor(color1, alpha);
+    const c2 = Util.multiplyColor(color2, 1.0 - alpha);
+    return [c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2]];
+  }
+
   static floorToPixel(u, px) {
     return Math.floor(u*px) / px;
   }
