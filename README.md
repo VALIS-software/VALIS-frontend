@@ -8,8 +8,8 @@ VALIS (Visualization & Analytics for Life Science) is a powerful genome visualiz
 ### Install
 
 ```
-git clone git@github.com:saliksyed/WebGLGenomeBrowser.git
-cd WebGLGenomeBrowser
+git clone git@github.com:saliksyed/VALIS.git
+cd VALIS
 npm install
 ```
 There is a test server located in the `tools` directory. The server requires the following libraries, which are installable using pip.
