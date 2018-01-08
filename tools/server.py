@@ -134,20 +134,18 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 					start = ch_range[0] + gene.start
 					end = ch_range[0] + gene.end
 					sz = end - start
-					if sz/float(sampling_rate) > 50:
+					if sz/float(sampling_rate) > 20:
 						annotation_results.append((name, start, end))
-						last_gene_start = None
-						gene_count = 0
-					elif not last_gene_start:
-						last_gene_start = start
-						gene_count = 1
-					elif (end-last_gene_start)/float(sampling_rate) > 150:
-						gene_count += 1
-						annotation_results.append(("%d Genes" % gene_count, last_gene_start, end))
-						gene_count = 0
-						last_gene_start = None
-					else:
-						gene_count += 1
+
+		if annotation_id == "cross-track-test-1":
+			for i in xrange(0, 3000000000, 10000000):
+				if i >= start_bp and i <= end_bp:
+					annotation_results.append(("X", i, i + 1000000))
+
+		if annotation_id == "cross-track-test-2":
+			for i in xrange(0, 3000000000, 50000000):
+				if i >= start_bp and i <= end_bp:
+					annotation_results.append(("Y", i, i + 1000000))
 
 		annotations = []
 		for annotation_name, annotation_start, annotation_end in annotation_results:
