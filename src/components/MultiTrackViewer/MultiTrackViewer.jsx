@@ -179,6 +179,10 @@ class MultiTrackViewer extends React.Component {
         trackView.setAnnotationTrack(track.annotationTrack);
       }
 
+      if (track.graphTrack) {
+        trackView.setGraphTrack(track.graphTrack); 
+      }
+
       trackView.setBasePairOffset(track.basePairOffset);
       trackView.setHeight(track.height);
     });

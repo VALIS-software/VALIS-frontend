@@ -88,7 +88,7 @@ CORS(app)
 def graphs():
 	return json.dumps(["ld_score"])
 
-@app.route("/graph/<string:graph_id>/<string:annotation_id1>/<string:annotation_id2>/<int:start_bp>/<int:end_bp>")
+@app.route("/graphs/<string:graph_id>/<string:annotation_id1>/<string:annotation_id2>/<int:start_bp>/<int:end_bp>")
 def graph(graph_id, annotation_id1, annotation_id2, start_bp, end_bp):
 	start_bp = int(start_bp)
 	end_bp = int(end_bp)
