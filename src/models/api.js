@@ -1,9 +1,11 @@
 import { LOCAL_API_URL } from '../helpers/constants.js';
 
 import DataTrack from './dataTrack.js';
+import GraphOverlay from './graphOverlay.js';
 import AnnotationTrack from './annotationTrack.js';
 
 const TRACK_CACHE = {};
+const GRAPH_CACHE = {};
 const ANNOTATION_CACHE = {};
 
 const axios = require('axios');
@@ -16,6 +18,12 @@ class GenomeAPI {
 
 	getAnnotations() {
 		return axios.get(`${this.baseUrl}/annotations`).then(data => {
+			return data.data;
+		});
+	}
+
+	getGraphs() {
+		return axios.get(`${this.baseUrl}/graphs`).then(data => {
 			return data.data;
 		});
 	}
@@ -34,6 +42,27 @@ class GenomeAPI {
 				return track;
 			});	
 		}
+	}
+
+	getGraph(graphId, annotationId1, annotationId2) {
+		const trackId = `${graphId},${annotationId1},${annotationId2}`;
+		if (GRAPH_CACHE[trackId]) {
+			return new Promise((resolve, reject) => {
+				resolve(GRAPH_CACHE[trackId]);
+			});
+		} else {
+			const track = new GraphOverlay(this, graphId, annotationId1, annotationId2);
+			GRAPH_CACHE[trackId] = track;
+			return new Promise((resolve, reject) => {
+				resolve(GRAPH_CACHE[trackId]);
+			});
+		}
+	}
+
+	getGraphData(graphId, annotationId1, annotationId2, startBp, endBp, samplingRate=1) {
+		const samplingRateQuery = `?sampling_rate=${samplingRate}`;
+		const requestUrl = `${this.baseUrl}/graphs/${graphId}/${annotationId1}/${annotationId2}/${startBp}/${endBp}${samplingRateQuery}`;
+		return axios.get(requestUrl);
 	}
 
 	getAnnotationData(annotationIds, startBp, endBp, samplingRate=1, trackHeightPx=0) {

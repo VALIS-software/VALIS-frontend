@@ -93,11 +93,21 @@ class Util {
     igloo.textures = textures;
     igloo.boundTextures = {};
     igloo.quad = igloo.array(Igloo.QUAD2);
+    igloo.lineBuffer = igloo.array();
+    igloo.lineColorBuffer = igloo.array();
 
     // handle quad rendering:
     igloo.drawQuad = function(shader) {
         shader.attrib('points', igloo.quad, 2);
         shader.draw(igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
+    };
+
+    igloo.drawLines = function(shader, lines, colors) {
+      igloo.lineBuffer.update(lines);
+      igloo.lineColorBuffer.update(colors);
+      shader.attrib('points', igloo.lineBuffer, 2);
+      shader.attrib('color', igloo.lineColorBuffer, 4);
+      shader.draw(igloo.gl.LINES, lines.length / 2);
     };
 
     igloo.bindTexture = function(texDataGuid, texData, width, height) {

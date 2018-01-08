@@ -13,10 +13,13 @@ const APP_EVENT_LOADING_STATE_CHANGED = 'LOADING_CHANGED';
 const APP_EVENT_EDIT_TRACK_VIEW_SETTINGS = 'EDIT_TRACK_VIEW';
 const APP_EVENT_SHOW_ENTITY_DETAIL = 'SHOW_ENTITY_DETAIL';
 const APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED = 'TRACK_VIEW_SETTINGS_UPDATED';
-
+const APP_EVENT_ADD_OVERLAY = 'ADD_OVERLAY';
+const APP_EVENT_REMOVE_OVERLAY = 'REMOVE_OVERLAY';
 
 export { 
   APP_EVENT_ADD_TRACK,
+  APP_EVENT_ADD_OVERLAY,
+  APP_EVENT_REMOVE_OVERLAY,
   APP_EVENT_REMOVE_TRACK,
   APP_EVENT_REORDER_TRACKS,
   APP_EVENT_LOADING_STATE_CHANGED,
@@ -31,8 +34,10 @@ class AppModel extends EventCreator {
     this.api = new GenomeAPI();
     this.addDataTrack = this.addDataTrack.bind(this);
     this.addAnnotationTrack = this.addAnnotationTrack.bind(this);
+    this.addGraphOverlay = this.addGraphOverlay.bind(this);
     this.removeTrack = this.removeTrack.bind(this);
     this.tracks = [];
+    this.overlays = [];
     this.tracksLoading = 0;
     this.loadingStarted = this.loadingStarted.bind(this);
   }
@@ -62,8 +67,24 @@ class AppModel extends EventCreator {
     this.notifyListeners(APP_EVENT_SHOW_ENTITY_DETAIL, element);
   }
 
+  addDataTrack(trackId) {
+    return this.api.getTrack(trackId).then(model => {
+      const track = {
+        guid: uuid(),
+        height: 0.1,
+        basePairOffset: 0,
+        dataTrack: model,
+        annotationTrack: null,
+      };
+      model.addListener(this.loadingStarted, TRACK_EVENT_LOADING);
+      this.tracks = this.tracks.concat([track]);
+      this.notifyListeners(APP_EVENT_ADD_TRACK, track);
+      return track;
+    });
+  }
+
   addAnnotationTrack(annotationId) {
-    this.api.getAnnotation([annotationId]).then(model => {
+    return this.api.getAnnotation([annotationId]).then(model => {
       const track = {
         guid: uuid(),
         height: 0.1,
@@ -74,6 +95,20 @@ class AppModel extends EventCreator {
       model.addListener(this.loadingStarted, TRACK_EVENT_LOADING);
       this.tracks = this.tracks.concat([track]);
       this.notifyListeners(APP_EVENT_ADD_TRACK, track);
+      return track;
+    });
+  }
+
+  addGraphOverlay(graphId, annotationId1, annotationId2) {
+    return this.api.getGraph(graphId, annotationId1, annotationId2).then(model => {
+      model.addListener(this.loadingStarted, TRACK_EVENT_LOADING);
+      const overlay = {
+        guid: uuid(),
+        graphTrack: model,
+      };
+      this.overlays = this.overlays.concat([overlay]);
+      this.notifyListeners(APP_EVENT_ADD_OVERLAY, overlay);
+      return overlay;
     });
   }
 
@@ -113,21 +148,6 @@ class AppModel extends EventCreator {
     const index = this.indexOfTrack(trackViewGuid);
     this.tracks[index].basePairOffset = bpOffset;
     this.notifyListeners(APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED, this.tracks[index]);
-  }
-
-  addDataTrack(trackId) {
-    this.api.getTrack(trackId).then(model => {
-      const track = {
-        guid: uuid(),
-        height: 0.1,
-        basePairOffset: 0,
-        dataTrack: model,
-        annotationTrack: null,
-      };
-      model.addListener(this.loadingStarted, TRACK_EVENT_LOADING);
-      this.tracks = this.tracks.concat([track]);
-      this.notifyListeners(APP_EVENT_ADD_TRACK, track);
-    });
   }
 
   removeTrack(trackViewGuid) {

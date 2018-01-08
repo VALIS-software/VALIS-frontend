@@ -25,15 +25,25 @@ export default class AnnotationTrackRenderer {
     const startBasePair = windowState.startBasePair;
     const basePairsPerPixel = windowState.basePairsPerPixel;
     const endBasePair = Util.endBasePair(startBasePair, basePairsPerPixel, windowState.windowSize);
+    const windowSize = windowState.windowSize;
     const trackHeightPx = windowState.windowSize[1] * height;
     const annotations = annotationTrack.getAnnotations(startBasePair, endBasePair, basePairsPerPixel, trackHeightPx);
     this._hoverEnabled = false;
     this._hoverElement = null;
+    const renderResults = {};
     annotations.forEach(annotation => {
       let enableHover = 0;
       const annotationYOffset = annotation.yOffsetPx / windowState.windowSize[1];
       const annotationHeight = annotation.heightPx / windowState.windowSize[1];
       const annotationCenter = 0.5 * annotationHeight;
+      
+      const xPx = Util.pixelForBasePair(annotation.startBp + (annotation.endBp - annotation.startBp)/2.0, 
+                            startBasePair, 
+                            basePairsPerPixel, 
+                            windowSize);
+      const yPx = (yOffset + annotationYOffset + annotationCenter) * windowState.windowSize[1];
+
+      renderResults[annotation.id] = [xPx / windowSize[0], yPx / windowSize[1]];
       
       // check if the annotation is currently hovered
       if (windowState.selectedBasePair && windowState.selectedTrackOffset) {
@@ -120,5 +130,7 @@ export default class AnnotationTrackRenderer {
         context.drawQuad(shader);
       });
     });
+    
+    return renderResults;
   }
 }

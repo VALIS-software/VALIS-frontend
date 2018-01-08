@@ -50,6 +50,9 @@ class App extends React.Component {
     this.appModel.addDataTrack('K562-DNase');
     this.appModel.addDataTrack('MCF7-DNase');
     this.appModel.addAnnotationTrack('GRCh38_genes');
+    this.appModel.addAnnotationTrack('cross-track-test-1');
+    this.appModel.addAnnotationTrack('cross-track-test-2');
+    this.appModel.addGraphOverlay('ld_score', 'cross-track-test-1', 'cross-track-test-2');
     this.appModel.addListener(this.updateLoadingState, APP_EVENT_LOADING_STATE_CHANGED);
     this.appModel.addListener(this.showEntityDetails, APP_EVENT_SHOW_ENTITY_DETAIL);
     this.appModel.addListener(this.showTrackSettings, APP_EVENT_EDIT_TRACK_VIEW_SETTINGS);

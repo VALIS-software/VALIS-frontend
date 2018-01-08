@@ -7,6 +7,8 @@ import {
   APP_EVENT_ADD_TRACK,
   APP_EVENT_REMOVE_TRACK,
   APP_EVENT_REORDER_TRACKS,
+  APP_EVENT_ADD_OVERLAY,
+  APP_EVENT_REMOVE_OVERLAY,
   APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED,
 } from '../../models/appModel.js';
 
@@ -14,6 +16,7 @@ import {
 import { VIEW_EVENT_STATE_CHANGED, VIEW_EVENT_SELECTION } from '../../models/viewModel.js';
 
 import TrackView from '../TrackView/TrackView.jsx';
+import OverlayView from '../OverlayView/OverlayView.jsx';
 import TrackToolTip from '../TrackToolTip/TrackToolTip.jsx';
 import XAxis from '../XAxis/XAxis.jsx';
 
@@ -31,8 +34,11 @@ class MultiTrackViewer extends React.Component {
   constructor(props) {
     super(props);
     this.views = {};
+    this.overlayViews = {};
     this.tracks = [];
+    this.overlays = [];
     this.updateViews = this.updateViews.bind(this);
+    this.updateOverlays = this.updateOverlays.bind(this);
     this.updateViewState = this.updateViewState.bind(this);
     this.updateSelection = this.updateSelection.bind(this);
     this.classNames = '';
@@ -42,6 +48,8 @@ class MultiTrackViewer extends React.Component {
                                                APP_EVENT_REORDER_TRACKS, 
                                                APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED,
                                                APP_EVENT_REMOVE_TRACK]);
+
+    props.model.addListener(this.updateOverlays, [APP_EVENT_ADD_OVERLAY, APP_EVENT_REMOVE_OVERLAY]);
     this.viewModel = props.viewModel;
     this.onDrop = this.onDrop.bind(this);
     this.onDragOver = this.onDragOver.bind(this);
@@ -66,6 +74,7 @@ class MultiTrackViewer extends React.Component {
 
       this.renderContext = Util.newRenderContext(domElem);
       this.shaders = TrackView.initializeShaders(this.renderContext);
+      this.overlayShaders = OverlayView.initializeShaders(this.renderContext);
       
       const renderFrame = () => {
         this.renderGL();
@@ -160,6 +169,20 @@ class MultiTrackViewer extends React.Component {
     this.viewModel.setViewRegionUsingRange(event.data.startBp, event.data.endBp);
   }
 
+  updateOverlays(event) {
+    const newViews = {};
+    this.overlays = event.sender.overlays;
+    this.overlays.forEach(overlay => {
+      if (!this.overlayViews[overlay.guid]) {
+        newViews[overlay.guid] = new OverlayView(overlay.guid);
+      } else {
+        newViews[overlay.guid] = this.overlayViews[overlay.guid];
+      }
+      newViews[overlay.guid].setGraphTrack(overlay.graphTrack);
+    });
+    this.overlayViews = newViews;
+  }
+
   updateViews(event) {
     const newViews = {};
     this.tracks = event.sender.tracks;
@@ -195,17 +218,25 @@ class MultiTrackViewer extends React.Component {
     this.hoverEnabled = false;
     this.hoverElement = null;
     let currOffset = padding;
+
+    
+    const overlayViews = _.keys(this.overlayViews).map(key => this.overlayViews[key]);
+    overlayViews.forEach(view => view.prepForRender());
+    
     for (let i = 0; i < numTracks; i++) {
       // setup track position
       const track = this.views[viewGuids[i]];
       track.setYOffset(currOffset + windowState.trackOffset);
       currOffset += track.getHeight() + padding;
-      track.render(this.renderContext, this.shaders, windowState);
+      track.render(this.renderContext, this.shaders, windowState, overlayViews);
       if (track.hoverEnabled && !this.hoverEnabled) {
         this.hoverEnabled = true;
         this.hoverElement = track.hoverElement;
       }
     }
+
+    overlayViews.forEach(view => view.render(this.renderContext, this.overlayShaders));
+    
     this.forceUpdate();
   }
 

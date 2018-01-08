@@ -61,6 +61,50 @@ export function LinearCacheSampler(k=4096, min=4096) {
   };
 }
 
+export class GraphCache {
+  constructor(minBp, maxBp, tileFetchFn, stepSampler=ExponentialCacheSampler()) {
+    this.cache = {};
+    this.inFlight = {};
+    this.minBp = minBp;
+    this.maxBp = maxBp;
+    this.tileFetchFn = tileFetchFn;
+    this.get = _.throttle(this.get.bind(this), CACHE_THROTTLE_MS);
+    this.stepSampler = stepSampler;
+    this.previous = [];
+  }
+
+  get tileSize() {
+    return null;
+  }
+
+  clearCache() {
+    this.cache = {};
+  }
+
+  get(startBp, endBp, samplingRate, trackHeightPx=0) {
+    const stepSize = this.stepSampler(samplingRate);
+    const start = Math.max(this.minBp, Util.floorToMultiple(startBp, stepSize));
+    const end = Math.min(this.maxBp, Util.floorToMultiple(endBp, stepSize));
+    const key = `${start}:${end}`;
+    
+    if (this.cache[key]) {
+      this.previous = [{
+        range: [start, end],
+        tile: this.cache[key],
+      }];
+    }
+
+    if (!this.inFlight[key]) {
+      this.inFlight[key] = true;
+      this.tileFetchFn(start, end, samplingRate, 0).then(tile => {
+        this.cache[key] = tile;
+      });
+    }
+
+    return this.previous;
+  }
+}
+
 export class TileCache {
   constructor(minBp, maxBp, tileFetchFn, xSampler=ExponentialCacheSampler(), ySampler=ExponentialCacheSampler()) {
     this.cache = {};
@@ -153,6 +197,7 @@ export class TileCache {
   clear() {
     this.cache = {};
     this.inFlight = {};
+    this.itree = new itree((this.maxBp-this.minBp) / 2.0);
   }
 
   _put(tileRange, samplingRate, trackHeightPx, data) {
@@ -192,3 +237,4 @@ export class TileCache {
     return tiles;
   }
 }
+

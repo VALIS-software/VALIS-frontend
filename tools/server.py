@@ -84,6 +84,62 @@ def getMockData():
 app = Flask(__name__)
 CORS(app)
 
+@app.route("/graphs")
+def graphs():
+	return json.dumps(["ld_score"])
+
+@app.route("/graphs/<string:graph_id>/<string:annotation_id1>/<string:annotation_id2>/<int:start_bp>/<int:end_bp>")
+def graph(graph_id, annotation_id1, annotation_id2, start_bp, end_bp):
+	start_bp = int(start_bp)
+	end_bp = int(end_bp)
+	
+	sampling_rate = 1
+	if request.args.get('sampling_rate'):
+		sampling_rate = int(float(request.args.get('sampling_rate')))
+
+	base_pair_offset = 0
+	if request.args.get('base_pair_offset'):
+		base_pair_offset = int(float(request.args.get('base_pair_offset')))
+
+	if graph_id != "ld_score":
+		abort(500, "Unknown graph : %s", graph_id)
+
+	if annotation_id1 != "cross-track-test-1" or annotation_id2 != "cross-track-test-2":
+		abort(500, "no graph available")
+
+	# send edge scores
+	set1 = []
+	set2 = []
+	if sampling_rate < 1000000:
+		count = 0
+		for i in xrange(0, 3000000000, 10000000):
+			if i >= start_bp and i <= end_bp:
+				annotation_name = "X%d" % count
+				random.seed(annotation_name)
+				set1.append(random.randint(0,1000000000))
+			count += 1
+		count = 0
+		for i in xrange(0, 3000000000, 50000000):
+			if i >= start_bp + base_pair_offset and i <= end_bp + base_pair_offset:
+				annotation_name = "Y%d" % count
+				random.seed(annotation_name)
+				set2.append(random.randint(0,1000000000))
+			count += 1
+
+	edges = []
+	for e1 in set1:
+		for e2 in set2:
+			random.seed("%d|%d" % (e1,e2))
+			edges.append([e1, e2, random.random()])
+	return json.dumps({
+		"startBp" : start_bp,
+		"endBp" : end_bp,
+		"samplingRate": sampling_rate,
+		"graphId": graph_id,
+		"annotationIds": [annotation_id1, annotation_id2],
+		"values": edges
+	})
+
 @app.route("/annotations")
 def annotations():
 	MOCK_ANNOTATIONS = getMockAnnotations()
@@ -134,25 +190,27 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 					start = ch_range[0] + gene.start
 					end = ch_range[0] + gene.end
 					sz = end - start
-					if sz/float(sampling_rate) > 50:
+					if sz/float(sampling_rate) > 20:
 						annotation_results.append((name, start, end))
-						last_gene_start = None
-						gene_count = 0
-					elif not last_gene_start:
-						last_gene_start = start
-						gene_count = 1
-					elif (end-last_gene_start)/float(sampling_rate) > 150:
-						gene_count += 1
-						annotation_results.append(("%d Genes" % gene_count, last_gene_start, end))
-						gene_count = 0
-						last_gene_start = None
-					else:
-						gene_count += 1
+
+		count = 0
+		if annotation_id == "cross-track-test-1":
+			for i in xrange(0, 3000000000, 10000000):
+				if i >= start_bp and i <= end_bp:
+					annotation_results.append(("X%d" % count, i, i + 1000000))
+				count += 1
+
+		if annotation_id == "cross-track-test-2":
+			for i in xrange(0, 3000000000, 50000000):
+				if i >= start_bp and i <= end_bp:
+					annotation_results.append(("Y%d" % count, i, i + 1000000))
+				count += 1
 
 		annotations = []
 		for annotation_name, annotation_start, annotation_end in annotation_results:
 			random.seed(annotation_name)
 			color = [random.random()*0.5, random.random()*0.5, random.random()*0.5, 1.0]
+			random.seed(annotation_name)
 			annotations.append({
 				"id": random.randint(0,1000000000),
 				# label format: text, True = render text inside, False= render outside?, position: 0-left, 1-top, 2-right, 3-below, offset-x, offset-y

@@ -62,6 +62,13 @@ class Header extends Component {
         dataSource: this.state.dataSource.concat(dataTracks),
       });
     });
+
+    this.api.getGraphs().then(result => {
+      const graphTracks = result.map(d => { return { name: d, resultType: 'graph' }; });
+      this.setState({
+        dataSource: this.state.dataSource.concat(graphTracks),
+      });
+    });
   }
 
   onUpdateSearchFilter(event, index, value) {
@@ -76,6 +83,9 @@ class Header extends Component {
         this.props.model.addDataTrack(chosen.name);  
       } else if (chosen.resultType === 'annotation') {
         this.props.model.addAnnotationTrack(chosen.name);
+      } else if (chosen.resultType === 'graph') {
+        // TODO: build an interface to choose annotation tracks
+        this.props.model.addGraphOverlay(chosen.name, 'cross-track-test-1', 'cross-track-test-2');
       } else if (chosen.resultType === 'location') {
         const viewState = this.props.viewModel.getViewState();
         const bpp = (chosen.range[1] - chosen.range[0]) / viewState.windowSize[0];

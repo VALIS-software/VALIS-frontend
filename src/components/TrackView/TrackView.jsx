@@ -88,7 +88,7 @@ class TrackView {
     return this.basePairOffset;
   }
 
-  render(context, shaders, windowState) {
+  render(context, shaders, windowState, overlays) {
     // copy window state and apply track specific offsets:
     const trackWindowState = Object.assign({}, windowState);
     trackWindowState.startBasePair += this.basePairOffset;
@@ -97,7 +97,10 @@ class TrackView {
     const roundedHeight = Util.floorToPixel(this.height, windowState.windowSize[1]);
     
     if (this.annotationTrack !== null) {
-      this.annotationRenderer.render(this.annotationTrack, roundedHeight, this.yOffset, context, shaders, trackWindowState);
+      const renderResult = this.annotationRenderer.render(this.annotationTrack, roundedHeight, this.yOffset, context, shaders, trackWindowState);
+      overlays.forEach(overlay => {
+        overlay.addRegion(this.annotationTrack, roundedHeight, this.yOffset, trackWindowState, renderResult);
+      });
     }
     if (this.dataTrack !== null) {
       this.dataRenderer.render(this.dataTrack, roundedHeight, this.yOffset, context, shaders, trackWindowState);

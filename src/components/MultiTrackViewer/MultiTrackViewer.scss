@@ -3,7 +3,7 @@ $padding-right: 16px;
 $browser-width: calc(100% - #{$track-header-width} - #{$padding-right});
 $browser-height: 100%;
 $axis-height: 32px;
-$bg-color: #e8e8e8;
+$bg-color: #242321;
 
 .content {
     background-color: $bg-color;
@@ -46,10 +46,10 @@ $bg-color: #e8e8e8;
         background: linear-gradient(darken($bg-color, 25%), $bg-color);
         .x-axis {
             text {
-                fill: #242321;
+                fill: #e8e8e8;
             }
             line {
-                stroke: #242321;
+                stroke: #e8e8e8;
             }
             transform: translate(0px, $axis-height);
             g:nth-child(2) {
