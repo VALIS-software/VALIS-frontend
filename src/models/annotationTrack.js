@@ -1,6 +1,6 @@
 
 import Util from '../helpers/util.js';
-import { Tile, TileCache, LinearCacheSampler, FixedCacheSampler } from './tileCache.js';
+import { Tile, TileCache, LinearCacheSampler, FixedCacheSampler } from '../helpers/cache.js';
 import { GENOME_LENGTH } from '../helpers/constants.js';
 import Track, { TRACK_EVENT_LOADING } from './track.js';
 

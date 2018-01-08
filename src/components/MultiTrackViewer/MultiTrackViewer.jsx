@@ -74,6 +74,7 @@ class MultiTrackViewer extends React.Component {
 
       this.renderContext = Util.newRenderContext(domElem);
       this.shaders = TrackView.initializeShaders(this.renderContext);
+      this.overlayShaders = OverlayView.initializeShaders(this.renderContext);
       
       const renderFrame = () => {
         this.renderGL();
@@ -234,7 +235,7 @@ class MultiTrackViewer extends React.Component {
       }
     }
 
-    overlayViews.forEach(view => view.render(this.renderContext, this.shaders));
+    overlayViews.forEach(view => view.render(this.renderContext, this.overlayShaders));
     
     this.forceUpdate();
   }

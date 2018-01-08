@@ -110,7 +110,7 @@ def graph(graph_id, annotation_id1, annotation_id2, start_bp, end_bp):
 	# send edge scores
 	set1 = []
 	set2 = []
-	if sampling_rate < 50000:
+	if sampling_rate < 1000000:
 		count = 0
 		for i in xrange(0, 3000000000, 10000000):
 			if i >= start_bp and i <= end_bp:

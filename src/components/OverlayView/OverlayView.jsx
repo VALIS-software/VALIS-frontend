@@ -2,6 +2,8 @@ import React from 'react';
 
 // import renderers
 import GraphTrackRenderer from '../../renderers/GraphTrackRenderer.jsx';
+import vertexShader from './project.vert';
+import fragShader from './render.frag';
 
 import Util from '../../helpers/util.js';
 
@@ -14,11 +16,11 @@ class OverlayView {
     this.yOffset = 0;
   }
 
-  // static initializeShaders(context) {
-  //   return {
-  //     graphShader: context.program(vertexShader, graphShader),
-  //   };
-  // }
+  static initializeShaders(context) {
+    return {
+      graphShader: context.program(vertexShader, fragShader),
+    };
+  }
 
   setYOffset(offset) {
     this.yOffset = offset;
@@ -40,8 +42,8 @@ class OverlayView {
     this.currentRegions = [];
   }
 
-  addRegion(track, trackHeightPx, yOffset, windowState) {
-    this.currentRegions.push({ track, trackHeightPx, yOffset, windowState });
+  addRegion(track, trackHeightPx, yOffset, windowState, renderResult) {
+    this.currentRegions.push({ track, trackHeightPx, yOffset, windowState, renderResult });
   }
 
   get hoverEnabled() {
@@ -59,15 +61,15 @@ class OverlayView {
       const annotation2Matches = [];
       this.currentRegions.forEach(region => {
         if (region.track.hasAnnotation(this.graphTrack.annotationId1)) {
-          annotation1Matches.push(region.windowState);
+          annotation1Matches.push([region.renderResult, region.windowState]);
         }
         if (region.track.hasAnnotation(this.graphTrack.annotationId2)) {
-          annotation2Matches.push(region.windowState); 
+          annotation2Matches.push([region.renderResult, region.windowState]); 
         }
       });
-      annotation1Matches.forEach(window1 => {
-        annotation2Matches.forEach(window2 => {
-          this.graphRenderer.render(this.graphTrack, this.yOffset, context, shaders, window1, window2);
+      annotation1Matches.forEach(match1 => {
+        annotation2Matches.forEach(match2 => {
+          this.graphRenderer.render(this.graphTrack, match1[0], match2[0], context, shaders, match1[1], match2[1]);
         });
       });
     }

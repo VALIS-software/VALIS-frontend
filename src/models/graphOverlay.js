@@ -1,6 +1,7 @@
 
 import Util from '../helpers/util.js';
-import { Tile, TileCache, CACHE_TILE_SIZE, LinearCacheSampler, FixedCacheSampler } from './tileCache.js';
+import { Tile, GraphCache } from '../helpers/cache.js';
+
 import { 
   BASE_PAIR_COLORS,
   GENOME_LENGTH, 
@@ -9,6 +10,9 @@ import {
   TRACK_DATA_TYPE_GBANDS,
 } from '../helpers/constants.js';
 import Track, { TRACK_EVENT_LOADING } from './track.js';
+
+const itree = require('interval-tree2');
+const xspans = require('xspans');
 
 const _ = require('underscore');
 
@@ -20,7 +24,7 @@ class GraphOverlay extends Track {
     this.annotationId1 = annotationId1;
     this.annotationId2 = annotationId2;
     this.loadData = this.loadData.bind(this);
-    this.cache = new TileCache(0, GENOME_LENGTH, this.loadData, LinearCacheSampler(), FixedCacheSampler(0));
+    this.cache = new GraphCache(0, GENOME_LENGTH, this.loadData);
   }
 
   get title() {

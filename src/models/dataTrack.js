@@ -1,6 +1,6 @@
 
 import Util from '../helpers/util.js';
-import { Tile, TileCache, CACHE_TILE_SIZE } from './tileCache.js';
+import { Tile, TileCache } from '../helpers/cache.js';
 import { 
   BASE_PAIR_COLORS,
   GENOME_LENGTH, 
@@ -46,7 +46,7 @@ class DataTrack extends Track {
       if (basePair >= tile.range[0] && basePair <= tile.range[1]) {
         if (basePair >= tile.tile.tileRange[0]  && basePair <= tile.tile.tileRange[1]) {
           const totalRange = (tile.tile.tileRange[1] - tile.tile.tileRange[0]);
-          const idx = Math.round(CACHE_TILE_SIZE * (basePair - tile.tile.tileRange[0]) / totalRange);
+          const idx = Math.round(this.cache.tileSize * (basePair - tile.tile.tileRange[0]) / totalRange);
           const values = tile.tile.data.values;
           const dimensions = tile.tile.data.dimensions;
           const curr = [];
