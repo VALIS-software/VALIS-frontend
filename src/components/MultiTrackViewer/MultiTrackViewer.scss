@@ -11,6 +11,7 @@ $bg-color: #242321;
     color: $bg-color;
     position: relative;
     overflow: hidden;
+    cursor: crosshair;
 
     #webgl-overlay {
         overflow: hidden;

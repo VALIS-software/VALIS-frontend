@@ -46,8 +46,8 @@ class ViewModel extends EventCreator {
   }
 
   bindListeners(domElem) {
-    domElem.addEventListener('keydown', this.handleKeydown);
-    domElem.addEventListener('keyup', this.handleKeyup);
+    document.addEventListener('keydown', this.handleKeydown);
+    document.addEventListener('keyup', this.handleKeyup);
     domElem.addEventListener('wheel', this.handleMouse);
     domElem.addEventListener('mousemove', this.handleMouseMove);
     domElem.addEventListener('mousedown', this.handleMouseDown);
@@ -56,8 +56,8 @@ class ViewModel extends EventCreator {
   }
 
   removeListeners(domElem) {
-    domElem.removeEventListener('keydown', this.handleKeydown);
-    domElem.removeEventListener('keyup', this.handleKeyup);
+    document.removeEventListener('keydown', this.handleKeydown);
+    document.removeEventListener('keyup', this.handleKeyup);
     domElem.removeEventListener('wheel', this.handleMouse);
     domElem.removeEventListener('mousemove', this.handleMouseMove);
     domElem.removeEventListener('mousedown', this.handleMouseDown);
@@ -173,8 +173,9 @@ class ViewModel extends EventCreator {
         this.trackOffset = delta;
       }
 
-      if (Math.abs(e.offsetX - this.startDragCoord[0]) > 10) {
-        this.selectEnabled = true;
+      if (Math.abs(deltaX) > 0 && !this.selectEnabled) {
+        const delta = -deltaX * this.basePairsPerPixel;
+        this.startBasePair += delta;
       }
     }
     this.lastDragCoord = [e.offsetX, e.offsetY];
@@ -253,7 +254,7 @@ class ViewModel extends EventCreator {
   }
 
   handleKeydown(e) {
-    if (e.key === 'Alt') {
+    if (e.key === 'Shift') {
       this.selectEnabled = true;
       this.notifyViewStateChange(true);
     } else if (e.key === 'Control') {

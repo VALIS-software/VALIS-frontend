@@ -41,22 +41,22 @@ export default class GraphTrackRenderer {
         const loc1 = annotations1[a1Id];
         const loc2 = annotations2[a2Id];
         if (loc1 && loc2) {
-          edgeArray[idx*4] = loc1[0];
-          edgeArray[idx*4 + 1] = loc1[1];
-          edgeArray[idx*4 + 2] = loc2[0];
-          edgeArray[idx*4 + 3] = loc2[1];
+          edgeArray[idx * 4] = loc1[0];
+          edgeArray[idx * 4 + 1] = loc1[1];
+          edgeArray[idx * 4 + 2] = loc2[0];
+          edgeArray[idx * 4 + 3] = loc2[1];
 
-          const color = Util.blendColors([0,0,1], [1,0,0], weight);
+          const color = Util.blendColors([0, 0, 1], [1, 0, 0], weight);
 
-          edgeColorArray[idx*8]     = color[0];
-          edgeColorArray[idx*8 + 1] = color[1];
-          edgeColorArray[idx*8 + 2] = color[2];
-          edgeColorArray[idx*8 + 3] = 1.0;
+          edgeColorArray[idx * 8]     = color[0];
+          edgeColorArray[idx * 8 + 1] = color[1];
+          edgeColorArray[idx * 8 + 2] = color[2];
+          edgeColorArray[idx * 8 + 3] = 1.0;
 
-          edgeColorArray[idx*8 + 4] = color[0];
-          edgeColorArray[idx*8 + 5] = color[1];
-          edgeColorArray[idx*8 + 6] = color[2];
-          edgeColorArray[idx*8 + 7] = 1.0;
+          edgeColorArray[idx * 8 + 4] = color[0];
+          edgeColorArray[idx * 8 + 5] = color[1];
+          edgeColorArray[idx * 8 + 6] = color[2];
+          edgeColorArray[idx * 8 + 7] = 1.0;
         }
         idx++;
       });
