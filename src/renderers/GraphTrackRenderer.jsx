@@ -41,22 +41,22 @@ export default class GraphTrackRenderer {
         const loc1 = annotations1[a1Id];
         const loc2 = annotations2[a2Id];
         if (loc1 && loc2) {
-          edgeArray[idx] = loc1[0];
-          edgeArray[idx + 1] = loc1[1];
-          edgeArray[idx + 2] = loc2[0];
-          edgeArray[idx + 3] = loc2[1];
+          edgeArray[idx*4] = loc1[0];
+          edgeArray[idx*4 + 1] = loc1[1];
+          edgeArray[idx*4 + 2] = loc2[0];
+          edgeArray[idx*4 + 3] = loc2[1];
 
-          edgeColorArray[idx]     = weight;
-          edgeColorArray[idx + 1] = weight;
-          edgeColorArray[idx + 2] = weight;
-          edgeColorArray[idx + 3] = 1.0;
+          edgeColorArray[idx*8]     = 0;
+          edgeColorArray[idx*8 + 1] = 0;
+          edgeColorArray[idx*8 + 2] = 1.0;
+          edgeColorArray[idx*8 + 3] = 1.0;
 
-          edgeColorArray[idx + 4] = weight;
-          edgeColorArray[idx + 5] = weight;
-          edgeColorArray[idx + 6] = weight;
-          edgeColorArray[idx + 7] = 1.0;
+          edgeColorArray[idx*8 + 4] = 1.0;
+          edgeColorArray[idx*8 + 5] = 0.0;
+          edgeColorArray[idx*8 + 6] = 0.0;
+          edgeColorArray[idx*8 + 7] = 1.0;
         }
-        idx += 4;
+        idx++;
       });
       shader.use();
       context.drawLines(shader, edgeArray, edgeColorArray);
