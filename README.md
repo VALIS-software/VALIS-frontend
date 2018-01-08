@@ -1,4 +1,6 @@
-# WebGLGenomeBrowser
+# VALIS
+
+VALIS (Visualization & Analytics for Life Science) is a powerful genome visualizer written using modern web-technologies such as React, ES6 and WebGL. 
 
 ### Dependencies
 * Node + NPM (https://nodejs.org/en/)
