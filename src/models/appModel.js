@@ -13,10 +13,13 @@ const APP_EVENT_LOADING_STATE_CHANGED = 'LOADING_CHANGED';
 const APP_EVENT_EDIT_TRACK_VIEW_SETTINGS = 'EDIT_TRACK_VIEW';
 const APP_EVENT_SHOW_ENTITY_DETAIL = 'SHOW_ENTITY_DETAIL';
 const APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED = 'TRACK_VIEW_SETTINGS_UPDATED';
-
+const APP_EVENT_ADD_OVERLAY = 'ADD_OVERLAY';
+const APP_EVENT_REMOVE_OVERLAY = 'REMOVE_OVERLAY';
 
 export { 
   APP_EVENT_ADD_TRACK,
+  APP_EVENT_ADD_OVERLAY,
+  APP_EVENT_REMOVE_OVERLAY,
   APP_EVENT_REMOVE_TRACK,
   APP_EVENT_REORDER_TRACKS,
   APP_EVENT_LOADING_STATE_CHANGED,
@@ -31,9 +34,10 @@ class AppModel extends EventCreator {
     this.api = new GenomeAPI();
     this.addDataTrack = this.addDataTrack.bind(this);
     this.addAnnotationTrack = this.addAnnotationTrack.bind(this);
-    this.addGraphTrack = this.addGraphTrack.bind(this);
+    this.addGraphOverlay = this.addGraphOverlay.bind(this);
     this.removeTrack = this.removeTrack.bind(this);
     this.tracks = [];
+    this.overlays = [];
     this.tracksLoading = 0;
     this.loadingStarted = this.loadingStarted.bind(this);
   }
@@ -63,13 +67,10 @@ class AppModel extends EventCreator {
     this.notifyListeners(APP_EVENT_SHOW_ENTITY_DETAIL, element);
   }
 
-
-
   addDataTrack(trackId) {
     return this.api.getTrack(trackId).then(model => {
       const track = {
         guid: uuid(),
-        overlay: false,
         height: 0.1,
         basePairOffset: 0,
         dataTrack: model,
@@ -86,11 +87,9 @@ class AppModel extends EventCreator {
     return this.api.getAnnotation([annotationId]).then(model => {
       const track = {
         guid: uuid(),
-        overlay: false,
         height: 0.1,
         basePairOffset: 0,
         dataTrack: null,
-        graphTrack: null,
         annotationTrack: model,
       };
       model.addListener(this.loadingStarted, TRACK_EVENT_LOADING);
@@ -100,21 +99,16 @@ class AppModel extends EventCreator {
     });
   }
 
-  addGraphTrack(graphId, annotationId1, annotationId2) {
+  addGraphOverlay(graphId, annotationId1, annotationId2) {
     return this.api.getGraph(graphId, annotationId1, annotationId2).then(model => {
-      const track = {
+      model.addListener(this.loadingStarted, TRACK_EVENT_LOADING);
+      const overlay = {
         guid: uuid(),
-        overlay: true,
-        height: 0.1,
-        basePairOffset: 0,
-        dataTrack: null,
-        annotationTrack: null,
         graphTrack: model,
       };
-      model.addListener(this.loadingStarted, TRACK_EVENT_LOADING);
-      this.tracks = this.tracks.concat([track]);
-      this.notifyListeners(APP_EVENT_ADD_TRACK, track);
-      return track;
+      this.overlays = this.overlays.concat([overlay]);
+      this.notifyListeners(APP_EVENT_ADD_OVERLAY, overlay);
+      return overlay;
     });
   }
 

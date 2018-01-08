@@ -97,6 +97,10 @@ def graph(graph_id, annotation_id1, annotation_id2, start_bp, end_bp):
 	if request.args.get('sampling_rate'):
 		sampling_rate = int(float(request.args.get('sampling_rate')))
 
+	base_pair_offset = 0
+	if request.args.get('base_pair_offset'):
+		base_pair_offset = int(float(request.args.get('base_pair_offset')))
+
 	if graph_id != "ld_score":
 		abort(500, "Unknown graph : %s", graph_id)
 
@@ -116,7 +120,7 @@ def graph(graph_id, annotation_id1, annotation_id2, start_bp, end_bp):
 			count += 1
 		count = 0
 		for i in xrange(0, 3000000000, 50000000):
-			if i >= start_bp and i <= end_bp:
+			if i >= start_bp + base_pair_offset and i <= end_bp + base_pair_offset:
 				annotation_name = "Y%d" % count
 				random.seed(annotation_name)
 				set2.append(random.randint(0,1000000000))

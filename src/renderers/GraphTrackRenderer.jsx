@@ -1,8 +1,6 @@
 import Util from '../helpers/util.js';
 import { GENOME_LENGTH } from '../helpers/constants.js';
 
-
-
 export default class GraphTrackRenderer {
 
   constructor() {
@@ -19,11 +17,12 @@ export default class GraphTrackRenderer {
     return this._hoverElement;
   }
 
-  render(graphTrack, height, yOffset, context, shaders, windowState) {
+  render(graphTrack, height, yOffset, context, shaders, windowState, secondWindowState) {
     const startBasePair = windowState.startBasePair;
     const basePairsPerPixel = windowState.basePairsPerPixel;
     const endBasePair = Util.endBasePair(startBasePair, basePairsPerPixel, windowState.windowSize);
     const trackHeightPx = windowState.windowSize[1] * height;
+    // TODO figure out the relative base pair offset, using secondWindowState
     const tiles = graphTrack.getTiles(startBasePair, endBasePair, basePairsPerPixel, trackHeightPx);
     this._hoverEnabled = false;
     this._hoverElement = null;

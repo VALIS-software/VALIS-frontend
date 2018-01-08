@@ -1,7 +1,7 @@
 import { LOCAL_API_URL } from '../helpers/constants.js';
 
 import DataTrack from './dataTrack.js';
-import GraphTrack from './graphTrack.js';
+import GraphOverlay from './graphOverlay.js';
 import AnnotationTrack from './annotationTrack.js';
 
 const TRACK_CACHE = {};
@@ -51,7 +51,7 @@ class GenomeAPI {
 				resolve(GRAPH_CACHE[trackId]);
 			});
 		} else {
-			const track = new GraphTrack(this, graphId, annotationId1, annotationId2);
+			const track = new GraphOverlay(this, graphId, annotationId1, annotationId2);
 			GRAPH_CACHE[trackId] = track;
 			return new Promise((resolve, reject) => {
 				resolve(GRAPH_CACHE[trackId]);

@@ -21,6 +21,10 @@ class AnnotationTrack extends Track {
     return false;
   }
 
+  hasAnnotation(annotationId) {
+    return this.annotationIds.indexOf(annotationId) >= 0;
+  }
+
   getAnnotations(start, end, samplingRate, trackHeightPx) {
     const tiles = this.getTiles(start, end, samplingRate, trackHeightPx);
     let ret = [];

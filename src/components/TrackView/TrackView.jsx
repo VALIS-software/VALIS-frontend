@@ -11,7 +11,6 @@ import annotationShader from './render_annotation.frag';
 // import renderers
 import AnnotationTrackRenderer from '../../renderers/AnnotationTrackRenderer.jsx';
 import DataTrackRenderer from '../../renderers/DataTrackRenderer.jsx';
-import GraphTrackRenderer from '../../renderers/GraphTrackRenderer.jsx';
 
 import TrackHeader from '../TrackHeader/TrackHeader.jsx';
 import TrackBackground from '../TrackBackground/TrackBackground.jsx';
@@ -26,10 +25,8 @@ class TrackView {
     this.yOffset = 0.0;
     this.annotationTrack = null;
     this.dataTrack = null;
-    this.graphTrack = null;
     this.dataRenderer = new DataTrackRenderer();
     this.annotationRenderer = new AnnotationTrackRenderer();
-    this.graphRenderer = new GraphTrackRenderer();
     this.basePairOffset = basePairOffset;
   }
 
@@ -57,14 +54,6 @@ class TrackView {
 
   removeAnnotationTrack() {
     this.annotationTrack = null;
-  }
-
-  setGraphTrack(track) {
-    this.graphTrack = track;
-  }
-
-  removeGraphTrack() {
-    this.graphTrack = null;
   }
 
   setDataTrack(track) {
@@ -99,7 +88,7 @@ class TrackView {
     return this.basePairOffset;
   }
 
-  render(context, shaders, windowState) {
+  render(context, shaders, windowState, overlays) {
     // copy window state and apply track specific offsets:
     const trackWindowState = Object.assign({}, windowState);
     trackWindowState.startBasePair += this.basePairOffset;
@@ -109,13 +98,12 @@ class TrackView {
     
     if (this.annotationTrack !== null) {
       this.annotationRenderer.render(this.annotationTrack, roundedHeight, this.yOffset, context, shaders, trackWindowState);
+      overlays.forEach(overlay => {
+        overlay.addRegion(this.annotationTrack, roundedHeight, this.yOffset, trackWindowState);
+      });
     }
     if (this.dataTrack !== null) {
       this.dataRenderer.render(this.dataTrack, roundedHeight, this.yOffset, context, shaders, trackWindowState);
-    }
-
-    if (this.graphTrack !== null) {
-      this.graphRenderer.render(this.graphTrack, roundedHeight, this.yOffset, context, shaders, trackWindowState);
     }
   }
 

@@ -12,7 +12,7 @@ import Track, { TRACK_EVENT_LOADING } from './track.js';
 
 const _ = require('underscore');
 
-class GraphTrack extends Track {
+class GraphOverlay extends Track {
   constructor(api, graphId, annotationId1, annotationId2) {
     super();
     this.api = api;
@@ -58,4 +58,4 @@ class GraphTrack extends Track {
     });
   }
 }
-export default GraphTrack;
+export default GraphOverlay;

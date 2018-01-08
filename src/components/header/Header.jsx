@@ -85,8 +85,8 @@ class Header extends Component {
         this.props.model.addAnnotationTrack(chosen.name);
       } else if (chosen.resultType === 'graph') {
         // TODO: build an interface to choose annotation tracks
-        this.props.model.addGraphTrack(chosen.name, 'cross-track-test-1', 'cross-track-test-2');
-      }else if (chosen.resultType === 'location') {
+        this.props.model.addGraphOverlay(chosen.name, 'cross-track-test-1', 'cross-track-test-2');
+      } else if (chosen.resultType === 'location') {
         const viewState = this.props.viewModel.getViewState();
         const bpp = (chosen.range[1] - chosen.range[0]) / viewState.windowSize[0];
         this.props.viewModel.setViewRegion(chosen.range[0], bpp);
