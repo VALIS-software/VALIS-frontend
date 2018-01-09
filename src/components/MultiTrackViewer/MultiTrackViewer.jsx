@@ -112,7 +112,7 @@ class MultiTrackViewer extends React.Component {
 
     // figure out which track the click was inside of:
     let track = null;
-    const clickOffset = (coord[1] - viewState.trackOffset * windowSize[1]) / windowSize[1];
+    const clickOffset = (coord[1]) / windowSize[1];
     const hoveredBasePair = Util.basePairForScreenX(coord[0], start, bpp, windowSize);
     let trackOffsetPx = null;
     for (let i = 0; i < this.tracks.length; i++) {
@@ -133,7 +133,7 @@ class MultiTrackViewer extends React.Component {
     if (track) {
       trackHeightPx = this.views[track.guid].getHeight() * windowSize[1];
       trackBasePairOffset = this.views[track.guid].getBasePairOffset();
-      trackCenterPx =  trackOffsetPx - trackHeightPx/2.0 + viewState.trackOffset * windowSize[1];
+      trackCenterPx =  trackOffsetPx - trackHeightPx / 2.0;
       dataTooltip = null;
       if (track.dataTrack) {
         dataTooltip = track.dataTrack.getTooltipData(hoveredBasePair + trackBasePairOffset, clickOffset, start, end, bpp, trackHeightPx);

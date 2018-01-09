@@ -70,6 +70,8 @@ void main() {
 
 	finalColor = mix(a, b, alpha) / 255.0;
 
+	if (val == 0.0) finalColor = vec3(0.0);
+
 	vec3 tintColor = vec3(0.0);
 	float pixelsPerBp = windowSize.x/(displayedRange.y - displayedRange.x);
 	

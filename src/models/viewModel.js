@@ -238,7 +238,6 @@ class ViewModel extends EventCreator {
     this.dragEnabled = false;
     this.lastDragCoord = null;
     this.startDragCoord = null;
-    this.selectEnabled = false;
     this.notifyViewStateChange(true);
   }
 
@@ -275,7 +274,7 @@ class ViewModel extends EventCreator {
   }
 
   handleKeyup(e) {
-    if (e.key === 'Alt') {
+    if (e.key === 'Shift') {
       this.selectEnabled = false;
       this.notifyViewStateChange();
     } else if (e.key === 'Control') {
