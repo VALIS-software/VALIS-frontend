@@ -13,7 +13,7 @@ import {
 } from '../../models/appModel.js';
 
 
-import { VIEW_EVENT_STATE_CHANGED, VIEW_EVENT_SELECTION } from '../../models/viewModel.js';
+import { VIEW_EVENT_STATE_CHANGED, VIEW_EVENT_SELECTION, VIEW_EVENT_CLICK } from '../../models/viewModel.js';
 
 import TrackView from '../TrackView/TrackView.jsx';
 import OverlayView from '../OverlayView/OverlayView.jsx';
@@ -41,6 +41,7 @@ class MultiTrackViewer extends React.Component {
     this.updateOverlays = this.updateOverlays.bind(this);
     this.updateViewState = this.updateViewState.bind(this);
     this.updateSelection = this.updateSelection.bind(this);
+    this.handleClick = this.handleClick.bind(this);
     this.classNames = '';
 
     // listen to track change updates
@@ -71,6 +72,7 @@ class MultiTrackViewer extends React.Component {
 
       this.viewModel.addListener(this.updateViewState, VIEW_EVENT_STATE_CHANGED);
       this.viewModel.addListener(this.updateSelection, VIEW_EVENT_SELECTION);
+      this.viewModel.addListener(this.handleClick, VIEW_EVENT_CLICK);
 
       this.renderContext = Util.newRenderContext(domElem);
       this.shaders = TrackView.initializeShaders(this.renderContext);
@@ -147,6 +149,12 @@ class MultiTrackViewer extends React.Component {
       trackHeightPx: trackHeightPx,
       trackCenterPx: trackCenterPx,
     };
+  }
+
+  handleClick(evt) {
+    if (this.hoverElement) {
+      this.props.model.showEntityDetails(this.hoverElement);
+    }
   }
 
   updateViewState(event) {
