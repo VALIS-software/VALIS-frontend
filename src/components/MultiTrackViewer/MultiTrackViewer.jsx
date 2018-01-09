@@ -136,7 +136,7 @@ class MultiTrackViewer extends React.Component {
       trackCenterPx =  trackOffsetPx - trackHeightPx / 2.0;
       dataTooltip = null;
       if (track.dataTrack) {
-        dataTooltip = track.dataTrack.getTooltipData(hoveredBasePair + trackBasePairOffset, clickOffset, start, end, bpp, trackHeightPx);
+        dataTooltip = track.dataTrack.getTooltipData(hoveredBasePair + trackBasePairOffset, clickOffset, start + trackBasePairOffset, end + trackBasePairOffset, bpp, trackHeightPx);
       }
     }
 
