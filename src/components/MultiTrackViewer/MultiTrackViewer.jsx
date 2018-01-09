@@ -64,6 +64,7 @@ class MultiTrackViewer extends React.Component {
       domElem.width = domElem.clientWidth;
       domElem.height = domElem.clientHeight;
 
+
       const bpp = GENOME_LENGTH / domElem.clientWidth;
       const windowSize = [domElem.clientWidth, domElem.clientHeight];
 
@@ -83,6 +84,11 @@ class MultiTrackViewer extends React.Component {
         requestAnimationFrame(renderFrame);
       };
       renderFrame();
+    });
+
+    window.addEventListener('resize', () => {
+      // Hack WebGL resizing not working as I want it to :/
+      location.reload();
     });
   }
 

@@ -109,6 +109,7 @@ class Util {
     };
 
     igloo.drawLines = function(shader, lines, colors) {
+      if (lines.length === 0) return;
       igloo.lineBuffer.update(lines);
       igloo.lineColorBuffer.update(colors);
       shader.attrib('points', igloo.lineBuffer, 2);
