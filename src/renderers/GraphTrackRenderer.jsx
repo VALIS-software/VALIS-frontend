@@ -17,12 +17,12 @@ export default class GraphTrackRenderer {
     return this._hoverElement;
   }
 
-  render(graphTrack, annotations1, annotations2, context, shaders, windowState, secondWindowState) {
-    const startBasePair = windowState.startBasePair;
-    const basePairsPerPixel = windowState.basePairsPerPixel;
-    const endBasePair = Util.endBasePair(startBasePair, basePairsPerPixel, windowState.windowSize);
+  render(graphTrack, annotations1, annotations2, context, shaders, a1WindowState, a2WindowState) {
+    const startBasePair = a1WindowState.startBasePair;
+    const basePairsPerPixel = a1WindowState.basePairsPerPixel;
+    const endBasePair = Util.endBasePair(startBasePair, basePairsPerPixel, a1WindowState.windowSize);
 
-    // TODO figure out the relative base pair offset, using secondWindowState
+    // TODO FIX ... figure out the relative base pair offset, using a2WindowState
     const tiles = graphTrack.getTiles(startBasePair, endBasePair, basePairsPerPixel, 0);
     const shader = shaders.graphShader;
     

@@ -32,13 +32,14 @@ class Util {
     return Util.inRange(range1, range2[0]) || Util.inRange(range1, range2[1]);
   }
 
-  static endBasePair(startBasePair, basePairsPerPixel, windowSize) {
-    return startBasePair + Math.floor(windowSize[0] * basePairsPerPixel);
+  static endBasePair(startBasePair, basePairsPerPixel, windowSize, round=true) {
+    const result = startBasePair + windowSize[0] * basePairsPerPixel;
+    return round ? Math.floor(result) : result;
   }
 
-  static basePairForScreenX(x, startBasePair, basePairsPerPixel, windowSize) {
+  static basePairForScreenX(x, startBasePair, basePairsPerPixel, windowSize, round=true) {
     const u = x / windowSize[0];
-    const endBasePair = Util.endBasePair(startBasePair, basePairsPerPixel, windowSize);
+    const endBasePair = Util.endBasePair(startBasePair, basePairsPerPixel, windowSize, round);
     return startBasePair + (u * (endBasePair - startBasePair));
   }
 

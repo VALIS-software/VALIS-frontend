@@ -44,50 +44,48 @@ class DataTrack extends Track {
     };
     tiles.forEach(tile => {
       if (basePair >= tile.range[0] && basePair <= tile.range[1]) {
-        if (basePair >= tile.tile.tileRange[0]  && basePair <= tile.tile.tileRange[1]) {
-          const totalRange = (tile.tile.tileRange[1] - tile.tile.tileRange[0]);
-          const idx = Math.round(this.cache.tileSize * (basePair - tile.tile.tileRange[0]) / totalRange);
-          const values = tile.tile.data.values;
-          const dimensions = tile.tile.data.dimensions;
-          const curr = [];
-          const currNormalized = [];
-          let colors = SIGNAL_COLORS;
-          if (tile.tile.data.dataType === TRACK_DATA_TYPE_BASE_PAIRS) {
-            const currValue = values[4 * idx];
-            if (currValue <= 0.0) {
-              curr.push('A');
-              colors = [BASE_PAIR_COLORS[0]];
-            } else if (currValue <=0.25) {
-              curr.push('T');
-              colors = [BASE_PAIR_COLORS[1]];
-            } else if (currValue <=0.5) {
-              curr.push('C');
-              colors = [BASE_PAIR_COLORS[2]];
-            } else if (currValue <=0.75) {
-              curr.push('G');
-              colors = [BASE_PAIR_COLORS[3]];
-            }
-            currNormalized.push(0.5);
-          } else if (tile.tile.data.dataType === TRACK_DATA_TYPE_GBANDS) {
-            const d = values[idx];
-            colors = [Util.multiplyColor([255, 255, 255], d)];
-            curr.push(d);
-            currNormalized.push(0.5);
-          } else {
-            for (let i = 0; i < dimensions.length; i++) {
-              const d = values[dimensions.length * idx + i];
-              curr.push(d);
-              currNormalized.push((d-this.min) / (this.max - this.min));
-            }
+        const totalRange = (tile.tile.tileRange[1] - tile.tile.tileRange[0]);
+        const idx = Math.round(this.cache.tileSize * ((basePair - tile.tile.tileRange[0]) / totalRange));
+        const values = tile.tile.data.values;
+        const dimensions = tile.tile.data.dimensions;
+        const curr = [];
+        const currNormalized = [];
+        let colors = SIGNAL_COLORS;
+        if (tile.tile.data.dataType === TRACK_DATA_TYPE_BASE_PAIRS) {
+          const currValue = values[4 * idx];
+          if (currValue <= 0.0) {
+            curr.push('A');
+            colors = [BASE_PAIR_COLORS[0]];
+          } else if (currValue <=0.25) {
+            curr.push('T');
+            colors = [BASE_PAIR_COLORS[1]];
+          } else if (currValue <=0.5) {
+            curr.push('C');
+            colors = [BASE_PAIR_COLORS[2]];
+          } else if (currValue <=0.75) {
+            curr.push('G');
+            colors = [BASE_PAIR_COLORS[3]];
           }
-          ret = {
-            values: curr,
-            dimensions: dimensions,
-            valuesNormalized: currNormalized,
-            positionNormalized: _.max(currNormalized),
-            colors: colors,
-          };
+          currNormalized.push(0.5);
+        } else if (tile.tile.data.dataType === TRACK_DATA_TYPE_GBANDS) {
+          const d = values[idx];
+          colors = [Util.multiplyColor([255, 255, 255], d)];
+          curr.push(d);
+          currNormalized.push(0.5);
+        } else {
+          for (let i = 0; i < dimensions.length; i++) {
+            const d = values[dimensions.length * idx + i];
+            curr.push(d);
+            currNormalized.push((d-this.min) / (this.max - this.min));
+          }
         }
+        ret = {
+          values: curr,
+          dimensions: dimensions,
+          valuesNormalized: currNormalized,
+          positionNormalized: _.max(currNormalized),
+          colors: colors,
+        };
       }
     });
     return ret;

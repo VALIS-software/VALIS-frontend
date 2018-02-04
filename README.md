@@ -16,14 +16,8 @@ There is a test server located in the `tools` directory. The server requires the
 * [PyEnsembl](https://github.com/hammerlab/pyensembl)
 * [Flask](http://flask.pocoo.org/)
 * [Flask-Cors](http://flask-cors.readthedocs.io/en/latest/)
-* [bcolz](http://bcolz.blosc.org/en/latest/)
 
-You also need [gsutil](https://cloud.google.com/storage/docs/gsutil) for accessing data located on Google Cloud.
-
-### Download Sample Data
-* `pyensembl install --release 76 --species human`
-* `gsutil -m cp -r gs://elastic-genomics/dev-data/elastic-genome-data ~/data/`
-
+Note: Currently all sequence and DNase track just contain dummy data.
 
 ### Run
 ```

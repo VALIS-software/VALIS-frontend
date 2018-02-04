@@ -25,6 +25,7 @@
     "react/sort-comp": "off",
     "new-cap": "off",
     "import/imports-first": "off",
+    "import/no-unresolved": "off",
   },
   "env": {
     "browser": true

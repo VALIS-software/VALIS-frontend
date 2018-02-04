@@ -1,7 +1,6 @@
 from pyensembl import EnsemblRelease
 from flask import Flask, abort, request
 from flask_cors import CORS
-import genomedata
 import random
 import json
 import numpy as np
@@ -112,14 +111,14 @@ def graph(graph_id, annotation_id1, annotation_id2, start_bp, end_bp):
 	set2 = []
 	if sampling_rate < 1000000:
 		count = 0
-		for i in xrange(0, 3000000000, 10000000):
+		for i in xrange(0, 100000000, 500000):
 			if i >= start_bp and i <= end_bp:
 				annotation_name = "X%d" % count
 				random.seed(annotation_name)
 				set1.append(random.randint(0,1000000000))
 			count += 1
 		count = 0
-		for i in xrange(0, 3000000000, 50000000):
+		for i in xrange(0, 100000000, 500000):
 			if i >= start_bp + base_pair_offset and i <= end_bp + base_pair_offset:
 				annotation_name = "Y%d" % count
 				random.seed(annotation_name)
@@ -195,15 +194,15 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 
 		count = 0
 		if annotation_id == "cross-track-test-1":
-			for i in xrange(0, 3000000000, 10000000):
+			for i in xrange(0, 100000000, 500000):
 				if i >= start_bp and i <= end_bp:
-					annotation_results.append(("X%d" % count, i, i + 1000000))
+					annotation_results.append(("X%d" % count, i, i + 100000))
 				count += 1
 
 		if annotation_id == "cross-track-test-2":
-			for i in xrange(0, 3000000000, 50000000):
+			for i in xrange(0, 100000000, 500000):
 				if i >= start_bp and i <= end_bp:
-					annotation_results.append(("Y%d" % count, i, i + 1000000))
+					annotation_results.append(("Y%d" % count, i, i + 100000))
 				count += 1
 
 		annotations = []
@@ -311,7 +310,9 @@ def get_track_data(track_id, start_bp, end_bp):
 					if data_key == 'sequence':
 						if sampling_rate == 1:
 							track_data_type = 'basepairs'
-							d = genomedata.get(data_key, chrom, idx, idx + 1)
+							d = [0, 0, 0, 0]
+							r = random.randint(0, 3)
+							d[r] = 1.0
 							if float(d[0]) > 0.0 :
 								ret.append(0.0)
 							elif float(d[1]) > 0.0:
@@ -329,10 +330,10 @@ def get_track_data(track_id, start_bp, end_bp):
 						chr_range = chromosome_range(curr)
 						ret.append(float(idx - chr_range[0]) / (chr_range[1] - chr_range[0]))
 					else:
-						ret.append(float(genomedata.get(data_key, chrom, idx, idx + 1)[0]))
+						ret.append(random.random())
 				else:
 
-					d = float(genomedata.get(data_key, chrom, idx, idx + 1)[0])
+					d = random.random()
 					for aggregation in aggregations:
 						if aggregation == 'max':
 							ret.append(d*2.0)

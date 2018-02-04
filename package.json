@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "webpack-dev-server --env.dev",
-    "production": "webpack -p --env.production"
+    "production": "webpack -p --env.production",
+    "pack": "webpack --display-error-details"
   },
   "keywords": [],
   "author": "",
@@ -49,6 +50,7 @@
     "sass-loader": "^4.0.1",
     "style-loader": "^0.13.1",
     "webpack": "^2.1.0-beta.25",
+    "webpack-cli": "^2.0.4",
     "webpack-dev-server": "^2.1.0-beta.2"
   }
 }

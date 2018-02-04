@@ -119,7 +119,7 @@ class MultiTrackViewer extends React.Component {
     // figure out which track the click was inside of:
     let track = null;
     const clickOffset = (coord[1]) / windowSize[1];
-    const hoveredBasePair = Util.basePairForScreenX(coord[0], start, bpp, windowSize);
+    const hoveredBasePair = Util.basePairForScreenX(coord[0], start, bpp, windowSize, false);
     let trackOffsetPx = null;
     for (let i = 0; i < this.tracks.length; i++) {
       const currTrack = this.tracks[i];

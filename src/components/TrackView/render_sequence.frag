@@ -41,7 +41,7 @@ void main() {
 	float bpPerPixel = (displayedRange.y - displayedRange.x) / windowSize.x;
 	float delta = 0.5 / (totalTileRange.y - totalTileRange.x);
 	float currBp = mix(currentTileDisplayRange.x, currentTileDisplayRange.y, coord.x);
-	float locInTile = mix(tileRoi.x, tileRoi.y, coord.x + delta);
+	float locInTile = mix(tileRoi.x, tileRoi.y, coord.x);
 
 	// load and normalize data value:
 	vec4 currData = texture2D(data, vec2(locInTile, 0.0));
