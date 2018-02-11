@@ -5,7 +5,7 @@ import ExtractTextPlugin from 'extract-text-webpack-plugin';
 import {DefinePlugin} from 'webpack';
 
 const defaultEnv = {
-    dev: true,
+    dev: false,
     production: false,
 };
 
