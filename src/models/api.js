@@ -12,7 +12,15 @@ const axios = require('axios');
 
 class GenomeAPI {
 	constructor(baseUrl) {
-		if (!baseUrl) baseUrl = LOCAL_API_URL;
+		if (baseUrl === undefined) {
+			if (process.env.API_URL) {
+				baseUrl = process.env.API_URL;
+			} else if (process.env.dev) {
+				baseUrl = LOCAL_API_URL;
+			} else {
+				baseUrl = '';
+			}
+		}
 		this.baseUrl = baseUrl;
 	}
 

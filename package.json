@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "webpack-dev-server --env.dev",
+    "dev-remote": "webpack-dev-server --env.dev --env.API_URL=http://35.185.230.75",
     "production": "webpack -p --env.production",
     "pack": "webpack --display-error-details"
   },

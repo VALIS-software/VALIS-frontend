@@ -2,6 +2,7 @@ import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import {HotModuleReplacementPlugin} from 'webpack';
 import ExtractTextPlugin from 'extract-text-webpack-plugin';
+import {DefinePlugin} from 'webpack';
 
 const defaultEnv = {
     dev: true,
@@ -29,6 +30,12 @@ export default (env = defaultEnv) => ({
     new HtmlWebpackPlugin({
         filename: 'index.html',
         template: path.join(__dirname, 'src/index.html'),
+    }),
+    new DefinePlugin({
+      'process.env': {
+        'dev': env.dev,
+        'API_URL': JSON.stringify(env.API_URL)
+      }
     }),
   ],
   module: {
@@ -69,7 +76,7 @@ export default (env = defaultEnv) => ({
         test: /\.(css|scss|sass)$/,
         loader: env.dev ? 'style-loader!css-loader!sass-loader' : ExtractTextPlugin.extract({
           fallbackLoader: 'style-loader',
-          loader: 'css!sass'
+          loader: 'css-loader!sass-loader'
         })
       },
     ]
