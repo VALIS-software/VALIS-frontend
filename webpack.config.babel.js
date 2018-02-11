@@ -3,10 +3,13 @@ import HtmlWebpackPlugin from 'html-webpack-plugin';
 import {HotModuleReplacementPlugin} from 'webpack';
 import ExtractTextPlugin from 'extract-text-webpack-plugin';
 import {DefinePlugin} from 'webpack';
+import WebpackGoogleCloudStoragePlugin from 'webpack-google-cloud-storage-plugin';
+var ZipPlugin = require('zip-webpack-plugin');
 
 const defaultEnv = {
     dev: false,
     production: false,
+    API_URL: null,
 };
 
 export default (env = defaultEnv) => ({
@@ -34,9 +37,27 @@ export default (env = defaultEnv) => ({
     new DefinePlugin({
       'process.env': {
         'dev': env.dev,
-        'API_URL': JSON.stringify(env.API_URL)
-      }
+        'API_URL': JSON.stringify(env.API_URL),
+      },
     }),
+    ...env.dev ? [] : [
+      new ZipPlugin({
+        filename: 'dist.zip',
+      }),
+      new WebpackGoogleCloudStoragePlugin({
+        directory: './dist',
+        include: ['dist.zip'],
+        exclude: [],
+        storageOptions: {
+          projectId: 'valis-194104',
+          keyFilename: path.join(process.env.HOME, 'gcloud-service-key.json'), // This shouldn't be included in the repository!
+        },
+        uploadOptions: {
+          bucketName: 'valis-front-dev',
+          gzip: false,
+        },
+      }),
+    ],
   ],
   module: {
     rules: [
