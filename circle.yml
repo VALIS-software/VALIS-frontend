@@ -5,7 +5,7 @@ machine:
     CLUSTER_NAME: cluster-sirius
     CLOUDSDK_COMPUTE_ZONE: us-west1-b
   docker:
-    image: circleci/node:8.9.4
+    image: webpackcontrib/circleci-node9
 
 dependencies:
   pre:
