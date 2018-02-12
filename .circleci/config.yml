@@ -25,10 +25,14 @@ jobs:
           paths:
             - node_modules
           key: dependency-cache-{{ checksum "package.json" }}
-
+      - run:
+          name: prep-gcloud
+          command: ./tools/prep_gcloud.sh
       - run:
           name: webpack
           command: NODE_ENV=development npm run pack
-
+      - run:
+          name: trigger-roll-out
+          command: ./tools/trigger_sirius_deployment.sh
       - store_artifacts:
           path: dist
