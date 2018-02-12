@@ -6,6 +6,8 @@ machine:
     CLOUDSDK_COMPUTE_ZONE: us-west1-b
   docker:
     image: webpackcontrib/circleci-node9
+  node:
+    version: 8.9.4
 
 dependencies:
   pre:
