@@ -1,4 +1,4 @@
-import path from 'path';
+const path = require('path');
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import {HotModuleReplacementPlugin} from 'webpack';
 import ExtractTextPlugin from 'extract-text-webpack-plugin';
@@ -10,6 +10,7 @@ const defaultEnv = {
     dev: false,
     production: false,
     API_URL: null,
+    deploy: false,
 };
 
 export default (env = defaultEnv) => ({
@@ -22,17 +23,20 @@ export default (env = defaultEnv) => ({
   ],
   output: {
     path: path.join(__dirname, 'dist'),
-    filename: 'bundle.js',
+    filename: ('static/bundle.js'),
   },
   plugins: [
     ...env.dev ? [
       new HotModuleReplacementPlugin(),
     ] : [
-      new ExtractTextPlugin('[name].css'),
+      new ExtractTextPlugin('static/[name].css'),
     ],
     new HtmlWebpackPlugin({
-        filename: 'index.html',
-        template: path.join(__dirname, 'src/index.html'),
+      // Here we do a little hack, to allow webpack-dev-server to find the index.html, but also use URL like static/bundle.js in the packed version in /dist
+      // The packed version want to use URL static/bundle.js because we need to seperate the requrest between / and /static to use Nginx
+      // On the server, Nginx will direct
+      filename: 'index.html',
+      template: path.join(__dirname, 'src/index.html'),
     }),
     new DefinePlugin({
       'process.env': {
@@ -40,8 +44,9 @@ export default (env = defaultEnv) => ({
         'API_URL': JSON.stringify(env.API_URL),
       },
     }),
-    ...env.dev ? [] : [
+    ...env.deploy ? [
       new ZipPlugin({
+        // path: path.join(__dirname, 'dist'),
         filename: 'dist.zip',
       }),
       new WebpackGoogleCloudStoragePlugin({
@@ -57,13 +62,17 @@ export default (env = defaultEnv) => ({
           gzip: false,
         },
       }),
-    ],
+    ] : [],
   ],
   module: {
     rules: [
-      { 
-        test: /\.(jpe?g|gif|png|svg|woff|ttf|wav|mp3|frag|vert)$/, 
-        use: [ { loader: "file-loader" } ]
+      {
+        test: /\.(jpe?g|gif|png|svg|woff|ttf|wav|mp3|frag|vert)$/,
+        loader: "file-loader",
+        query: {
+          limit: 10000,
+          name: 'static/[hash].[ext]',
+        }
       },
       {
         test: /.jsx?$/,
