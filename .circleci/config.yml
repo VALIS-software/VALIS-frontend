@@ -30,7 +30,7 @@ jobs:
           command: ./tools/prep_gcloud.sh
       - run:
           name: webpack
-          command: NODE_ENV=development npm run pack
+          command: NODE_ENV=development npm run deploy
       - run:
           name: trigger-roll-out
           command: ./tools/trigger_sirius_deployment.sh
