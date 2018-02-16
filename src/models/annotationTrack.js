@@ -10,7 +10,7 @@ class AnnotationTrack extends Track {
     this.api = api;
     this.annotationIds = annotationIds;
     this.loadData = this.loadData.bind(this);
-    this.cache = new TileCache(0, GENOME_LENGTH, this.loadData, LinearCacheSampler(), LinearCacheSampler(25));
+    this.cache = new TileCache(0, GENOME_LENGTH, this.loadData, LinearCacheSampler(), LinearCacheSampler(8, 8));
   }
 
   get title() {
