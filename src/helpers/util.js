@@ -2,6 +2,7 @@ import { Igloo } from '../../lib/igloojs/igloo.js';
 
 const d3 = require('d3');
 const _ = require('underscore');
+
 import { CHROMOSOME_START_BASE_PAIRS } from './constants.js';
 
 const formatSi = d3.format('.6s');

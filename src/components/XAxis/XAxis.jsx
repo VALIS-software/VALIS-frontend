@@ -28,6 +28,7 @@ class XAxis extends React.Component {
     if (relativeBp) {
       return Util.roundToHumanReadable(relativeBp.basePair);
     }
+    return '';
   }
 
 
@@ -35,6 +36,7 @@ class XAxis extends React.Component {
     for (let i = 0; i < CHROMOSOME_START_BASE_PAIRS.length; i++) {
       if (d <= CHROMOSOME_START_BASE_PAIRS[i]) return 'c' + Util.chromosomeIndexToName(i);
     }
+    return '';
   }
 
   render() {
