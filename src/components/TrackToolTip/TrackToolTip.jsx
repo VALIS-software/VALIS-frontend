@@ -5,11 +5,19 @@ import PropTypes from 'prop-types';
 // Styles
 import './TrackToolTip.scss';
 
+import Util from '../../helpers/util.js';
+
 function TrackToolTip(props) {
   const style = {
     transform: `translate(${props.x}px, ${props.y}px) translateY(-50%)`,
   };
-  const bp = Math.round(props.basePair);
+  const relativeBp = Util.rawBasePairToChromosomeBasePair(props.basePair);
+  let bp = '';
+  if (relativeBp) {
+    const chrName = 'chr ' + Util.chromosomeIndexToName(relativeBp.chromosomeIndex);
+    bp = chrName + ' ' + Util.roundToHumanReadable(relativeBp.basePair);
+  }
+  
   const dataValues = [];
   props.values.forEach(value => {
     const colorIdx = dataValues.length;
@@ -23,7 +31,7 @@ function TrackToolTip(props) {
     <div className="track-tool-tip">
       <div style={style} className="track-tool-tip-arrow">
         <div className="track-tool-tip-inner">
-          <div>BP:{bp}</div>
+          <div>{bp}</div>
           <table>
             <tbody>
               {dataValues}

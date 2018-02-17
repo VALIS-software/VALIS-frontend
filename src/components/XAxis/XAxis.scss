@@ -1,0 +1,21 @@
+@import "../../helpers/variables.scss";
+
+.x-axis-container {
+    padding-left: $track-header-width;
+    width: 100%;
+    height: $axis-height;
+    background: linear-gradient(darken($bg-color, 25%), $bg-color);
+    .x-axis {
+        text {
+            fill: black;
+        }
+        line {
+            stroke: black;
+        }
+        transform: translate(0px, $axis-height);
+
+        g:last-child {
+            display: none;
+        }
+    }
+}
