@@ -1,9 +1,4 @@
-$track-header-width: 200px;
-$padding-right: 16px;
-$browser-width: calc(100% - #{$track-header-width} - #{$padding-right});
-$browser-height: 100%;
-$axis-height: 32px;
-$bg-color: #242321;
+@import "../../helpers/variables.scss";
 
 .content {
     background-color: $bg-color;
@@ -40,27 +35,6 @@ $bg-color: #242321;
         user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
     }
 
-    .x-axis-container {
-        padding-left: $track-header-width;
-        width: 100%;
-        height: $axis-height;
-        background: linear-gradient(darken($bg-color, 25%), $bg-color);
-        .x-axis {
-            text {
-                fill: #e8e8e8;
-            }
-            line {
-                stroke: #e8e8e8;
-            }
-            transform: translate(0px, $axis-height);
-            g:nth-child(2) {
-                display: none;
-            }
-            g:last-child {
-                display: none;
-            }
-        }
-    }
     .track-header-axis {
         height: $axis-height;
         z-index: 999;

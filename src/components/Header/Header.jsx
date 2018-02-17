@@ -22,27 +22,8 @@ class Header extends Component {
     this.onNewRequest = this.onNewRequest.bind(this);
     this.onUpdateSearchFilter = this.onUpdateSearchFilter.bind(this);
     this.api = new GenomeAPI();
-    const chromosomes = [];
-    let start = 0;
-    for (let i = 0; i < 23; i++) {
-      let name = '';
-      if (i <= 20) {
-        name = 'Chromosome ' + (i+1);
-      } else if (i === 21) {
-        name = 'X Chromosome';
-      } else if (i === 22) {
-        name = 'Y Chromosome';
-      }
-      const end = start + CHROMOSOME_SIZES[i];
-      chromosomes.push({
-        resultType: 'location',
-        name: name,
-        range: [start, end],
-      });
-      start += CHROMOSOME_SIZES[i];
-    }
     this.state = {
-      dataSource : chromosomes,
+      dataSource : [],
       inputValue : '',
       searchFilter: 1,
     };
@@ -101,7 +82,6 @@ class Header extends Component {
     };
     return (<div className="header">
       <Toolbar>
-
         <ToolbarGroup firstChild={true}>
           <IconButton onClick={() => this.props.viewModel.back()}>
             <NavigationArrowBack />

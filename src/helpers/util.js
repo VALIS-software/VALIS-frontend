@@ -3,9 +3,36 @@ import { Igloo } from '../../lib/igloojs/igloo.js';
 const d3 = require('d3');
 const _ = require('underscore');
 
+import { CHROMOSOME_START_BASE_PAIRS } from './constants.js';
+
 const formatSi = d3.format('.6s');
 
 class Util {
+
+  static chromosomeIndexToName(chromosomeIdx) {
+    if (chromosomeIdx <= 21) {
+      return '' + (chromosomeIdx + 1);
+    } else if (chromosomeIdx === 22) { 
+      return 'X';
+    } else if (chromosomeIdx === 23) {
+      return 'Y';
+    }
+    return null;
+  }
+
+  static rawBasePairToChromosomeBasePair(d) {
+    for (let i = 0; i < CHROMOSOME_START_BASE_PAIRS.length; i++) {
+      if (CHROMOSOME_START_BASE_PAIRS[i] >= d && i > 0) {
+        d -= CHROMOSOME_START_BASE_PAIRS[i - 1];
+        return {
+          chromosomeIndex: i - 1,
+          basePair: d,
+        };
+      }
+    }
+    return null;
+  }
+
   static floorToMultiple(x, k) {
     return Math.round((x % k === 0) ? x :  x + k - x % k - k);
   }
