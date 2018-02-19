@@ -36,7 +36,42 @@ class AnnotationTrack extends Track {
 
   loadData(start, end, samplingRate, trackHeightPx) {
     this.notifyListeners(TRACK_EVENT_LOADING, true);
-    const promise = this.api.getAnnotationData(this.annotationIds, start, end, samplingRate, trackHeightPx);
+    let query = { query : [] };
+    if (this.annotationIds[0] === 'GWASCatalog') {
+      query = {
+        query: [{
+          GenomeNode : {
+            filters : {
+              type : 'variant',
+              location: {
+                startBp: start,
+                endBp: end,
+              },
+              dataSource: 'GWASCatalog',
+            },
+          },
+        },
+        {
+          EdgeNode: {
+            filters : {
+              type: 'influences',
+              pvalue: { '<' : 0.5 },
+              dataSource: '*',
+            },
+          },
+        },
+        {
+          InfoNode : {
+            filters : {
+              type : 'trait',
+              dataSource: '*',
+              name: { contains : 'cancer' },
+            },
+          },
+        }],
+      };
+    }
+    const promise = this.api.getAnnotationData(this.annotationIds, start, end, samplingRate, trackHeightPx, query);
     return promise.then(data => {
       const result = data.data;
       const rawData = data.data.values;

@@ -153,7 +153,7 @@ def annotation(annotation_id):
 	else:
 		abort(404, "Annotation not found")
 
-@app.route("/annotations/<string:annotation_ids>/<int:start_bp>/<int:end_bp>")
+@app.route("/annotations/<string:annotation_ids>/<int:start_bp>/<int:end_bp>", methods=['POST'])
 def get_annotation_data(annotation_ids, start_bp, end_bp):
 	MOCK_DATA = getMockData()
 	MOCK_ANNOTATIONS = getMockAnnotations()
@@ -175,7 +175,7 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 		end_bp = min([end_bp, annotation["endBp"]])
 		annotation_results = []
 		ANNOTATION_HEIGHT_PX = 25
-		if annotation_id == "GRCh38_genes":
+		if annotation_id == "GRCh38":
 			# get chromosomes in range
 			cStart = chromosome_to_idx(find_chromosome(start_bp))
 			cEnd = chromosome_to_idx(find_chromosome(end_bp))
@@ -191,9 +191,11 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 					sz = end - start
 					if sz/float(sampling_rate) > 20:
 						annotation_results.append((name, start, end))
-
+		if annotation_id == "GWASCatalog":
+			print "got json"
+			print request.get_json()
 		count = 0
-		if annotation_id == "cross-track-test-1":
+		if annotation_id == "cross-track-test-1" or annotation_id == "GWASCatalog":
 			for i in xrange(0, 100000000, 500000):
 				if i >= start_bp and i <= end_bp:
 					annotation_results.append(("X%d" % count, i, i + 100000))

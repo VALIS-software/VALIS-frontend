@@ -1,6 +1,6 @@
 {
-	"GRCh38_genes": {
-		"annotationId": "GRCh38_genes",
+	"GRCh38": {
+		"annotationId": "GRCh38",
 		"startBp": 0,
 		"endBp": 3000000000
 	},
@@ -11,6 +11,11 @@
 	},
 	"cross-track-test-2": {
 		"annotationId": "cross-track-test-2",
+		"startBp": 0,
+		"endBp": 3000000000
+	},
+	"GWASCatalog": {
+		"annotationId": "GWASCatalog",
 		"startBp": 0,
 		"endBp": 3000000000
 	}
