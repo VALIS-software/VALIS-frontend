@@ -1,0 +1,32 @@
+.entity-details {
+	padding: 14px;
+	.entity-header {
+		margin-left: 8px;
+		margin-right: 8px;
+		.entity-name {
+			font-size: 32px;
+			font-weight: bold;
+		}
+	}
+
+	table {
+		margin: 8px;
+		width: 100%;
+	}
+
+	.detail-item {
+		margin: 0px;
+		margin-top: 8px;
+		border-radius: 8px;
+		padding: 8px;
+		background-color: lighten(gray, 35%);
+		color: lighten(gray, 15%);
+		.detail-header {
+
+		}
+		.detail-value {
+			text-align: right;
+			color: darken(gray, 15%);
+		}
+	}
+}

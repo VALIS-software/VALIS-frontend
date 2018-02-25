@@ -10,6 +10,7 @@ import IconButton from 'material-ui/IconButton';
 
 // Components
 import Header from '../Header/Header.jsx';
+import EntityDetails from '../EntityDetails/EntityDetails.jsx';
 import TrackViewSettings from '../TrackViewSettings/TrackViewSettings.jsx';
 import MultiTrackViewer from '../MultiTrackViewer/MultiTrackViewer.jsx';
 import AppModel, { 
@@ -69,6 +70,7 @@ class App extends React.Component {
           showInfo: true,
           currSideBarType: SIDEBAR_TYPE_ENTITY_DETAILS,
           currSideBarInfo: event.data.labels[0][0],
+          currSideBarEntity: event.data.entity,
         });          
       }
     }
@@ -93,7 +95,8 @@ class App extends React.Component {
       const guid = this.state.currSideBarInfo;
       return (<TrackViewSettings guid={guid} model={this.appModel} />);
     } else {
-      return (<div>Entity details</div>);
+      const entity = this.state.currSideBarEntity;
+      return (<EntityDetails entity={entity} />);
     }
   }
 

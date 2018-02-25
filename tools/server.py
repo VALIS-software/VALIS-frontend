@@ -221,7 +221,12 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
   				"yOffsetPx": 0,
   				"heightPx": ANNOTATION_HEIGHT_PX,
   				# segment format: startBp, endBp, textureName, [R,G,B,A], height
-  				"segments": [[0, annotation_end - annotation_start, None, color, 20]]
+  				"segments": [[0, annotation_end - annotation_start, None, color, 20]],
+  				"entity": {
+  					"value1": "string-value",
+  					"value2": 1.343,
+  					"value3": "+"
+  				}
 			})
 		# move overlaps that fit in track height, discard those that don't
 		ret = []
