@@ -1,4 +1,3 @@
-const GENOME_LENGTH = 3000000000;
 const LOCAL_API_URL = 'http://localhost:5000';
 
 const COLOR1 =  [37, 206, 209];
@@ -47,6 +46,15 @@ for (let i = 0; i < CHROMOSOME_SIZES.length; i++) {
 	CHROMOSOME_START_BASE_PAIRS.push(currSize);
 }
 
+const GENOME_LENGTH = CHROMOSOME_START_BASE_PAIRS[CHROMOSOME_START_BASE_PAIRS.length - 1];
+
+const CHROMOSOME_NAMES = [];
+for (let i = 1; i < 23; i++) {
+	CHROMOSOME_NAMES.push(`Chr${i}`);
+}
+CHROMOSOME_NAMES.push('ChrX');
+CHROMOSOME_NAMES.push('ChrY');
+
 export { 
 	GENOME_LENGTH, 
 	LOCAL_API_URL,
@@ -65,4 +73,5 @@ export {
 	BASE_PAIR_COLORS,
 	CHROMOSOME_SIZES,
 	CHROMOSOME_START_BASE_PAIRS,
+        CHROMOSOME_NAMES,
 };
