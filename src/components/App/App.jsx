@@ -65,13 +65,17 @@ class App extends React.Component {
     if (event.data !== null) {
       if (event.data.labels[0][0] === this.state.currSideBarInfo) {
         this.hideSideBar();
+      } else if (event.data.aggregation === true) {
+        // if the annotation is an aggregation then zoom
+        this.viewModel.setViewRegionUsingRange(event.data.startBp, event.data.endBp);
       } else {
+        // otherwise just show the entity details
         this.setState({
           showInfo: true,
           currSideBarType: SIDEBAR_TYPE_ENTITY_DETAILS,
           currSideBarInfo: event.data.labels[0][0],
           currSideBarEntity: event.data.entity,
-        });          
+        });     
       }
     }
   }
