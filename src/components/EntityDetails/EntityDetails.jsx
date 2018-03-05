@@ -1,6 +1,7 @@
 // Dependencies
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { CHROMOSOME_NAMES } from '../../helpers/constants.js';
 
 // Styles
 import './EntityDetails.scss';
@@ -22,7 +23,7 @@ class EntityDetails extends Component {
 				<table className="detail-item">
 					<tr>
 						<td className="detail-header">location</td>
-						<td className="detail-value">{entity.assembly} {entity.location}</td>
+						<td className="detail-value">{entity.assembly} {CHROMOSOME_NAMES[entity.chromid-1]}</td>
 					</tr>
 					<tr>
 						<td className="detail-header">start</td>
