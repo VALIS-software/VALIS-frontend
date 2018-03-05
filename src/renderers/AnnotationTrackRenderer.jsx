@@ -32,9 +32,11 @@ export default class AnnotationTrackRenderer {
     this._hoverElement = null;
     const renderResults = {};
     annotations.forEach(annotation => {
+      const aggregation = annotation.aggregation;
       let enableHover = 0;
       const annotationYOffset = annotation.yOffsetPx / windowState.windowSize[1];
-      const annotationHeight = annotation.heightPx / windowState.windowSize[1];
+      let annotationHeight = annotation.heightPx / windowState.windowSize[1];
+      if (aggregation) annotationHeight = trackHeightPx / windowState.windowSize[1];
       const annotationCenter = 0.5 * annotationHeight;
       
       const xPx = Util.pixelForBasePair(annotation.startBp + (annotation.endBp - annotation.startBp)/2.0, 
@@ -57,13 +59,16 @@ export default class AnnotationTrackRenderer {
         }
       }
 
+
       // render the segments:
       annotation.segments.forEach(segment => {
         // segment = [startBp, endBp, textureName, [R,G,B,A], heightPx]
         const shader = shaders.annotationShader;
         const textureName = segment[2];
         const color = segment[3] || [0.5, 0.5, 0.5, 1.0];
-        const segmentHeight = (segment[4] || 32) / windowState.windowSize[1];
+        let segmentHeight = (segment[4] || 32) / windowState.windowSize[1];
+
+        if (aggregation) segmentHeight = trackHeightPx / windowState.windowSize[1];
 
         const range = [segment[0] + annotation.startBp, segment[1] + annotation.startBp];
 
