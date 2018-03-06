@@ -2,6 +2,7 @@ import Util from '../helpers/util.js';
 import { GENOME_LENGTH } from '../helpers/constants.js';
 
 const createText = require('../../lib/gl-render-text/createText.js');
+const stats = require('stats-lite');
 
 const TEXT_PADDING_LEFT = 4;
 
@@ -27,10 +28,25 @@ export default class AnnotationTrackRenderer {
     const endBasePair = Util.endBasePair(startBasePair, basePairsPerPixel, windowState.windowSize);
     const windowSize = windowState.windowSize;
     const trackHeightPx = windowState.windowSize[1] * height;
-    const annotations = annotationTrack.getAnnotations(startBasePair, endBasePair, basePairsPerPixel, trackHeightPx);
+    const annotationData = annotationTrack.getAnnotations(startBasePair, endBasePair, basePairsPerPixel, trackHeightPx);
+    const annotations = annotationData.annotations;
+    const countInRange = annotationData.countInRange;
     this._hoverEnabled = false;
     this._hoverElement = null;
     const renderResults = {};
+
+    const normalizedCounts = [];
+    const pixels = [];
+    annotations.forEach(annotation => {
+      const pixelWidth = (annotation.endBp - annotation.startBp) / basePairsPerPixel;
+      normalizedCounts.push(annotation.count / pixelWidth);
+      pixels.push(pixelWidth);
+    });
+
+    const averageNormalizedCount = stats.mean(normalizedCounts);
+    const normalizedCountVariance = stats.variance(normalizedCounts);
+    const totalPixels = stats.sum(pixels);
+
     annotations.forEach(annotation => {
       const aggregation = annotation.aggregation;
       let enableHover = 0;
@@ -59,13 +75,12 @@ export default class AnnotationTrackRenderer {
         }
       }
 
-
       // render the segments:
       annotation.segments.forEach(segment => {
         // segment = [startBp, endBp, textureName, [R,G,B,A], heightPx]
         const shader = shaders.annotationShader;
         const textureName = segment[2];
-        const color = segment[3] || [0.5, 0.5, 0.5, 1.0];
+        let color = segment[3] || [0.5, 0.5, 0.5, 1.0];
         let segmentHeight = (segment[4] || 32) / windowState.windowSize[1];
 
         if (aggregation) segmentHeight = trackHeightPx / windowState.windowSize[1];
@@ -81,7 +96,9 @@ export default class AnnotationTrackRenderer {
           this.textures[textureName].bind(1);
           shader.uniformi('texture', 1);
         }
-        color.map(d => { return 0.0 + d; });
+        const normalizedCount = annotation.count / ((range[1] - range[0]) / basePairsPerPixel);
+        const brightness =  1.0 + (normalizedCount - averageNormalizedCount) / normalizedCountVariance;
+        color = color.map(d => { return brightness * (0.0 + d); });
         shader.uniform('color', color);
         shader.uniformi('showHover', enableHover);
         shader.uniformi('selectedBasePair', windowState.selectedBasePair);
@@ -102,38 +119,40 @@ export default class AnnotationTrackRenderer {
       });
 
       // render labels:
-      annotation.labels.forEach(label => {
-        const text = label[0];
-        if (!this.textures[text]) {
-          this.textures[text] = createText(context.gl, text, { size: 16, color: [255.0, 255.0, 255.0] }); 
-        }
-        // label format: [text, inside or outside, position: 0-left, 1-top, 2-right, 3-below, 4-center, offset-x, offset-y]
+      if (!aggregation || enableHover) {
+        annotation.labels.forEach(label => {
+          const text = label[0];
+          if (!this.textures[text]) {
+            this.textures[text] = createText(context.gl, text, { size: 16, color: [255.0, 255.0, 255.0] }); 
+          }
+          // label format: [text, inside or outside, position: 0-left, 1-top, 2-right, 3-below, 4-center, offset-x, offset-y]
 
-        const textHeight = this.textures[text].shape[0] / windowState.windowSize[1];
-        const padding = TEXT_PADDING_LEFT / windowState.windowSize[0];
-        const roiOffsetX = padding + 0.5 * (this.textures[text].roi.w - this.textures[text].shape[1]) / windowState.windowSize[0];
-        const roiOffsetY = annotationCenter - 0.5 * this.textures[text].shape[0] / windowState.windowSize[1];
-        const shader = shaders.textShader;
-        const labelEndBp = annotation.startBp + this.textures[text].shape[1] * windowState.basePairsPerPixel;
-        this.textures[text].bind(1);
-        shader.use();
-        shader.uniformi('texture', 1);
-        shader.uniform('textureDimensions', this.textures[text].shape);
-        shader.uniform('currentTileDisplayRange', [annotation.startBp, labelEndBp]);
-        shader.uniform('totalTileRange', [annotation.startBp, labelEndBp]);
-        shader.uniform('color', [1.0, 0.0, 0.5]);
-        shader.uniform('windowSize', windowState.windowSize);
-        shader.uniform('tileHeight', textHeight);
-        shader.uniform('displayedRange', [startBasePair, endBasePair]);
-        shader.uniform('totalRange', [0, GENOME_LENGTH]);
-        shader.uniform('offset', [roiOffsetX, yOffset + annotationYOffset + roiOffsetY]);
-        if (windowState.selection) {
-          shader.uniformi('showSelection', 1);
-          shader.uniform('selectionBoundsMin', windowState.selection.min);
-          shader.uniform('selectionBoundsMax', windowState.selection.max);
-        }
-        context.drawQuad(shader);
-      });
+          const textHeight = this.textures[text].shape[0] / windowState.windowSize[1];
+          const padding = TEXT_PADDING_LEFT / windowState.windowSize[0];
+          const roiOffsetX = padding + 0.5 * (this.textures[text].roi.w - this.textures[text].shape[1]) / windowState.windowSize[0];
+          const roiOffsetY = annotationCenter - 0.5 * this.textures[text].shape[0] / windowState.windowSize[1];
+          const shader = shaders.textShader;
+          const labelEndBp = annotation.startBp + this.textures[text].shape[1] * windowState.basePairsPerPixel;
+          this.textures[text].bind(1);
+          shader.use();
+          shader.uniformi('texture', 1);
+          shader.uniform('textureDimensions', this.textures[text].shape);
+          shader.uniform('currentTileDisplayRange', [annotation.startBp, labelEndBp]);
+          shader.uniform('totalTileRange', [annotation.startBp, labelEndBp]);
+          shader.uniform('color', [1.0, 0.0, 0.5]);
+          shader.uniform('windowSize', windowState.windowSize);
+          shader.uniform('tileHeight', textHeight);
+          shader.uniform('displayedRange', [startBasePair, endBasePair]);
+          shader.uniform('totalRange', [0, GENOME_LENGTH]);
+          shader.uniform('offset', [roiOffsetX, yOffset + annotationYOffset + roiOffsetY]);
+          if (windowState.selection) {
+            shader.uniformi('showSelection', 1);
+            shader.uniform('selectionBoundsMin', windowState.selection.min);
+            shader.uniform('selectionBoundsMax', windowState.selection.max);
+          }
+          context.drawQuad(shader);
+        });
+      }
     });
     
     return renderResults;

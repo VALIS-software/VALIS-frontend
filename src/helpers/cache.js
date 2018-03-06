@@ -10,13 +10,18 @@ export const CACHE_TILE_SIZE = 1024;
 const CACHE_THROTTLE_MS = 250;
 
 export class Tile {
-  constructor(tileRange, dataRange, samplingRate, trackHeightPx, data) {
+  constructor(tileRange, dataRange, samplingRate, trackHeightPx, data, count=null) {
     this._tileRange = tileRange;
     this._dataRange = dataRange;
     this._samplingRate = samplingRate;
     this._trackHeightPx = trackHeightPx;
     this._data = data;
+    this._count = count;
     data.guid = uuid();
+  }
+
+  get count() {
+    return this._count;
   }
 
   get data() {
