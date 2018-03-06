@@ -43,9 +43,14 @@ export default class AnnotationTrackRenderer {
       pixels.push(pixelWidth);
     });
 
-    const averageNormalizedCount = stats.mean(normalizedCounts);
-    const normalizedCountVariance = stats.variance(normalizedCounts);
-    const totalPixels = stats.sum(pixels);
+    const totalNormalizedCounts = stats.sum(normalizedCounts);
+    const weights = [];
+    normalizedCounts.forEach(count => {
+      weights.push(count / totalNormalizedCounts);
+    });
+
+    const weightAverage = stats.mean(weights);
+    const weightVariance = stats.variance(weights);
 
     annotations.forEach(annotation => {
       const aggregation = annotation.aggregation;
@@ -97,7 +102,9 @@ export default class AnnotationTrackRenderer {
           shader.uniformi('texture', 1);
         }
         const normalizedCount = annotation.count / ((range[1] - range[0]) / basePairsPerPixel);
-        const brightness =  1.0 + (normalizedCount - averageNormalizedCount) / normalizedCountVariance;
+        let brightness = 0.5 + ((normalizedCount / totalNormalizedCounts) - weightAverage) / Math.sqrt(weightVariance);
+        const alpha = 0.8;
+        brightness = alpha + brightness * (1.0 - alpha);
         color = color.map(d => { return brightness * (0.0 + d); });
         shader.uniform('color', color);
         shader.uniformi('showHover', enableHover);
