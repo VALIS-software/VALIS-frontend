@@ -30,8 +30,10 @@ class AnnotationTrack extends Track {
     let ret = [];
     let countInRange = 0;
     tiles.forEach(tile => {
-      countInRange += tile.tile.count;
-      ret = ret.concat(tile.tile.data);
+      if (tile.tile) {
+        countInRange += tile.tile.count;
+        ret = ret.concat(tile.tile.data);
+      }
     });
     return {
       annotations: ret,

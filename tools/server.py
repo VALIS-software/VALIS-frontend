@@ -111,14 +111,14 @@ def graph(graph_id, annotation_id1, annotation_id2, start_bp, end_bp):
 	set2 = []
 	if sampling_rate < 1000000:
 		count = 0
-		for i in xrange(0, 100000000, 500000):
+		for i in range(0, 100000000, 500000):
 			if i >= start_bp and i <= end_bp:
 				annotation_name = "X%d" % count
 				random.seed(annotation_name)
 				set1.append(random.randint(0,1000000000))
 			count += 1
 		count = 0
-		for i in xrange(0, 100000000, 500000):
+		for i in range(0, 100000000, 500000):
 			if i >= start_bp + base_pair_offset and i <= end_bp + base_pair_offset:
 				annotation_name = "Y%d" % count
 				random.seed(annotation_name)
@@ -142,7 +142,7 @@ def graph(graph_id, annotation_id1, annotation_id2, start_bp, end_bp):
 @app.route("/annotations")
 def annotations():
 	MOCK_ANNOTATIONS = getMockAnnotations()
-	return json.dumps(MOCK_ANNOTATIONS.keys())
+	return json.dumps(dict(MOCK_ANNOTATIONS.keys()))
 
 @app.route("/annotations/<string:annotation_id>")
 def annotation(annotation_id):
@@ -181,7 +181,7 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 			cEnd = chromosome_to_idx(find_chromosome(end_bp))
 			last_gene_start = None
 			gene_count = 0
-			for ch_idx in xrange(cStart, cEnd + 1):
+			for ch_idx in range(cStart, cEnd + 1):
 				ch = idx_to_chromosome(ch_idx)
 				ch_range = chromosome_range(ch)
 				for gene in ENSEMBL_DATA.genes(ch):
@@ -192,17 +192,17 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 					if sz/float(sampling_rate) > 20:
 						annotation_results.append((name, start, end))
 		if annotation_id == "GWASCatalog":
-			print "got json"
-			print request.get_json()
+			print("got json")
+			print(request.get_json())
 		count = 0
 		if annotation_id == "cross-track-test-1" or annotation_id == "GWASCatalog":
-			for i in xrange(0, 100000000, 500000):
+			for i in range(0, 100000000, 500000):
 				if i >= start_bp and i <= end_bp:
 					annotation_results.append(("X%d" % count, i, i + 100000))
 				count += 1
 
 		if annotation_id == "cross-track-test-2":
-			for i in xrange(0, 100000000, 500000):
+			for i in range(0, 100000000, 500000):
 				if i >= start_bp and i <= end_bp:
 					annotation_results.append(("Y%d" % count, i, i + 100000))
 				count += 1
