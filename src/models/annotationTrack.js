@@ -28,10 +28,15 @@ class AnnotationTrack extends Track {
   getAnnotations(start, end, samplingRate, trackHeightPx) {
     const tiles = this.getTiles(start, end, samplingRate, trackHeightPx);
     let ret = [];
+    let countInRange = 0;
     tiles.forEach(tile => {
+      countInRange += tile.tile.count;
       ret = ret.concat(tile.tile.data);
     });
-    return ret;
+    return {
+      annotations: ret,
+      countInRange: countInRange,
+    };
   }
 
   loadData(start, end, samplingRate, trackHeightPx) {
@@ -75,8 +80,9 @@ class AnnotationTrack extends Track {
     return promise.then(data => {
       const result = data.data;
       const rawData = data.data.values;
+      const totalCount = data.data.countInRange;
       this.notifyListeners(TRACK_EVENT_LOADING, false);
-      return new Tile([start, end], [result.startBp, result.endBp], result.samplingRate, result.trackHeightPx, rawData);
+      return new Tile([start, end], [result.startBp, result.endBp], result.samplingRate, result.trackHeightPx, rawData, totalCount);
     }, failure => {
       this.notifyListeners(TRACK_EVENT_LOADING, false);
     });
