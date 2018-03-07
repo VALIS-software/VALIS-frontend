@@ -101,10 +101,15 @@ export default class AnnotationTrackRenderer {
           this.textures[textureName].bind(1);
           shader.uniformi('texture', 1);
         }
-        const normalizedCount = annotation.count / ((range[1] - range[0]) / basePairsPerPixel);
-        let brightness = 0.5 + ((normalizedCount / totalNormalizedCounts) - weightAverage) / Math.sqrt(weightVariance);
-        const alpha = 0.8;
-        brightness = alpha + brightness * (1.0 - alpha);
+
+        let brightness = 1.0;
+        if (aggregation) {
+          const normalizedCount = annotation.count / ((range[1] - range[0]) / basePairsPerPixel);
+          brightness = 0.5 + ((normalizedCount / totalNormalizedCounts) - weightAverage) / Math.sqrt(weightVariance);
+          const alpha = 0.8;
+          brightness = alpha + brightness * (1.0 - alpha);  
+        }
+
         color = color.map(d => { return brightness * (0.0 + d); });
         shader.uniform('color', color);
         shader.uniformi('showHover', enableHover);
