@@ -202,7 +202,7 @@ class MultiTrackViewer extends React.Component {
     this.tracks = event.sender.tracks;
     event.sender.tracks.forEach(track => {
       if (!this.views[track.guid]) {
-        newViews[track.guid] = new TrackView(track.guid, this.props.model, track.height, track.basePairOffset);
+        newViews[track.guid] = new TrackView(track.guid, this.props.model, track.color, track.height, track.basePairOffset);
       } else {
         newViews[track.guid] = this.views[track.guid];
       }
@@ -216,6 +216,7 @@ class MultiTrackViewer extends React.Component {
         trackView.setAnnotationTrack(track.annotationTrack);
       }
 
+      trackView.setColor(track.color);
       trackView.setBasePairOffset(track.basePairOffset);
       trackView.setHeight(track.height);
     });
