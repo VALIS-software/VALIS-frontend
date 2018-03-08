@@ -10,6 +10,7 @@ import AutoComplete from 'material-ui/AutoComplete';
 import Toggle from 'material-ui/Toggle';
 import { RadioButton, RadioButtonGroup } from 'material-ui/RadioButton';
 import { Card, CardHeader, CardTitle, CardText } from 'material-ui/Card';
+import { HuePicker } from 'react-color';
 
 // Styles
 import './TrackViewSettings.scss';
@@ -18,28 +19,43 @@ import 'react-input-range/lib/css/index.css';
 class TrackViewSettings extends Component {
   constructor(props) {
     super(props);
-    this.onChange = this.onChange.bind(this);
+    this.onHeightChange = this.onHeightChange.bind(this);
+    this.onColorChange = this.onColorChange.bind(this);
     this.onNewRequest = this.onNewRequest.bind(this);
     this.setAutoScale = this.setAutoScale.bind(this);
   }
+
+  computeHsv(c) {
+    return { h: 360.0 * c, s: 1.0, l: 1.0, a: 1.0 };
+  } 
 
   componentDidMount() {
     this.setState({
       currentHeight: 0.1,
       currentBasePairOffset: 0,
+      currentColor: this.computeHsv(0.8),
       dataSource: ['BRCA1', 'SLC6A4'],
     });
   }
 
   componentWillReceiveProps(nextProps) {
     if (!nextProps.model || !nextProps.guid) return;
+    const color = nextProps.model.getTrackColor(nextProps.guid);
     this.setState({
       currentHeight: nextProps.model.getTrackHeight(nextProps.guid),
+      currentColor: this.computeHsv(color),
       yAxisMode: 'a',
     });
   }
 
-  onChange(currentHeight) {
+  onColorChange(currentColor) {
+    const guid = this.props.guid;
+    const hue = currentColor.hsv.h / 360.0;
+    this.props.model.setTrackColor(guid, hue);
+    this.setState({ currentColor });
+  }
+
+  onHeightChange(currentHeight) {
     const guid = this.props.guid;
     this.props.model.setTrackHeight(guid, currentHeight);
     this.setState({ currentHeight });
@@ -70,7 +86,8 @@ class TrackViewSettings extends Component {
 
   render() {
     if (!this.state) return (<div />);
-    const onChange = this.onChange;
+    const onHeightChange = this.onHeightChange;
+    const onColorChange = this.onColorChange;
     const dataSourceConfig = {
       // text: 'name',
       // value: 'name',
@@ -85,7 +102,7 @@ class TrackViewSettings extends Component {
           maxValue={1}
           minValue={0.1}
           value={this.state.currentHeight}
-          onChange={onChange}
+          onChange={onHeightChange}
         />
       </div>
     </div>);
@@ -111,7 +128,7 @@ class TrackViewSettings extends Component {
             maxValue={1}
             minValue={0.1}
             value={this.state.currentHeight}
-            onChange={onChange}
+            onChange={onHeightChange}
           />
         </div>
         <div>Offset </div>
@@ -122,7 +139,7 @@ class TrackViewSettings extends Component {
             maxValue={1}
             minValue={0.1}
             value={this.state.currentHeight}
-            onChange={onChange}
+            onChange={onHeightChange}
           />
         </div>
       </div>);
@@ -132,18 +149,13 @@ class TrackViewSettings extends Component {
       backgroundColor: '#e8e8e8',
     };
 
+    
+    const huePicker = (<HuePicker color={this.state.currentColor} onChangeComplete={onColorChange} width="100%" />);
     return (<div className="track-view-settings">
       <Card>
-        <CardHeader style={headerStyle} title="Start Location Offset" />
+        <CardHeader style={headerStyle} title="Track Color" />
         <CardText>
-          <AutoComplete
-            hintText="Gene, SNP or Base Pair"
-            dataSource={this.state.dataSource}
-            onNewRequest={this.onNewRequest}
-            filter={AutoComplete.caseInsensitiveFilter}
-            maxSearchResults={8}
-            fullWidth={false}
-          />
+          {huePicker}
         </CardText>
       </Card>
       <Card>
@@ -156,7 +168,7 @@ class TrackViewSettings extends Component {
               maxValue={1}
               minValue={0.04}
               value={this.state.currentHeight}
-              onChange={onChange}
+              onChange={onHeightChange}
             />
           </div>
         </CardText>

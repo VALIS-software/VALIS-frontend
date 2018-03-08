@@ -20,7 +20,7 @@ export default class DataTrackRenderer {
     this.textures = {};
   }
 
-  render(dataTrack, height, yOffset, context, shaders, windowState) {
+  render(dataTrack, color, height, yOffset, context, shaders, windowState) {
     const startBasePair = windowState.startBasePair;
     const basePairsPerPixel = windowState.basePairsPerPixel;
     const endBasePair = Util.endBasePair(startBasePair, basePairsPerPixel, windowState.windowSize);

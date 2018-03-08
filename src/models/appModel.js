@@ -74,6 +74,7 @@ class AppModel extends EventCreator {
         height: 0.1,
         basePairOffset: 0,
         dataTrack: model,
+        color: null,
         annotationTrack: null,
       };
       model.addListener(this.loadingStarted, TRACK_EVENT_LOADING);
@@ -90,6 +91,7 @@ class AppModel extends EventCreator {
         height: 0.1,
         basePairOffset: 0,
         dataTrack: null,
+        color: 0.6,
         annotationTrack: model,
       };
       model.addListener(this.loadingStarted, TRACK_EVENT_LOADING);
@@ -126,6 +128,17 @@ class AppModel extends EventCreator {
     arr.splice(toIdx, 0, arr.splice(index, 1)[0]);
     this.tracks = arr;
     this.notifyListeners(APP_EVENT_REORDER_TRACKS, trackMoved);
+  }
+
+  setTrackColor(trackViewGuid, color) {
+    const index = this.indexOfTrack(trackViewGuid);
+    this.tracks[index].color = color;
+    this.notifyListeners(APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED, this.tracks[index]);
+  }
+
+  getTrackColor(trackViewGuid) {
+    const index = this.indexOfTrack(trackViewGuid);
+    return this.tracks[index].color;
   }
 
   setTrackHeight(trackViewGuid, height) {

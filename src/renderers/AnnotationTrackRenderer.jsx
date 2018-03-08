@@ -3,6 +3,7 @@ import { GENOME_LENGTH } from '../helpers/constants.js';
 
 const createText = require('../../lib/gl-render-text/createText.js');
 const stats = require('stats-lite');
+const hsl = require('color-space/hsl');
 
 const TEXT_PADDING_LEFT = 4;
 
@@ -22,7 +23,7 @@ export default class AnnotationTrackRenderer {
     return this._hoverElement;
   }
 
-  render(annotationTrack, height, yOffset, context, shaders, windowState) {
+  render(annotationTrack, trackColor, height, yOffset, context, shaders, windowState) {
     const startBasePair = windowState.startBasePair;
     const basePairsPerPixel = windowState.basePairsPerPixel;
     const endBasePair = Util.endBasePair(startBasePair, basePairsPerPixel, windowState.windowSize);
@@ -85,7 +86,6 @@ export default class AnnotationTrackRenderer {
         // segment = [startBp, endBp, textureName, [R,G,B,A], heightPx]
         const shader = shaders.annotationShader;
         const textureName = segment[2];
-        let color = segment[3] || [0.5, 0.5, 0.5, 1.0];
         let segmentHeight = (segment[4] || 32) / windowState.windowSize[1];
 
         if (aggregation) segmentHeight = trackHeightPx / windowState.windowSize[1];
@@ -102,15 +102,15 @@ export default class AnnotationTrackRenderer {
           shader.uniformi('texture', 1);
         }
 
-        let brightness = 1.0;
+        let color = segment[3] || [0.5, 0.5, 0.5, 1];
         if (aggregation) {
           const normalizedCount = annotation.count / ((range[1] - range[0]) / basePairsPerPixel);
-          brightness = 0.5 + ((normalizedCount / totalNormalizedCounts) - weightAverage) / Math.sqrt(weightVariance);
+          let brightness = 0.5 + ((normalizedCount / totalNormalizedCounts) - weightAverage) / Math.sqrt(weightVariance);
           const alpha = 0.8;
           brightness = alpha + brightness * (1.0 - alpha);  
+          color = hsl.rgb([trackColor * 360.0, 50.0, 0.5]).map(d => brightness * d / 3.0);
+          color.push(1.0);
         }
-
-        color = color.map(d => { return brightness * (0.0 + d); });
         shader.uniform('color', color);
         shader.uniformi('showHover', enableHover);
         shader.uniformi('selectedBasePair', windowState.selectedBasePair);

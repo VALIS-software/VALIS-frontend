@@ -18,11 +18,12 @@ import TrackBackground from '../TrackBackground/TrackBackground.jsx';
 import Util from '../../helpers/util.js';
 
 class TrackView {
-  constructor(guid, appModel, height=0.1, basePairOffset=0) {
+  constructor(guid, appModel, color=0.6, height=0.1, basePairOffset=0) {
     this.guid = guid;
     this.appModel = appModel;
     this.height = height;
     this.yOffset = 0.0;
+    this.color = color;
     this.annotationTrack = null;
     this.dataTrack = null;
     this.dataRenderer = new DataTrackRenderer();
@@ -72,6 +73,14 @@ class TrackView {
     return this.height;
   }
 
+  setColor(color) {
+    this.color = color;
+  }
+
+  getColor() {
+    return this.color;
+  }
+
   setYOffset(offset) {
     this.yOffset = offset;
   }
@@ -97,13 +106,13 @@ class TrackView {
     const roundedHeight = Util.floorToPixel(this.height, windowState.windowSize[1]);
     
     if (this.annotationTrack !== null) {
-      const renderResult = this.annotationRenderer.render(this.annotationTrack, roundedHeight, this.yOffset, context, shaders, trackWindowState);
+      const renderResult = this.annotationRenderer.render(this.annotationTrack, this.color, roundedHeight, this.yOffset, context, shaders, trackWindowState);
       overlays.forEach(overlay => {
         overlay.addRegion(this.annotationTrack, roundedHeight, this.yOffset, trackWindowState, renderResult);
       });
     }
     if (this.dataTrack !== null) {
-      this.dataRenderer.render(this.dataTrack, roundedHeight, this.yOffset, context, shaders, trackWindowState);
+      this.dataRenderer.render(this.dataTrack, this.color, roundedHeight, this.yOffset, context, shaders, trackWindowState);
     }
   }
 
