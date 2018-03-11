@@ -106,6 +106,12 @@ class GenomeAPI {
 		const requestUrl = `${this.baseUrl}/tracks/${trackId}/${startBp}/${endBp}${query}`;
 		return axios.get(requestUrl);
 	}
+
+	getTrackInfo() {
+		return axios.get(`${this.baseUrl}/track_info`).then(data => {
+			return data.data;
+		});
+	}
 }
 
 export default GenomeAPI;

@@ -1,0 +1,22 @@
+.dataset-selector {
+	padding: auto;
+	.dataset-option {
+        border-radius: 18px;
+        background: #404346;
+        padding: 8px;
+        margin: 10px;
+        .option-title{
+            color: white;  
+			font-size: 16px;
+            font-weight: bold;
+            padding: 2px;
+            text-align: center;
+        }
+        .option-description{
+            color: #d2d5d6;
+            font-size: 14px;
+            padding: 2px;
+            text-align: center;
+        }
+    }
+}

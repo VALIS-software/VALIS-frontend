@@ -7,6 +7,7 @@ import MenuItem from 'material-ui/MenuItem';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import IconButton from 'material-ui/IconButton';
+import RaisedButton from 'material-ui/RaisedButton';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 
@@ -100,12 +101,15 @@ class Header extends Component {
               fullWidth={true}
             />
           </div>
+        </ToolbarGroup>
+        <ToolbarGroup>
           <DropDownMenu value={this.state.searchFilter}  onChange={this.onUpdateSearchFilter}>
             <MenuItem value={1} primaryText="Everything" />
             <MenuItem value={2} primaryText="Genomes" />
             <MenuItem value={3} primaryText="Genes" />
             <MenuItem value={4} primaryText="SNPs" />
           </DropDownMenu>
+          <RaisedButton label="Browse Data" primary={true} onClick={() => this.props.model.addDatasetBrowser()} />
         </ToolbarGroup>
       </Toolbar>
     </div>);
