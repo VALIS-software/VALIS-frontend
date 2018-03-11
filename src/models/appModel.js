@@ -70,10 +70,7 @@ class AppModel extends EventCreator {
   }
 
   addDatasetBrowser() {
-    return this.api.getTrackInfo().then(data => {
-      this.notifyListeners(APP_EVENT_ADD_DATASET_BROWSER, data);  
-      return data;
-    });
+    this.notifyListeners(APP_EVENT_ADD_DATASET_BROWSER);
   }
 
   addDataTrack(trackId) {

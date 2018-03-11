@@ -85,12 +85,11 @@ class App extends React.Component {
     }
   }
 
-  addDatasetBrowser(event) {
+  addDatasetBrowser() {
     this.setState({
       showInfo: true,
       currSideBarType: SIDEBAR_TYPE_BROWSE_DATA,
       currSideBarInfo: 'Add Track',
-      currSideBarDataInfo: event.data,
     });
   }
 
@@ -116,8 +115,7 @@ class App extends React.Component {
       const entity = this.state.currSideBarEntity;
       return (<EntityDetails entity={entity} />);
     } else if (this.state.currSideBarType === SIDEBAR_TYPE_BROWSE_DATA) {
-      const dataInfo = this.state.currSideBarDataInfo;
-      return (<DatasetSelector dataInfo={dataInfo} />);
+      return (<DatasetSelector />);
     } else {
       return null;
     }
