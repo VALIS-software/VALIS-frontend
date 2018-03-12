@@ -16,6 +16,7 @@ const APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED = 'TRACK_VIEW_SETTINGS_UPDATED';
 const APP_EVENT_ADD_OVERLAY = 'ADD_OVERLAY';
 const APP_EVENT_REMOVE_OVERLAY = 'REMOVE_OVERLAY';
 const APP_EVENT_ADD_DATASET_BROWSER = 'ADD_DATASET_BROWSER';
+const APP_EVENT_EDIT_DATASET_BROWSER = 'EDIT_DATASET_BROWSER';
 
 export { 
   APP_EVENT_ADD_TRACK,
@@ -28,6 +29,7 @@ export {
   APP_EVENT_EDIT_TRACK_VIEW_SETTINGS,
   APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED,
   APP_EVENT_ADD_DATASET_BROWSER,
+  APP_EVENT_EDIT_DATASET_BROWSER,
 };
 
 class AppModel extends EventCreator {
@@ -71,6 +73,10 @@ class AppModel extends EventCreator {
 
   addDatasetBrowser() {
     this.notifyListeners(APP_EVENT_ADD_DATASET_BROWSER);
+  }
+
+  editDatasetBrowser(dataType) {
+    this.notifyListeners(APP_EVENT_EDIT_DATASET_BROWSER, dataType);
   }
 
   addDataTrack(trackId) {

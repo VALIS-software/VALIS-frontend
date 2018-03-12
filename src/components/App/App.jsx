@@ -14,11 +14,13 @@ import EntityDetails from '../EntityDetails/EntityDetails.jsx';
 import TrackViewSettings from '../TrackViewSettings/TrackViewSettings.jsx';
 import MultiTrackViewer from '../MultiTrackViewer/MultiTrackViewer.jsx';
 import DatasetSelector from '../DatasetSelector/DatasetSelector.jsx';
+import GWASSelector from '../GWASSelector/GWASSelector.jsx';
 import AppModel, { 
   APP_EVENT_LOADING_STATE_CHANGED,  
   APP_EVENT_EDIT_TRACK_VIEW_SETTINGS,
   APP_EVENT_SHOW_ENTITY_DETAIL,
   APP_EVENT_ADD_DATASET_BROWSER,
+  APP_EVENT_EDIT_DATASET_BROWSER,
 } from '../../models/appModel.js';
 
 import ViewModel from '../../models/viewModel.js';
@@ -30,6 +32,7 @@ const _ = require('underscore');
 const SIDEBAR_TYPE_TRACK_SETTINGS = 'track-settings';
 const SIDEBAR_TYPE_ENTITY_DETAILS = 'entity-details';
 const SIDEBAR_TYPE_BROWSE_DATA = 'browse-data';
+const SIDEBAR_TYPE_BROWSE_DATA_GWAS = 'browse-data-gwas';
 
 class App extends React.Component {
   constructor(props) {
@@ -39,6 +42,7 @@ class App extends React.Component {
     this.showTrackSettings = this.showTrackSettings.bind(this);
     this.hideSideBar = this.hideSideBar.bind(this);
     this.addDatasetBrowser = this.addDatasetBrowser.bind(this);
+    this.editDatasetBrowser = this.editDatasetBrowser.bind(this);
   }
 
   componentDidMount() {
@@ -57,6 +61,7 @@ class App extends React.Component {
     this.appModel.addListener(this.showEntityDetails, APP_EVENT_SHOW_ENTITY_DETAIL);
     this.appModel.addListener(this.showTrackSettings, APP_EVENT_EDIT_TRACK_VIEW_SETTINGS);
     this.appModel.addListener(this.addDatasetBrowser, APP_EVENT_ADD_DATASET_BROWSER);
+    this.appModel.addListener(this.editDatasetBrowser, APP_EVENT_EDIT_DATASET_BROWSER);
   }
 
   hideSideBar() {
@@ -93,6 +98,29 @@ class App extends React.Component {
     });
   }
 
+  editDatasetBrowser(event) {
+    const trackType = event.data;
+    let currSideBarType;
+    let currSideBarInfo;
+    if (trackType === 'gwas') {
+      currSideBarType = SIDEBAR_TYPE_BROWSE_DATA_GWAS;
+      currSideBarInfo = 'GWAS Track';
+    } else if (trackType === 'sequence') {
+      currSideBarInfo = 'Sequence Track';
+    } else if (trackType === 'GRCh38_gff') {
+      currSideBarInfo = 'Genome Elements Track';
+    } else if (trackType === 'eqtl') {
+      currSideBarInfo = 'eQTL Track';
+    } else {
+      currSideBarInfo = trackType;
+    }
+    this.setState({
+      showInfo: true,
+      currSideBarType: currSideBarType,
+      currSideBarInfo: currSideBarInfo,
+    });
+  }
+
   showTrackSettings(event) {
     if (event.data !== null) {
       if (event.data === this.state.currSideBarInfo) {
@@ -115,7 +143,9 @@ class App extends React.Component {
       const entity = this.state.currSideBarEntity;
       return (<EntityDetails entity={entity} />);
     } else if (this.state.currSideBarType === SIDEBAR_TYPE_BROWSE_DATA) {
-      return (<DatasetSelector />);
+      return (<DatasetSelector appmodel={this.appModel} />);
+    } else if (this.state.currSideBarType === SIDEBAR_TYPE_BROWSE_DATA_GWAS) {
+      return (<GWASSelector appmodel={this.appModel} />);
     } else {
       return null;
     }

@@ -1,14 +1,17 @@
 // Dependencies
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import GenomeAPI from '../../models/api.js';
+
 // Styles
 import './DatasetSelector.scss';
 
 class DatasetSelector extends Component {
   constructor(props) {
     super(props);
-    this.api = new GenomeAPI();
+    if (props.appmodel) {
+      this.appmodel = props.appmodel;
+      this.api = this.appmodel.api;
+    }
     this.state = {
       dataInfo : [],
     };
@@ -28,14 +31,12 @@ class DatasetSelector extends Component {
     const dataInfoBlocks = [];
     for (const di of dataInfo) {
       dataInfoBlocks.push(
-        <div className="dataset-option">
-          <div className="option-title">
-            {di.title}
-          </div>
-          <div className="option-description">
-            {di.description}
-          </div>
-        </div>
+        <DataButton
+          title={di.title}
+          description={di.description}
+          onClick={() => this.appmodel.editDatasetBrowser(di.track_type)}
+          key={di.title}
+        />
       );
     }
     return (<div className="dataset-selector">{ dataInfoBlocks }</div>);
@@ -43,7 +44,27 @@ class DatasetSelector extends Component {
 }
 
 DatasetSelector.propTypes = {
-  api: PropTypes.object,
+  appmodel: PropTypes.object,
+  onClick: PropTypes.func,
+};
+
+function DataButton(props) {
+  return (
+    <button className="dataset-button" onClick={props.onClick}>
+      <div className="option-title">
+        {props.title}
+      </div>
+      <div className="option-description">
+        {props.description}
+      </div>
+    </button>
+  );
+}
+
+DataButton.propTypes = {
+  onClick: PropTypes.func,
+  title: PropTypes.string,
+  description: PropTypes.string,
 };
 
 export default DatasetSelector;
