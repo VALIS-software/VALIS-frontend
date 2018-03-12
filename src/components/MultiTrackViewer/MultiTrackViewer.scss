@@ -36,6 +36,7 @@
     }
 
     .track-header-axis {
+        position: relative;
         height: $axis-height;
         z-index: 999;
         background: linear-gradient(darken($bg-color, 25%), $bg-color);
