@@ -23,6 +23,8 @@ jobs:
       - store_artifacts:
           path: dist
   test:
+    docker:
+      - image: yudongdev/node-gcloud:8.9.4
     working_directory: ~/VALIS-frontend
     steps:
       - checkout
@@ -31,6 +33,8 @@ jobs:
           # we need to add some tests here
           command: echo "Testing"
   deploy:
+    docker:
+      - image: yudongdev/node-gcloud:8.9.4
     working_directory: ~/VALIS-frontend
     steps:
       - checkout
