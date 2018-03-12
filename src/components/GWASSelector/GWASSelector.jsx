@@ -28,8 +28,8 @@ class GWASSelector extends Component {
     this.handleUpdateGeneInput = this.handleUpdateGeneInput.bind(this);
     this.handleUpdatePValue = this.handleUpdatePValue.bind(this);
     this.handleUpdateMaxNumber = this.handleUpdateMaxNumber.bind(this);
-    if (props.appmodel) {
-      this.appmodel = props.appmodel;
+    if (props.appModel) {
+      this.appModel = props.appModel;
     }
     this.state = {
       searchTrait: '',
@@ -110,7 +110,7 @@ class GWASSelector extends Component {
         <RaisedButton
           label="Create Track"
           primary={true}
-          onClick={() => this.appmodel.addDatasetBrowser()}
+          onClick={() => this.appModel.addDatasetBrowser()}
           disabled={!this.state.searchTrait}
           style={{ position: 'absolute', bottom: '10px', width: '90%' }}
         />
@@ -120,7 +120,7 @@ class GWASSelector extends Component {
 }
 
 GWASSelector.propTypes = {
-  appmodel: PropTypes.object,
+  appModel: PropTypes.object,
 };
 
 export default GWASSelector;

@@ -16,9 +16,9 @@ const APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED = 'TRACK_VIEW_SETTINGS_UPDATED';
 const APP_EVENT_ADD_OVERLAY = 'ADD_OVERLAY';
 const APP_EVENT_REMOVE_OVERLAY = 'REMOVE_OVERLAY';
 const APP_EVENT_ADD_DATASET_BROWSER = 'ADD_DATASET_BROWSER';
-const APP_EVENT_EDIT_DATASET_BROWSER = 'EDIT_DATASET_BROWSER';
+const APP_EVENT_DATA_SET_SELECTED = 'DATA_SET_SELECTED';
 
-export { 
+export {
   APP_EVENT_ADD_TRACK,
   APP_EVENT_ADD_OVERLAY,
   APP_EVENT_REMOVE_OVERLAY,
@@ -29,7 +29,7 @@ export {
   APP_EVENT_EDIT_TRACK_VIEW_SETTINGS,
   APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED,
   APP_EVENT_ADD_DATASET_BROWSER,
-  APP_EVENT_EDIT_DATASET_BROWSER,
+  APP_EVENT_DATA_SET_SELECTED,
 };
 
 class AppModel extends EventCreator {
@@ -75,8 +75,8 @@ class AppModel extends EventCreator {
     this.notifyListeners(APP_EVENT_ADD_DATASET_BROWSER);
   }
 
-  editDatasetBrowser(dataType) {
-    this.notifyListeners(APP_EVENT_EDIT_DATASET_BROWSER, dataType);
+  dataSetSelected(trackType) {
+    this.notifyListeners(APP_EVENT_DATA_SET_SELECTED, trackType);
   }
 
   addDataTrack(trackId) {
@@ -185,7 +185,7 @@ class AppModel extends EventCreator {
     const removed = arr[index].dataTrack || arr[index].annotationTrack;
     removed.removeListener(this.loadingStarted);
     if (index >= 0) {
-      arr.splice(index, 1); 
+      arr.splice(index, 1);
       this.tracks = arr;
       this.notifyListeners(APP_EVENT_REMOVE_TRACK, removed);
     }

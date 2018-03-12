@@ -8,9 +8,9 @@ import './DatasetSelector.scss';
 class DatasetSelector extends Component {
   constructor(props) {
     super(props);
-    if (props.appmodel) {
-      this.appmodel = props.appmodel;
-      this.api = this.appmodel.api;
+    if (props.appModel) {
+      this.appModel = props.appModel;
+      this.api = this.appModel.api;
     }
     this.state = {
       dataInfo : [],
@@ -34,7 +34,7 @@ class DatasetSelector extends Component {
         <DataButton
           title={di.title}
           description={di.description}
-          onClick={() => this.appmodel.editDatasetBrowser(di.track_type)}
+          onClick={() => this.appModel.dataSetSelected(di.track_type)}
           key={di.title}
         />
       );
@@ -44,7 +44,7 @@ class DatasetSelector extends Component {
 }
 
 DatasetSelector.propTypes = {
-  appmodel: PropTypes.object,
+  appModel: PropTypes.object,
   onClick: PropTypes.func,
 };
 
