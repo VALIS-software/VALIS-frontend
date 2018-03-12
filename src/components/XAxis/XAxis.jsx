@@ -63,7 +63,7 @@ class XAxis extends React.Component {
                 .tickSizeOuter(-10)
                 .tickValues(ticks)
                 .tickFormat(this.renderChromosome);
-    } else {
+    } else if (endBasePair > windowState.startBasePair) { // validate active range
       let centerBasePair = (windowState.startBasePair + endBasePair) * 0.5;
       centerBasePair = Math.max(centerBasePair, 0);
       centerBasePair = Math.min(centerBasePair, GENOME_LENGTH);
