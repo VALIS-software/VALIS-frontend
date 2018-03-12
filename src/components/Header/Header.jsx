@@ -62,7 +62,7 @@ class Header extends Component {
   onNewRequest(chosen, index) {
     if (index > -1) {
       if (chosen.resultType === 'data') {
-        this.props.model.addDataTrack(chosen.name);  
+        this.props.model.addDataTrack(chosen.name);
       } else if (chosen.resultType === 'annotation') {
         this.props.model.addAnnotationTrack(chosen.name);
       } else if (chosen.resultType === 'graph') {
@@ -83,7 +83,7 @@ class Header extends Component {
     };
     return (<div className="header">
       <Toolbar>
-        <ToolbarGroup firstChild={true}>
+        <ToolbarGroup firstChild={true} style={{ width: '512px' }}>
           <IconButton onClick={() => this.props.viewModel.back()}>
             <NavigationArrowBack />
           </IconButton>
