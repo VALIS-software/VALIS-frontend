@@ -3,9 +3,7 @@
 .x-axis-indicator {
     position: absolute;
     width: $track-header-width;
-    background: linear-gradient(darken($bg-color, 25%), $bg-color);
     height: $axis-height;
-    
     .indicator-content {
         position: absolute;
         bottom: 0;
@@ -21,7 +19,6 @@
     margin-left: $track-header-width;
     width: 100%;
     height: $axis-height;
-    background: linear-gradient(darken($bg-color, 25%), $bg-color);
     .x-axis {
         text {
             fill: black;
