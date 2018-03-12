@@ -165,6 +165,7 @@ class ViewModel extends EventCreator {
   }
 
   handleMouseMove(e) {
+    e.preventDefault();
     if (this.dragEnabled) {
       const deltaX = e.offsetX - this.lastDragCoord[0];
       const deltaY = e.offsetY - this.lastDragCoord[1];
@@ -183,6 +184,7 @@ class ViewModel extends EventCreator {
   }
 
   handleMouse(e) {
+    e.preventDefault();
     if (this.dragEnabled) {
       return;
     } else if (this.basePairsPerPixel <= GENOME_LENGTH / (this.windowSize[0])) {
