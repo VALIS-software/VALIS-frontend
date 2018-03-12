@@ -11,7 +11,7 @@ function TrackToolTip(props) {
   const style = {
     transform: `translate(${props.x}px, ${props.y}px) translateY(-50%)`,
   };
-  const relativeBp = Util.rawBasePairToChromosomeBasePair(props.basePair);
+  const relativeBp = Util.chromosomeRelativeBasePair(props.basePair);
   let bp = '';
   if (relativeBp) {
     const chrName = 'chr ' + Util.chromosomeIndexToName(relativeBp.chromosomeIndex);

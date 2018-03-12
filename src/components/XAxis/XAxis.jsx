@@ -24,7 +24,7 @@ class XAxis extends React.Component {
   }
 
   renderBasePair(d) {
-    const relativeBp = Util.rawBasePairToChromosomeBasePair(d);
+    const relativeBp = Util.chromosomeRelativeBasePair(d);
     if (relativeBp) {
       return Util.roundToHumanReadable(relativeBp.basePair);
     }
