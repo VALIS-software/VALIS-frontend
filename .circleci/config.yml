@@ -27,7 +27,7 @@ jobs:
       - deploy:
           name: Deploy on Google Cloud
           command: |
-            if [ "$ {CIRCLE_BRANCH}" == "master" ]; then
+            if [ "${CIRCLE_BRANCH}" == "master" ] && [ ! -z "$GCLOUD_SERVICE_KEY" ]; then
               ./tools/prep_gcloud.sh
               NODE_ENV=development npm run deploy
               ./tools/trigger_sirius_deployment.sh
