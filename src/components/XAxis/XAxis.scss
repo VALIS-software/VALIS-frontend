@@ -1,10 +1,24 @@
 @import "../../helpers/variables.scss";
 
+.x-axis-indicator {
+    position: absolute;
+    width: $track-header-width;
+    height: $axis-height;
+    .indicator-content {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        color: black;
+        text-align: center;
+        font-size: 12px;
+    }
+}
+
 .x-axis-container {
-    padding-left: $track-header-width;
+    position: absolute;
+    margin-left: $track-header-width;
     width: 100%;
     height: $axis-height;
-    background: linear-gradient(darken($bg-color, 25%), $bg-color);
     .x-axis {
         text {
             fill: black;

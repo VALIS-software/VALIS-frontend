@@ -20,17 +20,23 @@ class Util {
     return null;
   }
 
-  static rawBasePairToChromosomeBasePair(d) {
-    for (let i = 0; i < CHROMOSOME_START_BASE_PAIRS.length; i++) {
-      if (CHROMOSOME_START_BASE_PAIRS[i] >= d && i > 0) {
-        d -= CHROMOSOME_START_BASE_PAIRS[i - 1];
-        return {
-          chromosomeIndex: i - 1,
-          basePair: d,
-        };
+  static chromosomeIndex(absoluteBasePair) {
+    // determine which chromosome this point falls within
+    for (let i = 1; i < CHROMOSOME_START_BASE_PAIRS.length; i++) {
+      const regionEnd = CHROMOSOME_START_BASE_PAIRS[i];
+      if (absoluteBasePair <= regionEnd) {
+        return i - 1;
       }
     }
     return null;
+  }
+
+  static chromosomeRelativeBasePair(absoluteBasePair) {
+    const chromosomeIndex = this.chromosomeIndex(absoluteBasePair);
+    return {
+      chromosomeIndex: chromosomeIndex,
+      basePair: absoluteBasePair - CHROMOSOME_START_BASE_PAIRS[chromosomeIndex],
+    };
   }
 
   static floorToMultiple(x, k) {
