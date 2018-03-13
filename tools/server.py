@@ -87,6 +87,19 @@ CORS(app)
 def graphs():
 	return json.dumps(["ld_score"])
 
+@app.route("/track_info")
+def track_info():
+    """Return a list of track information"""
+    mock_track_info = [
+        {
+            'track_type': 'sequence',
+            'title': 'Sequence Tracks',
+            'description': 'Raw sequence data'
+        }
+    ]
+    return json.dumps(mock_track_info)
+
+
 @app.route("/graphs/<string:graph_id>/<string:annotation_id1>/<string:annotation_id2>/<int:start_bp>/<int:end_bp>")
 def graph(graph_id, annotation_id1, annotation_id2, start_bp, end_bp):
 	start_bp = int(start_bp)
@@ -142,7 +155,7 @@ def graph(graph_id, annotation_id1, annotation_id2, start_bp, end_bp):
 @app.route("/annotations")
 def annotations():
 	MOCK_ANNOTATIONS = getMockAnnotations()
-	return json.dumps(dict(MOCK_ANNOTATIONS.keys()))
+	return json.dumps(list(MOCK_ANNOTATIONS.keys()))
 
 @app.route("/annotations/<string:annotation_id>")
 def annotation(annotation_id):
@@ -153,11 +166,10 @@ def annotation(annotation_id):
 	else:
 		abort(404, "Annotation not found")
 
-@app.route("/annotations/<string:annotation_ids>/<int:start_bp>/<int:end_bp>", methods=['POST'])
-def get_annotation_data(annotation_ids, start_bp, end_bp):
+@app.route("/annotations/<string:annotation_id>/<int:start_bp>/<int:end_bp>", methods=['POST'])
+def get_annotation_data(annotation_id, start_bp, end_bp):
 	MOCK_DATA = getMockData()
 	MOCK_ANNOTATIONS = getMockAnnotations()
-	annotation_id = annotation_ids.split(",")[0] # mock server doesn't return multiple annotations!
 	start_bp = int(start_bp)
 	end_bp = int(end_bp)
 	
@@ -248,7 +260,7 @@ def get_annotation_data(annotation_ids, start_bp, end_bp):
 		"endBp" : end_bp,
 		"samplingRate": sampling_rate,
 		"trackHeightPx": track_height_px,
-		"annotationIds": annotation_ids,
+		"annotationId": annotation_id,
 		"values": ret
 	})
 
