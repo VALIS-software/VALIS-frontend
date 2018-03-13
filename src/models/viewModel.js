@@ -51,7 +51,8 @@ class ViewModel extends EventCreator {
     domElem.addEventListener('wheel', this.handleMouse);
     domElem.addEventListener('mousemove', this.handleMouseMove);
     domElem.addEventListener('mousedown', this.handleMouseDown);
-    domElem.addEventListener('mouseup', this.handleMouseUp);
+    // capture mouse-up events on the window so that drag operations are ended no matter where the mouse is at the time (even outside the window)
+    window.addEventListener('mouseup', this.handleMouseUp);
     domElem.addEventListener('dblclick', this.handleDoubleClick);
   }
 
@@ -61,7 +62,7 @@ class ViewModel extends EventCreator {
     domElem.removeEventListener('wheel', this.handleMouse);
     domElem.removeEventListener('mousemove', this.handleMouseMove);
     domElem.removeEventListener('mousedown', this.handleMouseDown);
-    domElem.removeEventListener('mouseup', this.handleMouseUp);
+    window.removeEventListener('mouseup', this.handleMouseUp);
     domElem.removeEventListener('dblclick', this.handleDoubleClick);
   }
 
@@ -165,6 +166,7 @@ class ViewModel extends EventCreator {
   }
 
   handleMouseMove(e) {
+    e.preventDefault();
     if (this.dragEnabled) {
       const deltaX = e.offsetX - this.lastDragCoord[0];
       const deltaY = e.offsetY - this.lastDragCoord[1];
@@ -183,6 +185,7 @@ class ViewModel extends EventCreator {
   }
 
   handleMouse(e) {
+    e.preventDefault();
     if (this.dragEnabled) {
       return;
     } else if (this.basePairsPerPixel <= GENOME_LENGTH / (this.windowSize[0])) {
