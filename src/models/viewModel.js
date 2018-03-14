@@ -1,7 +1,7 @@
 
 import EventCreator from './eventCreator.js';
 import Util from '../helpers/util.js';
-import { GENOME_LENGTH } from '../helpers/constants.js';
+import { GENOME_LENGTH, MAX_BASE_PAIR_WIDTH } from '../helpers/constants.js';
 
 const _ = require('underscore');
 
@@ -152,7 +152,7 @@ class ViewModel extends EventCreator {
   }
 
   setViewRegionUsingRange(startBasePair, endBasePair) {
-    const basePairsPerPixel = (endBasePair - startBasePair) / this.windowSize[0];
+    const basePairsPerPixel = Math.max(1.0 / MAX_BASE_PAIR_WIDTH, (endBasePair - startBasePair) / this.windowSize[0]);
     this.setViewRegion(startBasePair, basePairsPerPixel);
   }
 
