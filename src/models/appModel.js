@@ -96,8 +96,8 @@ class AppModel extends EventCreator {
     });
   }
 
-  addAnnotationTrack(annotationId) {
-    return this.api.getAnnotation([annotationId]).then(model => {
+  addAnnotationTrack(annotationId, query=null) {
+    return this.api.getAnnotation(annotationId, query).then(model => {
       const track = {
         guid: uuid(),
         height: 0.1,
