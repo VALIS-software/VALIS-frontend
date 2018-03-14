@@ -236,7 +236,7 @@ class ViewModel extends EventCreator {
       const end = Math.max(this.startDragCoord[0], this.lastDragCoord[0]);
       const startBp = Util.basePairForScreenX(start, this.startBasePair, this.basePairsPerPixel, windowSize);
       const endBp = Util.basePairForScreenX(end, this.startBasePair, this.basePairsPerPixel, windowSize);
-      this.notifyListeners(VIEW_EVENT_SELECTION, { startBp, endBp });
+      if (startBp !== endBp) this.notifyListeners(VIEW_EVENT_SELECTION, { startBp, endBp });
     } else {
       this.notifyListeners(VIEW_EVENT_CLICK, this.lastDragCoord);
     }
