@@ -1,7 +1,7 @@
 
 import EventCreator from './eventCreator.js';
 import Util from '../helpers/util.js';
-import { GENOME_LENGTH } from '../helpers/constants.js';
+import { GENOME_LENGTH, MAX_BASE_PAIR_WIDTH } from '../helpers/constants.js';
 
 const _ = require('underscore');
 
@@ -203,7 +203,7 @@ class ViewModel extends EventCreator {
           
           let newBpPerPixel = this.basePairsPerPixel / (1.0 - (e.deltaY / 1000.0));  
           newBpPerPixel = Math.min(GENOME_LENGTH / (this.windowSize[0]), newBpPerPixel);
-
+          newBpPerPixel = Math.max(1.0 / MAX_BASE_PAIR_WIDTH, newBpPerPixel);
           // compute the new startBasePair so that the cursor remains
           // centered on the same base pair after scaling:
           const rawPixelsAfter = lastBp / newBpPerPixel;
@@ -236,7 +236,7 @@ class ViewModel extends EventCreator {
       const end = Math.max(this.startDragCoord[0], this.lastDragCoord[0]);
       const startBp = Util.basePairForScreenX(start, this.startBasePair, this.basePairsPerPixel, windowSize);
       const endBp = Util.basePairForScreenX(end, this.startBasePair, this.basePairsPerPixel, windowSize);
-      this.notifyListeners(VIEW_EVENT_SELECTION, { startBp, endBp });
+      if (startBp !== endBp) this.notifyListeners(VIEW_EVENT_SELECTION, { startBp, endBp });
     } else {
       this.notifyListeners(VIEW_EVENT_CLICK, this.lastDragCoord);
     }

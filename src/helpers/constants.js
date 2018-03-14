@@ -10,6 +10,7 @@ const COLOR7 = [25, 147, 251];
 const COLOR8 = [209, 17, 73];
 const SIGNAL_COLORS = [COLOR1, COLOR2, COLOR3, COLOR4];
 const BASE_PAIR_COLORS = [COLOR5, COLOR6, COLOR7, COLOR8];
+const MAX_BASE_PAIR_WIDTH = 32.0;
 const TRACK_DATA_TYPE_BASE_PAIRS = 'basepairs';
 const TRACK_DATA_TYPE_GBANDS = 'gbands';
 const TRACK_DATA_TYPE_SIGNAL = 'signal';
@@ -42,16 +43,17 @@ const CHROMOSOME_SIZES = [
 
 const CHROMOSOME_START_BASE_PAIRS = [0];
 for (let i = 0; i < CHROMOSOME_SIZES.length; i++) {
-	const currSize = CHROMOSOME_START_BASE_PAIRS[i] + CHROMOSOME_SIZES[i];
-	CHROMOSOME_START_BASE_PAIRS.push(currSize);
+  const currSize = CHROMOSOME_START_BASE_PAIRS[i] + CHROMOSOME_SIZES[i];
+  CHROMOSOME_START_BASE_PAIRS.push(currSize);
 }
 
 const GENOME_LENGTH = CHROMOSOME_START_BASE_PAIRS[CHROMOSOME_START_BASE_PAIRS.length - 1];
 
 const CHROMOSOME_NAMES = [];
 for (let i = 1; i < 23; i++) {
-	CHROMOSOME_NAMES.push(`Chr${i}`);
+  CHROMOSOME_NAMES.push(`Chr${i}`);
 }
+
 CHROMOSOME_NAMES.push('ChrX');
 CHROMOSOME_NAMES.push('ChrY');
 
