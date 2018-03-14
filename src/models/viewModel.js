@@ -49,7 +49,8 @@ class ViewModel extends EventCreator {
     document.addEventListener('keydown', this.handleKeydown);
     document.addEventListener('keyup', this.handleKeyup);
     domElem.addEventListener('wheel', this.handleMouse);
-    domElem.addEventListener('mousemove', this.handleMouseMove);
+    // continue to capture mouse movement when the mouse leaves the browser window
+    window.addEventListener('mousemove', this.handleMouseMove);
     domElem.addEventListener('mousedown', this.handleMouseDown);
     // capture mouse-up events on the window so that drag operations are ended no matter where the mouse is at the time (even outside the window)
     window.addEventListener('mouseup', this.handleMouseUp);
@@ -60,7 +61,7 @@ class ViewModel extends EventCreator {
     document.removeEventListener('keydown', this.handleKeydown);
     document.removeEventListener('keyup', this.handleKeyup);
     domElem.removeEventListener('wheel', this.handleMouse);
-    domElem.removeEventListener('mousemove', this.handleMouseMove);
+    window.removeEventListener('mousemove', this.handleMouseMove);
     domElem.removeEventListener('mousedown', this.handleMouseDown);
     window.removeEventListener('mouseup', this.handleMouseUp);
     domElem.removeEventListener('dblclick', this.handleDoubleClick);
@@ -168,15 +169,13 @@ class ViewModel extends EventCreator {
   handleMouseMove(e) {
     e.preventDefault();
     if (this.dragEnabled) {
-      const deltaX = e.offsetX - this.lastDragCoord[0];
-      const deltaY = e.offsetY - this.lastDragCoord[1];
-      if (Math.abs(deltaY) > 0 && !this.selectEnabled) {
-        const delta = Math.min(0.0, this.trackOffset + deltaY / this.windowSize[1]);
+      if (Math.abs(e.movementY) > 0 && !this.selectEnabled) {
+        const delta = Math.min(0.0, this.trackOffset + e.movementY / this.windowSize[1]);
         this.trackOffset = delta;
       }
 
-      if (Math.abs(deltaX) > 0 && !this.selectEnabled) {
-        const delta = -deltaX * this.basePairsPerPixel;
+      if (Math.abs(e.movementX) > 0 && !this.selectEnabled) {
+        const delta = -e.movementX * this.basePairsPerPixel;
         this.startBasePair += delta;
       }
     }
@@ -217,14 +216,17 @@ class ViewModel extends EventCreator {
   }
 
   handleMouseDown(evt) {
-    this.dragEnabled = true;
-    this.lastDragCoord = [evt.offsetX, evt.offsetY];
-    this.startDragCoord = [evt.offsetX, evt.offsetY];
-    // set focus on canvas:
-    // evt.currentTarget.setAttribute('tabindex', '1');
-    // evt.currentTarget.focus();
-    // send the drag started event:
-    this.notifyViewStateChange();
+    // only begin drag when the primary button is used
+    if (evt.button === 0) {
+      this.dragEnabled = true;
+      this.lastDragCoord = [evt.offsetX, evt.offsetY];
+      this.startDragCoord = [evt.offsetX, evt.offsetY];
+      // set focus on canvas:
+      // evt.currentTarget.setAttribute('tabindex', '1');
+      // evt.currentTarget.focus();
+      // send the drag started event:
+      this.notifyViewStateChange();
+    }
   }
 
   handleMouseUp(evt) {
