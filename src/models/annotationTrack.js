@@ -5,16 +5,16 @@ import { GENOME_LENGTH } from '../helpers/constants.js';
 import Track, { TRACK_EVENT_LOADING } from './track.js';
 
 class AnnotationTrack extends Track { 
-  constructor(api, annotationIds) {
+  constructor(api, annotationId) {
     super();
     this.api = api;
-    this.annotationIds = annotationIds;
+    this.annotationId = annotationId;
     this.loadData = this.loadData.bind(this);
     this.cache = new TileCache(0, GENOME_LENGTH, this.loadData, LinearCacheSampler(), LinearCacheSampler(8, 8));
   }
 
   get title() {
-    return this.annotationIds.join(',');
+    return this.annotationId;
   }
 
   get showAxis() {
@@ -22,7 +22,7 @@ class AnnotationTrack extends Track {
   }
 
   hasAnnotation(annotationId) {
-    return this.annotationIds.indexOf(annotationId) >= 0;
+    return this.annotationId === annotationId;
   }
 
   getAnnotations(start, end, samplingRate, trackHeightPx) {
@@ -44,7 +44,7 @@ class AnnotationTrack extends Track {
   loadData(start, end, samplingRate, trackHeightPx) {
     this.notifyListeners(TRACK_EVENT_LOADING, true);
     let query = { query : [] };
-    if (this.annotationIds[0] === 'GWASCatalog') {
+    if (this.annotationId === 'GWASCatalog') {
       query = {
         query: [{
           GenomeNode : {
@@ -78,7 +78,7 @@ class AnnotationTrack extends Track {
         }],
       };
     }
-    const promise = this.api.getAnnotationData(this.annotationIds, start, end, samplingRate, trackHeightPx, query);
+    const promise = this.api.getAnnotationData(this.annotationId, start, end, samplingRate, trackHeightPx, query);
     return promise.then(data => {
       const result = data.data;
       const rawData = data.data.values;
