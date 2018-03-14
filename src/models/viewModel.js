@@ -152,7 +152,7 @@ class ViewModel extends EventCreator {
   }
 
   setViewRegionUsingRange(startBasePair, endBasePair) {
-    const basePairsPerPixel = Math.max(1.0 / MAX_BASE_PAIR_WIDTH, (endBasePair - startBasePair) / this.windowSize[0]);
+    const basePairsPerPixel = (endBasePair - startBasePair) / this.windowSize[0];
     this.setViewRegion(startBasePair, basePairsPerPixel);
   }
 
@@ -203,7 +203,7 @@ class ViewModel extends EventCreator {
           
           let newBpPerPixel = this.basePairsPerPixel / (1.0 - (e.deltaY / 1000.0));  
           newBpPerPixel = Math.min(GENOME_LENGTH / (this.windowSize[0]), newBpPerPixel);
-
+          newBpPerPixel = Math.max(1.0 / MAX_BASE_PAIR_WIDTH, newBpPerPixel);
           // compute the new startBasePair so that the cursor remains
           // centered on the same base pair after scaling:
           const rawPixelsAfter = lastBp / newBpPerPixel;
