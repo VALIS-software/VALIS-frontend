@@ -242,20 +242,24 @@ class ViewModel extends EventCreator {
   }
 
   handleMouseUp(evt) {
-    if (this.selectEnabled) {
-      const windowSize = this.windowSize;
-      const start = Math.min(this.startDragCoord[0], this.lastDragCoord[0]);
-      const end = Math.max(this.startDragCoord[0], this.lastDragCoord[0]);
-      const startBp = Util.basePairForScreenX(start, this.startBasePair, this.basePairsPerPixel, windowSize);
-      const endBp = Util.basePairForScreenX(end, this.startBasePair, this.basePairsPerPixel, windowSize);
-      if (startBp !== endBp) this.notifyListeners(VIEW_EVENT_SELECTION, { startBp, endBp });
-    } else {
-      this.notifyListeners(VIEW_EVENT_CLICK, this.lastDragCoord);
+    if (evt.target === this.domElem || this.dragEnabled) {
+      evt.preventDefault();
+
+      if (this.selectEnabled) {
+        const windowSize = this.windowSize;
+        const start = Math.min(this.startDragCoord[0], this.lastDragCoord[0]);
+        const end = Math.max(this.startDragCoord[0], this.lastDragCoord[0]);
+        const startBp = Util.basePairForScreenX(start, this.startBasePair, this.basePairsPerPixel, windowSize);
+        const endBp = Util.basePairForScreenX(end, this.startBasePair, this.basePairsPerPixel, windowSize);
+        if (startBp !== endBp) this.notifyListeners(VIEW_EVENT_SELECTION, { startBp, endBp });
+      } else {
+        this.notifyListeners(VIEW_EVENT_CLICK, this.lastDragCoord);
+      }
+      this.dragEnabled = false;
+      this.lastDragCoord = null;
+      this.startDragCoord = null;
+      this.notifyViewStateChange(true);
     }
-    this.dragEnabled = false;
-    this.lastDragCoord = null;
-    this.startDragCoord = null;
-    this.notifyViewStateChange(true);
   }
 
   handleDoubleClick(evt) {
