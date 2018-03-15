@@ -59,6 +59,10 @@ class QueryBuilder {
     this.query.filters['info.p-value'] = { '<': pvalue };
   }
 
+  setLimit(limit) {
+    this.query.limit = limit;
+  }
+
   addToEdge(edgeQuery) {
     if (this.query.type === QUERY_TYPE_EDGE) {
       throw new Error('Edge can not be connect to another edge.');
