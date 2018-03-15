@@ -92,6 +92,7 @@ class GWASSelector extends Component {
     const edgeQuery = builder.build();
     builder.newGenomeQuery();
     builder.addToEdge(edgeQuery);
+    builder.setLimit(this.state.maxnumber);
     const genomeQuery = builder.build();
     return genomeQuery;
   }
