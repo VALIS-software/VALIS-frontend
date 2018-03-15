@@ -33,10 +33,14 @@ class Util {
 
   static chromosomeRelativeBasePair(absoluteBasePair) {
     const chromosomeIndex = this.chromosomeIndex(absoluteBasePair);
-    return {
-      chromosomeIndex: chromosomeIndex,
-      basePair: absoluteBasePair - CHROMOSOME_START_BASE_PAIRS[chromosomeIndex],
-    };
+    if (chromosomeIndex == null) {
+      return null;
+    } else {
+      return  {
+        chromosomeIndex: chromosomeIndex,
+        basePair: absoluteBasePair - CHROMOSOME_START_BASE_PAIRS[chromosomeIndex],
+      };
+    }
   }
 
   static floorToMultiple(x, k) {
