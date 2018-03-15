@@ -35,7 +35,7 @@ class GWASSelector extends Component {
       this.appModel = props.appModel;
     }
     this.state = {
-      title: 'GWAS',
+      title: '',
       searchTrait: '',
       searchGene: '',
       traits: ['cancer', 'Alzheimer', 'sleep', 'pain', 'hair color', 'asthma'],
