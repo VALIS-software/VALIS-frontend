@@ -36,19 +36,19 @@ class GenomeAPI {
 		});
 	}
 
-	getAnnotation(annotationId) {
-		const cacheKey = annotationId;
+	getAnnotation(annotationId, query=null) {
+		const cacheKey = annotationId + JSON.stringify(query);
 		if (ANNOTATION_CACHE[cacheKey]) {
 			return new Promise((resolve, reject) => {
 				resolve(ANNOTATION_CACHE[cacheKey]);
 			});
 		} else {
-			return axios.get(`${this.baseUrl}/annotations/${cacheKey}`).then(data => {
+			return axios.get(`${this.baseUrl}/annotations/${annotationId}`).then(data => {
 				const trackData = data.data;
-				const track = new AnnotationTrack(this, trackData.annotationId, trackData.startBp, trackData.endBp);
+				const track = new AnnotationTrack(this, trackData.annotationId, query);
 				ANNOTATION_CACHE[cacheKey] = track;
 				return track;
-			});	
+			});
 		}
 	}
 
@@ -96,7 +96,7 @@ class GenomeAPI {
 				const track = new DataTrack(this, trackData.trackId, trackData.dataType);
 				TRACK_CACHE[trackId] = track;
 				return track;
-			});	
+			});
 		}
 	}
 

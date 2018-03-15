@@ -4,10 +4,12 @@ import PropTypes from 'prop-types';
 import TextField from 'material-ui/TextField';
 import AutoComplete from 'material-ui/AutoComplete';
 import Slider from 'material-ui/Slider';
+import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
+import QueryBuilder from '../../models/query.js';
 
 // Styles
 import './GWASSelector.scss';
-import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
+
 
 const logmin = 0;
 const logmax = Math.pow(10, 6);
@@ -24,6 +26,7 @@ function reverse(value) {
 class GWASSelector extends Component {
   constructor(props) {
     super(props);
+    this.handleUpdateTitle = this.handleUpdateTitle.bind(this);
     this.handleUpdateTraitInput = this.handleUpdateTraitInput.bind(this);
     this.handleUpdateGeneInput = this.handleUpdateGeneInput.bind(this);
     this.handleUpdatePValue = this.handleUpdatePValue.bind(this);
@@ -32,6 +35,7 @@ class GWASSelector extends Component {
       this.appModel = props.appModel;
     }
     this.state = {
+      title: '',
       searchTrait: '',
       searchGene: '',
       traits: ['cancer', 'Alzheimer', 'sleep', 'pain', 'hair color', 'asthma'],
@@ -41,10 +45,22 @@ class GWASSelector extends Component {
     };
   }
 
+  handleUpdateTitle(event) {
+    this.setState({
+      title: event.target.value,
+      fixTitle: true,
+    });
+  }
+
   handleUpdateTraitInput(searchText) {
     this.setState({
       searchTrait: searchText,
     });
+    if (!this.state.fixTitle) {
+      this.setState({
+        title: searchText,
+      });
+    }
   }
 
   handleUpdateGeneInput(searchText) {
@@ -65,12 +81,33 @@ class GWASSelector extends Component {
     });
   }
 
+  buildGWASQuery() {
+    const builder = new QueryBuilder();
+    builder.newInfoQuery();
+    builder.filterName({ $contains: this.state.searchTrait });
+    const infoQuery = builder.build();
+    builder.newEdgeQuery();
+    builder.filterMaxPValue(this.state.pvalue);
+    builder.setToNode(infoQuery);
+    const edgeQuery = builder.build();
+    builder.newGenomeQuery();
+    builder.addToEdge(edgeQuery);
+    const genomeQuery = builder.build();
+    return genomeQuery;
+  }
+
+  addGWASQueryTrack() {
+    const query = this.buildGWASQuery();
+    this.appModel.addAnnotationTrack(this.state.title, query);
+  }
+
 	render() {
     return (
       <div className="track-editor">
         <TextField
-          defaultValue="GWAS"
+          value={this.state.title}
           floatingLabelText="Track Title"
+          onChange={this.handleUpdateTitle}
         /><br /> <br />
         <AutoComplete
           floatingLabelText="Trait"
@@ -110,7 +147,7 @@ class GWASSelector extends Component {
         <RaisedButton
           label="Create Track"
           primary={true}
-          onClick={() => this.appModel.addDatasetBrowser()}
+          onClick={() => this.addGWASQueryTrack()}
           disabled={!this.state.searchTrait}
           style={{ position: 'absolute', bottom: '10px', width: '90%' }}
         />
