@@ -29,6 +29,7 @@ class ViewModel extends EventCreator {
     this.selectEnabled = false;
     this.viewStateHistory = [];
     this.historyOffset = 0;
+    this.domElem = null;
     
     this.handleKeydown = this.handleKeydown.bind(this);
     this.handleKeyup = this.handleKeyup.bind(this);
@@ -46,6 +47,7 @@ class ViewModel extends EventCreator {
   }
 
   bindListeners(domElem) {
+    this.domElem = domElem;
     document.addEventListener('keydown', this.handleKeydown);
     document.addEventListener('keyup', this.handleKeyup);
     domElem.addEventListener('wheel', this.handleMouse);
@@ -58,6 +60,7 @@ class ViewModel extends EventCreator {
   }
 
   removeListeners(domElem) {
+    this.domElem = null;
     document.removeEventListener('keydown', this.handleKeydown);
     document.removeEventListener('keyup', this.handleKeyup);
     domElem.removeEventListener('wheel', this.handleMouse);
@@ -167,19 +170,28 @@ class ViewModel extends EventCreator {
   }
 
   handleMouseMove(e) {
-    e.preventDefault();
-    if (this.dragEnabled) {
-      if (Math.abs(e.movementY) > 0 && !this.selectEnabled) {
-        const delta = Math.min(0.0, this.trackOffset + e.movementY / this.windowSize[1]);
-        this.trackOffset = delta;
+    if (e.target === this.domElem || this.dragEnabled) {
+      e.preventDefault();
+      if (this.dragEnabled) {
+        if (Math.abs(e.movementY) > 0 && !this.selectEnabled) {
+          const delta = Math.min(0.0, this.trackOffset + e.movementY / this.windowSize[1]);
+          this.trackOffset = delta;
+        }
+
+        if (Math.abs(e.movementX) > 0 && !this.selectEnabled) {
+          const delta = -e.movementX * this.basePairsPerPixel;
+          this.startBasePair += delta;
+        }
       }
 
-      if (Math.abs(e.movementX) > 0 && !this.selectEnabled) {
-        const delta = -e.movementX * this.basePairsPerPixel;
-        this.startBasePair += delta;
-      }
+      // calculate position relative to domElem
+      const domRect = this.domElem.getBoundingClientRect();
+      const domX = window.scrollX + domRect.left;
+      const domY = window.scrollY + domRect.top;
+      this.lastDragCoord = [e.pageX - domX, e.pageY - domY];
+    } else {
+      this.lastDragCoord = null;
     }
-    this.lastDragCoord = [e.offsetX, e.offsetY];
     this.notifyViewStateChange();
   }
 
@@ -230,20 +242,24 @@ class ViewModel extends EventCreator {
   }
 
   handleMouseUp(evt) {
-    if (this.selectEnabled) {
-      const windowSize = this.windowSize;
-      const start = Math.min(this.startDragCoord[0], this.lastDragCoord[0]);
-      const end = Math.max(this.startDragCoord[0], this.lastDragCoord[0]);
-      const startBp = Util.basePairForScreenX(start, this.startBasePair, this.basePairsPerPixel, windowSize);
-      const endBp = Util.basePairForScreenX(end, this.startBasePair, this.basePairsPerPixel, windowSize);
-      if (startBp !== endBp) this.notifyListeners(VIEW_EVENT_SELECTION, { startBp, endBp });
-    } else {
-      this.notifyListeners(VIEW_EVENT_CLICK, this.lastDragCoord);
+    if (evt.target === this.domElem || this.dragEnabled) {
+      evt.preventDefault();
+
+      if (this.selectEnabled) {
+        const windowSize = this.windowSize;
+        const start = Math.min(this.startDragCoord[0], this.lastDragCoord[0]);
+        const end = Math.max(this.startDragCoord[0], this.lastDragCoord[0]);
+        const startBp = Util.basePairForScreenX(start, this.startBasePair, this.basePairsPerPixel, windowSize);
+        const endBp = Util.basePairForScreenX(end, this.startBasePair, this.basePairsPerPixel, windowSize);
+        if (startBp !== endBp) this.notifyListeners(VIEW_EVENT_SELECTION, { startBp, endBp });
+      } else {
+        this.notifyListeners(VIEW_EVENT_CLICK, this.lastDragCoord);
+      }
+      this.dragEnabled = false;
+      this.lastDragCoord = null;
+      this.startDragCoord = null;
+      this.notifyViewStateChange(true);
     }
-    this.dragEnabled = false;
-    this.lastDragCoord = null;
-    this.startDragCoord = null;
-    this.notifyViewStateChange(true);
   }
 
   handleDoubleClick(evt) {
