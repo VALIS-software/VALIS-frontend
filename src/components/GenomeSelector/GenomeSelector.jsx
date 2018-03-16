@@ -8,7 +8,7 @@ import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import QueryBuilder, { QUERY_TYPE_GENOME } from '../../models/query.js';
-import { CHROMOSOME_NAMES, CHROMOSOME_IDS } from '../../helpers/constants.js';
+import { CHROMOSOME_NAMES } from '../../helpers/constants.js';
 
 // Styles
 import './GenomeSelector.scss';
