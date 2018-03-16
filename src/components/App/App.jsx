@@ -15,6 +15,7 @@ import TrackViewSettings from '../TrackViewSettings/TrackViewSettings.jsx';
 import MultiTrackViewer from '../MultiTrackViewer/MultiTrackViewer.jsx';
 import DatasetSelector from '../DatasetSelector/DatasetSelector.jsx';
 import GWASSelector from '../GWASSelector/GWASSelector.jsx';
+import GenomeSelector from '../GenomeSelector/GenomeSelector.jsx';
 import AppModel, {
   APP_EVENT_LOADING_STATE_CHANGED,
   APP_EVENT_EDIT_TRACK_VIEW_SETTINGS,
@@ -33,10 +34,11 @@ const SIDEBAR_TYPE_TRACK_SETTINGS = 'track-settings';
 const SIDEBAR_TYPE_ENTITY_DETAILS = 'entity-details';
 const SIDEBAR_TYPE_BROWSE_DATA = 'browse-data';
 const SIDEBAR_TYPE_BROWSE_DATA_GWAS = 'browse-data-gwas';
+const SIDEBAR_TYPE_BROWSE_DATA_GENOME = 'browse-data-genome';
 
 const TRACK_TYPE_GWAS = 'gwas';
 const TRACK_TYPE_SEQUENCE = 'sequence';
-const TRACK_TYPE_GRCH38GFF = 'GRCh38_gff';
+const TRACK_TYPE_GENOME = 'GRCh38_gff';
 const TRACK_TYPE_EQTL = 'eqtl';
 
 class App extends React.Component {
@@ -60,7 +62,7 @@ class App extends React.Component {
     this.viewModel = new ViewModel();
     this.appModel = new AppModel();
     this.appModel.addDataTrack('sequence');
-    this.appModel.addAnnotationTrack('GRCh38');
+    // this.appModel.addAnnotationTrack('GRCh38');
 
     this.appModel.addListener(this.updateLoadingState, APP_EVENT_LOADING_STATE_CHANGED);
     this.appModel.addListener(this.showEntityDetails, APP_EVENT_SHOW_ENTITY_DETAIL);
@@ -112,7 +114,8 @@ class App extends React.Component {
       currSideBarInfo = 'GWAS Track';
     } else if (trackType === TRACK_TYPE_SEQUENCE) {
       currSideBarInfo = 'Sequence Track';
-    } else if (trackType === TRACK_TYPE_GRCH38GFF) {
+    } else if (trackType === TRACK_TYPE_GENOME) {
+      currSideBarType = SIDEBAR_TYPE_BROWSE_DATA_GENOME;
       currSideBarInfo = 'Genome Elements Track';
     } else if (trackType === TRACK_TYPE_EQTL) {
       currSideBarInfo = 'eQTL Track';
@@ -151,6 +154,8 @@ class App extends React.Component {
       return (<DatasetSelector appModel={this.appModel} />);
     } else if (this.state.currSideBarType === SIDEBAR_TYPE_BROWSE_DATA_GWAS) {
       return (<GWASSelector appModel={this.appModel} />);
+    } else if (this.state.currSideBarType === SIDEBAR_TYPE_BROWSE_DATA_GENOME) {
+      return (<GenomeSelector appModel={this.appModel} />);
     } else {
       return null;
     }
