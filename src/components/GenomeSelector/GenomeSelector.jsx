@@ -6,9 +6,10 @@ import AutoComplete from 'material-ui/AutoComplete';
 import Slider from 'material-ui/Slider';
 import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import QueryBuilder from '../../models/query.js';
+import { CHROMOSOME_NAMES, CHROMOSOME_IDS } from '../../helpers/constants.js';
 
 // Styles
-import './GWASSelector.scss';
+import './GenomeSelector.scss';
 
 
 const logmin = 0;
@@ -23,24 +24,56 @@ function reverse(value) {
   return (1 / power) * Math.log(((Math.exp(power) - 1) * value / logmax) + 1) * logmax;
 }
 
-class GWASSelector extends Component {
+// all types and numbers in current database
+// CDS 1369853
+// C_gene_segment 28
+// D_gene_segment 32
+// J_gene_segment 105
+// RNase_MRP_RNA 1
+// RNase_P_RNA 1
+// SNP 44796
+// SRP_RNA 2
+// V_gene_segment 424
+// Y_RNA 4
+// antisense_RNA 22
+// cDNA_match 3980
+// centromere 24
+// enhancer 5
+// exon 1804840
+// gene 53823
+// lnc_RNA 26187
+// mRNA 109263
+// match 20607
+// miRNA 2813
+// ncRNA 29
+// primary_transcript 1881
+// promoter 41
+// rRNA 17
+// region 26
+// repeat_region 1
+// snRNA 62
+// snoRNA 431
+// tRNA 421
+// telomerase_RNA 1
+// transcript 15197
+// vault_RNA 3
+
+class GenomeSelector extends Component {
   constructor(props) {
     super(props);
     this.handleUpdateTitle = this.handleUpdateTitle.bind(this);
-    this.handleUpdateTraitInput = this.handleUpdateTraitInput.bind(this);
-    this.handleUpdateGeneInput = this.handleUpdateGeneInput.bind(this);
-    this.handleUpdatePValue = this.handleUpdatePValue.bind(this);
+    this.handleUpdateType = this.handleUpdateType.bind(this);
+    this.handleUpdateChromid = this.handleUpdateChromid.bind(this);
+    this.handleUpdateMinLength = this.handleUpdateMinLength.bind(this);
     this.handleUpdateMaxNumber = this.handleUpdateMaxNumber.bind(this);
     if (props.appModel) {
       this.appModel = props.appModel;
     }
     this.state = {
       title: '',
-      searchTrait: '',
-      searchGene: '',
-      traits: ['cancer', 'Alzheimer', 'sleep', 'pain', 'hair color', 'asthma'],
-      genes: ['CHI3L1', 'THADA'],
-      pvalue: 0.05,
+      genomeType: '',
+      chromoName: 'Any',
+      minLength : 10,
       maxnumber: 10000,
     };
   }
@@ -52,20 +85,20 @@ class GWASSelector extends Component {
     });
   }
 
-  handleUpdateTraitInput(searchText) {
+  handleUpdateType(event, index, value) {
     this.setState({
-      searchTrait: searchText,
+        genomeType: value,
     });
     if (!this.state.fixTitle) {
       this.setState({
-        title: searchText,
+        title: value,
       });
     }
   }
 
-  handleUpdateGeneInput(searchText) {
+  handleUpdateChromName(chromoName) {
     this.setState({
-      searchGene: searchText,
+        chromoName: chromoName,
     });
   }
 
@@ -81,7 +114,7 @@ class GWASSelector extends Component {
     });
   }
 
-  buildGWASQuery() {
+  buildGenomeQuery() {
     const builder = new QueryBuilder();
     builder.newInfoQuery();
     builder.filterName({ $contains: this.state.searchTrait });
@@ -92,13 +125,12 @@ class GWASSelector extends Component {
     const edgeQuery = builder.build();
     builder.newGenomeQuery();
     builder.addToEdge(edgeQuery);
-    builder.setLimit(this.state.maxnumber);
     const genomeQuery = builder.build();
     return genomeQuery;
   }
 
   addQueryTrack() {
-    const query = this.buildGWASQuery();
+    const query = this.buildGenomeQuery();
     this.appModel.addAnnotationTrack(this.state.title, query);
   }
 
@@ -157,8 +189,8 @@ class GWASSelector extends Component {
   }
 }
 
-GWASSelector.propTypes = {
+GenomeSelector.propTypes = {
   appModel: PropTypes.object,
 };
 
-export default GWASSelector;
+export default GenomeSelector;

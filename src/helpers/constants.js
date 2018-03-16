@@ -57,6 +57,13 @@ for (let i = 1; i < 23; i++) {
 CHROMOSOME_NAMES.push('ChrX');
 CHROMOSOME_NAMES.push('ChrY');
 
+// QYD: Here the CHROMOSOME_IDS starts from 1 to be consistent with backend.
+const CHROMOSOME_IDS = {};
+for (let i = 1; i < 25; i++) {
+  const cname = CHROMOSOME_NAMES[i-1];
+  CHROMOSOME_IDS[cname] = i;
+}
+
 export {
   GENOME_LENGTH,
   LOCAL_API_URL,
@@ -77,4 +84,5 @@ export {
   CHROMOSOME_SIZES,
   CHROMOSOME_START_BASE_PAIRS,
   CHROMOSOME_NAMES,
+  CHROMOSOME_IDS,
 };
