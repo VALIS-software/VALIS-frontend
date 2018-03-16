@@ -7,7 +7,7 @@ import Slider from 'material-ui/Slider';
 import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
-import QueryBuilder from '../../models/query.js';
+import QueryBuilder, { QUERY_TYPE_GENOME } from '../../models/query.js';
 import { CHROMOSOME_NAMES, CHROMOSOME_IDS } from '../../helpers/constants.js';
 
 // Styles
@@ -26,39 +26,6 @@ function reverse(value) {
   return (1 / power) * Math.log(((Math.exp(power) - 1) * value / logmax) + 1) * logmax;
 }
 
-// all types and numbers in current database
-// CDS 1369853
-// C_gene_segment 28
-// D_gene_segment 32
-// J_gene_segment 105
-// RNase_MRP_RNA 1
-// RNase_P_RNA 1
-// SNP 44796
-// SRP_RNA 2
-// V_gene_segment 424
-// Y_RNA 4
-// antisense_RNA 22
-// cDNA_match 3980
-// centromere 24
-// enhancer 5
-// exon 1804840
-// gene 53823
-// lnc_RNA 26187
-// mRNA 109263
-// match 20607
-// miRNA 2813
-// ncRNA 29
-// primary_transcript 1881
-// promoter 41
-// rRNA 17
-// region 26
-// repeat_region 1
-// snRNA 62
-// snoRNA 431
-// tRNA 421
-// telomerase_RNA 1
-// transcript 15197
-// vault_RNA 3
 
 class GenomeSelector extends Component {
   constructor(props) {
@@ -70,6 +37,7 @@ class GenomeSelector extends Component {
     this.handleUpdateMaxNumber = this.handleUpdateMaxNumber.bind(this);
     if (props.appModel) {
       this.appModel = props.appModel;
+      this.api = this.appModel.api;
     }
     this.state = {
       title: '',
@@ -81,11 +49,7 @@ class GenomeSelector extends Component {
   }
 
   componentDidMount() {
-    // this.api.getTrackInfo().then(dataInfo => {
-    //   this.setState({
-    //     dataInfo: dataInfo,
-    //   });
-    // });
+    // some pre-defined types
     this.availableTypes = ['gene', 'exon', 'mRNA', 'promoter', 'enhancer', 'SNP'];
     this.genomeTypeItems = [];
     for (let i = 0; i < this.availableTypes.length; i++) {
@@ -97,7 +61,18 @@ class GenomeSelector extends Component {
       this.chromoNameItems.push(<MenuItem value={i} key={i} primaryText={this.availableChromoNames[i]} />);
     }
     this.setState({
-      title: 'GRCh38',
+      genomeTypeValue: 0,
+    });
+    // use api to pull all available types
+    this.api.getDistinctValues(QUERY_TYPE_GENOME, 'type').then(data => {
+      this.availableTypes = data;
+      this.genomeTypeItems = [];
+      for (let i = 0; i < this.availableTypes.length; i++) {
+        this.genomeTypeItems.push(<MenuItem value={i} key={i} primaryText={this.availableTypes[i]} />);
+      }
+      this.setState({
+        genomeTypeValue: 0,
+      });
     });
   }
 

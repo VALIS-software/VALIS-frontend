@@ -91,3 +91,4 @@ class QueryBuilder {
 
 
 export default QueryBuilder;
+export { QUERY_TYPE_GENOME, QUERY_TYPE_INFO, QUERY_TYPE_EDGE };
