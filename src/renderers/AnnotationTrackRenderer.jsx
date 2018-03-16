@@ -51,7 +51,8 @@ export default class AnnotationTrackRenderer {
     });
 
     const weightAverage = stats.mean(weights);
-    const weightVariance = stats.variance(weights);
+    const weightVariance = (weights.length > 1) ? stats.variance(weights) : 1;
+
 
     annotations.forEach(annotation => {
       const aggregation = annotation.aggregation;
@@ -60,18 +61,18 @@ export default class AnnotationTrackRenderer {
       let annotationHeight = annotation.heightPx / windowState.windowSize[1];
       if (aggregation) annotationHeight = trackHeightPx / windowState.windowSize[1];
       const annotationCenter = 0.5 * annotationHeight;
-      
-      const xPx = Util.pixelForBasePair(annotation.startBp + (annotation.endBp - annotation.startBp)/2.0, 
-                            startBasePair, 
-                            basePairsPerPixel, 
+
+      const xPx = Util.pixelForBasePair(annotation.startBp + (annotation.endBp - annotation.startBp)/2.0,
+                            startBasePair,
+                            basePairsPerPixel,
                             windowSize);
       const yPx = (yOffset + annotationYOffset + annotationCenter) * windowState.windowSize[1];
 
       renderResults[annotation.id] = [xPx / windowSize[0], yPx / windowSize[1]];
-      
+
       // check if the annotation is currently hovered
       if (windowState.selectedBasePair && windowState.selectedTrackOffset) {
-        if (windowState.selectedBasePair >= annotation.startBp && 
+        if (windowState.selectedBasePair >= annotation.startBp &&
             windowState.selectedBasePair <= annotation.endBp &&
             windowState.selectedTrackOffset >= yOffset + annotationYOffset &&
             windowState.selectedTrackOffset <= (yOffset + annotationYOffset + annotationHeight)) {
@@ -107,7 +108,7 @@ export default class AnnotationTrackRenderer {
           const normalizedCount = annotation.count / ((range[1] - range[0]) / basePairsPerPixel);
           let brightness = 0.5 + ((normalizedCount / totalNormalizedCounts) - weightAverage) / Math.sqrt(weightVariance);
           const alpha = 0.8;
-          brightness = alpha + brightness * (1.0 - alpha);  
+          brightness = alpha + brightness * (1.0 - alpha);
           color = hsl.rgb([trackColor * 360.0, 50.0, 0.5]).map(d => brightness * d / 3.0);
           color.push(1.0);
         }
@@ -135,7 +136,7 @@ export default class AnnotationTrackRenderer {
         annotation.labels.forEach(label => {
           const text = label[0];
           if (!this.textures[text]) {
-            this.textures[text] = createText(context.gl, text, { size: 16, color: [255.0, 255.0, 255.0] }); 
+            this.textures[text] = createText(context.gl, text, { size: 16, color: [255.0, 255.0, 255.0] });
           }
           // label format: [text, inside or outside, position: 0-left, 1-top, 2-right, 3-below, 4-center, offset-x, offset-y]
 
@@ -166,7 +167,7 @@ export default class AnnotationTrackRenderer {
         });
       }
     });
-    
+
     return renderResults;
   }
 }
