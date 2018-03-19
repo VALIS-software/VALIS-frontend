@@ -112,6 +112,12 @@ class GenomeAPI {
 			return data.data;
 		});
 	}
+
+	getDistinctValues(queryType, index) {
+		return axios.get(`${this.baseUrl}/distinct_values/${queryType}/${index}`).then(data => {
+			return data.data;
+		});
+	}
 }
 
 export default GenomeAPI;

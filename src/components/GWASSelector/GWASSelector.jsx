@@ -5,7 +5,7 @@ import TextField from 'material-ui/TextField';
 import AutoComplete from 'material-ui/AutoComplete';
 import Slider from 'material-ui/Slider';
 import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
-import QueryBuilder from '../../models/query.js';
+import QueryBuilder, { QUERY_TYPE_INFO } from '../../models/query.js';
 
 // Styles
 import './GWASSelector.scss';
@@ -33,6 +33,7 @@ class GWASSelector extends Component {
     this.handleUpdateMaxNumber = this.handleUpdateMaxNumber.bind(this);
     if (props.appModel) {
       this.appModel = props.appModel;
+      this.api = this.appModel.api;
     }
     this.state = {
       title: '',
@@ -43,6 +44,14 @@ class GWASSelector extends Component {
       pvalue: 0.05,
       maxnumber: 10000,
     };
+  }
+
+  componentDidMount() {
+    this.api.getDistinctValues(QUERY_TYPE_INFO, 'name').then(data => {
+      this.setState({
+        traits: data,
+      });
+    });
   }
 
   handleUpdateTitle(event) {
@@ -97,7 +106,7 @@ class GWASSelector extends Component {
     return genomeQuery;
   }
 
-  addGWASQueryTrack() {
+  addQueryTrack() {
     const query = this.buildGWASQuery();
     this.appModel.addAnnotationTrack(this.state.title, query);
   }
@@ -114,7 +123,7 @@ class GWASSelector extends Component {
           floatingLabelText="Trait"
           searchText={this.state.searchTrait}
           filter={AutoComplete.caseInsensitiveFilter}
-          openOnFocus={true}
+          maxSearchResults={10}
           hintText="Type anything"
           dataSource={this.state.traits}
           onUpdateInput={this.handleUpdateTraitInput}
@@ -148,7 +157,7 @@ class GWASSelector extends Component {
         <RaisedButton
           label="Create Track"
           primary={true}
-          onClick={() => this.addGWASQueryTrack()}
+          onClick={() => this.addQueryTrack()}
           disabled={!this.state.searchTrait}
           style={{ position: 'absolute', bottom: '10px', width: '90%' }}
         />
