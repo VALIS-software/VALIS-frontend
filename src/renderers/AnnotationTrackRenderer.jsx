@@ -6,6 +6,7 @@ const stats = require('stats-lite');
 const hsl = require('color-space/hsl');
 
 const TEXT_PADDING_LEFT = 4;
+const CLICK_RANGE_PIXELS = 5;
 
 export default class AnnotationTrackRenderer {
 
@@ -21,6 +22,31 @@ export default class AnnotationTrackRenderer {
 
   get hoverElement() {
     return this._hoverElement;
+  }
+
+  checkForHover(annotation, height, yOffset, windowState) {
+    const annotationYOffset = annotation.yOffsetPx / windowState.windowSize[1];
+    const annotationHeight = annotation.heightPx / windowState.windowSize[1];
+    if (windowState.selectedBasePair && windowState.selectedTrackOffset) {
+      const clickableRange = this.rangeForClickableRegion(annotation, windowState);
+      if (windowState.selectedBasePair >= clickableRange[0] &&
+          windowState.selectedBasePair <= clickableRange[1] &&
+          windowState.selectedTrackOffset >= yOffset + annotationYOffset &&
+          windowState.selectedTrackOffset <= (yOffset + annotationYOffset + annotationHeight)) {
+          this._hoverEnabled = true;
+          this._hoverElement = annotation;
+          return true;
+      }
+    }
+    return false;
+  }
+
+  rangeForClickableRegion(annotation, windowState) {
+    const midPoint = (annotation.endBp - annotation.startBp) / 2.0 + annotation.startBp;
+    const clickRange = Math.max(CLICK_RANGE_PIXELS * windowState.basePairsPerPixel, (annotation.endBp - annotation.startBp) / 2.0);
+    const minClick = midPoint - clickRange;
+    const maxClick = midPoint + clickRange;
+    return [minClick, maxClick];
   }
 
   render(annotationTrack, trackColor, height, yOffset, context, shaders, windowState) {
@@ -71,15 +97,8 @@ export default class AnnotationTrackRenderer {
       renderResults[annotation.id] = [xPx / windowSize[0], yPx / windowSize[1]];
 
       // check if the annotation is currently hovered
-      if (windowState.selectedBasePair && windowState.selectedTrackOffset) {
-        if (windowState.selectedBasePair >= annotation.startBp &&
-            windowState.selectedBasePair <= annotation.endBp &&
-            windowState.selectedTrackOffset >= yOffset + annotationYOffset &&
-            windowState.selectedTrackOffset <= (yOffset + annotationYOffset + annotationHeight)) {
-            enableHover = 1;
-            this._hoverEnabled = true;
-            this._hoverElement = annotation;
-        }
+      if (this.checkForHover(annotation, height, yOffset, windowState)) {
+        enableHover = 1;
       }
 
       // render the segments:
@@ -91,7 +110,10 @@ export default class AnnotationTrackRenderer {
 
         if (aggregation) segmentHeight = trackHeightPx / windowState.windowSize[1];
 
-        const range = [segment[0] + annotation.startBp, segment[1] + annotation.startBp];
+        const range = this.rangeForClickableRegion(annotation, windowState);
+        // NOTE: We will deprecate segment rendering within an annotation. This was a poor 
+        // early design choice. The frontend should make decisions on how
+        // to visually display the annotation instead of the backend deciding this via segments
 
         if (textureName && !this.textures[textureName]) {
           this.textures[textureName] = null; // TODO: load texture

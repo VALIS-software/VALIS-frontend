@@ -280,18 +280,7 @@ class ViewModel extends EventCreator {
     } else if (e.key === 'Control') {
       this.zoomEnabled = true;
       this.notifyViewStateChange(true);
-    } else if (e.key === 'a' || e.key === 'd') {
-      const delta = ((e.key === 'a') ? 128 : -128) * this.basePairsPerPixel;
-      this.startBasePair += delta;
-      this.notifyViewStateChange(true);
-    } else if (e.key === '=' || e.key === 'w') {
-      const startCenter = this.startBasePair + this.basePairsPerPixel * this.windowSize[0] / 2.0;
-      this.basePairsPerPixel /= 1.2;
-      this.notifyViewStateChange(true);
-    } else if (e.key === '-' || e.key === 's') {
-      this.basePairsPerPixel *= 1.2;
-      this.notifyViewStateChange(true);
-    }
+    } 
   }
 
   handleKeyup(e) {

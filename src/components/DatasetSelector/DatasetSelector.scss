@@ -24,7 +24,9 @@
     }
     .dataset-button:hover {
         background-color: #3198dd;
+        cursor: pointer;
     }
+
     .dataset-button:focus {
         outline: 0;
     }

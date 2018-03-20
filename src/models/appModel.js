@@ -103,7 +103,7 @@ class AppModel extends EventCreator {
         height: 0.1,
         basePairOffset: 0,
         dataTrack: null,
-        color: 0.6,
+        color: Math.sin(this.tracks.length * 0.1) / 2.0 + 0.5,
         annotationTrack: model,
       };
       model.addListener(this.loadingStarted, TRACK_EVENT_LOADING);
