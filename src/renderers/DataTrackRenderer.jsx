@@ -20,8 +20,23 @@ export default class DataTrackRenderer {
     this.textures = {};
   }
 
-  render(dataTrack, color, height, xOffset, yOffset, context, shaders, startBasePair, endBasePair, renderRoiWidth, renderRoiHeight) {
-    const basePairsPerPixel = (endBasePair - startBasePair) / renderRoiWidth;
+  // dataTrack: the data track to fetch tiles from
+  // yOffset: relative y-offset, independent of screen resolution e.g [0, 1]
+  // context: the igloo rendering context
+  // shaders: the shaders to render the data with
+  // basePairOffset: The number of basePairs that have already been rendered 
+  // startBasePair: The start base pair of the region to be rendered
+  // endBasePair: The end base pair of the region to be rendered
+  // totalBasePairRange: The total amount of basePairs to be rendered (sum of all region sizes)
+  // windowState: the view model windowState
+  render(dataTrack, color, height, yOffset, context, shaders, basePairOffset, startBasePair, endBasePair, totalBasePairRange, windowState) {
+    const basePairsPerPixel = windowState.basePairsPerPixel;
+    const normalizedStartBasePair = startBasePair - basePairOffset;
+    const normalizedEndBasePair = normalizedStartBasePair + totalBasePairRange;
+
+    const renderRoiWidth = (endBasePair - startBasePair) / totalBasePairRange * windowState.windowSize[0];
+    const renderRoiHeight = windowState.windowSize[1];
+
     const trackHeightPx = renderRoiHeight * height;
     const tiles = dataTrack.getTiles(startBasePair, endBasePair, basePairsPerPixel, trackHeightPx);
 
@@ -49,6 +64,7 @@ export default class DataTrackRenderer {
         const tileExtents = tile.tile.tileRange[1] - tile.tile.tileRange[0];
         const tileMin = tile.tile.tileRange[0];
         const roi = [(tile.range[0] - tileMin) / tileExtents, (tile.range[1] - tileMin)/ tileExtents];
+        
         shader.use();
         shader.uniformi('data', texId);
         shader.uniformi('isApproximate', tile.isApproximate ? 1 : 0);
@@ -64,10 +80,10 @@ export default class DataTrackRenderer {
         shader.uniform('tileRoi', roi);
         shader.uniform('currentTileDisplayRange', tile.range);
         shader.uniform('totalTileRange', tile.tile.tileRange);
-        shader.uniform('windowSize', [0, renderRoiHeight]);
+        shader.uniform('windowSize', [renderRoiWidth, renderRoiHeight]);
         shader.uniform('tileHeight', height);
-        shader.uniform('displayedRange', [startBasePair, endBasePair]);
-        shader.uniform('offset', [xOffset, yOffset]); // specifies where to render the tile
+        shader.uniform('displayedRange', [normalizedStartBasePair, normalizedEndBasePair]);
+        shader.uniform('offset', [0, yOffset]); // specifies where to render the tile
         // shader.uniform('selectedBasePair', windowState.selectedBasePair + windowState.trackBasePairOffset);
         // if (windowState.selection) {
         //   shader.uniformi('showSelection', 1);

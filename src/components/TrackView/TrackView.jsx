@@ -88,7 +88,7 @@ class TrackView {
     return this.yOffset;
   }
 
-  render(context, shaders, windowState, overlays, region, xOffset, xWidth) {
+  render(context, shaders, windowState, overlays, region, basePairOffset, totalBasePairRange) {
     const roundedHeight = Util.floorToPixel(this.height, windowState.windowSize[1]);
     // if (this.annotationTrack !== null) {
     //   const renderResult = this.annotationRenderer.render(this.annotationTrack, this.color, roundedHeight, 0.5, this.yOffset, context, shaders, trackWindowState);
@@ -99,15 +99,15 @@ class TrackView {
     if (this.dataTrack !== null) {
       this.dataRenderer.render(this.dataTrack, 
                                this.color, 
-                               roundedHeight, 
-                               xOffset, 
+                               roundedHeight,  
                                this.yOffset, 
                                context, 
                                shaders, 
+                               basePairOffset,
                                region.startBasePair, 
                                region.endBasePair, 
-                               xWidth, 
-                               windowState.windowSize[1]);
+                               totalBasePairRange,
+                               windowState);
     }
   }
 

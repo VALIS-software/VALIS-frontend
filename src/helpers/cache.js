@@ -147,6 +147,7 @@ export class TileCache {
     for (let i = 0; i <= numTiles; i++) {
       let range = [(startIdx + i) * bpPerTile, (startIdx + i + 1) * bpPerTile];
       range = xspans.intersect([this.minBp, this.maxBp], range).getData();
+      range = xspans.intersect([startBp, endBp], range).getData();
       if (tiles[startIdx + i] !== undefined) {
         tilesFound.push({
           heightPx: finalHeightPx,

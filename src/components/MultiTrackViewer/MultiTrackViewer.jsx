@@ -45,8 +45,8 @@ class MultiTrackViewer extends React.Component {
     this.classNames = '';
 
     this.colorSet = [];
-    for(let i = 0; i < 150; i++) {
-      this.colorSet.push([Math.random(), Math.random(), Math.random()]);
+    for (let i = 0; i < 150; i++) {
+      this.colorSet.push([i/150.0 + 0.4, Math.random(), Math.random()]);
     }
 
     // listen to track change updates
@@ -238,29 +238,30 @@ class MultiTrackViewer extends React.Component {
     const overlayViews = _.keys(this.overlayViews).map(key => this.overlayViews[key]);
     overlayViews.forEach(view => view.prepForRender());
 
-    let offset = 0;
-    let sum = 0;
+    let basePairOffset = 0;
+    let totalBasePairRange = 0;
     let idx = 0;
-    windowState.regions.forEach(region => { sum += region.endBasePair - region.startBasePair; });
+    windowState.regions.forEach(region => { totalBasePairRange += region.endBasePair - region.startBasePair; });
 
-    windowState.regions.forEach(region => {
-      let currOffset = padding;
-      const width = (region.endBasePair - region.startBasePair) / windowState.basePairsPerPixel;
+    for (let j = 0; j < windowState.regions.length; j++) {
+      const region = windowState.regions[j];
+      let yOffset = padding;
+      const width = (region.endBasePair - region.startBasePair) / totalBasePairRange * windowState.windowSize[0];
       for (let i = 0; i < numTracks; i++) {
         // setup track position
         const track = this.views[viewGuids[i]];
         track.setColor(this.colorSet[idx]);
-        track.setYOffset(currOffset + windowState.trackOffset);
-        currOffset += track.getHeight() + padding;
-        track.render(this.renderContext, this.shaders, windowState, overlayViews, region, offset, width);
+        track.setYOffset(yOffset + windowState.trackOffset);
+        yOffset += track.getHeight() + padding;
+        track.render(this.renderContext, this.shaders, windowState, overlayViews, region, basePairOffset, totalBasePairRange);
         if (track.hoverEnabled && !this.hoverEnabled) {
           this.hoverEnabled = true;
           this.hoverElement = track.hoverElement;
         }
       }
       idx++;
-      offset += width / windowState.windowSize[0] + 0.01;
-    });
+      basePairOffset += (region.endBasePair - region.startBasePair);
+    };
 
     // overlayViews.forEach(view => view.render(this.renderContext, this.overlayShaders));
     
