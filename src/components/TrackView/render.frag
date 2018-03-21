@@ -37,27 +37,5 @@ void main() {
 		selectionHighlight = 1.5;
 	}
 
-	// add highlights
-
-	vec3 highlights = vec3(0.0);
-	if (mod(currBp, 25000000.0) < TICK_WIDTH) {
-		highlights = vec3(0.5);
-	}
-
-	if (abs(currBp - totalRange.x) < 2.0*TICK_WIDTH || abs(currBp - totalRange.y) < 2.0*TICK_WIDTH) {
-		highlights = vec3(1.0, 0.0, 0.0);
-	}
-
-
-	if (abs(currBp - currentTileDisplayRange.x) < 2.0*TICK_WIDTH || abs(currBp - currentTileDisplayRange.y) < 2.0*TICK_WIDTH) {
-		highlights = vec3(1.0, 1.0, 0.0);
-	}
-
-
-	if (false) { //coord.y < 0.05) {
-		gl_FragColor = vec4(highlights, 1.0);
-	} else {
-		gl_FragColor = vec4(dataValue * selectionHighlight, 1.0);
-	}
-	
+	gl_FragColor = vec4(dataValue * selectionHighlight, 1.0);	
 }

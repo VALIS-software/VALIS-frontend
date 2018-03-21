@@ -114,8 +114,6 @@ class TrackHeader extends Component {
       >
         <div className="inner">
           {title}
-          <br />
-          <span className="bp-offset"> {offset} </span>
         </div>
       </div>
       {axis}

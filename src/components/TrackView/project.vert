@@ -7,7 +7,6 @@ uniform vec2 windowSize;
 uniform vec2 offset;
 
 uniform vec2 displayedRange;
-uniform vec2 totalRange;
 
 uniform vec2 currentTileDisplayRange; // range of the current tile
 

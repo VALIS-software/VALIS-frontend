@@ -20,11 +20,9 @@ export default class DataTrackRenderer {
     this.textures = {};
   }
 
-  render(dataTrack, color, height, yOffset, context, shaders, windowState) {
-    const startBasePair = windowState.startBasePair;
-    const basePairsPerPixel = windowState.basePairsPerPixel;
-    const endBasePair = Util.endBasePair(startBasePair, basePairsPerPixel, windowState.windowSize);
-    const trackHeightPx = windowState.windowSize[1] * height;
+  render(dataTrack, color, height, xOffset, yOffset, context, shaders, startBasePair, endBasePair, renderRoiWidth, renderRoiHeight) {
+    const basePairsPerPixel = (endBasePair - startBasePair) / renderRoiWidth;
+    const trackHeightPx = renderRoiHeight * height;
     const tiles = dataTrack.getTiles(startBasePair, endBasePair, basePairsPerPixel, trackHeightPx);
 
     let j = 0;
@@ -57,6 +55,7 @@ export default class DataTrackRenderer {
         shader.uniformi('dimensions', dimensions);
         shader.uniform('dataMin', dataTrack.min);
         shader.uniform('dataMax', dataTrack.max);
+        shader.uniform('color', color);
         shader.uniform('color1', c1);
         shader.uniform('color2', c2);
         shader.uniform('color3', c3);
@@ -65,19 +64,18 @@ export default class DataTrackRenderer {
         shader.uniform('tileRoi', roi);
         shader.uniform('currentTileDisplayRange', tile.range);
         shader.uniform('totalTileRange', tile.tile.tileRange);
-        shader.uniform('windowSize', windowState.windowSize);
+        shader.uniform('windowSize', [0, renderRoiHeight]);
         shader.uniform('tileHeight', height);
         shader.uniform('displayedRange', [startBasePair, endBasePair]);
-        shader.uniform('totalRange', [0, GENOME_LENGTH]);
-        shader.uniform('offset', [0, yOffset]);
-        shader.uniform('selectedBasePair', windowState.selectedBasePair + windowState.trackBasePairOffset);
-        if (windowState.selection) {
-          shader.uniformi('showSelection', 1);
-          shader.uniform('selectionBoundsMin', windowState.selection.min);
-          shader.uniform('selectionBoundsMax', windowState.selection.max);
-        } else {
-          shader.uniformi('showSelection', 0);
-        }
+        shader.uniform('offset', [xOffset, yOffset]); // specifies where to render the tile
+        // shader.uniform('selectedBasePair', windowState.selectedBasePair + windowState.trackBasePairOffset);
+        // if (windowState.selection) {
+        //   shader.uniformi('showSelection', 1);
+        //   shader.uniform('selectionBoundsMin', windowState.selection.min);
+        //   shader.uniform('selectionBoundsMax', windowState.selection.max);
+        // } else {
+        //   shader.uniformi('showSelection', 0);
+        // }
         context.drawQuad(shader);
         j += 1;
     });

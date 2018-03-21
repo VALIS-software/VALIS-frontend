@@ -18,7 +18,7 @@ import TrackBackground from '../TrackBackground/TrackBackground.jsx';
 import Util from '../../helpers/util.js';
 
 class TrackView {
-  constructor(guid, appModel, color=0.6, height=0.1, basePairOffset=0) {
+  constructor(guid, appModel, color=0.6, height=0.1) {
     this.guid = guid;
     this.appModel = appModel;
     this.height = height;
@@ -28,7 +28,6 @@ class TrackView {
     this.dataTrack = null;
     this.dataRenderer = new DataTrackRenderer();
     this.annotationRenderer = new AnnotationTrackRenderer();
-    this.basePairOffset = basePairOffset;
   }
 
   static initializeShaders(context) {
@@ -89,30 +88,26 @@ class TrackView {
     return this.yOffset;
   }
 
-  setBasePairOffset(offset) {
-    this.basePairOffset = offset;
-  }
-
-  getBasePairOffset() {
-    return this.basePairOffset;
-  }
-
-  render(context, shaders, windowState, overlays) {
-    // copy window state and apply track specific offsets:
-    const trackWindowState = Object.assign({}, windowState);
-    trackWindowState.startBasePair += this.basePairOffset;
-    trackWindowState.trackBasePairOffset = this.basePairOffset;
-
+  render(context, shaders, windowState, overlays, region, xOffset, xWidth) {
     const roundedHeight = Util.floorToPixel(this.height, windowState.windowSize[1]);
-    
-    if (this.annotationTrack !== null) {
-      const renderResult = this.annotationRenderer.render(this.annotationTrack, this.color, roundedHeight, this.yOffset, context, shaders, trackWindowState);
-      overlays.forEach(overlay => {
-        overlay.addRegion(this.annotationTrack, roundedHeight, this.yOffset, trackWindowState, renderResult);
-      });
-    }
+    // if (this.annotationTrack !== null) {
+    //   const renderResult = this.annotationRenderer.render(this.annotationTrack, this.color, roundedHeight, 0.5, this.yOffset, context, shaders, trackWindowState);
+    //   overlays.forEach(overlay => {
+    //     overlay.addRegion(this.annotationTrack, roundedHeight, this.yOffset, trackWindowState, renderResult);
+    //   });
+    // }
     if (this.dataTrack !== null) {
-      this.dataRenderer.render(this.dataTrack, this.color, roundedHeight, this.yOffset, context, shaders, trackWindowState);
+      this.dataRenderer.render(this.dataTrack, 
+                               this.color, 
+                               roundedHeight, 
+                               xOffset, 
+                               this.yOffset, 
+                               context, 
+                               shaders, 
+                               region.startBasePair, 
+                               region.endBasePair, 
+                               xWidth, 
+                               windowState.windowSize[1]);
     }
   }
 
@@ -139,9 +134,9 @@ class TrackView {
     const height = Math.floor(windowState.windowSize[1] * this.height);
     const key = this.guid;
     const model = this.appModel;
-    const offset = this.getBasePairOffset();
 
-    return (<TrackHeader key={key} showAxis={showAxis} offset={offset} guid={key} top={top} height={height} min={min} max={max} title={title} appModel={model} />);
+
+    return (<TrackHeader key={key} showAxis={showAxis} guid={key} top={top} height={height} min={min} max={max} title={title} appModel={model} />);
   }
 
   getBackground(windowState) {

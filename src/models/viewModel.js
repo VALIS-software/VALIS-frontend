@@ -1,7 +1,12 @@
 
 import EventCreator from './eventCreator.js';
 import Util from '../helpers/util.js';
-import { GENOME_LENGTH, MAX_BASE_PAIR_WIDTH } from '../helpers/constants.js';
+import { GENOME_LENGTH, 
+         MAX_BASE_PAIR_WIDTH, 
+         CHROMOSOME_SIZES,
+         CHROMOSOME_START_BASE_PAIRS,
+         CHROMOSOME_NAMES,
+} from '../helpers/constants.js';
 
 const _ = require('underscore');
 
@@ -30,7 +35,16 @@ class ViewModel extends EventCreator {
     this.viewStateHistory = [];
     this.historyOffset = 0;
     this.domElem = null;
-    
+    this.regions = [];
+
+    for (let i = 0; i < CHROMOSOME_NAMES.length; i++) {
+      this.regions.push({
+        name: CHROMOSOME_NAMES[i],
+        startBasePair: CHROMOSOME_START_BASE_PAIRS[i],
+        endBasePair: CHROMOSOME_START_BASE_PAIRS[i] + CHROMOSOME_SIZES[i],
+      });
+    }
+
     this.handleKeydown = this.handleKeydown.bind(this);
     this.handleKeyup = this.handleKeyup.bind(this);
     this.handleMouseMove = this.handleMouseMove.bind(this);
@@ -130,6 +144,7 @@ class ViewModel extends EventCreator {
       selectedBasePair: x,
       selectedTrackOffset: y,
       panning: this.panning,
+      regions: this.regions,
       dragEnabled: this.dragEnabled,
       selectEnabled: this.selectEnabled,
       zoomEnabled: this.zoomEnabled,

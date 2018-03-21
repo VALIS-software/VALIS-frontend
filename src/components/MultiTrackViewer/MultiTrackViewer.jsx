@@ -44,6 +44,11 @@ class MultiTrackViewer extends React.Component {
     this.handleClick = this.handleClick.bind(this);
     this.classNames = '';
 
+    this.colorSet = [];
+    for(let i = 0; i < 150; i++) {
+      this.colorSet.push([Math.random(), Math.random(), Math.random()]);
+    }
+
     // listen to track change updates
     props.model.addListener(this.updateViews, [APP_EVENT_ADD_TRACK, 
                                                APP_EVENT_REORDER_TRACKS, 
@@ -133,23 +138,20 @@ class MultiTrackViewer extends React.Component {
 
     let trackHeightPx = null;
     let trackCenterPx = null;
-    let trackBasePairOffset = null;
     let dataTooltip = null;
     
     if (track) {
       trackHeightPx = this.views[track.guid].getHeight() * windowSize[1];
-      trackBasePairOffset = this.views[track.guid].getBasePairOffset();
       trackCenterPx =  trackOffsetPx - trackHeightPx / 2.0;
       dataTooltip = null;
       if (track.dataTrack) {
-        dataTooltip = track.dataTrack.getTooltipData(hoveredBasePair + trackBasePairOffset, clickOffset, start + trackBasePairOffset, end + trackBasePairOffset, bpp, trackHeightPx);
+        dataTooltip = track.dataTrack.getTooltipData(hoveredBasePair, clickOffset, start, end, bpp, trackHeightPx);
       }
     }
 
     return {
       yOffset: clickOffset,
       basePair: hoveredBasePair,
-      basePairOffset: trackBasePairOffset,
       track: track,
       tooltip: dataTooltip,
       trackHeightPx: trackHeightPx,
@@ -217,7 +219,6 @@ class MultiTrackViewer extends React.Component {
       }
 
       trackView.setColor(track.color);
-      trackView.setBasePairOffset(track.basePairOffset);
       trackView.setHeight(track.height);
     });
     this.views = newViews;
@@ -232,25 +233,36 @@ class MultiTrackViewer extends React.Component {
     const padding = TRACK_PADDING_PX / windowState.windowSize[1];
     this.hoverEnabled = false;
     this.hoverElement = null;
-    let currOffset = padding;
 
     
     const overlayViews = _.keys(this.overlayViews).map(key => this.overlayViews[key]);
     overlayViews.forEach(view => view.prepForRender());
-    
-    for (let i = 0; i < numTracks; i++) {
-      // setup track position
-      const track = this.views[viewGuids[i]];
-      track.setYOffset(currOffset + windowState.trackOffset);
-      currOffset += track.getHeight() + padding;
-      track.render(this.renderContext, this.shaders, windowState, overlayViews);
-      if (track.hoverEnabled && !this.hoverEnabled) {
-        this.hoverEnabled = true;
-        this.hoverElement = track.hoverElement;
-      }
-    }
 
-    overlayViews.forEach(view => view.render(this.renderContext, this.overlayShaders));
+    let offset = 0;
+    let sum = 0;
+    let idx = 0;
+    windowState.regions.forEach(region => { sum += region.endBasePair - region.startBasePair; });
+
+    windowState.regions.forEach(region => {
+      let currOffset = padding;
+      const width = (region.endBasePair - region.startBasePair) / windowState.basePairsPerPixel;
+      for (let i = 0; i < numTracks; i++) {
+        // setup track position
+        const track = this.views[viewGuids[i]];
+        track.setColor(this.colorSet[idx]);
+        track.setYOffset(currOffset + windowState.trackOffset);
+        currOffset += track.getHeight() + padding;
+        track.render(this.renderContext, this.shaders, windowState, overlayViews, region, offset, width);
+        if (track.hoverEnabled && !this.hoverEnabled) {
+          this.hoverEnabled = true;
+          this.hoverElement = track.hoverElement;
+        }
+      }
+      idx++;
+      offset += width / windowState.windowSize[0] + 0.01;
+    });
+
+    // overlayViews.forEach(view => view.render(this.renderContext, this.overlayShaders));
     
     this.forceUpdate();
   }

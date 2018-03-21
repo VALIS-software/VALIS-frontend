@@ -8,7 +8,6 @@ uniform vec3 color3;
 uniform vec3 color4;
 
 uniform vec2 displayedRange; // range of genome currently displayed
-uniform vec2 totalRange; // total range of the genome
 uniform vec2 currentTileDisplayRange; // range of the tile that is displayed
 uniform vec2 totalTileRange; // total range of the current tile
 

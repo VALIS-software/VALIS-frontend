@@ -23,7 +23,7 @@ export default class AnnotationTrackRenderer {
     return this._hoverElement;
   }
 
-  render(annotationTrack, trackColor, height, yOffset, context, shaders, windowState) {
+  render(annotationTrack, trackColor, height, xOffset, yOffset, context, shaders, windowState) {
     const startBasePair = windowState.startBasePair;
     const basePairsPerPixel = windowState.basePairsPerPixel;
     const endBasePair = Util.endBasePair(startBasePair, basePairsPerPixel, windowState.windowSize);
@@ -65,7 +65,7 @@ export default class AnnotationTrackRenderer {
       const xPx = Util.pixelForBasePair(annotation.startBp + (annotation.endBp - annotation.startBp)/2.0,
                             startBasePair,
                             basePairsPerPixel,
-                            windowSize);
+                            windowSize) + xOffset * windowSize[0];
       const yPx = (yOffset + annotationYOffset + annotationCenter) * windowState.windowSize[1];
 
       renderResults[annotation.id] = [xPx / windowSize[0], yPx / windowSize[1]];
@@ -122,7 +122,7 @@ export default class AnnotationTrackRenderer {
         shader.uniform('tileHeight', segmentHeight);
         shader.uniform('displayedRange', [startBasePair, endBasePair]);
         shader.uniform('totalRange', [0, GENOME_LENGTH]);
-        shader.uniform('offset', [0, yOffset + annotationYOffset + annotationCenter - 0.5 * segmentHeight]);
+        shader.uniform('offset', [xOffset, yOffset + annotationYOffset + annotationCenter - 0.5 * segmentHeight]);
         if (windowState.selection) {
           shader.uniformi('showSelection', 1);
           shader.uniform('selectionBoundsMin', windowState.selection.min);
@@ -156,8 +156,7 @@ export default class AnnotationTrackRenderer {
           shader.uniform('windowSize', windowState.windowSize);
           shader.uniform('tileHeight', textHeight);
           shader.uniform('displayedRange', [startBasePair, endBasePair]);
-          shader.uniform('totalRange', [0, GENOME_LENGTH]);
-          shader.uniform('offset', [roiOffsetX, yOffset + annotationYOffset + roiOffsetY]);
+          shader.uniform('offset', [xOffset + roiOffsetX, yOffset + annotationYOffset + roiOffsetY]);
           if (windowState.selection) {
             shader.uniformi('showSelection', 1);
             shader.uniform('selectionBoundsMin', windowState.selection.min);
