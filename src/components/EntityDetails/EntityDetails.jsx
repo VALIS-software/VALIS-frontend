@@ -12,13 +12,17 @@ class EntityDetails extends Component {
 		if (!this.props.entity || !this.props.entity.info) return (<div />);
 		const entity = this.props.entity;
 		const info = this.props.entity.info;
+		let description = '';
+		try {
+			description = unescape(info.attributes.description);
+		} catch (err) {
+			description = '';
+		}
 		return (
 			<div className="entity-details">
 				<div className="entity-header">
 						<div className="entity-name">{info.name}</div>
-					<div className="entity-desc">
-						{unescape(attributes.description)}
-					</div>
+					<div className="entity-desc">{description}</div>
 				</div>
 				<table className="detail-item">
 					<tr>
