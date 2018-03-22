@@ -11,11 +11,11 @@ class EntityDetails extends Component {
 	render() {
 		if (!this.props.entity || !this.props.entity.info) return (<div />);
 		const entity = this.props.entity;
-		const attributes = this.props.entity.info.attributes;
+		const info = this.props.entity.info;
 		return (
 			<div className="entity-details">
 				<div className="entity-header">
-						<div className="entity-name">{attributes.Name}</div>
+						<div className="entity-name">{info.name}</div>
 					<div className="entity-desc">
 						{unescape(attributes.description)}
 					</div>
