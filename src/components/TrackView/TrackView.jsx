@@ -17,6 +17,8 @@ import TrackBackground from '../TrackBackground/TrackBackground.jsx';
 
 import Util from '../../helpers/util.js';
 
+const GPUTextWebGL = require('../../../lib/gputext/gputext-webgl.js');
+
 class TrackView {
   constructor(guid, appModel, color=0.6, height=0.1, basePairOffset=0) {
     this.guid = guid;
@@ -32,12 +34,14 @@ class TrackView {
   }
 
   static initializeShaders(context) {
+    const msdfCode = GPUTextWebGL.generateMsdfShaderCode();
+    
     return {
       annotationShader: context.program(vertexShader, annotationShader),
       signalShader: context.program(vertexShader, signalShader),
       sequenceShader: context.program(vertexShader, sequenceShader),
       gbandShader: context.program(vertexShader, gbandShader),
-      textShader: context.program(vertexShader, textFragmentShader),
+      textShader: GPUTextWebGL.createTextProgram(context.gl, {}),
     };
   }
 
