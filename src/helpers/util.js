@@ -164,7 +164,7 @@ class Util {
         // if we're over the cache limit, free the oldest
         const cachedTextureKeys = Object.keys(igloo.cachedTextures);
         if ((cachedTextureKeys.length + 1) > igloo.maxCachedTextures) {
-          // @! free the oldest texture
+          // free the oldest texture
           let lowestIdx = Infinity;
           let lowestGuid = null;
           for (let k = 0; k < cachedTextureKeys.length; k++) {
