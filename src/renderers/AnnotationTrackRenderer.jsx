@@ -2,7 +2,6 @@ import Util from '../helpers/util.js';
 import { GENOME_LENGTH } from '../helpers/constants.js';
 import GPUTextFonts from '../helpers/GPUTextFonts.js';
 
-// const createText = require('../../lib/gl-render-text/createText.js');
 const GPUText = require('../../lib/gputext/gputext.js');
 const GPUTextWebGL = require('../../lib/gputext/gputext-webgl.js');
 
