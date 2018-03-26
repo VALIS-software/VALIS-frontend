@@ -1,7 +1,6 @@
 import React from 'react';
 
 // import shaders
-import textFragmentShader from './text.frag';
 import vertexShader from './project.vert';
 import signalShader from './render_signal.frag';
 import sequenceShader from './render_sequence.frag';
