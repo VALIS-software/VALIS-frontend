@@ -67,7 +67,7 @@ export default (env = defaultEnv) => ({
   module: {
     rules: [
       {
-        test: /\.(jpe?g|gif|png|svg|woff|ttf|wav|mp3|frag|vert)$/,
+        test: /\.(jpe?g|gif|png|svg|woff|ttf|wav|mp3|frag|vert|json)$/,
         loader: "file-loader",
         query: {
           limit: 10000,

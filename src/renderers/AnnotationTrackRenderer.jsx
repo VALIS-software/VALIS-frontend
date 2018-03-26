@@ -1,6 +1,6 @@
 import Util from '../helpers/util.js';
 import { GENOME_LENGTH } from '../helpers/constants.js';
-import GPUTextFonts from '../helpers/GPUTextFonts.js';
+import GPUTextFonts from '../fonts/GPUTextFonts.js';
 
 const GPUText = require('../../lib/gputext/gputext.js');
 const GPUTextWebGL = require('../../lib/gputext/gputext-webgl.js');
