@@ -36,8 +36,6 @@ class GPUTextFonts {
 
 }
 
-console.log(OpenSansRegularJson);
-
 GPUTextFonts._fonts = {};
 GPUTextFonts.loadFontAtlas(OpenSansRegularJson, OpenSansRegularAtlas);
 
