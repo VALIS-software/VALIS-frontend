@@ -139,6 +139,7 @@ class GenomeSelector extends Component {
           value={this.state.title}
           floatingLabelText="Track Title"
           onChange={this.handleUpdateTitle}
+          errorText={!this.state.title ? 'This field is required' : ''}
         /><br /> <br />
         <SelectField
           value={this.state.genomeTypeValue}
@@ -176,6 +177,7 @@ class GenomeSelector extends Component {
           label="Create Track"
           primary={true}
           onClick={() => this.addQueryTrack()}
+          disabled={!this.state.title}
           style={{ position: 'absolute', bottom: '10px', width: '90%' }}
         />
       </div>
