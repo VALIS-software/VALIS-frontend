@@ -116,7 +116,7 @@ export default class AnnotationTrackRenderer {
       const x0Px = Util.pixelForBasePair(annotation.startBp, startBasePair, basePairsPerPixel, windowSize);
       const x1Px = Util.pixelForBasePair(annotation.endBp, startBasePair, basePairsPerPixel, windowSize);
 
-      // out of visible bounds
+      // out of visible bounds; don't render
       if (x1Px < 0 || x0Px > windowState.windowSize[0]) {
         return;
       }
@@ -250,15 +250,15 @@ export default class AnnotationTrackRenderer {
         const textHeightPx = Math.min(annotationHeightPx, fontSizePx);
         const textWidthPx = (cacheEntry.bounds.r - cacheEntry.bounds.l) * textHeightPx;
 
-        // out of visible bounds
-        if (x1Px < 0 || x0Px > windowState.windowSize[0]) {
-          continue;
-        }
-
         // center text in annotation x
         const xPx = x0Px + Math.max(widthPx * 0.5 - textWidthPx * 0.5, 0);
         // center text in annotation y
         const yPx = y0Px + annotationHeightPx * 0.5 - textHeightPx * 0.5;
+
+        // out of visible bounds; don't render
+        if ((xPx + textWidthPx) < 0 || (xPx > windowState.windowSize[0])) {
+          continue;
+        }
 
         // compose transform - convert px units to clip-space
         const s = (textHeightPx * canvasDisplayScale) / (gl.drawingBufferHeight * 0.5);
