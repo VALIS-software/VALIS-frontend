@@ -61,6 +61,7 @@ export default class DataTrackRenderer {
     shader.uniform('dataMin', dataTrack.min);
     shader.uniform('dataMax', dataTrack.max);
 
+    shader.uniform('displayScale', gl.canvas.clientWidth / gl.canvas.width);
     shader.uniform('windowSize', windowState.windowSize);
     shader.uniform('tileHeight', height);
     shader.uniform('displayedRange', [startBasePair, endBasePair]);

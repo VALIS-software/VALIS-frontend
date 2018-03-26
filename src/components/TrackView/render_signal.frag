@@ -12,6 +12,7 @@ uniform vec2 totalRange; // total range of the genome
 uniform vec2 currentTileDisplayRange; // range of the tile that is displayed
 uniform vec2 totalTileRange; // total range of the current tile
 
+uniform float displayScale;
 uniform vec2 windowSize;
 uniform vec2 selectionBoundsMin;
 uniform vec2 selectionBoundsMax;
@@ -83,7 +84,7 @@ void main() {
 	vec2 bMin = vec2(min(selectionBoundsMin.x, selectionBoundsMax.x), min(selectionBoundsMin.y, selectionBoundsMax.y));
 	vec2 bMax = vec2(max(selectionBoundsMin.x, selectionBoundsMax.x), max(selectionBoundsMin.y, selectionBoundsMax.y));
 
-	vec2 screenCoord =  gl_FragCoord.xy;
+	vec2 screenCoord =  gl_FragCoord.xy * displayScale;
 	screenCoord.y = windowSize.y - screenCoord.y;
 
 	vec3 selectionHighlight = vec3(0.0);

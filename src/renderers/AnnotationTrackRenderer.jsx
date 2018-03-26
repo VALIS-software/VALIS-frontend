@@ -70,6 +70,7 @@ export default class AnnotationTrackRenderer {
     this._hoverEnabled = false;
     this._hoverElement = null;
     const renderResults = {};
+    const gl = context.gl;
 
     const normalizedCounts = [];
     const pixels = [];
@@ -95,6 +96,7 @@ export default class AnnotationTrackRenderer {
     shader.uniform('displayedRange', [startBasePair, endBasePair]);
     shader.uniform('totalRange', [0, GENOME_LENGTH]);
     shader.uniformi('selectedBasePair', windowState.selectedBasePair);
+    shader.uniform('displayScale', gl.canvas.clientWidth / gl.canvas.width);
     shader.uniform('windowSize', windowState.windowSize);
     if (windowState.selection) {
       shader.uniformi('showSelection', 1);
@@ -183,12 +185,12 @@ export default class AnnotationTrackRenderer {
     // render labels
     // units of 'px' refer to non-dpi-scaled 'DOM' pixels
     const font = GPUTextFonts.getFont('OpenSans-Regular');
-    // igloo doesn't support vertex buffer offset or blend modes so It's simpler to just use API directly
-    const gl = context.gl;
     const viewportAspect = gl.drawingBufferWidth / gl.drawingBufferHeight;
     const canvasDisplayScale = gl.canvas.width / gl.canvas.clientWidth;
     const trackYOffsetPx = yOffset * windowState.windowSize[1];
     const fontSizePx = 20;
+
+    // igloo doesn't support vertex buffer offset or blend modes so It's simpler to just use API directly
 
     gl.enable(gl.BLEND);
     gl.blendEquation(gl.FUNC_ADD);
