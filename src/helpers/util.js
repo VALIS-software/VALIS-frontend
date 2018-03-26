@@ -119,23 +119,18 @@ class Util {
   }
 
   static newRenderContext(domElem) {
-    const MAX_TEXTURES = 128;
     const igloo = new Igloo(domElem);
     const gl = igloo.gl;
-    const textures = [];
     
     gl.getExtension('OES_texture_float');
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.disable(gl.DEPTH_TEST);
-    for (let i = 0; i < MAX_TEXTURES; i++) {
-      const newTexture = igloo.texture(null, gl.RGBA, gl.CLAMP_TO_EDGE, gl.NEAREST, gl.FLOAT);
-      textures.push(newTexture);
-    }
 
     // monkey patch igloo... 
-    igloo.textures = textures;
-    igloo.boundTextures = {};
+    igloo.cachedTextures = {};
+    igloo.cachedTextureIdx = 0;
+    igloo.maxCachedTextures = 1024;
     igloo.quad = igloo.array(Igloo.QUAD2);
     igloo.lineBuffer = igloo.array();
     igloo.lineColorBuffer = igloo.array();
@@ -156,23 +151,44 @@ class Util {
     };
 
     igloo.bindTexture = function(texDataGuid, texData, width, height) {
-      if (!igloo.boundTextures[texDataGuid]) {
-        const keys = _.keys(igloo.boundTextures);
-        let idx = keys.length;
-        if (idx >= igloo.textures.length) {
-          // free a random texture:
-          const toFree = keys[Math.floor(Math.random() * igloo.textures.length)];
-          idx = igloo.boundTextures[toFree];
-          delete igloo.boundTextures[toFree];
-          igloo.boundTextures[texDataGuid] = idx;
-        }
-        igloo.textures[idx].bind(idx + 1);
-        igloo.textures[idx].set(texData, width, height);
-        return idx + 1;
+      // @! this is a quick fix over the existing solution which was uploading texture data each use
+      // we should be handling GPU texture caching elsewhere
+
+      // we don't have any texture unit management so safest thing to do is reuse slot 0
+      const slot = 0; 
+      const cacheEntry = igloo.cachedTextures[texDataGuid];
+      if (cacheEntry != null) {
+        cacheEntry.tex.bind(slot);
+        return slot;
       } else {
-        const idx = igloo.boundTextures[texDataGuid];
-        igloo.textures[idx].bind(idx + 1);
-        return idx + 1;
+        // if we're over the cache limit, free the oldest
+        const cachedTextureKeys = Object.keys(igloo.cachedTextures);
+        if ((cachedTextureKeys.length + 1) > igloo.maxCachedTextures) {
+          // free the oldest texture
+          let lowestIdx = Infinity;
+          let lowestGuid = null;
+          for (let k = 0; k < cachedTextureKeys.length; k++) {
+            const guid = cachedTextureKeys[k];
+            const idx = igloo.cachedTextures[guid].idx;
+            if (idx < lowestIdx) {
+              lowestIdx = idx;
+              lowestGuid = guid;
+            }
+          }
+          const oldestTex = igloo.cachedTextures[lowestGuid].tex;
+          gl.deleteTexture(oldestTex.texture);
+          delete igloo.cachedTextures[lowestGuid];
+        }
+
+        // allocate texture on the GPU
+        const iglooTex = igloo.texture(null, gl.RGBA, gl.CLAMP_TO_EDGE, gl.NEAREST, gl.FLOAT);
+        igloo.cachedTextures[texDataGuid] = {
+          idx: ++igloo.cachedTextureIdx,
+          tex: iglooTex,
+        };
+        iglooTex.set(texData, width, height);
+        iglooTex.bind(slot);
+        return slot;
       }
     };
 

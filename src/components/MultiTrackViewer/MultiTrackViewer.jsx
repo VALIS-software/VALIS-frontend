@@ -61,9 +61,15 @@ class MultiTrackViewer extends React.Component {
     // that handles destruction of WebGL Context when the page changes
     window.addEventListener('load', () => {
       const domElem = document.querySelector('#webgl-canvas');
-      domElem.width = domElem.clientWidth;
-      domElem.height = domElem.clientHeight;
+      const currentWidth = domElem.clientWidth;
+      const currentHeight = domElem.clientHeight;
 
+      // scale canvas to account for device pixel ratio
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      domElem.width = Math.round(currentWidth * devicePixelRatio);
+      domElem.height = Math.round(currentHeight * devicePixelRatio);
+      domElem.style.width = domElem.width / devicePixelRatio + 'px';
+      domElem.style.height = domElem.height / devicePixelRatio + 'px';
 
       const bpp = GENOME_LENGTH / domElem.clientWidth;
       const windowSize = [domElem.clientWidth, domElem.clientHeight];

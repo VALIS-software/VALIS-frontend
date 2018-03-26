@@ -1,7 +1,10 @@
 import Util from '../helpers/util.js';
 import { GENOME_LENGTH } from '../helpers/constants.js';
+import GPUTextFonts from '../helpers/GPUTextFonts.js';
 
-const createText = require('../../lib/gl-render-text/createText.js');
+const GPUText = require('../../lib/gputext/gputext.js');
+const GPUTextWebGL = require('../../lib/gputext/gputext-webgl.js');
+
 const stats = require('stats-lite');
 const hsl = require('color-space/hsl');
 
@@ -11,7 +14,13 @@ const CLICK_RANGE_PIXELS = 5;
 export default class AnnotationTrackRenderer {
 
   constructor() {
-    this.textures = {};
+    this._textBufferCache = {};
+    this._textMat4 = new Float32Array([
+      1.0, 0.0, 0.0, 0.0,
+      0.0, 1.0, 0.0, 0.0,
+      0.0, 0.0, 1.0, 0.0,
+      0.0, 0.0, 0.0, 1.0,
+    ]);
     this._hoverEnabled = false;
     this._hoverElement = null;
   }
@@ -61,6 +70,7 @@ export default class AnnotationTrackRenderer {
     this._hoverEnabled = false;
     this._hoverElement = null;
     const renderResults = {};
+    const gl = context.gl;
 
     const normalizedCounts = [];
     const pixels = [];
@@ -79,6 +89,23 @@ export default class AnnotationTrackRenderer {
     const weightAverage = stats.mean(weights);
     const weightVariance = (weights.length > 1) ? stats.variance(weights) : 1;
 
+    const shader = shaders.annotationShader;
+    shader.use(); // we want to minimize shader binding
+    shader.attrib('points', context.quad, 2);
+
+    shader.uniform('displayedRange', [startBasePair, endBasePair]);
+    shader.uniform('totalRange', [0, GENOME_LENGTH]);
+    shader.uniformi('selectedBasePair', windowState.selectedBasePair);
+    shader.uniform('displayScale', gl.canvas.clientWidth / gl.canvas.width);
+    shader.uniform('windowSize', windowState.windowSize);
+    if (windowState.selection) {
+      shader.uniformi('showSelection', 1);
+      shader.uniform('selectionBoundsMin', windowState.selection.min);
+      shader.uniform('selectionBoundsMax', windowState.selection.max);
+    }
+
+    let _shaderHover = null;
+    let _shaderTileHeight = null;
 
     annotations.forEach(annotation => {
       const aggregation = annotation.aggregation;
@@ -88,10 +115,15 @@ export default class AnnotationTrackRenderer {
       if (aggregation) annotationHeight = trackHeightPx / windowState.windowSize[1];
       const annotationCenter = 0.5 * annotationHeight;
 
-      const xPx = Util.pixelForBasePair(annotation.startBp + (annotation.endBp - annotation.startBp)/2.0,
-                            startBasePair,
-                            basePairsPerPixel,
-                            windowSize);
+      const x0Px = Util.pixelForBasePair(annotation.startBp, startBasePair, basePairsPerPixel, windowSize);
+      const x1Px = Util.pixelForBasePair(annotation.endBp, startBasePair, basePairsPerPixel, windowSize);
+
+      // out of visible bounds; don't render
+      if (x1Px < 0 || x0Px > windowState.windowSize[0]) {
+        return;
+      }
+
+      const xPx = (x1Px + x0Px) * 0.5;
       const yPx = (yOffset + annotationYOffset + annotationCenter) * windowState.windowSize[1];
 
       renderResults[annotation.id] = [xPx / windowSize[0], yPx / windowSize[1]];
@@ -104,7 +136,6 @@ export default class AnnotationTrackRenderer {
       // render the segments:
       annotation.segments.forEach(segment => {
         // segment = [startBp, endBp, textureName, [R,G,B,A], heightPx]
-        const shader = shaders.annotationShader;
         const textureName = segment[2];
         let segmentHeight = (segment[4] || 32) / windowState.windowSize[1];
 
@@ -119,7 +150,6 @@ export default class AnnotationTrackRenderer {
           this.textures[textureName] = null; // TODO: load texture
         }
 
-        shader.use();
         if (textureName) {
           this.textures[textureName].bind(1);
           shader.uniformi('texture', 1);
@@ -134,61 +164,154 @@ export default class AnnotationTrackRenderer {
           color = hsl.rgb([trackColor * 360.0, 50.0, 0.5]).map(d => brightness * d / 3.0);
           color.push(1.0);
         }
+
         shader.uniform('color', color);
-        shader.uniformi('showHover', enableHover);
-        shader.uniformi('selectedBasePair', windowState.selectedBasePair);
-        shader.uniform('windowSize', windowState.windowSize);
-        shader.uniform('currentTileDisplayRange', range);
-        shader.uniform('totalTileRange', range);
-        shader.uniform('windowSize', windowState.windowSize);
-        shader.uniform('tileHeight', segmentHeight);
-        shader.uniform('displayedRange', [startBasePair, endBasePair]);
-        shader.uniform('totalRange', [0, GENOME_LENGTH]);
         shader.uniform('offset', [0, yOffset + annotationYOffset + annotationCenter - 0.5 * segmentHeight]);
-        if (windowState.selection) {
-          shader.uniformi('showSelection', 1);
-          shader.uniform('selectionBoundsMin', windowState.selection.min);
-          shader.uniform('selectionBoundsMax', windowState.selection.max);
+        shader.uniform('currentTileDisplayRange', range);
+        // only update shader values when they change
+        if (_shaderHover !== enableHover) {
+          _shaderHover = enableHover;
+          shader.uniformi('showHover', enableHover);
         }
-        context.drawQuad(shader);
+        if (_shaderTileHeight !== segmentHeight) {
+          _shaderTileHeight = segmentHeight;
+          shader.uniform('tileHeight', segmentHeight);
+        }
+
+        shader.draw(context.gl.TRIANGLE_STRIP, 4);
       });
-
-      // render labels:
-      if (!aggregation || enableHover) {
-        annotation.labels.forEach(label => {
-          const text = label[0];
-          if (!this.textures[text]) {
-            this.textures[text] = createText(context.gl, text, { size: 16, color: [255.0, 255.0, 255.0] });
-          }
-          // label format: [text, inside or outside, position: 0-left, 1-top, 2-right, 3-below, 4-center, offset-x, offset-y]
-
-          const textHeight = this.textures[text].shape[0] / windowState.windowSize[1];
-          const padding = TEXT_PADDING_LEFT / windowState.windowSize[0];
-          const roiOffsetX = padding + 0.5 * (this.textures[text].roi.w - this.textures[text].shape[1]) / windowState.windowSize[0];
-          const roiOffsetY = annotationCenter - 0.5 * this.textures[text].shape[0] / windowState.windowSize[1];
-          const shader = shaders.textShader;
-          const labelEndBp = annotation.startBp + this.textures[text].shape[1] * windowState.basePairsPerPixel;
-          this.textures[text].bind(1);
-          shader.use();
-          shader.uniformi('texture', 1);
-          shader.uniform('textureDimensions', this.textures[text].shape);
-          shader.uniform('currentTileDisplayRange', [annotation.startBp, labelEndBp]);
-          shader.uniform('totalTileRange', [annotation.startBp, labelEndBp]);
-          shader.uniform('color', [1.0, 0.0, 0.5]);
-          shader.uniform('windowSize', windowState.windowSize);
-          shader.uniform('tileHeight', textHeight);
-          shader.uniform('displayedRange', [startBasePair, endBasePair]);
-          shader.uniform('totalRange', [0, GENOME_LENGTH]);
-          shader.uniform('offset', [roiOffsetX, yOffset + annotationYOffset + roiOffsetY]);
-          if (windowState.selection) {
-            shader.uniformi('showSelection', 1);
-            shader.uniform('selectionBoundsMin', windowState.selection.min);
-            shader.uniform('selectionBoundsMax', windowState.selection.max);
-          }
-          context.drawQuad(shader);
-        });
-      }
     });
+
+    // render labels
+    // units of 'px' refer to non-dpi-scaled 'DOM' pixels
+    const font = GPUTextFonts.getFont('OpenSans-Regular');
+    const viewportAspect = gl.drawingBufferWidth / gl.drawingBufferHeight;
+    const canvasDisplayScale = gl.canvas.width / gl.canvas.clientWidth;
+    const trackYOffsetPx = yOffset * windowState.windowSize[1];
+    const fontSizePx = 20;
+
+    // igloo doesn't support vertex buffer offset or blend modes so It's simpler to just use API directly
+
+    gl.enable(gl.BLEND);
+    gl.blendEquation(gl.FUNC_ADD);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+    // store the font atlas in texture units
+    // (we could use some GL texture management so we're not rebinding textures each frame)
+    const atlasTextureUnit = 1;
+    gl.activeTexture(gl.TEXTURE0 + atlasTextureUnit);
+    const atlasTexture = GPUTextFonts.getAtlasTexture(gl, font);
+    gl.bindTexture(gl.TEXTURE_2D, atlasTexture);
+
+    const textShader = shaders.textShader;
+    gl.useProgram(textShader.deviceHandle);
+
+    gl.enableVertexAttribArray(textShader.attributeLocations.position);
+    gl.enableVertexAttribArray(textShader.attributeLocations.uv);
+
+    // common uniform data
+    gl.uniform1i(textShader.uniformLocations.glyphAtlas, atlasTextureUnit);
+    gl.uniform1f(textShader.uniformLocations.fieldRange, font.descriptor.fieldRange_px);
+    gl.uniform2f(textShader.uniformLocations.resolution, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    gl.uniform4f(textShader.uniformLocations.color, 1.0, 1.0, 1.0, 1.0);
+
+    for (let a = 0; a < annotations.length; a++) {
+      const annotation = annotations[a];
+      const annotationHeightPx = annotation.aggregation ? trackHeightPx : annotation.heightPx;
+
+      // only show aggregation labels on hover
+      const showLabels = !(annotation.aggregation && !this.checkForHover(annotation, height, yOffset, windowState));
+
+      const labels = annotation.labels;
+
+      for (let l = 0; (l < annotation.labels.length) && showLabels; l++) {
+        const label = annotation.labels[l];
+        const text = label[0];
+
+        let cacheEntry = this._textBufferCache[text];
+
+        if (cacheEntry == null) {
+          // generate text vertex buffer
+          const glyphLayout = GPUText.layout(text, font.descriptor, {});
+          cacheEntry = this._textBufferCache[text] = {
+            bounds: glyphLayout.bounds,
+            buffer: GPUTextWebGL.createTextBuffer(gl, GPUText.generateVertexData(glyphLayout)),
+            inUse: true,
+          };
+        } else {
+          cacheEntry.inUse = true;
+        }
+
+        const textBuffer = cacheEntry.buffer;
+
+        // non-dpi-scaled 'DOM' pixels
+        const x0Px = Util.pixelForBasePair(annotation.startBp, startBasePair, basePairsPerPixel, windowSize);
+        const x1Px = Util.pixelForBasePair(annotation.endBp, startBasePair, basePairsPerPixel, windowSize);
+        const y0Px = trackYOffsetPx + annotation.yOffsetPx;
+        const widthPx = x1Px - x0Px;
+        const textHeightPx = Math.min(annotationHeightPx, fontSizePx);
+        const textWidthPx = (cacheEntry.bounds.r - cacheEntry.bounds.l) * textHeightPx;
+
+        // center text in annotation x
+        const xPx = x0Px + Math.max(widthPx * 0.5 - textWidthPx * 0.5, 0);
+        // center text in annotation y
+        const yPx = y0Px + annotationHeightPx * 0.5 - textHeightPx * 0.5;
+
+        // out of visible bounds; don't render
+        if ((xPx + textWidthPx) < 0 || (xPx > windowState.windowSize[0])) {
+          continue;
+        }
+
+        // compose transform - convert px units to clip-space
+        const s = (textHeightPx * canvasDisplayScale) / (gl.drawingBufferHeight * 0.5);
+        const xClipspace = 2 * (xPx * canvasDisplayScale - gl.drawingBufferWidth * 0.5) / gl.drawingBufferWidth;
+        const yClipSpace = -2 * (yPx * canvasDisplayScale - gl.drawingBufferHeight * 0.5) / gl.drawingBufferHeight;
+
+        this._textMat4[0] = s; this._textMat4[5] = s;
+        this._textMat4[12] = xClipspace; this._textMat4[13] = yClipSpace;
+
+        gl.uniformMatrix4fv(textShader.uniformLocations.transform, false, this._textMat4);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, textBuffer.deviceHandle);
+        gl.vertexAttribPointer(
+          textShader.attributeLocations.position,
+          textBuffer.vertexLayout.position.elements,
+          gl.FLOAT,
+          false,
+          textBuffer.vertexLayout.position.strideBytes,
+          textBuffer.vertexLayout.position.offsetBytes
+        );
+        gl.vertexAttribPointer(
+          textShader.attributeLocations.uv,
+          textBuffer.vertexLayout.uv.elements,
+          gl.FLOAT,
+          false,
+          textBuffer.vertexLayout.uv.strideBytes,
+          textBuffer.vertexLayout.uv.offsetBytes
+        );
+
+        gl.drawArrays(textBuffer.drawMode, 0, textBuffer.vertexCount);
+      }
+    }
+
+    gl.disable(gl.BLEND);
+    gl.disableVertexAttribArray(textShader.attributeLocations.uv);
+    gl.disableVertexAttribArray(textShader.attributeLocations.position);
+    
+    // text buffer cache management
+    // delete any text buffers not used in this frame
+    const cacheKeys = Object.keys(this._textBufferCache);
+    for (let i = 0; i < cacheKeys.length; i++) {
+      const key = cacheKeys[i];
+      const cacheEntry = this._textBufferCache[key];
+      if (!cacheEntry.inUse) {
+        GPUTextWebGL.deleteTextBuffer(gl, cacheEntry.buffer);
+        delete this._textBufferCache[key];
+      } else {
+        // mark as unused for next round
+        cacheEntry.inUse = false;
+      }
+    }
 
     return renderResults;
   }
