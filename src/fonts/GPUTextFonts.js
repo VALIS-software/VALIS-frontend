@@ -21,22 +21,55 @@ class GPUTextFonts {
         return font._atlasTexture;
     }
 
-    static loadFontAtlas(font, atlasUrl) {
+    static loadFont(url, atlasUrlOverride) {
         const _fonts = this._fonts;
-        const glyphAtlas = new Image();
-        glyphAtlas.onload = function() {
-            _fonts[font.metadata.postScriptName] = {
-                descriptor: font,
-                atlas: glyphAtlas,
-                _atlasTexture: null,
-            };
+
+        // object modified as parts arrive
+        const font = {
+            descriptor: null,
+            atlas: null,
+            _atlasTexture: null,
         };
-        glyphAtlas.src = atlasUrl;
+
+        function partLoaded() {
+            // validate font for completion
+            if (font.descriptor != null && font.atlas != null) {
+                // font complete, make available
+                _fonts[font.descriptor.metadata.postScriptName] = font;
+            }
+        }
+
+        const jsonFont = url.substr(-5).toLowerCase() === '.json';
+
+        if (jsonFont) {
+            const glyphAtlas = new Image();
+            glyphAtlas.onload = function() {
+                font.atlas = glyphAtlas;
+                partLoaded();
+            };
+
+            if (atlasUrlOverride == null) {
+                const i = url.lastIndexOf('/') + 1;
+                const basename = url.substring(i, url.length - 5);
+                const directory = url.substr(0, i);
+                glyphAtlas.src = directory + basename + '-0.png';
+            } else {
+                glyphAtlas.src = atlasUrlOverride;
+            }
+        }
+
+        const req = new XMLHttpRequest();
+        req.open('GET', url, true);
+        req.onload = function() {
+            font.descriptor = JSON.parse(req.responseText);
+            partLoaded();
+        };
+        req.send();
     }
 
 }
 
 GPUTextFonts._fonts = {};
-GPUTextFonts.loadFontAtlas(OpenSansRegularJson, OpenSansRegularAtlas);
+GPUTextFonts.loadFont(OpenSansRegularJson, OpenSansRegularAtlas);
 
 export default GPUTextFonts;
