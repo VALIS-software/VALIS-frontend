@@ -65,7 +65,6 @@ class GenomeSelector extends Component {
     // use api to pull all available types
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
-    builder.filterSource(DATA_SOURCE_GENOME);
     const genomeQuery = builder.build();
     this.api.getDistinctValues('type', genomeQuery).then(data => {
       this.availableTypes = data;
@@ -118,7 +117,6 @@ class GenomeSelector extends Component {
   buildGenomeQuery() {
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
-    builder.filterSource(DATA_SOURCE_GENOME);
     // The chromoNameValue starts from 1, which is the same as the chromid in the backend
     if (this.state.chromoNameValue > 0) {
       builder.filterChromid(this.state.chromoNameValue);
