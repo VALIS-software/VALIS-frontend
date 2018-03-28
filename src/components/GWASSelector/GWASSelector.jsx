@@ -6,6 +6,7 @@ import AutoComplete from 'material-ui/AutoComplete';
 import Slider from 'material-ui/Slider';
 import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import QueryBuilder, { QUERY_TYPE_INFO } from '../../models/query.js';
+import { DATA_SOURCE_GWAS } from '../../helpers/constants.js';
 
 // Styles
 import './GWASSelector.scss';
@@ -47,7 +48,11 @@ class GWASSelector extends Component {
   }
 
   componentDidMount() {
-    this.api.getDistinctValues(QUERY_TYPE_INFO, 'name').then(data => {
+    const builder = new QueryBuilder();
+    builder.newInfoQuery();
+    builder.filterSource(DATA_SOURCE_GWAS);
+    const infoQuery = builder.build();
+    this.api.getDistinctValues('name', infoQuery).then(data => {
       this.setState({
         traits: data,
       });
@@ -93,13 +98,16 @@ class GWASSelector extends Component {
   buildGWASQuery() {
     const builder = new QueryBuilder();
     builder.newInfoQuery();
+    builder.filterSource(DATA_SOURCE_GWAS);
     builder.filterName({ $contains: this.state.searchTrait });
     const infoQuery = builder.build();
     builder.newEdgeQuery();
+    builder.filterSource(DATA_SOURCE_GWAS);
     builder.filterMaxPValue(this.state.pvalue);
     builder.setToNode(infoQuery);
     const edgeQuery = builder.build();
     builder.newGenomeQuery();
+    builder.filterSource(DATA_SOURCE_GWAS);
     builder.addToEdge(edgeQuery);
     builder.setLimit(this.state.maxnumber);
     const genomeQuery = builder.build();

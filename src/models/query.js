@@ -44,6 +44,10 @@ class QueryBuilder {
     this.query.filters.type = type;
   }
 
+  filterSource(source) {
+    this.query.filters.source = source;
+  }
+
   filterChromid(chromid) {
     if (this.query.type !== QUERY_TYPE_GENOME) {
       throw new Error('chromid only available for GenomeNodes');
