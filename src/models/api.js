@@ -73,7 +73,7 @@ class GenomeAPI {
 		return axios.get(requestUrl);
 	}
 
-	getAnnotationData(annotationId, startBp, endBp, samplingRate=1, trackHeightPx=0, query={ query :[] }) {
+	getAnnotationData(annotationId, startBp, endBp, samplingRate=1, trackHeightPx=0, query={}) {
 		const samplingRateQuery = `?sampling_rate=${samplingRate}&track_height_px=${trackHeightPx}`;
 		const requestUrl = `${this.baseUrl}/annotations/${annotationId}/${startBp}/${endBp}${samplingRateQuery}`;
 		return axios.post(requestUrl, query);
@@ -113,8 +113,9 @@ class GenomeAPI {
 		});
 	}
 
-	getDistinctValues(queryType, index) {
-		return axios.get(`${this.baseUrl}/distinct_values/${queryType}/${index}`).then(data => {
+	getDistinctValues(index, query) {
+		const requestUrl = `${this.baseUrl}/distinct_values/${index}`;
+		return axios.post(requestUrl, query).then(data => {
 			return data.data;
 		});
 	}

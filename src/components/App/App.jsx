@@ -23,6 +23,15 @@ import AppModel, {
   APP_EVENT_ADD_DATASET_BROWSER,
   APP_EVENT_DATA_SET_SELECTED,
 } from '../../models/appModel.js';
+import {
+  TRACK_TYPE_SEQUENCE,
+  TRACK_TYPE_FUNCTIONAL,
+  TRACK_TYPE_GENOME,
+  TRACK_TYPE_GWAS,
+  TRACK_TYPE_EQTL,
+  TRACK_TYPE_3D,
+  TRACK_TYPE_NETWORK,
+} from '../../helpers/constants.js';
 
 import ViewModel from '../../models/viewModel.js';
 // Styles
@@ -35,11 +44,6 @@ const SIDEBAR_TYPE_ENTITY_DETAILS = 'entity-details';
 const SIDEBAR_TYPE_BROWSE_DATA = 'browse-data';
 const SIDEBAR_TYPE_BROWSE_DATA_GWAS = 'browse-data-gwas';
 const SIDEBAR_TYPE_BROWSE_DATA_GENOME = 'browse-data-genome';
-
-const TRACK_TYPE_GWAS = 'gwas';
-const TRACK_TYPE_SEQUENCE = 'sequence';
-const TRACK_TYPE_GENOME = 'GRCh38_gff';
-const TRACK_TYPE_EQTL = 'eqtl';
 
 class App extends React.Component {
   constructor(props) {
@@ -107,20 +111,24 @@ class App extends React.Component {
 
   dataSetSelected(event) {
     const trackType = event.data;
-    let currSideBarType;
-    let currSideBarInfo;
-    if (trackType === TRACK_TYPE_GWAS) {
-      currSideBarType = SIDEBAR_TYPE_BROWSE_DATA_GWAS;
-      currSideBarInfo = 'GWAS Track';
-    } else if (trackType === TRACK_TYPE_SEQUENCE) {
+    let currSideBarType = '';
+    let currSideBarInfo = trackType;
+    if (trackType === TRACK_TYPE_SEQUENCE) {
       currSideBarInfo = 'Sequence Track';
+    } else if (trackType === TRACK_TYPE_FUNCTIONAL) {
+      currSideBarInfo = 'Functional Track';
     } else if (trackType === TRACK_TYPE_GENOME) {
       currSideBarType = SIDEBAR_TYPE_BROWSE_DATA_GENOME;
       currSideBarInfo = 'Genome Elements Track';
+    } else if (trackType === TRACK_TYPE_GWAS) {
+      currSideBarType = SIDEBAR_TYPE_BROWSE_DATA_GWAS;
+      currSideBarInfo = 'GWAS Track';
     } else if (trackType === TRACK_TYPE_EQTL) {
       currSideBarInfo = 'eQTL Track';
-    } else {
-      currSideBarInfo = trackType;
+    } else if (trackType === TRACK_TYPE_3D) {
+      currSideBarInfo = '3D Structure Track';
+    } else if (trackType === TRACK_TYPE_NETWORK) {
+      currSideBarInfo = 'Network Track';
     }
     this.setState({
       showInfo: true,
@@ -152,11 +160,11 @@ class App extends React.Component {
       return (<EntityDetails entity={entity} />);
     } else if (this.state.currSideBarType === SIDEBAR_TYPE_BROWSE_DATA) {
       return (<DatasetSelector appModel={this.appModel} />);
-    } else if (this.state.currSideBarType === SIDEBAR_TYPE_BROWSE_DATA_GWAS) {
-      return (<GWASSelector appModel={this.appModel} />);
     } else if (this.state.currSideBarType === SIDEBAR_TYPE_BROWSE_DATA_GENOME) {
       return (<GenomeSelector appModel={this.appModel} />);
-    } else {
+    } else if (this.state.currSideBarType === SIDEBAR_TYPE_BROWSE_DATA_GWAS) {
+      return (<GWASSelector appModel={this.appModel} />);
+    }  else {
       return null;
     }
   }

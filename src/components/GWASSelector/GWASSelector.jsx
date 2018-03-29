@@ -5,7 +5,10 @@ import TextField from 'material-ui/TextField';
 import AutoComplete from 'material-ui/AutoComplete';
 import Slider from 'material-ui/Slider';
 import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
+import SelectField from 'material-ui/SelectField';
+import MenuItem from 'material-ui/MenuItem';
 import QueryBuilder, { QUERY_TYPE_INFO } from '../../models/query.js';
+import { DATA_SOURCE_GWAS, DATA_SOURCE_CLINVAR } from '../../helpers/constants.js';
 
 // Styles
 import './GWASSelector.scss';
@@ -28,9 +31,10 @@ class GWASSelector extends Component {
     super(props);
     this.handleUpdateTitle = this.handleUpdateTitle.bind(this);
     this.handleUpdateTraitInput = this.handleUpdateTraitInput.bind(this);
-    this.handleUpdateGeneInput = this.handleUpdateGeneInput.bind(this);
+    this.handleUpdateSearchSource = this.handleUpdateSearchSource.bind(this);
     this.handleUpdatePValue = this.handleUpdatePValue.bind(this);
     this.handleUpdateMaxNumber = this.handleUpdateMaxNumber.bind(this);
+    this.updateTraits = this.updateTraits.bind(this);
     if (props.appModel) {
       this.appModel = props.appModel;
       this.api = this.appModel.api;
@@ -38,16 +42,35 @@ class GWASSelector extends Component {
     this.state = {
       title: '',
       searchTrait: '',
-      searchGene: '',
+      searchSourceValue: 0,
       traits: ['cancer', 'Alzheimer', 'sleep', 'pain', 'hair color', 'asthma'],
-      genes: ['CHI3L1', 'THADA'],
       pvalue: 0.05,
       maxnumber: 10000,
     };
   }
 
   componentDidMount() {
-    this.api.getDistinctValues(QUERY_TYPE_INFO, 'name').then(data => {
+    this.availableSourceNames = ['Any', 'GWAS', 'ClinVar'];
+    this.searchSourceItems = [];
+    for (let i = 0; i < this.availableSourceNames.length; i++) {
+      this.searchSourceItems.push(<MenuItem value={i} key={i} primaryText={this.availableSourceNames[i]} />);
+    }
+    this.setState({
+      searchSourceValue: 0,
+    });
+    this.updateTraits(0);
+  }
+
+  updateTraits(value) {
+    const builder = new QueryBuilder();
+    builder.newInfoQuery();
+    if (value === 1) {
+      builder.filterSource(DATA_SOURCE_GWAS);
+    } else if (value === 2) {
+      builder.filterSource(DATA_SOURCE_CLINVAR);
+    }
+    const infoQuery = builder.build();
+    this.api.getDistinctValues('name', infoQuery).then(data => {
       this.setState({
         traits: data,
       });
@@ -72,10 +95,11 @@ class GWASSelector extends Component {
     }
   }
 
-  handleUpdateGeneInput(searchText) {
+  handleUpdateSearchSource(event, index, value) {
     this.setState({
-      searchGene: searchText,
+      searchSourceValue: value,
     });
+    this.updateTraits(value);
   }
 
   handleUpdatePValue(event, value) {
@@ -93,13 +117,28 @@ class GWASSelector extends Component {
   buildGWASQuery() {
     const builder = new QueryBuilder();
     builder.newInfoQuery();
+    if (this.state.searchSourceValue === 1) {
+      builder.filterSource(DATA_SOURCE_GWAS);
+    } else if (this.state.searchSourceValue === 2) {
+      builder.filterSource(DATA_SOURCE_CLINVAR);
+    }
     builder.filterName({ $contains: this.state.searchTrait });
     const infoQuery = builder.build();
     builder.newEdgeQuery();
+    if (this.state.searchSourceValue === 1) {
+      builder.filterSource(DATA_SOURCE_GWAS);
+    } else if (this.state.searchSourceValue === 2) {
+      builder.filterSource(DATA_SOURCE_CLINVAR);
+    }
     builder.filterMaxPValue(this.state.pvalue);
     builder.setToNode(infoQuery);
     const edgeQuery = builder.build();
     builder.newGenomeQuery();
+    if (this.state.searchSourceValue === 1) {
+      builder.filterSource(DATA_SOURCE_GWAS);
+    } else if (this.state.searchSourceValue === 2) {
+      builder.filterSource(DATA_SOURCE_CLINVAR);
+    }
     builder.addToEdge(edgeQuery);
     builder.setLimit(this.state.maxnumber);
     const genomeQuery = builder.build();
@@ -111,7 +150,7 @@ class GWASSelector extends Component {
     this.appModel.addAnnotationTrack(this.state.title, query);
   }
 
-	render() {
+  render() {
     return (
       <div className="track-editor">
         <TextField
@@ -130,15 +169,13 @@ class GWASSelector extends Component {
           onUpdateInput={this.handleUpdateTraitInput}
           errorText={!this.state.searchTrait ? 'This field is required' : ''}
         /><br /> <br />
-        <AutoComplete
-          floatingLabelText="Gene"
-          searchText={this.state.searchGene}
-          filter={AutoComplete.caseInsensitiveFilter}
-          openOnFocus={true}
-          hintText="Type anything"
-          dataSource={this.state.genes}
-          onUpdateInput={this.handleUpdateGeneInput}
-        /><br /> <br /> <br />
+        <SelectField
+          value={this.state.searchSourceValue}
+          floatingLabelText="Data Source"
+          onChange={this.handleUpdateSearchSource}
+        >
+          {this.searchSourceItems}
+        </SelectField><br /> <br />
         <div> {'P-Value < '} {this.state.pvalue} </div>
         <Slider
           min={0}
@@ -146,6 +183,7 @@ class GWASSelector extends Component {
           step={0.001}
           value={this.state.pvalue}
           onChange={this.handleUpdatePValue}
+          disabled={this.state.searchSourceValue === 2}
         />
         <div> {'Max Number of Results: '} {this.state.maxnumber} </div>
         <Slider

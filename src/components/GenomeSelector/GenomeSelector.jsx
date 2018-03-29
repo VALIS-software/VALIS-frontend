@@ -13,7 +13,6 @@ import { CHROMOSOME_NAMES } from '../../helpers/constants.js';
 // Styles
 import './GenomeSelector.scss';
 
-
 const logmin = 0;
 const logmax = Math.pow(10, 6);
 const power = 12;
@@ -64,7 +63,10 @@ class GenomeSelector extends Component {
       genomeTypeValue: 0,
     });
     // use api to pull all available types
-    this.api.getDistinctValues(QUERY_TYPE_GENOME, 'type').then(data => {
+    const builder = new QueryBuilder();
+    builder.newGenomeQuery();
+    const genomeQuery = builder.build();
+    this.api.getDistinctValues('type', genomeQuery).then(data => {
       this.availableTypes = data;
       this.genomeTypeItems = [];
       for (let i = 0; i < this.availableTypes.length; i++) {
@@ -132,7 +134,7 @@ class GenomeSelector extends Component {
     this.appModel.addAnnotationTrack(this.state.title, query);
   }
 
-	render() {
+  render() {
     return (
       <div className="track-editor">
         <TextField

@@ -14,6 +14,23 @@ const MAX_BASE_PAIR_WIDTH = 32.0;
 const TRACK_DATA_TYPE_BASE_PAIRS = 'basepairs';
 const TRACK_DATA_TYPE_GBANDS = 'gbands';
 const TRACK_DATA_TYPE_SIGNAL = 'signal';
+
+// These const strings should be consistent with backend sirius.realdata.constants
+const DATA_SOURCE_SEQUENCE = 'sequence';
+const DATA_SOURCE_GENOME = 'GRCh38_gff';
+const DATA_SOURCE_GWAS = 'GWAS';
+const DATA_SOURCE_EQTL = 'eQTL';
+const DATA_SOURCE_CLINVAR = 'ClinVar';
+const DATA_SOURCE_DBSNP = 'dbSNP';
+
+const TRACK_TYPE_SEQUENCE = 'track_type_sequence';
+const TRACK_TYPE_FUNCTIONAL = 'track_type_functional';
+const TRACK_TYPE_GENOME = 'track_type_genome';
+const TRACK_TYPE_GWAS = 'track_type_gwas';
+const TRACK_TYPE_EQTL = 'track_type_eqtl';
+const TRACK_TYPE_3D = 'track_type_3d';
+const TRACK_TYPE_NETWORK = 'track_type_network';
+
 const CHROMOSOME_SIZES = [
   248956422,
   242193529,
@@ -77,4 +94,17 @@ export {
   CHROMOSOME_SIZES,
   CHROMOSOME_START_BASE_PAIRS,
   CHROMOSOME_NAMES,
+  DATA_SOURCE_SEQUENCE,
+  DATA_SOURCE_GENOME,
+  DATA_SOURCE_GWAS,
+  DATA_SOURCE_EQTL,
+  DATA_SOURCE_CLINVAR,
+  DATA_SOURCE_DBSNP,
+  TRACK_TYPE_SEQUENCE,
+  TRACK_TYPE_FUNCTIONAL,
+  TRACK_TYPE_GENOME,
+  TRACK_TYPE_GWAS,
+  TRACK_TYPE_EQTL,
+  TRACK_TYPE_3D,
+  TRACK_TYPE_NETWORK,
 };
