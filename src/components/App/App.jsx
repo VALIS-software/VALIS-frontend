@@ -24,12 +24,13 @@ import AppModel, {
   APP_EVENT_DATA_SET_SELECTED,
 } from '../../models/appModel.js';
 import {
-  DATA_SOURCE_SEQUENCE,
-  DATA_SOURCE_GENOME,
-  DATA_SOURCE_GWAS,
-  DATA_SOURCE_EQTL,
-  DATA_SOURCE_CLINVAR,
-  DATA_SOURCE_DBSNP,
+  TRACK_TYPE_SEQUENCE,
+  TRACK_TYPE_FUNCTIONAL,
+  TRACK_TYPE_GENOME,
+  TRACK_TYPE_GWAS,
+  TRACK_TYPE_EQTL,
+  TRACK_TYPE_3D,
+  TRACK_TYPE_NETWORK,
 } from '../../helpers/constants.js';
 
 import ViewModel from '../../models/viewModel.js';
@@ -109,23 +110,25 @@ class App extends React.Component {
   }
 
   dataSetSelected(event) {
-    const trackDataSource = event.data;
+    const trackType = event.data;
     let currSideBarType = '';
-    let currSideBarInfo = trackDataSource;
-    if (trackDataSource === DATA_SOURCE_SEQUENCE) {
+    let currSideBarInfo = trackType;
+    if (trackType === TRACK_TYPE_SEQUENCE) {
       currSideBarInfo = 'Sequence Track';
-    } else if (trackDataSource === DATA_SOURCE_GENOME) {
+    } else if (trackType === TRACK_TYPE_FUNCTIONAL) {
+      currSideBarInfo = 'Functional Track';
+    } else if (trackType === TRACK_TYPE_GENOME) {
       currSideBarType = SIDEBAR_TYPE_BROWSE_DATA_GENOME;
       currSideBarInfo = 'Genome Elements Track';
-    } else if (trackDataSource === DATA_SOURCE_GWAS) {
+    } else if (trackType === TRACK_TYPE_GWAS) {
       currSideBarType = SIDEBAR_TYPE_BROWSE_DATA_GWAS;
       currSideBarInfo = 'GWAS Track';
-    } else if (trackDataSource === DATA_SOURCE_EQTL) {
+    } else if (trackType === TRACK_TYPE_EQTL) {
       currSideBarInfo = 'eQTL Track';
-    } else if (trackDataSource === DATA_SOURCE_CLINVAR) {
-      currSideBarInfo = 'ClinVar Track';
-    } else if (trackDataSource === DATA_SOURCE_DBSNP) {
-      currSideBarInfo = 'dbSNP Track';
+    } else if (trackType === TRACK_TYPE_3D) {
+      currSideBarInfo = '3D Structure Track';
+    } else if (trackType === TRACK_TYPE_NETWORK) {
+      currSideBarInfo = 'Network Track';
     }
     this.setState({
       showInfo: true,

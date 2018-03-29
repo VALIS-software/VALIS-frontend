@@ -25,7 +25,7 @@ class DatasetSelector extends Component {
     });
   }
 
-	render() {
+  render() {
     if (!this.state.dataInfo) return (<div />);
     const dataInfo = this.state.dataInfo;
     const dataInfoBlocks = [];
@@ -40,7 +40,7 @@ class DatasetSelector extends Component {
       );
     }
     return (<div className="dataset-selector">{ dataInfoBlocks }</div>);
-	}
+  }
 }
 
 DatasetSelector.propTypes = {

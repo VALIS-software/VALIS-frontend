@@ -8,7 +8,7 @@ import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import QueryBuilder, { QUERY_TYPE_GENOME } from '../../models/query.js';
-import { CHROMOSOME_NAMES, DATA_SOURCE_GENOME } from '../../helpers/constants.js';
+import { CHROMOSOME_NAMES } from '../../helpers/constants.js';
 
 // Styles
 import './GenomeSelector.scss';
@@ -134,7 +134,7 @@ class GenomeSelector extends Component {
     this.appModel.addAnnotationTrack(this.state.title, query);
   }
 
-	render() {
+  render() {
     return (
       <div className="track-editor">
         <TextField
