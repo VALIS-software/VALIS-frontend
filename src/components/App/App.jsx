@@ -84,19 +84,22 @@ class App extends React.Component {
 
   showEntityDetails(event) {
     if (event.data !== null) {
-      if (event.data.labels[0][0] === this.state.currSideBarInfo) {
-        this.hideSideBar();
-      } else if (event.data.aggregation === true) {
+      if (event.data.aggregation === true) {
         // if the annotation is an aggregation then zoom
         this.viewModel.setViewRegionUsingRange(event.data.startBp, event.data.endBp);
+      } else if (event.data.id === this.state.currSideBarDataID && this.state.showInfo) {
+        this.hideSideBar();
       } else {
-        // otherwise just show the entity details
-        this.setState({
-          showInfo: true,
-          currSideBarType: SIDEBAR_TYPE_ENTITY_DETAILS,
-          currSideBarInfo: event.data.labels[0][0],
-          currSideBarEntity: event.data.entity,
-        });
+          let title = '';
+          if (event.data.title) {
+            title = event.data.title;
+          }
+          this.setState({
+            showInfo: true,
+            currSideBarType: SIDEBAR_TYPE_ENTITY_DETAILS,
+            currSideBarInfo: title,
+            currSideBarDataID: event.data.id,
+          });
       }
     }
   }
@@ -156,8 +159,8 @@ class App extends React.Component {
       const guid = this.state.currSideBarInfo;
       return (<TrackViewSettings guid={guid} model={this.appModel} />);
     } else if (this.state.currSideBarType === SIDEBAR_TYPE_ENTITY_DETAILS) {
-      const entity = this.state.currSideBarEntity;
-      return (<EntityDetails entity={entity} />);
+      const dataID = this.state.currSideBarDataID;
+      return (<EntityDetails appModel={this.appModel} dataID={dataID} />);
     } else if (this.state.currSideBarType === SIDEBAR_TYPE_BROWSE_DATA) {
       return (<DatasetSelector appModel={this.appModel} />);
     } else if (this.state.currSideBarType === SIDEBAR_TYPE_BROWSE_DATA_GENOME) {
