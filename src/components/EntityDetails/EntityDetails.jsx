@@ -125,9 +125,6 @@ function DetailsTable(props) {
   if (details.chromid) {
     details.location = CHROMOSOME_NAMES[details.chromid-1];
   }
-  this.state = {
-    hoveredTooltip: false,
-  };
   // show available data
   const viewKeys = ['type', 'assembly', 'location', 'start', 'end', 'length', 'source'];
   for (const k of viewKeys) {
