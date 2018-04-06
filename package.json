@@ -1,61 +1,40 @@
 {
-  "name": "WebGLGenomeBrowser",
+  "name": "valis-frontend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "dev": "webpack-dev-server --env.dev",
-    "dev-remote": "webpack-dev-server --env.dev --env.API_URL=http://35.185.230.75",
-    "production": "webpack -p --env.production",
-    "pack": "webpack --display-error-details",
-    "deploy": "webpack --display-error-details --env.deploy"
+  "description": "VALIS (Visualization & Analytics for Life Science) is a powerful genome visualizer written using modern web-technologies (React, ES6 and WebGL).",
+  "main": "",
+  "directories": {
+    "lib": "lib"
   },
-  "keywords": [],
+  "scripts": {
+    
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haxiomic/VALIS-frontend.git"
+  },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "axios": "^0.17.1",
-    "color-space": "^1.16.0",
-    "d3": "^4.12.0",
-    "interval-tree2": "^1.1.0",
-    "lru-cache": "^4.1.1",
-    "material-ui": "^0.20.0",
-    "prop-types": "^15.6.0",
-    "react": "^15.3.1",
-    "react-color": "^2.14.0",
-    "react-dom": "^15.3.1",
-    "react-hot-loader": "^3.0.0-beta.3",
-    "react-input-range": "^1.2.2",
-    "stats-lite": "^2.1.0",
-    "underscore": "^1.8.3",
-    "uuid": "^3.1.0",
-    "webpack-google-cloud-storage-plugin": "^0.7.0",
-    "xspans": "^1.0.0",
-    "zip-webpack-plugin": "^2.1.0"
+  "bugs": {
+    "url": "https://github.com/haxiomic/VALIS-frontend/issues"
   },
+  "homepage": "https://github.com/haxiomic/VALIS-frontend#readme",
   "devDependencies": {
-    "babel-core": "^6.14.0",
-    "babel-eslint": "^6.1.2",
-    "babel-loader": "^6.2.5",
-    "babel-preset-es2015": "^6.14.0",
-    "babel-preset-react": "^6.11.1",
-    "babel-register": "^6.14.0",
-    "css-loader": "^0.24.0",
-    "eslint": "^3.4.0",
-    "eslint-config-airbnb": "^10.0.1",
-    "eslint-loader": "^1.5.0",
-    "eslint-plugin-import": "^1.14.0",
-    "eslint-plugin-jsx-a11y": "^2.2.1",
-    "eslint-plugin-react": "^6.2.0",
-    "extract-text-webpack-plugin": "^2.0.0-beta.4",
-    "file-loader": "^1.1.5",
-    "html-webpack-plugin": "^2.22.0",
-    "loader-utils": "^0.2.16",
-    "node-sass": "^3.9.0",
-    "sass-loader": "^4.0.1",
-    "style-loader": "^0.13.1",
-    "webpack": "^2.1.0-beta.25",
-    "webpack-cli": "^2.0.4",
-    "webpack-dev-server": "^2.1.0-beta.2"
+    "@types/node": "^9.6.1",
+    "@types/react": "^16.1.0",
+    "@types/react-dom": "^16.0.4",
+    "awesome-typescript-loader": "5.0.0-1",
+    "css-loader": "^0.28.11",
+    "node-sass": "^4.8.3",
+    "sass-loader": "^6.0.7",
+    "source-map-loader": "^0.2.3",
+    "style-loader": "^0.20.3",
+    "typescript": "^2.8.1",
+    "webpack": "^4.4.1",
+    "webpack-cli": "^2.0.13"
+  },
+  "dependencies": {
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0"
   }
 }
