@@ -391,7 +391,7 @@ class ReferenceCountCache<T> {
 		}
 	} = {};
 
-	constructor(protected onNoReferences: (value: T) => void) {}
+	constructor(protected onZeroReferences: (value: T) => void) {}
 
 	add(key: string, value: T) {
 		this.map[key] = {
@@ -412,7 +412,7 @@ class ReferenceCountCache<T> {
 		if (r == null) return false;
 		r.refs--;
 		if (r.refs === 0) {
-			this.onNoReferences(r.value);
+			this.onZeroReferences(r.value);
 			delete this.map[key];
 			return false;
 		}
