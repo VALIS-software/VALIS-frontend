@@ -119,6 +119,12 @@ class GenomeAPI {
 			return data.data;
 		});
 	}
+
+	getDetails(dataID) {
+		return axios.get(`${this.baseUrl}/details/${dataID}`).then(data => {
+			return data.data;
+		});
+	}
 }
 
 export default GenomeAPI;

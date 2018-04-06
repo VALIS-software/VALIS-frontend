@@ -70,7 +70,7 @@ class GWASSelector extends Component {
       builder.filterSource(DATA_SOURCE_CLINVAR);
     }
     const infoQuery = builder.build();
-    this.api.getDistinctValues('name', infoQuery).then(data => {
+    this.api.getDistinctValues('info.description', infoQuery).then(data => {
       this.setState({
         traits: data,
       });
@@ -122,7 +122,7 @@ class GWASSelector extends Component {
     } else if (this.state.searchSourceValue === 2) {
       builder.filterSource(DATA_SOURCE_CLINVAR);
     }
-    builder.filterName({ $contains: this.state.searchTrait });
+    builder.searchText(this.state.searchTrait);
     const infoQuery = builder.build();
     builder.newEdgeQuery();
     if (this.state.searchSourceValue === 1) {

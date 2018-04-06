@@ -70,6 +70,10 @@ class QueryBuilder {
     this.query.filters['info.p-value'] = { '<': pvalue };
   }
 
+  searchText(text) {
+    this.query.filters.$text = text;
+  }
+
   setLimit(limit) {
     this.query.limit = limit;
   }
