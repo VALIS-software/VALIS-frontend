@@ -1,27 +1,40 @@
 import Node from '../rendering/Node';
-import Device from '../rendering/Device';
+import Device, { GPUProgram, GPUVertexState } from '../rendering/Device';
 import RenderPass from '../rendering/RenderPass';
 import { Renderable, RenderableInternal } from '../rendering/Renderable';
 
 export enum BlendMode {
-	None = 0,
-	PremultipliedAlpha = 1,
-	Add = 2,
-	Multiply = 3,
+	NONE                = 0,
+	PREMULTIPLIED_ALPHA = 1,
+	ADD                 = 2,
+	MULTIPLY            = 3,
+}
+
+export enum DrawMode {
+	POINTS         = WebGLRenderingContext.POINTS,
+	LINE_STRIP     = WebGLRenderingContext.LINE_STRIP,
+	LINE_LOOP      = WebGLRenderingContext.LINE_LOOP,
+	LINES          = WebGLRenderingContext.LINES,
+	TRIANGLE_STRIP = WebGLRenderingContext.TRIANGLE_STRIP,
+	TRIANGLE_FAN   = WebGLRenderingContext.TRIANGLE_FAN,
+	TRIANGLES      = WebGLRenderingContext.TRIANGLES,
 }
 
 export class Renderer {
 
 	protected gl: WebGLRenderingContext;
+	protected extVao: OES_vertex_array_object;
+	protected drawContext: DrawContext;
 
 	constructor(protected device: Device) {
 		this.gl = (device as any).gl;
+		this.extVao = (device as any).extVao;
+		this.drawContext = new DrawContext(this.gl);
 	}
 
 	private _opaque = new Array<Renderable<any>>();
 	private _transparent = new Array<Renderable<any>>();
 	render(pass: RenderPass) {
-		// let renderContext = f(device)
 		const gl = this.gl;
 
 		// render-state = transparent, programId, vertexStateId, blendMode, user
@@ -123,13 +136,17 @@ export class Renderer {
 			let vertexId = (internal._renderStateKey & this.stateBMask) >>> this.stateBOffset;
 			let blendMode = (internal._renderStateKey & this.stateMMask) >>> this.stateMOffset;
 
+			// Update state
 			// @! to avoid id max limits we should compare the GPU handle objects for change rather than the ID instance
 			if (programId !== lastProgramId) {
-				gl.useProgram(internal.gpuProgram);
+				gl.useProgram(internal.gpuProgram.native);
+				(this.drawContext as any as DrawContextInternal).program = internal.gpuProgram;
 				lastProgramId = programId;
 			}
 
 			if (vertexId !== lastVertexId) {
+				this.extVao.bindVertexArrayOES(internal.gpuVertexState.native);
+				(this.drawContext as any as DrawContextInternal).vertexState = internal.gpuVertexState;
 				lastVertexId = vertexId;
 			}
 
@@ -143,7 +160,7 @@ export class Renderer {
 					}
 
 					switch (blendMode) {
-						case BlendMode.PremultipliedAlpha:
+						case BlendMode.PREMULTIPLIED_ALPHA:
 							gl.blendEquation(gl.FUNC_ADD);
 							gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 							break;
@@ -155,7 +172,7 @@ export class Renderer {
 				lastBlendMode = blendMode;
 			}
 
-			// renderable.draw(shaderContext / drawContext?)
+			renderable.draw(this.drawContext);
 		}
 	}
 
@@ -188,3 +205,103 @@ export class Renderer {
 	}
 
 }
+
+export type DrawContextInternal = {
+	gl: WebGLRenderingContext;
+	program: GPUProgram;
+	vertexState: GPUVertexState;
+}
+
+export class DrawContext {
+
+	protected program: GPUProgram;
+	protected vertexState: GPUVertexState;
+	protected extInstanced: ANGLE_instanced_arrays;
+
+	constructor(protected readonly gl: WebGLRenderingContext) {
+		this.extInstanced = gl.getExtension('ANGLE_instanced_arrays');
+	}
+
+	uniform1f(name: string, x: GLfloat) {
+		this.gl.uniform1f(this.program.uniforms[name].location, x);
+	}
+	uniform1fv(name: string, v: Float32Array) {
+		this.gl.uniform1fv(this.program.uniforms[name].location, v);
+	}
+	uniform1i(name: string, x: GLint) {
+		this.gl.uniform1i(this.program.uniforms[name].location, x);
+	}
+	uniform1iv(name: string, v: Int32Array) {
+		this.gl.uniform1iv(this.program.uniforms[name].location, v);
+	}
+	uniform2f(name: string, x: GLfloat, y: GLfloat) {
+		this.gl.uniform2f(this.program.uniforms[name].location, x, y);
+	}
+	uniform2fv(name: string, v: Float32Array) {
+		this.gl.uniform2fv(this.program.uniforms[name].location, v);
+	}
+	uniform2i(name: string, x: GLint, y: GLint) {
+		this.gl.uniform2i(this.program.uniforms[name].location, x, y);
+	}
+	uniform2iv(name: string, v: Int32Array) {
+		this.gl.uniform2iv(this.program.uniforms[name].location, v);
+	}
+	uniform3f(name: string, x: GLfloat, y: GLfloat, z: GLfloat) {
+		this.gl.uniform3f(this.program.uniforms[name].location, x, y, z);
+	}
+	uniform3fv(name: string, v: Float32Array) {
+		this.gl.uniform3fv(this.program.uniforms[name].location, v);
+	}
+	uniform3i(name: string, x: GLint, y: GLint, z: GLint) {
+		this.gl.uniform3i(this.program.uniforms[name].location, x, y, z);
+	}
+	uniform3iv(name: string, v: Int32Array) {
+		this.gl.uniform3iv(this.program.uniforms[name].location, v);
+	}
+	uniform4f(name: string, x: GLfloat, y: GLfloat, z: GLfloat, w: GLfloat) {
+		this.gl.uniform4f(this.program.uniforms[name].location, x, y, z, w);
+	}
+	uniform4fv(name: string, v: Float32Array) {
+		this.gl.uniform4fv(this.program.uniforms[name].location, v);
+	}
+	uniform4i(name: string, x: GLint, y: GLint, z: GLint, w: GLint) {
+		this.gl.uniform4i(this.program.uniforms[name].location, x, y, z, w);
+	}
+	uniform4iv(name: string, v: Int32Array) {
+		this.gl.uniform4iv(this.program.uniforms[name].location, v);
+	}
+	uniformMatrix2fv(name: string, transpose: boolean, value: Float32Array) {
+		this.gl.uniformMatrix2fv(this.program.uniforms[name].location, transpose, value);
+	}
+	uniformMatrix3fv(name: string, transpose: boolean, value: Float32Array) {
+		this.gl.uniformMatrix3fv(this.program.uniforms[name].location, transpose, value);
+	}
+	uniformMatrix4fv(name: string, transpose: boolean, value: Float32Array) {
+		this.gl.uniformMatrix4fv(this.program.uniforms[name].location, transpose, value);
+	}
+
+	draw(mode: DrawMode, indexCount: number, indexOffset: number) {
+		const gl = this.gl;
+		if (this.vertexState.indexType != null) {
+			gl.drawElements(mode, indexCount, this.vertexState.indexType, indexOffset);
+		} else {
+			gl.drawArrays(mode, indexOffset, indexCount);
+		}
+	}
+
+	extDrawInstanced(mode: DrawMode, indexCount: number, indexOffset: number, primCount: number) {
+		if (this.extInstanced !== null) {
+			if (this.vertexState.indexType != null) {
+				this.extInstanced.drawElementsInstancedANGLE(mode, indexCount, this.vertexState.indexType, indexOffset, primCount);
+			} else {
+				this.extInstanced.drawArraysInstancedANGLE(mode, indexOffset, indexCount, primCount);
+			}
+		} else {
+			// @! fallback or warn
+			console.error(`extDrawInstanced() failed: Instance drawing extension is not available`);
+		}
+	}
+
+}
+
+export default Renderer;

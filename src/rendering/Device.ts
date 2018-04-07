@@ -26,15 +26,17 @@ export class Device {
 	protected _vertexStateCount = 0;
 	protected _bufferCount = 0;
 
-	protected vaoExt: OES_vertex_array_object;
+	protected extVao: null | OES_vertex_array_object;
+	protected extInstanced: null | ANGLE_instanced_arrays;
 
 	constructor(gl: WebGLRenderingContext) {
 		this.gl = gl;
 		// the vertex array object extension makes controlling vertex state simpler and faster
 		// we require it for now because it's widely supported, however it's possible to work around lack of support
-		this.vaoExt = gl.getExtension('OES_vertex_array_object');
+		this.extVao = gl.getExtension('OES_vertex_array_object');
+		this.extInstanced = gl.getExtension('ANGLE_instanced_arrays');
 
-		if (this.vaoExt == null) {
+		if (this.extVao == null) {
 			throw `Vertex array object extension is not supported`;
 		}
 	}
@@ -88,7 +90,7 @@ export class Device {
 		let b = gl.createBuffer();
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, b);
 		gl.bufferData(
-			gl.ARRAY_BUFFER,
+			gl.ELEMENT_ARRAY_BUFFER,
 			indexBufferDescriptor.data || indexBufferDescriptor.size,
 			indexBufferDescriptor.usageHint || BufferUsageHint.STATIC
 		);
@@ -98,6 +100,14 @@ export class Device {
 		this._bufferCount++;
 
 		return bufferHandle;
+	}
+
+	updateBufferData(handle: GPUBuffer | GPUIndexBuffer, data: BufferDataSource, offsetBytes: number = 0) {
+		if (handle instanceof GPUIndexBuffer) {
+			this.gl.bufferSubData(this.gl.ELEMENT_ARRAY_BUFFER, offsetBytes, data);
+		} else {
+			this.gl.bufferSubData(this.gl.ARRAY_BUFFER, offsetBytes, data);
+		}
 	}
 
 	deleteBuffer(handle: GPUBuffer | GPUIndexBuffer) {
@@ -177,10 +187,10 @@ export class Device {
 	createVertexState(vertexStateDescriptor: VertexStateDescriptor) {
 		// handle doesn't already exist, create one
 		const gl = this.gl;
-		const vaoExt = this.vaoExt;
+		const extVao = this.extVao;
 
-		let vao = this.vaoExt.createVertexArrayOES();
-		vaoExt.bindVertexArrayOES(vao);
+		let vao = this.extVao.createVertexArrayOES();
+		extVao.bindVertexArrayOES(vao);
 		{
 			if (vertexStateDescriptor.index != null) {
 				// set index
@@ -195,20 +205,27 @@ export class Device {
 				} else {
 					gl.bindBuffer(gl.ARRAY_BUFFER, attribute.buffer.native);
 					gl.enableVertexAttribArray(i);
-					gl.vertexAttribPointer(gl.ARRAY_BUFFER, attribute.elementsPerVertex, attribute.dataType, !!attribute.normalize, attribute.offset, attribute.stride);
+					gl.vertexAttribPointer(i, attribute.elementsPerVertex, attribute.dataType, !!attribute.normalize, attribute.strideBytes, attribute.offsetBytes);
+					if (attribute.instanceDivisor != null && this.extInstanced) {
+						this.extInstanced.vertexAttribDivisorANGLE(i, attribute.instanceDivisor);
+					}
 				}
 			}
 		}
-		vaoExt.bindVertexArrayOES(null);
+		extVao.bindVertexArrayOES(null);
 
-		let vertexStateHandle = new GPUVertexState(this, this.vertexStateIds.assign(), vao, true);
+		let indexDataType = vertexStateDescriptor.index != null ? vertexStateDescriptor.index.dataType : null;
+
+		let isVao = true;
+
+		let vertexStateHandle = new GPUVertexState(this, this.vertexStateIds.assign(), vao, isVao, indexDataType);
 		this._vertexStateCount++;
 
 		return vertexStateHandle;
 	}
 
 	deleteVertexState(handle: GPUVertexState) {
-		this.vaoExt.deleteVertexArrayOES(handle.native);
+		this.extVao.deleteVertexArrayOES(handle.native);
 		this.vertexStateIds.release(handle.id);
 		this._vertexStateCount--;
 	}
@@ -258,8 +275,10 @@ export enum BufferUsageHint {
 	DYNAMIC = WebGLRenderingContext.DYNAMIC_DRAW,
 }
 
+export type BufferDataSource = Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | ArrayBuffer;
+
 export type BufferDescriptor = {
-	data?: Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | ArrayBuffer,
+	data?: BufferDataSource,
 	size?: number,
 	usageHint?: BufferUsageHint,
 }
@@ -277,9 +296,10 @@ export type VertexAttribute = VertexConstant | {
 	buffer: GPUBuffer,
 	elementsPerVertex: number,
 	dataType: VertexAttributeDataType,
-	offset: number,
-	stride: number,
-	normalize?: boolean
+	offsetBytes: number,
+	strideBytes: number,
+	normalize?: boolean,
+	instanceDivisor?: number,
 }
 
 export type VertexStateDescriptor = {
@@ -295,7 +315,7 @@ interface GPUObjectHandle {
 
 export class GPUBuffer implements GPUObjectHandle {
 
-	constructor(readonly device: Device, readonly native: WebGLBuffer) {}
+	constructor(protected readonly device: Device, readonly native: WebGLBuffer) {}
 
 	delete() {
 		this.device.deleteBuffer(this);
@@ -318,10 +338,11 @@ export class GPUIndexBuffer extends GPUBuffer {
 export class GPUVertexState implements GPUObjectHandle {
 
 	constructor(
-		readonly device: Device,
+		protected readonly device: Device,
 		readonly id: number,
 		readonly native: WebGLVertexArrayObjectOES | VertexStateDescriptor,
-		readonly isVao: boolean
+		readonly isVao: boolean,
+		readonly indexType?: IndexDataType,
 	) {}
 
 	delete() {
@@ -333,7 +354,7 @@ export class GPUVertexState implements GPUObjectHandle {
 export class GPUProgram implements GPUObjectHandle {
 
 	constructor(
-		readonly device: Device,
+		protected readonly device: Device,
 		readonly id: number,
 		readonly native: WebGLProgram,
 		readonly vertexCode: string,

@@ -1,8 +1,5 @@
 /*
 
-	- Create basic device methods
-		- We don't need array references, we can just use IDs
-	- device should not be a dependency
 	- vertex-state allocation
 		- may change between frames
 		- can only be 1 vertex state at a given time
@@ -17,10 +14,13 @@
 */
 
 import * as React from "react";
-import Node from '../rendering/Node';
-import Device from '../rendering/Device';
-import RenderPass from '../rendering/RenderPass';
-import Object2D from '../rendering/Object2D';
+import Node from './rendering/Node';
+import Device from './rendering/Device';
+import RenderPass from './rendering/RenderPass';
+import Object2D from './rendering/Object2D';
+import Renderer from './rendering/Renderer';
+import SharedResources from './ui/core/SharedResources';
+import Rect from './ui/core/Rect';
 
 interface Props {}
 
@@ -34,7 +34,7 @@ export class App extends React.Component<Props, State> {
 	protected viewer: HTMLElement;
 	protected canvas: HTMLCanvasElement;
 	protected device: Device;
-	// protected renderer: Renderer;
+	protected renderer: Renderer;
 	protected mainRenderPass: RenderPass;
 	protected scene: Node<Object2D>;
 
@@ -47,6 +47,9 @@ export class App extends React.Component<Props, State> {
 		}
 
 		this.scene = new Node();
+		let r = new Rect()
+		this.scene.add(r);
+
 		this.mainRenderPass = new RenderPass(
 			null,
 			this.scene,
@@ -57,23 +60,6 @@ export class App extends React.Component<Props, State> {
 		);
 	}
 
-	protected onResize = () => {
-		this.setState({
-			viewerWidth: window.innerWidth,
-			viewerHeight: window.innerHeight,
-		});
-	}
-
-	private _frameLoopHandle: number;
-	protected frameLoop = () => {
-		this._frameLoopHandle = window.requestAnimationFrame(this.frameLoop);
-
-		// iterate scene, handle user input
-			// canvas.style.cursor = ...
-		// step animation
-		// this.renderer.render(this.mainRenderPass);
-	}
-
 	componentDidMount() {
 		let gl = this.canvas.getContext('webgl', { antialias: true });
 
@@ -82,13 +68,18 @@ export class App extends React.Component<Props, State> {
 		}
 
 		this.device = new Device(gl);
-		// this.renderer = new Renderer(this.device);
+		this.renderer = new Renderer(this.device);
+		SharedResources.initialize(this.device);
 
 		window.addEventListener('resize', this.onResize);
 		this.frameLoop();
 	}
 
 	componentWillUnmount() {
+		SharedResources.release();
+		this.device = null;
+		this.renderer = null;
+		
 		window.removeEventListener('resize', this.onResize);
 		window.cancelAnimationFrame(this._frameLoopHandle);
 	}
@@ -124,6 +115,23 @@ export class App extends React.Component<Props, State> {
 				</div>
 			</div>
 		</div>)
+	}
+
+	protected onResize = () => {
+		this.setState({
+			viewerWidth: window.innerWidth,
+			viewerHeight: window.innerHeight,
+		});
+	}
+
+	private _frameLoopHandle: number;
+	protected frameLoop = () => {
+		this._frameLoopHandle = window.requestAnimationFrame(this.frameLoop);
+
+		// iterate scene, handle user input
+			// canvas.style.cursor = ...
+		// step animation
+		this.renderer.render(this.mainRenderPass);
 	}
 
 }

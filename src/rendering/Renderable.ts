@@ -1,7 +1,7 @@
 import Node from './Node';
 import RenderPass from './RenderPass';
 import { Device, GPUProgram, GPUVertexState } from './Device';
-import { BlendMode } from './Renderer';
+import { BlendMode, DrawContext } from './Renderer';
 
 export type RenderableInternal = {
 	worldTransformNeedsUpdate: boolean,
@@ -23,7 +23,7 @@ export class Renderable<T> extends Node<T> {
 	transparent = false;
 
 	dependentRenderPasses = new Array<RenderPass>();
-	blendMode = BlendMode.None;
+	blendMode = BlendMode.NONE;
 
 	protected worldTransformNeedsUpdate = true;
 
@@ -44,9 +44,10 @@ export class Renderable<T> extends Node<T> {
 		child.worldTransformNeedsUpdate = true;
 	}
 
-	protected allocateGPUResources(device: Device) {}
+	releaseGPUResources() {}
+	draw(context: DrawContext) {}
 
-	// protected draw()
+	protected allocateGPUResources(device: Device) {}
 
 }
 
