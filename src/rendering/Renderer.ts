@@ -1,5 +1,10 @@
+/**
+ * Dev Notes
+ * - State grouping: Often we want hierarchical state - i.e, set viewport for this node _and_ all of its children
+ */
+
 import Node from '../rendering/Node';
-import Device, { GPUProgram, GPUVertexState } from '../rendering/Device';
+import Device, { GPUProgram, GPUVertexState, DeviceInternal, VertexStateDescriptor, VertexAttribute } from '../rendering/Device';
 import RenderPass from '../rendering/RenderPass';
 import { Renderable, RenderableInternal } from '../rendering/Renderable';
 
@@ -22,20 +27,25 @@ export enum DrawMode {
 
 export class Renderer {
 
+	protected device: Device;
+	protected deviceInternal: DeviceInternal;
 	protected gl: WebGLRenderingContext;
 	protected extVao: OES_vertex_array_object;
 	protected drawContext: DrawContext;
 
-	constructor(protected device: Device) {
-		this.gl = (device as any).gl;
-		this.extVao = (device as any).extVao;
-		this.drawContext = new DrawContext(this.gl);
+	constructor(device: Device) {
+		this.device = device;
+		this.deviceInternal = device as any as DeviceInternal;
+		this.gl = this.deviceInternal.gl;
+		this.extVao = this.deviceInternal.extVao;
+		this.drawContext = new DrawContext(this.gl, this.deviceInternal.extInstanced);
 	}
 
 	private _opaque = new Array<Renderable<any>>();
 	private _transparent = new Array<Renderable<any>>();
 	render(pass: RenderPass) {
 		const gl = this.gl;
+		const drawContextInternal = this.drawContext as any as DrawContextInternal;
 
 		// render-state = transparent, programId, vertexStateId, blendMode, user
 		// when transparent, z sort should override everything, but same-z should still sort by state
@@ -96,7 +106,7 @@ export class Renderer {
 		}
 
 		// sort opaque objects for rendering
-		// @! this could be optimized
+		// @! this could be optimized by bucketing
 		opaque.sort((a, b) => {
 			let ai = a as any as RenderableInternal;
 			let bi = b as any as RenderableInternal;
@@ -122,12 +132,25 @@ export class Renderer {
 			gl.clearStencil(pass.clearOptions.clearStencil);
 		}
 
+		// by default, when starting a rendering pass the viewport is set to the render target dimensions
+		if (pass.target == null) {
+			gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+			drawContextInternal.viewport.x = 0;
+			drawContextInternal.viewport.y = 0;
+			drawContextInternal.viewport.w = gl.drawingBufferWidth;
+			drawContextInternal.viewport.h = gl.drawingBufferHeight;
+		} else {
+			// @! todo
+			throw 'Todo: use target size for viewport';
+		}
+
 		gl.clear(clearFlags);
 
 		// draw opaque objects
 		let lastProgramId = -1;
 		let lastVertexId = -1;
 		let lastBlendMode = -1;
+		let vaoFallback_lastAttributes: Array<VertexAttribute> = null;
 		for (let i = 0; i < opaque.length; i++) {
 			let renderable = opaque[i];
 			let internal = renderable as any as RenderableInternal;
@@ -140,13 +163,28 @@ export class Renderer {
 			// @! to avoid id max limits we should compare the GPU handle objects for change rather than the ID instance
 			if (programId !== lastProgramId) {
 				gl.useProgram(internal.gpuProgram.native);
-				(this.drawContext as any as DrawContextInternal).program = internal.gpuProgram;
+				drawContextInternal.program = internal.gpuProgram;
 				lastProgramId = programId;
 			}
 
 			if (vertexId !== lastVertexId) {
-				this.extVao.bindVertexArrayOES(internal.gpuVertexState.native);
-				(this.drawContext as any as DrawContextInternal).vertexState = internal.gpuVertexState;
+				if (internal.gpuVertexState.isVao) {
+					this.extVao.bindVertexArrayOES(internal.gpuVertexState.native);
+				} else {
+					// disable unused attribute arrays
+					// assume the only enabled attributes are the ones from the last fallback descriptor
+					if (vaoFallback_lastAttributes != null) {
+						for (let a = 0; a < vaoFallback_lastAttributes.length; a++) {
+							gl.disableVertexAttribArray(a);
+						}
+					}
+
+					let descriptor = internal.gpuVertexState.native as VertexStateDescriptor;
+					this.deviceInternal.applyVertexStateDescriptor(descriptor);
+					vaoFallback_lastAttributes = descriptor.attributes;
+				}
+
+				drawContextInternal.vertexState = internal.gpuVertexState;
 				lastVertexId = vertexId;
 			}
 
@@ -210,74 +248,80 @@ export type DrawContextInternal = {
 	gl: WebGLRenderingContext;
 	program: GPUProgram;
 	vertexState: GPUVertexState;
+	viewport: {
+		x: number, y: number,
+		w: number, h: number
+	};
 }
 
 export class DrawContext {
 
-	protected program: GPUProgram;
-	protected vertexState: GPUVertexState;
-	protected extInstanced: ANGLE_instanced_arrays;
+	// current state
+	readonly viewport: {
+		x: number, y: number,
+		w: number, h: number
+	} = {x: 0, y: 0, w: 0, h: 0};
+	readonly program: GPUProgram;
+	readonly vertexState: GPUVertexState;
 
-	constructor(protected readonly gl: WebGLRenderingContext) {
-		this.extInstanced = gl.getExtension('ANGLE_instanced_arrays');
-	}
+	constructor(protected readonly gl: WebGLRenderingContext, protected readonly extInstanced: ANGLE_instanced_arrays) {}
 
 	uniform1f(name: string, x: GLfloat) {
-		this.gl.uniform1f(this.program.uniforms[name].location, x);
+		this.gl.uniform1f(this.program.uniformLocation[name], x);
 	}
 	uniform1fv(name: string, v: Float32Array) {
-		this.gl.uniform1fv(this.program.uniforms[name].location, v);
+		this.gl.uniform1fv(this.program.uniformLocation[name], v);
 	}
 	uniform1i(name: string, x: GLint) {
-		this.gl.uniform1i(this.program.uniforms[name].location, x);
+		this.gl.uniform1i(this.program.uniformLocation[name], x);
 	}
 	uniform1iv(name: string, v: Int32Array) {
-		this.gl.uniform1iv(this.program.uniforms[name].location, v);
+		this.gl.uniform1iv(this.program.uniformLocation[name], v);
 	}
 	uniform2f(name: string, x: GLfloat, y: GLfloat) {
-		this.gl.uniform2f(this.program.uniforms[name].location, x, y);
+		this.gl.uniform2f(this.program.uniformLocation[name], x, y);
 	}
 	uniform2fv(name: string, v: Float32Array) {
-		this.gl.uniform2fv(this.program.uniforms[name].location, v);
+		this.gl.uniform2fv(this.program.uniformLocation[name], v);
 	}
 	uniform2i(name: string, x: GLint, y: GLint) {
-		this.gl.uniform2i(this.program.uniforms[name].location, x, y);
+		this.gl.uniform2i(this.program.uniformLocation[name], x, y);
 	}
 	uniform2iv(name: string, v: Int32Array) {
-		this.gl.uniform2iv(this.program.uniforms[name].location, v);
+		this.gl.uniform2iv(this.program.uniformLocation[name], v);
 	}
 	uniform3f(name: string, x: GLfloat, y: GLfloat, z: GLfloat) {
-		this.gl.uniform3f(this.program.uniforms[name].location, x, y, z);
+		this.gl.uniform3f(this.program.uniformLocation[name], x, y, z);
 	}
 	uniform3fv(name: string, v: Float32Array) {
-		this.gl.uniform3fv(this.program.uniforms[name].location, v);
+		this.gl.uniform3fv(this.program.uniformLocation[name], v);
 	}
 	uniform3i(name: string, x: GLint, y: GLint, z: GLint) {
-		this.gl.uniform3i(this.program.uniforms[name].location, x, y, z);
+		this.gl.uniform3i(this.program.uniformLocation[name], x, y, z);
 	}
 	uniform3iv(name: string, v: Int32Array) {
-		this.gl.uniform3iv(this.program.uniforms[name].location, v);
+		this.gl.uniform3iv(this.program.uniformLocation[name], v);
 	}
 	uniform4f(name: string, x: GLfloat, y: GLfloat, z: GLfloat, w: GLfloat) {
-		this.gl.uniform4f(this.program.uniforms[name].location, x, y, z, w);
+		this.gl.uniform4f(this.program.uniformLocation[name], x, y, z, w);
 	}
 	uniform4fv(name: string, v: Float32Array) {
-		this.gl.uniform4fv(this.program.uniforms[name].location, v);
+		this.gl.uniform4fv(this.program.uniformLocation[name], v);
 	}
 	uniform4i(name: string, x: GLint, y: GLint, z: GLint, w: GLint) {
-		this.gl.uniform4i(this.program.uniforms[name].location, x, y, z, w);
+		this.gl.uniform4i(this.program.uniformLocation[name], x, y, z, w);
 	}
 	uniform4iv(name: string, v: Int32Array) {
-		this.gl.uniform4iv(this.program.uniforms[name].location, v);
+		this.gl.uniform4iv(this.program.uniformLocation[name], v);
 	}
 	uniformMatrix2fv(name: string, transpose: boolean, value: Float32Array) {
-		this.gl.uniformMatrix2fv(this.program.uniforms[name].location, transpose, value);
+		this.gl.uniformMatrix2fv(this.program.uniformLocation[name], transpose, value);
 	}
 	uniformMatrix3fv(name: string, transpose: boolean, value: Float32Array) {
-		this.gl.uniformMatrix3fv(this.program.uniforms[name].location, transpose, value);
+		this.gl.uniformMatrix3fv(this.program.uniformLocation[name], transpose, value);
 	}
 	uniformMatrix4fv(name: string, transpose: boolean, value: Float32Array) {
-		this.gl.uniformMatrix4fv(this.program.uniforms[name].location, transpose, value);
+		this.gl.uniformMatrix4fv(this.program.uniformLocation[name], transpose, value);
 	}
 
 	draw(mode: DrawMode, indexCount: number, indexOffset: number) {

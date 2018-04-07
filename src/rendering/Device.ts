@@ -9,6 +9,14 @@ Dev notes
 
 **/
 
+export type DeviceInternal = {
+	gl: WebGLRenderingContext,
+	extVao: OES_vertex_array_object,
+	extInstanced: ANGLE_instanced_arrays,
+	compileShader: (code: string, type: number) => WebGLShader,
+	applyVertexStateDescriptor: (vertexStateDescriptor: VertexStateDescriptor) => void,
+}
+
 export class Device {
 
 	get programCount() { return this._programCount; }
@@ -22,12 +30,12 @@ export class Device {
 	protected vertexShaderCache = new ReferenceCountCache<WebGLShader>((shader) => this.gl.deleteShader(shader));
 	protected fragmentShaderCache = new ReferenceCountCache<WebGLShader>((shader) => this.gl.deleteShader(shader));
 
-	protected _programCount = 0;
-	protected _vertexStateCount = 0;
-	protected _bufferCount = 0;
-
 	protected extVao: null | OES_vertex_array_object;
 	protected extInstanced: null | ANGLE_instanced_arrays;
+
+	private _programCount = 0;
+	private _vertexStateCount = 0;
+	private _bufferCount = 0;
 
 	constructor(gl: WebGLRenderingContext) {
 		this.gl = gl;
@@ -35,10 +43,6 @@ export class Device {
 		// we require it for now because it's widely supported, however it's possible to work around lack of support
 		this.extVao = gl.getExtension('OES_vertex_array_object');
 		this.extInstanced = gl.getExtension('ANGLE_instanced_arrays');
-
-		if (this.extVao == null) {
-			throw `Vertex array object extension is not supported`;
-		}
 	}
 
 	createBuffer(bufferDescriptor: BufferDescriptor) {
@@ -151,15 +155,12 @@ export class Device {
 
 		// read all active uniform locations and cache them for later
 		let uniformCount = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
-		let uniformMap: {
-			[key: string]: WebGLActiveInfo & { location: WebGLUniformLocation }
-		} = {};
+		let uniformInfo: { [name: string]: WebGLActiveInfo } = {};
+		let uniformLocation: { [name: string]: WebGLUniformLocation } = {};
 		for (let i = 0; i < uniformCount; i++) {
 			let info = gl.getActiveUniform(p, i);
-			uniformMap[info.name] = {
-				...info,
-				location: gl.getUniformLocation(p, info.name),
-			}
+			uniformInfo[info.name] = info;
+			uniformLocation[info.name] = gl.getUniformLocation(p, info.name);
 		}
 
 		let programHandle = new GPUProgram(
@@ -169,7 +170,8 @@ export class Device {
 			vertexCode,
 			fragmentCode,
 			attributeBindings,
-			uniformMap
+			uniformInfo,
+			uniformLocation
 		);
 		this._programCount++;
 
@@ -189,36 +191,23 @@ export class Device {
 		const gl = this.gl;
 		const extVao = this.extVao;
 
-		let vao = this.extVao.createVertexArrayOES();
-		extVao.bindVertexArrayOES(vao);
-		{
-			if (vertexStateDescriptor.index != null) {
-				// set index
-				gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vertexStateDescriptor.index.native);
-			}
-
-			// set attributes
-			for (let i = 0; i < vertexStateDescriptor.attributes.length; i++) {
-				let attribute = vertexStateDescriptor.attributes[i];
-				if (attribute instanceof Float32Array) {
-					gl.vertexAttrib4fv(i, attribute); // @! verify that this works with array length < 4
-				} else {
-					gl.bindBuffer(gl.ARRAY_BUFFER, attribute.buffer.native);
-					gl.enableVertexAttribArray(i);
-					gl.vertexAttribPointer(i, attribute.elementsPerVertex, attribute.dataType, !!attribute.normalize, attribute.strideBytes, attribute.offsetBytes);
-					if (attribute.instanceDivisor != null && this.extInstanced) {
-						this.extInstanced.vertexAttribDivisorANGLE(i, attribute.instanceDivisor);
-					}
-				}
-			}
-		}
-		extVao.bindVertexArrayOES(null);
-
 		let indexDataType = vertexStateDescriptor.index != null ? vertexStateDescriptor.index.dataType : null;
 
-		let isVao = true;
+		let vaoSupported = extVao != null;
 
-		let vertexStateHandle = new GPUVertexState(this, this.vertexStateIds.assign(), vao, isVao, indexDataType);
+		let vertexStateHandle: GPUVertexState;
+		if (vaoSupported) {
+			let vao = extVao.createVertexArrayOES();
+			extVao.bindVertexArrayOES(vao);
+			this.applyVertexStateDescriptor(vertexStateDescriptor);
+			extVao.bindVertexArrayOES(null);
+
+			vertexStateHandle = new GPUVertexState(this, this.vertexStateIds.assign(), vao, vaoSupported, indexDataType);
+		} else {
+			// when VAO is not supported, pass in the descriptor so vertex state can be applied when rendering
+			vertexStateHandle = new GPUVertexState(this, this.vertexStateIds.assign(), vertexStateDescriptor, false, indexDataType);
+		}
+
 		this._vertexStateCount++;
 
 		return vertexStateHandle;
@@ -249,6 +238,31 @@ export class Device {
 		return s;
 	}
 
+	protected applyVertexStateDescriptor(vertexStateDescriptor: VertexStateDescriptor) {
+		const gl = this.gl;
+
+		// set index
+		if (vertexStateDescriptor.index != null) {
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vertexStateDescriptor.index.native);
+		} else {
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+		}
+
+		// set attributes
+		for (let i = 0; i < vertexStateDescriptor.attributes.length; i++) {
+			let attribute = vertexStateDescriptor.attributes[i];
+			if (attribute instanceof Float32Array) {
+				gl.vertexAttrib4fv(i, attribute); // @! verify that this works with array length < 4
+			} else {
+				gl.bindBuffer(gl.ARRAY_BUFFER, attribute.buffer.native);
+				gl.enableVertexAttribArray(i);
+				gl.vertexAttribPointer(i, attribute.elementsPerVertex, attribute.dataType, !!attribute.normalize, attribute.strideBytes, attribute.offsetBytes);
+				if (attribute.instanceDivisor != null && this.extInstanced) {
+					this.extInstanced.vertexAttribDivisorANGLE(i, attribute.instanceDivisor);
+				}
+			}
+		}
+	}
 
 }
 
@@ -360,7 +374,8 @@ export class GPUProgram implements GPUObjectHandle {
 		readonly vertexCode: string,
 		readonly fragmentCode: string,
 		readonly attributeBindings: Array<string>,
-		readonly uniforms: { [ name: string ]: WebGLActiveInfo & { location: WebGLUniformLocation } }
+		readonly uniformInfo: { [ name: string ]: WebGLActiveInfo },
+		readonly uniformLocation: { [ name: string ]: WebGLUniformLocation }
 	) {}
 
 	delete() {

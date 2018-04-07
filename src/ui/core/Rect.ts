@@ -5,6 +5,8 @@ import { DrawContext, DrawMode } from "../../rendering/Renderer";
 
 export class Rect extends Object2D {
 
+    color = new Float32Array([1, 0, 0, 1]);
+
     constructor() {
         super();
     }
@@ -32,14 +34,16 @@ export class Rect extends Object2D {
                 precision mediump float;
                 varying vec2 vUv;
 
-                uniform vec3 color;
+                uniform vec4 color;
                 
                 void main() {
-                    gl_FragColor = vec4(vUv, 0., 1.);
+                    gl_FragColor = color;//vec4(vUv, 0., 1.);
                 }
             `,
             ['position']
         );
+
+        console.log(this.gpuProgram);
     }
 
     releaseGPUResources() {
@@ -49,6 +53,7 @@ export class Rect extends Object2D {
     }
 
     draw(context: DrawContext) {
+        context.uniform4fv('color', this.color);
         context.draw(DrawMode.TRIANGLES, 6, 0);
     }
 
