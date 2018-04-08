@@ -17,6 +17,8 @@ const APP_EVENT_ADD_OVERLAY = 'ADD_OVERLAY';
 const APP_EVENT_REMOVE_OVERLAY = 'REMOVE_OVERLAY';
 const APP_EVENT_ADD_DATASET_BROWSER = 'ADD_DATASET_BROWSER';
 const APP_EVENT_DATA_SET_SELECTED = 'DATA_SET_SELECTED';
+const APP_EVENT_PUSH_VIEW = 'PUSH_VIEW';
+const APP_EVENT_POP_VIEW = 'POP_VIEW';
 
 export {
   APP_EVENT_ADD_TRACK,
@@ -28,8 +30,9 @@ export {
   APP_EVENT_SHOW_ENTITY_DETAIL,
   APP_EVENT_EDIT_TRACK_VIEW_SETTINGS,
   APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED,
-  APP_EVENT_ADD_DATASET_BROWSER,
   APP_EVENT_DATA_SET_SELECTED,
+  APP_EVENT_PUSH_VIEW,
+  APP_EVENT_POP_VIEW,
 };
 
 class AppModel extends EventCreator {
@@ -63,16 +66,20 @@ class AppModel extends EventCreator {
     }
   }
 
+  pushView(title, info, elem) {
+    this.notifyListeners(APP_EVENT_PUSH_VIEW, { title: title, info: info, view: elem });
+  }
+
+  popView() {
+    this.notifyListeners(APP_EVENT_POP_VIEW);
+  }
+
   editTrackViewSettings(viewGuid) {
     this.notifyListeners(APP_EVENT_EDIT_TRACK_VIEW_SETTINGS, viewGuid);
   }
 
   showEntityDetails(element) {
     this.notifyListeners(APP_EVENT_SHOW_ENTITY_DETAIL, element);
-  }
-
-  addDatasetBrowser() {
-    this.notifyListeners(APP_EVENT_ADD_DATASET_BROWSER);
   }
 
   dataSetSelected(trackType) {

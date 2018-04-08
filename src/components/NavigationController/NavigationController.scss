@@ -1,0 +1,106 @@
+.entity-details {
+  padding: 14px;
+  .entity-header {
+    margin-left: 8px;
+    margin-right: 8px;
+    .entity-name {
+      font-size: 32px;
+      font-weight: bold;
+    }
+  }
+
+  .detail-table {
+    margin: 8px;
+    width: 100%;
+  }
+
+  .detail-item {
+    margin: 0px;
+    margin-top: 8px;
+    border-radius: 8px;
+    padding: 8px;
+    background-color: lighten(gray, 35%);
+    color: lighten(gray, 15%);
+    .detail-value {
+      text-align: right;
+      color: darken(gray, 15%);
+    }
+  }
+}
+
+.relation-selector{
+  padding: 0px;
+  .relation-button {
+    border-radius: 18px;
+    background: #404346;
+    padding: 10px;
+    border: none;
+    margin: 3px;
+    width: calc(100% - 6px);
+    transition: background-color 0.5s cubic-bezier(.25,.8,.25,1);
+    .button-title {
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 2px;
+      text-align: center;
+    }
+    .button-description {
+      color: #d6d6d6;
+      font-size: 14px;
+      padding: 2px;
+      text-align: center;
+    }
+  }
+  .relation-button:hover {
+    background-color: #3198dd;
+    cursor: pointer;
+  }
+
+  .relation-button:focus {
+    outline: 0;
+  }
+
+  .relation-button:active {
+    box-shadow: 0 5px 10px rgba(0,0,0,0.19), 0 5px 10px rgba(0,0,0,0.23);
+  }
+
+  .relation-button {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .relation-button:after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.075);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+  }
+
+  @keyframes ripple {
+    0% {
+      transform: scale(0, 0);
+      opacity: 1;
+    }
+    20% {
+      transform: scale(25, 25);
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: scale(40, 40);
+    }
+  }
+
+  .relation-button:focus:after {
+      animation: ripple 1s ease-out;
+  }
+}
+
