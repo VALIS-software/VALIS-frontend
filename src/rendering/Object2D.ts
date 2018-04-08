@@ -15,11 +15,6 @@ export type Object2DInternal = RenderableInternal & {
 */
 export class Object2D extends Renderable<Object2D> {
 
-    bounds = {
-        l: 0, r: 0,
-        t: 0, b: 0
-    }
-
     // position
     set x(v: number) { this.localTransformMat4[12] = v; this.worldTransformNeedsUpdate = true; }
     get x() { return this.localTransformMat4[12]; }
@@ -33,6 +28,21 @@ export class Object2D extends Renderable<Object2D> {
     get sx() { return this.localTransformMat4[0]; }
     set sy(v: number) { this.localTransformMat4[5] = v; this.worldTransformNeedsUpdate = true; }
     get sy() { return this.localTransformMat4[5]; }
+    set sz(v: number) { this.localTransformMat4[10] = v; this.worldTransformNeedsUpdate = true; }
+    get sz() { return this.localTransformMat4[10]; }
+
+
+    // width & height
+    // interpreted individually by subclasses; does not correspond directly to vertex geometry
+    set w(w: number) { this._w = w; };
+    get w() { return this._w; }
+    set h(h: number) { this._h = h; };
+    get h() { return this._h; }
+
+    protected alignX: number = 0;
+    protected alignY: number = 0;
+    protected _w: number = 0;
+    protected _h: number = 0;
 
     protected handlesPointerEvents: Boolean = false;
     protected localTransformMat4 = new Float32Array([
@@ -107,14 +117,14 @@ export class Object2D extends Renderable<Object2D> {
 
                 // in non-rotational affine transformation only elements 0, 5, 12, 13, 14 are non-zero
                 // scale
-                let m0 = p[0] * c[0]; // x
-                let m5 = p[5] * c[5]; // y
-                let m10 = 1;          // z
-                let m15 = 1;          // w 
+                let m0  = p[0] * c[0];    // x
+                let m5  = p[5] * c[5];    // y
+                let m10 = p[10] * c[10];  // z
+                let m15 = 1;              // w
                 // translation
-                let m12 = p[0] * c[12] + p[12]; // x
-                let m13 = p[5] * c[13] + p[13]; // y
-                let m14 =    1 * c[14] + p[13]; // z
+                let m12 = p[0] * c[12] + p[12];  // x
+                let m13 = p[5] * c[13] + p[13];  // y
+                let m14 = p[10] * c[14] + p[14]; // z
 
                 // set world matrix
                 let w = child.worldTransformMat4;
@@ -131,6 +141,30 @@ export class Object2D extends Renderable<Object2D> {
             }
 
             child.updateWorldTransforms(false);
+        }
+    }
+
+    getLocalBounds() {
+        return {
+            l: 0,
+            r: this._w,
+            t: 0,
+            b: this._h,
+        }
+    }
+
+    /**
+     * Returns the local-space bounds field in world-space coordinates
+     * Assumes the scene-graph world transforms are all up-to-date
+     */
+    getWorldBounds() {
+        let w = this.worldTransformMat4;
+        let b = this.getLocalBounds();
+        return {
+            l: w[0] * b.l + w[12],
+            r: w[0] * b.r + w[12],
+            t: w[5] * b.t + w[13],
+            b: w[5] * b.b + w[13],
         }
     }
 

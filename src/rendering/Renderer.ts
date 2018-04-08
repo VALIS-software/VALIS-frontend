@@ -42,9 +42,10 @@ export class Renderer {
 
 
 		// @! temporary initialial GL state for 2D drawing
+		// in the future this should be applied to the root 2D node
 		this.gl.enable(this.gl.DEPTH_TEST);
 		this.gl.depthFunc(this.gl.LEQUAL);
-		this.gl.enable(this.gl.CULL_FACE);
+		this.gl.disable(this.gl.CULL_FACE);
 	}
 
 	private _opaque = new Array<Renderable<any>>();

@@ -7,40 +7,22 @@ import { debug } from "util";
 /**
  * Rectangle UI element
  * Todo:
- * - Support rounded corners, glow / shadows
+ * - Support rounded corners, stroke, glow & shadows, background shaders
  */
 export class Rect extends Object2D {
 
-    color = new Float32Array([1, 0, 0, 1]);
+    color = new Float32Array(4);
 
-    get w() { return this._w; }
-    get h() { return this._h; }
-    set w(w: number) {
-        this._w = w;
-        this.bounds.l = -w * 0.5;
-        this.bounds.r = w * 0.5;
-    };
-    set h(h: number) {
-        this._h = h;
-        this.bounds.b = -h * 0.5;
-        this.bounds.t = h * 0.5;
-    };
-
-    protected _w = 1;
-    protected _h = 1;
-
-    constructor(w: number = 1, h: number = 1, color?: ArrayLike<number>) {
+    constructor(w: number = 10, h: number = 10, color: ArrayLike<number> = [1, 0, 0, 1]) {
         super();
         this.w = w;
         this.h = h;
-        if (color != null) {
-            this.color.set(color);
-        }
+        this.color.set(color);
     }
 
     allocateGPUResources(device: Device) {
         // static initializations
-        this.gpuVertexState = SharedResources.unitQuadVertexState;
+        this.gpuVertexState = SharedResources.quad1x1VertexState;
         this.gpuProgram = SharedResources.getProgram(
             device,
             `
@@ -53,7 +35,7 @@ export class Rect extends Object2D {
                 varying vec2 vUv;
 
                 void main() {
-                    vUv = position * 0.5 + 0.5;
+                    vUv = position;
                     gl_Position = model * vec4(position * size, 0., 1.0);
                 }
             `,
@@ -80,7 +62,7 @@ export class Rect extends Object2D {
     }
 
     draw(context: DrawContext) {
-        context.uniform2f('size', this.w * 0.5, this.h * 0.5);
+        context.uniform2f('size', this.w, this.h);
         context.uniformMatrix4fv('model', false, this.worldTransformMat4);
         context.uniform4fv('color', this.color);
         context.draw(DrawMode.TRIANGLES, 6, 0);

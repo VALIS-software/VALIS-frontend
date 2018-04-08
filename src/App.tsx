@@ -1,13 +1,10 @@
 /*
-	- Aspect ratio and units
-		- What coordinate system should we use?
-		- Should we automatically handle aspect ratios?
-			(Probably)
-		- Ideas
-			DOM pixel units:
-				- What about inside a render target?
-				- Could use a root Object2D
-			Aspect-ratio clip-space, where h = 2 and w = r * 2
+	- Viewer height should be set by content
+	- Layout management - Alignment percent?
+		- If using alignment child worldTransformNeedsUpdate should flag when size changed changed
+		- Still difficult to center rect
+		- Percentage of parent dimensions?
+		- 
 
 	- Define a single track
 	- Define a trackset / multiple track view
@@ -47,18 +44,25 @@ export class App extends React.Component<Props, State> {
 	constructor(props: Props) {
 		super(props);
 
-		this.state = {
-			viewerWidth: window.innerWidth,
-			viewerHeight: window.innerHeight,
-		}
-
 		this.scene = new Object2D();
 
 		let r = new Rect(1, 1);
-		let g = new Rect(10, 10, [0, 1, 0, 1]);
-		r.z = -0.1;
+		r.x = 0;
+		r.y = 0;
+		let g = new Rect(100, 100, [0, 1, 0, 1]);
+		g.x = 30;
+		g.y = 30;
 		this.scene.add(g);
 		this.scene.add(r);
+
+		let b = new Rect(10, 10, [0, 0, 1, 1]);
+		b.x = 0;
+		b.z = 0.1;
+		g.add(b);	
+
+		this.scene.updateWorldTransforms(true);
+
+		console.log(g.getWorldBounds());
 
 		this.mainRenderPass = new RenderPass(
 			null,
@@ -68,6 +72,13 @@ export class App extends React.Component<Props, State> {
 				clearDepth: 1
 			}
 		);
+
+		this.state = {
+			viewerWidth: window.innerWidth,
+			viewerHeight: window.innerHeight,
+		}
+
+		this.updateSceneTransform();
 	}
 
 	componentDidMount() {
@@ -95,6 +106,15 @@ export class App extends React.Component<Props, State> {
 		window.cancelAnimationFrame(this._frameLoopHandle);
 	}
 
+	componentDidUpdate(prevProps: Props, prevState: State, snapshot: any) {
+		if (
+			this.state.viewerWidth !== prevState.viewerWidth ||
+			this.state.viewerHeight !== prevState.viewerHeight
+		) {
+			this.updateSceneTransform();
+		}
+	}
+
 	render() {
 		const pixelRatio = window.devicePixelRatio || 1;
 
@@ -112,10 +132,11 @@ export class App extends React.Component<Props, State> {
 						left: 0,
 						width: this.state.viewerWidth + 'px',
 						height: this.state.viewerHeight + 'px',
-						zIndex: 0
+						zIndex: 0,
+						outline: '1px solid blue',
 					}}
 				/>
-				<div className="overlay" style={{
+				<div className="dom-overlay" style={{
 					position: 'absolute',
 					top: 0,
 					left: 0,
@@ -123,6 +144,12 @@ export class App extends React.Component<Props, State> {
 					height: '100%',
 					zIndex: 1
 				}}>
+					<div style={{
+						position: 'absolute',
+						width: '10px',
+						height: '10px',
+						left: '20px', top: '20px',
+						background: 'pink'}}></div>
 				</div>
 			</div>
 		</div>)
@@ -135,6 +162,24 @@ export class App extends React.Component<Props, State> {
 		});
 	}
 
+	protected updateSceneTransform() {
+		// apply DOM pixel coordinate system to the scene via a transform on the root node
+		// viewerWidth and viewerHeight should be the display size of the scene in DOM pixel units
+		// (0, 0) corresponds to the top-left of the canvas
+		// (w_dom, h_dom) corresponds to the bottom right
+		// the z-axis is flipped from default OpenGL coordinates so that 1 = 'above' the screen and -1 is inside the screen
+		// z coordinates clip outside of -1 to 1
+		let w_dom = this.state.viewerWidth;
+		let h_dom = this.state.viewerHeight;
+		this.scene.x = -1;
+		this.scene.y = 1;
+		this.scene.sx = 2/w_dom;
+		this.scene.sy = -2/h_dom;
+		this.scene.sz = -1;
+
+		this.scene.updateWorldTransforms();
+	}
+
 	private _frameLoopHandle: number;
 	protected frameLoop = () => {
 		this._frameLoopHandle = window.requestAnimationFrame(this.frameLoop);
@@ -143,8 +188,10 @@ export class App extends React.Component<Props, State> {
 
 		// handle user input
 			// canvas.style.cursor = ...
-		this.scene.updateWorldTransforms();
 		// step animation
+
+		this.scene.updateWorldTransforms();
+		// scene graph must not change after this point
 		this.renderer.render(this.mainRenderPass);
 	}
 

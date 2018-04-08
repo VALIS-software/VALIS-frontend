@@ -3,6 +3,7 @@ import { Device, GPUVertexState, VertexAttributeDataType, GPUProgram } from "../
 export class SharedResources {
 
     static unitQuadVertexState: GPUVertexState;
+    static quad1x1VertexState: GPUVertexState;
 
     private static programs: { [key: string]: GPUProgram } = {};
 
@@ -43,11 +44,38 @@ export class SharedResources {
                 }
             ]
         });
+
+        SharedResources.quad1x1VertexState = device.createVertexState({
+            index: device.createIndexBuffer({
+                data: new Uint8Array([
+                    0, 1, 2,
+                    0, 3, 1
+                ])
+            }),
+            attributes: [
+                {
+                    buffer: device.createBuffer({
+                        data: new Float32Array([
+                            0, 0,
+                            1.0, 1.0,
+                            0, 1.0,
+                            1.0, 0,
+                        ]),
+                    }),
+                    elementsPerVertex: 2,
+                    dataType: VertexAttributeDataType.FLOAT,
+                    offsetBytes: 0,
+                    strideBytes: 2 * 4
+                }
+            ]
+        });
     }
 
     static release() {
         SharedResources.unitQuadVertexState.delete();
         SharedResources.unitQuadVertexState = null;
+        SharedResources.quad1x1VertexState.delete();
+        SharedResources.quad1x1VertexState = null;
 
         for (let key of Object.keys(SharedResources.programs)) {
             SharedResources.programs[key].delete();
