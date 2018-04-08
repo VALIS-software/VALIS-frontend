@@ -107,21 +107,21 @@ export class Object2D extends Renderable<Object2D> {
 
                 // in non-rotational affine transformation only elements 0, 5, 12, 13, 14 are non-zero
                 // scale
-                let m0 = p[0] * c[0];
-                let m5 = p[5] * c[5];
-                let m10 = 1;
-                let m15 = 1;
+                let m0 = p[0] * c[0]; // x
+                let m5 = p[5] * c[5]; // y
+                let m10 = 1;          // z
+                let m15 = 1;          // w 
                 // translation
-                let m12 = p[0] * c[12] + p[12];
-                let m13 = p[5] * c[13] + p[13];
-                let m14 = 1 * c[14] + p[13];
+                let m12 = p[0] * c[12] + p[12]; // x
+                let m13 = p[5] * c[13] + p[13]; // y
+                let m14 =    1 * c[14] + p[13]; // z
 
-                // replace complete world matrix
+                // set world matrix
                 let w = child.worldTransformMat4;
-                w[0] = m0; w[1] = 0; w[2] = 0; w[3] = 0;
-                w[4] = 0; w[5] = m5; w[6] = 0; w[7] = 0;
-                w[8] = 0; w[9] = 0; w[10] = m10; w[11] = 0;
-                w[12] = m12; w[13] = m13; w[14] = m14; w[15] = m15;
+                w[0]  = m0;   w[1] = 0;     w[2] = 0;    w[3] = 0;
+                w[4]  = 0;    w[5] = m5;    w[6] = 0;    w[7] = 0;
+                w[8]  = 0;    w[9] = 0;    w[10] = m10; w[11] = 0;
+                w[12] = m12; w[13] = m13;  w[14] = m14; w[15] = m15;
 
                 // child.worldTransformMat4 = this.worldTransformMat4 * child.localTransformMat4
                 child.worldTransformNeedsUpdate = false;

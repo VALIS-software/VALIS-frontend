@@ -12,13 +12,30 @@ import { debug } from "util";
 export class Rect extends Object2D {
 
     color = new Float32Array([1, 0, 0, 1]);
-    w = 1;
-    h = 1;
 
-    constructor(w: number = 1, h: number = 1, color: Float32Array = new Float32Array([1, 0, 0, 1])) {
+    get w() { return this._w; }
+    get h() { return this._h; }
+    set w(w: number) {
+        this._w = w;
+        this.bounds.l = -w * 0.5;
+        this.bounds.r = w * 0.5;
+    };
+    set h(h: number) {
+        this._h = h;
+        this.bounds.b = -h * 0.5;
+        this.bounds.t = h * 0.5;
+    };
+
+    protected _w = 1;
+    protected _h = 1;
+
+    constructor(w: number = 1, h: number = 1, color?: ArrayLike<number>) {
         super();
         this.w = w;
         this.h = h;
+        if (color != null) {
+            this.color.set(color);
+        }
     }
 
     allocateGPUResources(device: Device) {
@@ -37,7 +54,7 @@ export class Rect extends Object2D {
 
                 void main() {
                     vUv = position * 0.5 + 0.5;
-                    gl_Position = model * vec4(position * size, 0., 1.);
+                    gl_Position = model * vec4(position * size, 0., 1.0);
                 }
             `,
             `

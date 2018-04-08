@@ -39,6 +39,12 @@ export class Renderer {
 		this.gl = this.deviceInternal.gl;
 		this.extVao = this.deviceInternal.extVao;
 		this.drawContext = new DrawContext(this.gl, this.deviceInternal.extInstanced);
+
+
+		// @! temporary initialial GL state for 2D drawing
+		this.gl.enable(this.gl.DEPTH_TEST);
+		this.gl.depthFunc(this.gl.LEQUAL);
+		this.gl.enable(this.gl.CULL_FACE);
 	}
 
 	private _opaque = new Array<Renderable<any>>();
@@ -70,7 +76,7 @@ export class Renderer {
 					this.render(subpass);
 				}
 
-				// perform any nessesary allocations
+				// perform any necessary allocations
 				if (nodeInternal.gpuResourcesNeedAllocate) {
 					nodeInternal.allocateGPUResources(this.device);
 					if (nodeInternal.gpuProgram == null) {

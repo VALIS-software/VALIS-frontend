@@ -1,7 +1,13 @@
 /*
-	- Object2D not renderable by default
-	- Draw call order and depth issues
 	- Aspect ratio and units
+		- What coordinate system should we use?
+		- Should we automatically handle aspect ratios?
+			(Probably)
+		- Ideas
+			DOM pixel units:
+				- What about inside a render target?
+				- Could use a root Object2D
+			Aspect-ratio clip-space, where h = 2 and w = r * 2
 
 	- Define a single track
 	- Define a trackset / multiple track view
@@ -36,7 +42,7 @@ export class App extends React.Component<Props, State> {
 	protected device: Device;
 	protected renderer: Renderer;
 	protected mainRenderPass: RenderPass;
-	protected scene: Node<Object2D>;
+	protected scene: Object2D;
 
 	constructor(props: Props) {
 		super(props);
@@ -46,33 +52,20 @@ export class App extends React.Component<Props, State> {
 			viewerHeight: window.innerHeight,
 		}
 
-		this.scene = new Node();
+		this.scene = new Object2D();
 
-		let r = new Rect();r.color.set([1, 0, 0, 1]);
-		r.x = -1;
-		r.y = 0;
-		r.sx = 1;
-		let g = new Rect();g.color.set([0, 1, 0, 1]);
-		g.x = 1;
-		g.y = 0;
-		g.w = 0.5;
-		g.h = 0.5;
-		let b = new Rect(); b.color.set([0, 0, 1, 1]);
-		b.x = 0;
-		b.y = 0;
-		b.w = 0.25;
-		b.h = 0.25;
-
+		let r = new Rect(1, 1);
+		let g = new Rect(10, 10, [0, 1, 0, 1]);
+		r.z = -0.1;
+		this.scene.add(g);
 		this.scene.add(r);
-		r.add(g);
-		g.add(b);
 
 		this.mainRenderPass = new RenderPass(
 			null,
 			this.scene,
 			{
-				clearColor: [0, 0, 0, 1],
-				clearDepth: 0
+				clearColor: [1, 1, 1, 1],
+				clearDepth: 1
 			}
 		);
 	}

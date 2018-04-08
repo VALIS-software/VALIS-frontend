@@ -23,7 +23,7 @@ export class SharedResources {
             index: device.createIndexBuffer({
                 data: new Uint8Array([
                     0, 1, 2,
-                    0, 1, 3
+                    0, 3, 1
                 ])
             }),
             attributes: [
