@@ -4,16 +4,14 @@ import { Device, GPUProgram, GPUVertexState } from './Device';
 import { BlendMode, DrawContext } from './Renderer';
 
 export type RenderableInternal = {
-	worldTransformNeedsUpdate: boolean,
 	gpuResourcesNeedAllocate: boolean,
 	gpuProgram: GPUProgram,
 	gpuVertexState: GPUVertexState,
 	_renderStateKey: number,
-
 	allocateGPUResources: (device: Device) => void,
 }
 
-export class Renderable<T> extends Node<T> {
+export class Renderable<T extends Node<any>> extends Node<T> {
 
 	// set to false to disable rendering of this object
 	render = true;
@@ -24,8 +22,6 @@ export class Renderable<T> extends Node<T> {
 
 	dependentRenderPasses = new Array<RenderPass>();
 	blendMode = BlendMode.NONE;
-
-	protected worldTransformNeedsUpdate = true;
 
 	// @:device-local
 	protected gpuProgram: GPUProgram = null;
@@ -39,14 +35,8 @@ export class Renderable<T> extends Node<T> {
 		super();
 	}
 
-	add(child: Renderable<T>) {
-		super.add(child);
-		child.worldTransformNeedsUpdate = true;
-	}
-
 	releaseGPUResources() {}
 	draw(context: DrawContext) {}
-
 	protected allocateGPUResources(device: Device) {}
 
 }

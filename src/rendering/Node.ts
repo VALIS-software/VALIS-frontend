@@ -1,19 +1,25 @@
 /**
  * Scene tree node, type parameter is used to constrain the type of the node's children
  */
-export class Node<T> {
+export class Node<T extends Node<any>> {
 
-	get children(): Iterable<Node<T>> { return this._children; }
-	protected _children = new Array<Node<T>>();
+	get children(): Iterable<T> { return this._children; }
+	protected _children = new Array<T>();
 
-	add(child: Node<T>) {
+	add(child: T) {
 		this._children.push(child);
 	}
 
-	remove(child: Node<T>) {
+	remove(child: T) {
 		let i = this._children.indexOf(child);
 		if (i === -1) return false;
 		this._children.splice(i, 1);
+	}
+
+	updateWorldTransforms(root: boolean = true) {
+		for (let child of this._children) {
+			child.updateWorldTransforms(true);
+		}
 	}
 
 	/**

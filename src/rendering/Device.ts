@@ -202,7 +202,7 @@ export class Device {
 			this.applyVertexStateDescriptor(vertexStateDescriptor);
 			extVao.bindVertexArrayOES(null);
 
-			vertexStateHandle = new GPUVertexState(this, this.vertexStateIds.assign(), vao, vaoSupported, indexDataType);
+			vertexStateHandle = new GPUVertexState(this, this.vertexStateIds.assign(), vao, true, indexDataType);
 		} else {
 			// when VAO is not supported, pass in the descriptor so vertex state can be applied when rendering
 			vertexStateHandle = new GPUVertexState(this, this.vertexStateIds.assign(), vertexStateDescriptor, false, indexDataType);

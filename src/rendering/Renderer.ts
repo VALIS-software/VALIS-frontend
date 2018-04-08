@@ -30,7 +30,7 @@ export class Renderer {
 	protected device: Device;
 	protected deviceInternal: DeviceInternal;
 	protected gl: WebGLRenderingContext;
-	protected extVao: OES_vertex_array_object;
+	protected extVao: null | OES_vertex_array_object;
 	protected drawContext: DrawContext;
 
 	constructor(device: Device) {
