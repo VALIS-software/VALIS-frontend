@@ -23,6 +23,8 @@ export class Device {
 	get vertexStateCount() { return this._vertexStateCount; }
 	get bufferCount() { return this._bufferCount; }
 
+	readonly name: string;
+
 	protected gl: WebGLRenderingContext;
 	protected vertexStateIds = new IdManager(true);
 	protected programIds = new IdManager(true);
@@ -43,6 +45,9 @@ export class Device {
 		// we require it for now because it's widely supported, however it's possible to work around lack of support
 		this.extVao = gl.getExtension('OES_vertex_array_object');
 		this.extInstanced = gl.getExtension('ANGLE_instanced_arrays');
+
+		let extDebugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+		this.name = gl.getParameter(extDebugInfo == null ? gl.RENDERER : extDebugInfo.UNMASKED_RENDERER_WEBGL);
 	}
 
 	createBuffer(bufferDescriptor: BufferDescriptor) {

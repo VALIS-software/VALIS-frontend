@@ -4,9 +4,13 @@ import { debug } from 'util';
 
 export type Object2DInternal = RenderableInternal & {
     handlesPointerEvents: boolean,
-    worldTransformMat4: Float32Array,
     eventEmitter: EventEmitter,
     worldTransformNeedsUpdate: boolean,
+    worldTransformMat4: Float32Array,
+    computedX: number,
+    computedY: number,
+    computedWidth: number,
+    computedHeight: number,
 }
 
 /**
@@ -89,7 +93,8 @@ export class Object2D extends Renderable<Object2D> {
     protected _layoutH: number = 0;
 
     protected handlesPointerEvents: Boolean = false;
-    protected cursor = 'pointer';
+    protected pointerEventCount = 0;
+    protected cursorStyle: null | string = null;
 
     protected worldTransformNeedsUpdate = true;
     protected worldTransformMat4 = new Float32Array([
@@ -118,83 +123,46 @@ export class Object2D extends Renderable<Object2D> {
         child.worldTransformNeedsUpdate = true;
     }
 
+    // @! todo, event and detail type
     onPointerDown(listener: (event: any) => void) {
-        this.handlesPointerEvents = true;
         this.eventEmitter.on('pointerdown', listener);
+        this.pointerEventCount++;
+        this.handlesPointerEvents = true;
     }
 
     onPointerUp(listener: (event: any) => void) {
-        this.handlesPointerEvents = true;
         this.eventEmitter.on('pointerup', listener);
+        this.pointerEventCount++;
+        this.handlesPointerEvents = true;
     }
 
     removePointerDown(listener: (event: any) => void) {
         this.eventEmitter.removeListener('pointerdown', listener);
-        this.handlesPointerEvents = this.eventEmitter.eventNames().length > 0;
+        this.pointerEventCount--;
+        this.handlesPointerEvents = this.pointerEventCount > 0;
     }
 
     removePointerUp(listener: (event: any) => void) {
         this.eventEmitter.removeListener('pointerup', listener);
-        this.handlesPointerEvents = this.eventEmitter.eventNames().length > 0;
+        this.pointerEventCount--;
+        this.handlesPointerEvents = this.pointerEventCount > 0;
     }
-
+    
     emitPointerDown(detail: any) {
         this.eventEmitter.emit('pointerdown', detail);
-    }
-
-    removeAllListeners() {
-        this.eventEmitter.removeAllListeners();
-        this.handlesPointerEvents = false;
     }
 
     applyTreeTransforms(root: boolean = true) {
         if (root && this.worldTransformNeedsUpdate) {
             this.layout(0, 0);
-            // given there's no parent we can skip layout offsets
-            let cx = this.computedX;
-            let cy = this.computedY;
-            this.worldTransformMat4.set([
-                this._sx,        0,        0, 0,
-                       0, this._sy,        0, 0,
-                       0,        0, this._sz, 0,
-                      cx,       cy,  this._z, 1
-            ]);
-            this.worldTransformNeedsUpdate = false;
-            for (let c of this._children) c.worldTransformNeedsUpdate = true;
+            this.applyWorldTransform(null);
         }
 
         // apply world transform to children
         for (let child of this._children) {
             if (child.worldTransformNeedsUpdate) {
                 child.layout(this.computedWidth, this.computedHeight);
-
-                // child.worldTransformMat4 = this.worldTransformMat4 * child.<local transform after layout>
-
-                let p = this.worldTransformMat4;
-
-                // in non-rotational affine transformation only elements 0, 5, 12, 13, 14 are non-zero
-                // scale
-                let m0  = p[0] * child._sx;  // x
-                let m5  = p[5] * child._sy;  // y
-                let m10 = p[10] * child._sz; // z
-                let m15 = 1;                 // w
-
-                // translation
-                let m12 = p[0] * child.computedX + p[12];  // x
-                let m13 = p[5] * child.computedY + p[13];  // y
-                let m14 = p[10] * child._z + p[14];        // z
-
-                // set world matrix
-                let W = child.worldTransformMat4;
-                W[0]  = m0;   W[1] = 0;     W[2] = 0;    W[3] = 0;
-                W[4]  = 0;    W[5] = m5;    W[6] = 0;    W[7] = 0;
-                W[8]  = 0;    W[9] = 0;    W[10] = m10; W[11] = 0;
-                W[12] = m12; W[13] = m13;  W[14] = m14; W[15] = m15;
-
-                child.worldTransformNeedsUpdate = false;
-
-                // if the world matrix of the child has changed, then we must inform the children that they're out of sync also
-                for (let cc of child._children) cc.worldTransformNeedsUpdate = true;
+                child.applyWorldTransform(this.worldTransformMat4);
             }
 
             child.applyTreeTransforms(false);
@@ -208,6 +176,7 @@ export class Object2D extends Renderable<Object2D> {
     getWorldBounds() {
         let w = this.worldTransformMat4;
         let b = this.getLocalBounds();
+
         return {
             l: w[0] * b.l + w[12],
             r: w[0] * b.r + w[12],
@@ -235,6 +204,50 @@ export class Object2D extends Renderable<Object2D> {
 
         this.computedX = this._x + parentWidth * this._layoutParentX + this.computedWidth * this._layoutX;
         this.computedY = this._y + parentHeight * this._layoutParentY + this.computedHeight * this._layoutY;
+    }
+
+    protected applyWorldTransform(transformMat4: Float32Array | null) {
+        if (transformMat4 == null) {
+            let cx = this.computedX;
+            let cy = this.computedY;
+
+            this.worldTransformMat4.set([
+                this._sx , 0        , 0        , 0 ,
+                0        , this._sy , 0        , 0 ,
+                0        , 0        , this._sz , 0 ,
+                cx       , cy       , this._z  , 1
+            ]);
+
+            this.worldTransformNeedsUpdate = false;
+
+            for (let c of this._children) c.worldTransformNeedsUpdate = true;
+        } else {
+            let p = transformMat4;
+
+            // in non-rotational affine transformation only elements 0, 5, 12, 13, 14 are non-zero
+            // scale
+            let m0 = p[0] * this._sx;   // x
+            let m5 = p[5] * this._sy;   // y
+            let m10 = p[10] * this._sz; // z
+            let m15 = 1;                // w
+
+            // translation
+            let m12 = p[0] * this.computedX + p[12];  // x
+            let m13 = p[5] * this.computedY + p[13];  // y
+            let m14 = p[10] * this._z + p[14];        // z
+
+            // set world matrix
+            let W = this.worldTransformMat4;
+            W[0]  = m0;   W[1] = 0;     W[2] = 0;    W[3] = 0;
+            W[4]  = 0;    W[5] = m5;    W[6] = 0;    W[7] = 0;
+            W[8]  = 0;    W[9] = 0;    W[10] = m10; W[11] = 0;
+            W[12] = m12; W[13] = m13;  W[14] = m14; W[15] = m15;
+
+            this.worldTransformNeedsUpdate = false;
+
+            // if the world matrix of the child has changed, then we must inform the children that they're out of sync also
+            for (let cc of this._children) cc.worldTransformNeedsUpdate = true;
+        }
     }
 
 }
