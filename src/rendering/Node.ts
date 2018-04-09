@@ -1,5 +1,7 @@
 /**
- * Scene tree node, type parameter is used to constrain the type of the node's children
+ * Scene tree node
+ * - Type parameter is used to constrain the type of the node's children
+ * - Scene information flows from the roots to the leaves – by design nodes only have knowledge about their children, not their parents
  */
 export class Node<T extends Node<any>> {
 
@@ -16,9 +18,9 @@ export class Node<T extends Node<any>> {
 		this._children.splice(i, 1);
 	}
 
-	updateWorldTransforms(root: boolean = true) {
+	applyTreeTransforms(root: boolean = true) {
 		for (let child of this._children) {
-			child.updateWorldTransforms(true);
+			child.applyTreeTransforms(true);
 		}
 	}
 

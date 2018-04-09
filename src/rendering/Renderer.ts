@@ -54,6 +54,8 @@ export class Renderer {
 		const gl = this.gl;
 		const drawContextInternal = this.drawContext as any as DrawContextInternal;
 
+		pass.root.applyTreeTransforms(true);
+
 		// render-state = transparent, programId, vertexStateId, blendMode, user
 		// when transparent, z sort should override everything, but same-z should still sort by state
 		// when opaque, z sort should come after user sort and depth within tree 

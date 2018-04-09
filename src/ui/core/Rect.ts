@@ -1,8 +1,7 @@
-import { Object2D } from "../../rendering/Object2D";
 import { Device, GPUProgram } from "../../rendering/Device";
 import { SharedResources } from "./SharedResources";
 import { DrawContext, DrawMode } from "../../rendering/Renderer";
-import { debug } from "util";
+import { Object2D } from "./Object2D";
 
 /**
  * Rectangle UI element
@@ -62,7 +61,7 @@ export class Rect extends Object2D {
     }
 
     draw(context: DrawContext) {
-        context.uniform2f('size', this.w, this.h);
+        context.uniform2f('size', this.computedWidth, this.computedHeight);
         context.uniformMatrix4fv('model', false, this.worldTransformMat4);
         context.uniform4fv('color', this.color);
         context.draw(DrawMode.TRIANGLES, 6, 0);
