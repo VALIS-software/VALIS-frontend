@@ -1,7 +1,8 @@
-import { Device, GPUVertexState, VertexAttributeDataType, GPUProgram } from "../../rendering/Device";
+import { Device, GPUVertexState, VertexAttributeDataType, GPUProgram, GPUBuffer, GPUIndexBuffer } from "../../rendering/Device";
 
 export class SharedResources {
 
+    static quadIndicies: GPUIndexBuffer;
     static unitQuadVertexState: GPUVertexState;
     static quad1x1VertexState: GPUVertexState;
 
@@ -20,13 +21,15 @@ export class SharedResources {
     }
 
     static initialize(device: Device) {
+        this.quadIndicies = device.createIndexBuffer({
+            data: new Uint8Array([
+                0, 1, 2,
+                0, 3, 1
+            ])
+        });
+
         SharedResources.unitQuadVertexState = device.createVertexState({
-            index: device.createIndexBuffer({
-                data: new Uint8Array([
-                    0, 1, 2,
-                    0, 3, 1
-                ])
-            }),
+            index: this.quadIndicies,
             attributes: [
                 {
                     buffer: device.createBuffer({
@@ -46,12 +49,7 @@ export class SharedResources {
         });
 
         SharedResources.quad1x1VertexState = device.createVertexState({
-            index: device.createIndexBuffer({
-                data: new Uint8Array([
-                    0, 1, 2,
-                    0, 3, 1
-                ])
-            }),
+            index: this.quadIndicies,
             attributes: [
                 {
                     buffer: device.createBuffer({
@@ -72,6 +70,8 @@ export class SharedResources {
     }
 
     static release() {
+        SharedResources.quadIndicies.delete();
+        SharedResources.quadIndicies = null;
         SharedResources.unitQuadVertexState.delete();
         SharedResources.unitQuadVertexState = null;
         SharedResources.quad1x1VertexState.delete();
