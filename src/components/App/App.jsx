@@ -48,6 +48,8 @@ class App extends React.Component {
 
     this.popView = this.popView.bind(this);
     this.pushView = this.pushView.bind(this);
+    this.showTrackSettings = this.showTrackSettings.bind(this);
+    this.showEntityDetails = this.showEntityDetails.bind(this);
 
     this.viewModel = new ViewModel();
     this.appModel = new AppModel();
@@ -62,27 +64,24 @@ class App extends React.Component {
     this.appModel.addListener(this.pushView, APP_EVENT_PUSH_VIEW);
   }
 
-  // showEntityDetails(event) {
-  //   if (event.data !== null) {
-  //     if (event.data.aggregation === true) {
-  //       // if the annotation is an aggregation then zoom
-  //       this.viewModel.setViewRegionUsingRange(event.data.startBp, event.data.endBp);
-  //     } else if (event.data.id === this.state.currSideBarDataID && this.state.showInfo) {
-  //       this.hideSideBar();
-  //     } else {
-  //         let title = '';
-  //         if (event.data.title) {
-  //           title = event.data.title;
-  //         }
-  //         this.setState({
-  //           showInfo: true,
-  //           currSideBarType: SIDEBAR_TYPE_ENTITY_DETAILS,
-  //           currSideBarInfo: title,
-  //           currSideBarDataID: event.data.id,
-  //         });
-  //     }
-  //   }
-  // }
+  showEntityDetails(event) {
+    if (event.data !== null) {
+      if (event.data.aggregation === true) {
+        // if the annotation is an aggregation then zoom
+        this.viewModel.setViewRegionUsingRange(event.data.startBp, event.data.endBp);
+      } else if (this.currentView() && event.data.id === this.currentView().info) {
+        this.appModel.popView();
+      } else {
+          let title = '';
+          if (event.data.title) {
+            title = event.data.title;
+          }
+          const dataID = event.data.id;
+          const elem = (<EntityDetails appModel={this.appModel} dataID={dataID} />);
+          this.appModel.pushView(title, dataID, elem);
+      }
+    }
+  }
 
   popView() {
     const viewsCopy = this.state ? this.state.views.slice() : [];
@@ -100,37 +99,21 @@ class App extends React.Component {
     });
   }
 
-  // showTrackSettings(event) {
-  //   if (event.data !== null) {
-  //     if (event.data === this.state.currSideBarInfo) {
-  //       this.hideSideBar();
-  //     } else {
-  //       this.setState({
-  //         showInfo: true,
-  //         currSideBarType: SIDEBAR_TYPE_TRACK_SETTINGS,
-  //         currSideBarInfo: event.data,
-  //       });
-  //     }
-  //   }
-  // }
+  currentView() {
+    if (!this.state || this.state.views.length === 0) return null;
+    return this.state.views[this.state.views.length - 1];
+  }
 
-  // renderSidebar() {
-  //   if (this.state.currSideBarType === SIDEBAR_TYPE_TRACK_SETTINGS) {
-  //     const guid = this.state.currSideBarInfo;
-  //     return (<TrackViewSettings guid={guid} model={this.appModel} />);
-  //   } else if (this.state.currSideBarType === SIDEBAR_TYPE_ENTITY_DETAILS) {
-  //     const dataID = this.state.currSideBarDataID;
-  //     return (<EntityDetails appModel={this.appModel} dataID={dataID} />);
-  //   } else if (this.state.currSideBarType === SIDEBAR_TYPE_BROWSE_DATA) {
-  //     return (<DatasetSelector appModel={this.appModel} />);
-  //   } else if (this.state.currSideBarType === SIDEBAR_TYPE_BROWSE_DATA_GENOME) {
-  //     return (<GenomeSelector appModel={this.appModel} />);
-  //   } else if (this.state.currSideBarType === SIDEBAR_TYPE_BROWSE_DATA_GWAS) {
-  //     return (<GWASSelector appModel={this.appModel} />);
-  //   }  else {
-  //     return null;
-  //   }
-  // }
+  showTrackSettings(event) {
+    if (event.data !== null) {
+      if (this.currentView() && event.data === this.currentView().info) {
+        this.appModel.popView();
+      } else {
+        const elem = (<TrackViewSettings guid={event.data} model={this.appModel} />);
+        this.appModel.pushView('Track Settings', event.data, elem);
+      }
+    }
+  }
 
   updateLoadingState(event) {
     this.setState({

@@ -38,24 +38,22 @@ class DatasetSelector extends Component {
     });
   }
 
-
   dataSetSelected(trackType) {
-    if (trackType === TRACK_TYPE_SEQUENCE) {
-      //currSideBarInfo = 'Sequence Track';
-    } else if (trackType === TRACK_TYPE_FUNCTIONAL) {
-      //currSideBarInfo = 'Functional Track';
-    } else if (trackType === TRACK_TYPE_GENOME) {
-      // currSideBarType = SIDEBAR_TYPE_BROWSE_DATA_GENOME;
-      //currSideBarInfo = 'Genome Elements Track';
+    if (trackType === TRACK_TYPE_GENOME) {
+      this.appModel.pushView('Genomic Elements', null, (<GenomeSelector appModel={this.appModel} />));
     } else if (trackType === TRACK_TYPE_GWAS) {
       this.appModel.pushView('GWAS Track', null, (<GWASSelector appModel={this.appModel} />));
-    } else if (trackType === TRACK_TYPE_EQTL) {
-      //currSideBarInfo = 'eQTL Track';
-    } else if (trackType === TRACK_TYPE_3D) {
-      //currSideBarInfo = '3D Structure Track';
-    } else if (trackType === TRACK_TYPE_NETWORK) {
-      //currSideBarInfo = 'Network Track';
     }
+
+    // if (trackType === TRACK_TYPE_SEQUENCE) {
+    //   //currSideBarInfo = 'Sequence Track';
+    // } else if (trackType === TRACK_TYPE_FUNCTIONAL) {
+    //   //currSideBarInfo = 'Functional Track';
+    // } else 
+    //  else if (trackType === TRACK_TYPE_EQTL) {
+    // } else if (trackType === TRACK_TYPE_3D) {
+    // } else if (trackType === TRACK_TYPE_NETWORK) {
+    // }
   }
 
   render() {
