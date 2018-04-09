@@ -3,6 +3,8 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import GWASSelector from '../GWASSelector/GWASSelector.jsx';
 import GenomeSelector from '../GenomeSelector/GenomeSelector.jsx';
+import TrackSelector from '../TrackSelector/TrackSelector.jsx';
+import DataListItem from '../DataListItem/DataListItem.jsx';
 
 import {
   TRACK_TYPE_SEQUENCE,
@@ -43,17 +45,13 @@ class DatasetSelector extends Component {
       this.appModel.pushView('Genomic Elements', null, (<GenomeSelector appModel={this.appModel} />));
     } else if (trackType === TRACK_TYPE_GWAS) {
       this.appModel.pushView('GWAS Track', null, (<GWASSelector appModel={this.appModel} />));
+    } else if (trackType === TRACK_TYPE_FUNCTIONAL) {
+      this.appModel.pushView('Functional Tracks', null, (<TrackSelector trackType={trackType} appModel={this.appModel} />));
+    } else if (trackType === TRACK_TYPE_SEQUENCE) {
+      this.appModel.pushView('Sequence Tracks', null, (<TrackSelector trackType={trackType} appModel={this.appModel} />));
+    } else if (trackType === TRACK_TYPE_NETWORK) {
+      this.appModel.pushView('Network Tracks', null, (<TrackSelector trackType={trackType} appModel={this.appModel} />));
     }
-
-    // if (trackType === TRACK_TYPE_SEQUENCE) {
-    //   //currSideBarInfo = 'Sequence Track';
-    // } else if (trackType === TRACK_TYPE_FUNCTIONAL) {
-    //   //currSideBarInfo = 'Functional Track';
-    // } else 
-    //  else if (trackType === TRACK_TYPE_EQTL) {
-    // } else if (trackType === TRACK_TYPE_3D) {
-    // } else if (trackType === TRACK_TYPE_NETWORK) {
-    // }
   }
 
   render() {
@@ -63,7 +61,7 @@ class DatasetSelector extends Component {
     const dataInfoBlocks = [];
     for (const di of dataInfo) {
       dataInfoBlocks.push(
-        <DataButton
+        <DataListItem
           title={di.title}
           description={di.description}
           onClick={() =>  this.dataSetSelected(di.track_type)}
@@ -77,25 +75,6 @@ class DatasetSelector extends Component {
 
 DatasetSelector.propTypes = {
   appModel: PropTypes.object,
-};
-
-function DataButton(props) {
-  return (
-    <button className="dataset-button" onClick={props.onClick}>
-      <div className="option-title">
-        {props.title}
-      </div>
-      <div className="option-description">
-        {props.description}
-      </div>
-    </button>
-  );
-}
-
-DataButton.propTypes = {
-  onClick: PropTypes.func,
-  title: PropTypes.string,
-  description: PropTypes.string,
 };
 
 export default DatasetSelector;
