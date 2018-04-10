@@ -125,6 +125,13 @@ class GenomeAPI {
 			return data.data;
 		});
 	}
+
+	getQueryResults(query) {
+		const requestUrl = `${this.baseUrl}/query`;
+		return axios.post(requestUrl, query).then(data => {
+			return data.data;
+		});
+	}
 }
 
 export default GenomeAPI;
