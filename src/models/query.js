@@ -74,6 +74,10 @@ class QueryBuilder {
     this.query.filters['info.biosample'] = biosample;
   }
 
+  filterTargets(targets) {
+    this.query.filters['info.targets'] = targets;
+  }
+
   searchText(text) {
     this.query.filters.$text = text;
   }
