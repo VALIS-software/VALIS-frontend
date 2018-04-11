@@ -13,6 +13,7 @@ import {
 import Paper from 'material-ui/Paper';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import CircularProgress from 'material-ui/CircularProgress';
+import DataListItem from '../DataListItem/DataListItem.jsx';
 
 // Styles
 import './EntityDetails.scss';
@@ -182,35 +183,18 @@ function RelationsSelector(props) {
   if (!props.relations) return (<div />);
   const relationButtons = [];
   for (const relation of props.relations) {
-    relationButtons.push(
-      <RelationButton relation={relation} onClick={() => props.onClick(relation)} key={relation.id} />
-    );
+    relationButtons.push(<DataListItem
+      title={relation.title}
+      description={relation.description}
+      onClick={() => props.onClick(relation)}
+      key={relation.id}
+    />);
   }
   return (<div className="relation-selector">{ relationButtons }</div>);
 }
 
 RelationsSelector.propTypes = {
   relations: PropTypes.array,
-  onClick: PropTypes.func,
-};
-
-function RelationButton(props) {
-  if (!props.relation) return (<div />);
-  const relation = props.relation;
-  return (
-    <button className="relation-button" onClick={props.onClick}>
-      <div className="button-title">
-        {relation.title}
-      </div>
-      <div className="button-description">
-        {relation.description}
-      </div>
-    </button>
-  );
-}
-
-RelationButton.propTypes = {
-  relation: PropTypes.object,
   onClick: PropTypes.func,
 };
 
