@@ -21,7 +21,7 @@ class SearchResultsView extends Component {
   }
 
   resultSelected(result) {
-    let title = '';
+    const title = '';
     const dataID = result._id;
     const elem = (<EntityDetails appModel={this.appModel} dataID={result._id} />);
     this.appModel.pushView(title, dataID, elem);
@@ -43,18 +43,20 @@ class SearchResultsView extends Component {
           needsRefresh: false,
         });
       }); 
-      return (<div className="search-results-view-loading"><CircularProgress size={80} thickness={5} /> </div>);
+      return (<div className="navigation-controller-loading"><CircularProgress size={80} thickness={5} /> </div>);
     }
     const searchResultItems = this.state.results.map(result => {
       return (<DataListItem
         title={result.name}
         description={''}
+        entityId={result._id}
+        appModel={this.props.appModel}
         onClick={() =>  this.resultSelected(result)}
         key={result._id}
       />);
     });
     return (<div className="search-results-view">
-      <div class="result-info"> { searchResultItems.length } results for query <i>{ this.props.text } </i></div>
+      <div className="result-info"> { searchResultItems.length } results for query <i>{ this.props.text } </i></div>
       { searchResultItems }
     </div>);
   }
