@@ -9,6 +9,8 @@ import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import IconButton from 'material-ui/IconButton';
 import RaisedButton from 'material-ui/RaisedButton';
 import DatasetSelector from '../DatasetSelector/DatasetSelector.jsx';
+import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
+import EntityDetails from '../EntityDetails/EntityDetails.jsx';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import QueryBuilder, { QUERY_TYPE_INFO } from '../../models/query.js';
@@ -35,7 +37,6 @@ class Header extends Component {
   handleUpdateInput(searchText) {
     const builder = new QueryBuilder();
     builder.newInfoQuery();
-    builder.filterSource(DATA_SOURCE_GWAS);
     const infoQuery = builder.build();
     this.api.getDistinctValues('info.description', infoQuery).then(data => {
       this.setState({
@@ -45,7 +46,13 @@ class Header extends Component {
   }
 
   onNewRequest(chosen, index) {
-    console.log(chosen, index);
+    const builder = new QueryBuilder();
+    builder.newInfoQuery();
+    builder.searchText(chosen);
+    builder.setLimit(150);
+    const query = builder.build();
+    const view = (<SearchResultsView text={chosen} query={query} appModel={this.props.model} />);
+    this.props.model.pushView('Search Results', query, view);
   }
 
   addDatasetBrowser() {
