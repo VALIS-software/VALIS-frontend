@@ -12,6 +12,7 @@ import {
 } from 'material-ui/Table';
 import Paper from 'material-ui/Paper';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
+import CircularProgress from 'material-ui/CircularProgress';
 
 // Styles
 import './EntityDetails.scss';
@@ -63,7 +64,7 @@ class EntityDetails extends Component {
   }
 
   render() {
-    if (!this.state.details) return (<div />);
+    if (!this.state.details) return (<div className="navigation-controller-loading"><CircularProgress size={80} thickness={5} /> </div>);
     const details = this.state.details;
     // we ignore the relations with 'data not found' for now
     const relations = this.state.relations.filter((r) => { return (r.description !== 'data not found'); });
