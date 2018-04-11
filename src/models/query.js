@@ -70,6 +70,10 @@ class QueryBuilder {
     this.query.filters['info.p-value'] = { '<': pvalue };
   }
 
+  filterBiosample(biosample) {
+    this.query.filters['info.biosample'] = biosample;
+  }
+
   searchText(text) {
     this.query.filters.$text = text;
   }
