@@ -4,7 +4,6 @@
 	- All coordinates are set in DOM pixel units relative to the canvas (unless marked as otherwise)
 
     Todo:
-	- Viewer height should be set by content / or fill rest of page height
 	- Define a single track
 	- Define a trackset / multiple track view
 	- Define panel - a tracket with a header
@@ -24,6 +23,7 @@ import SharedResources from './ui/core/SharedResources';
 import { Object2D, Object2DInternal } from './ui/core/Object2D';
 import Rect from './ui/core/Rect';
 import { ReactObject, ReactObjectContainer } from "./ui/core/ReactObject";
+import { CLIENT_RENEG_LIMIT } from "tls";
 
 interface Props {
     width: number;
@@ -42,9 +42,6 @@ export class Viewer extends React.Component<Props, State> {
     protected mainRenderPass: RenderPass;
     protected scene: Object2D;
 
-    p: Rect;
-    e: ReactObject;
-
     constructor(props: Props) {
         super(props);
 
@@ -53,66 +50,174 @@ export class Viewer extends React.Component<Props, State> {
         }
 
         this.scene = new Object2D();
+        
+        // layout is driven by the edges which serve as the source of truth for the layout
+        // edges can change instantaneously, whereas elements within those edges may be animated to their position
+        // for a given index each edge corresponds to the _left_ side of a column
+        let verticalEdges = new Array<number>();
+        let horizontalEdges = new Array<number>();
 
-        let g = new Rect(100, 100, [0, 1, 0, 1]);
-        g.x = 30;
-        g.y = 30;
-        this.scene.add(g);
+        // cell = grid[column][row]
+        let grid = new Array<Array<Object2D>>();
 
-        let b = new Rect(10, 10, [0, 0, 1, 1]);
-        b.x = 0;
-        b.z = 0.1;
-        b.layoutParentX = 0.5;
-        b.layoutParentY = 0.5;
-        b.layoutX = -0.5;
-        b.layoutY = -0.5;
-        b.layoutW = 1;
-        b.w = -10;
-        g.add(b);
+        let scene = this.scene;
+        let paddingXPx = 1;
+        let paddingYPx = 1;
 
-        let p = new Rect(0, 0, [1, 0, 1, 1]);
-        this.p = p;
-        this.scene.add(p);
-        p.layoutX = -0.5;
-        p.layoutParentX = 0.5;
-        p.layoutW = 1;
-        p.h = 100;
-        p.w = -10;
-        p.y = 10;
-        p.z = 0.0;
-        p.y = 200;
+        let nColumns = 6;
+        let nRows = 4;
 
-        let gutterPx = 10;
-        let columns = 3;
-        for (let i = 0; i < columns; i++) {
-            let c = new Rect(0, 10, [0, 1, 1, 1]);
-            p.add(c);
-
-            // fill height subtract 10px
-            c.layoutH = 1;
-            c.h = -10;
-            // center y
-            c.layoutY = -0.5;
-            c.layoutParentY = 0.5;
-
-            // set width to 1/3 parent - gutter px
-            c.layoutW = 1.0 / columns;
-            c.w = -gutterPx;
-
-            // position at left-most of each column + gutter offset
-            c.layoutParentX = i / columns;
-            c.x = gutterPx * 0.5;
-
-            c.z = 0.1;
+        // generate evenly spaced edges
+        for (let i = 0; i < nColumns; i++) {
+            verticalEdges[i] = i / nColumns + Math.random() * 0.1;
+        }
+        verticalEdges[0] = 0;
+        for (let i = 0; i < nRows; i++) {
+            horizontalEdges[i] = i / nRows;
         }
 
-        this.e = new ReactObject(<ExampleComponent text="Testing 123" />, 100, -20);
-        this.e.layoutParentX = 1/columns;
-        this.e.layoutX = -0.5;
-        this.e.layoutParentY = 0.5;
-        this.e.layoutY = -0.5;
-        this.e.layoutH = 1;
-        p.add(this.e);
+        // fill the grid cells up with some rects
+        for (let c = 0; c < nColumns; c++) {
+            let col = new Array<Object2D>(nRows);
+            grid[c] = col;
+            for (let r = 0; r < nRows; r++) {
+                let cell = new Rect(0, 0, [c/nColumns, r/nRows, 0., 1.]);
+                col[r] = cell;
+                this.scene.add(cell);
+            }
+        }
+
+        function layoutGrid() {
+            // should set animation targets
+            for (let c = 0; c < grid.length; c++) {
+                let col = grid[c];
+                if (col == null) continue;
+                for (let r = 0; r < col.length; r++) {
+                    let cell = col[r];
+                    if (cell == null) continue;
+
+                    let leftEdge = c < 0 ? 0 : verticalEdges[c];
+                    let rightEdge = ((c + 1) >= verticalEdges.length) ? 1 : verticalEdges[c + 1];
+                    let topEdge = r < 0 ? 0 : horizontalEdges[r];
+                    let bottomEdge = ((r + 1) >= horizontalEdges.length) ? 1 : horizontalEdges[r + 1];
+
+                    cell.layoutW = rightEdge - leftEdge;
+                    cell.layoutX = -0.5;
+                    cell.layoutParentX = (rightEdge - leftEdge) * 0.5 + leftEdge;
+                    cell.w = -paddingXPx;
+
+                    cell.layoutH = bottomEdge - topEdge;
+                    cell.layoutY = -0.5;
+                    cell.layoutParentY = (bottomEdge - topEdge) * 0.5 + topEdge;
+                    cell.h = -paddingYPx;
+                }
+            }
+        }
+
+        // energy-preserving edge remove
+        // edge
+        function removeEdge(edges: Array<number>, index: number) {
+            if (index >= edges.length || index < 0) return false;
+
+            let leftEdge = edges[index];
+            let rightEdge = edges[index + 1] || 1;
+
+            let rSpanLeftEdge = edges[index + 1] || 1;
+            let rSpan = 1 - rSpanLeftEdge;
+            let lSpan = edges[index];
+            let totalSpan = rSpan + lSpan;
+
+            // determine where the left and right edges should come together
+            let edgeMergeTarget = (lSpan / totalSpan) * (rightEdge - leftEdge) + leftEdge;
+
+            // evenly redistribute all the edges ether side to fill the new space
+            let newRSpan = 1 - edgeMergeTarget;
+            let newLSpan = edgeMergeTarget;
+
+            let rSpanMultiplier = newRSpan / rSpan;
+            for (let i = index + 1; i < edges.length; i++) {
+                edges[i] = (edges[i] - rSpanLeftEdge) * rSpanMultiplier + edgeMergeTarget;
+            }
+
+            let lSpanMultiplier = newLSpan / lSpan;
+            for (let i = 1; i < index; i++) {
+                edges[i] *= lSpanMultiplier;
+            }
+
+            // remove edge from list
+            edges.splice(index, 1);
+
+            return true;
+        }
+
+        function removeColumn(index: number, forEachRemovedCell?: (cell: Object2D) => void) {
+            let edgeRemoved = removeEdge(verticalEdges, index);
+
+            // remove all cells within the column from the scene
+            let column = grid[index];
+            if (column != null) {
+                for (let r = 0; r < column.length; r++) {
+                    let cell = column[r];
+                    scene.remove(cell);
+                    if (forEachRemovedCell != null) forEachRemovedCell(cell);
+                }
+            }
+            // remove the column from the grid array
+            grid.splice(index, 1);
+
+            layoutGrid();
+            return edgeRemoved;
+        }
+
+        function removeRow(index: number, forEachRemovedCell?: (cell: Object2D) => void) {
+            let edgeRemoved = removeEdge(horizontalEdges, index);
+
+            for (let i = 0; i < grid.length; i++) {
+                let col = grid[i];
+                if (col == null) continue;
+                let cell = col[index];
+                if (cell == null) continue;
+                // remove the cell from the scene
+                scene.remove(cell);
+                // remove the row from the column
+                col.splice(index, 1);
+
+                if (forEachRemovedCell != null) forEachRemovedCell(cell);
+            }
+
+            layoutGrid();
+
+            return edgeRemoved;
+        }
+
+        function addColumn() {
+
+            let nRows = horizontalEdges.length;
+            let col = new Array<Object2D>(nRows);
+            for (let i = 0; i < nRows; i++) {
+                let cell = new Rect(0, 0, [Math.random(), Math.random(), Math.random(), 1]);
+                col[i] = cell;
+                scene.add(cell);
+            }
+            grid.push(col);
+
+            verticalEdges.push(1);
+            // shrink edges to make space
+            let lSpan = 1;
+            let newLSpan = 1 - (1 / verticalEdges.length);
+            let lSpanMultiplier = newLSpan / lSpan;
+            for (let e = 0; e < verticalEdges.length; e++) {
+                verticalEdges[e] *= lSpanMultiplier;
+            }
+
+            layoutGrid();
+        }
+
+        layoutGrid();
+
+        (window as any).removeColumn = removeColumn;
+        (window as any).removeRow = removeRow;
+        (window as any).addColumn = addColumn;
 
         this.mainRenderPass = new RenderPass(
             null,
@@ -183,22 +288,16 @@ export class Viewer extends React.Component<Props, State> {
                         outline: '1px solid blue',
                     }}
                 />
-                {this._reactObjects.map((ro) => <ReactObjectContainer key={ro.reactUid} reactObject={ro} scene={this.scene} />)}
+                {this.state.reactObjects.map((ro) => <ReactObjectContainer key={ro.reactUid} reactObject={ro} scene={this.scene} />)}
             </div>
         )
     }
 
     private _frameLoopHandle: number;
-    private _reactObjects = new Array<ReactObject>();
     protected frameLoop = () => {
         this._frameLoopHandle = window.requestAnimationFrame(this.frameLoop);
         let t_ms = window.performance.now();
         let t_s = t_ms / 1000;
-
-        this.e.content = <ExampleComponent text={Math.round(t_s) + ' s'} />
-
-        // demo animate
-        this.p.layoutW = (Math.cos(t_s) * 0.5 + 0.5) * 0.9 + 0.1;
 
         // handle user input
         // canvas.style.cursor = ...
@@ -244,6 +343,7 @@ export class Viewer extends React.Component<Props, State> {
         }
     }
 
+    private _reactObjects = new Array<ReactObject>();
     protected gatherReactObjects() {
         // find all react nodes in the scene
         let reactObjectIndex = 0;
@@ -275,28 +375,6 @@ export class Viewer extends React.Component<Props, State> {
                 reactObjects: this._reactObjects
             });
         }
-    }
-
-}
-
-class ExampleComponent extends React.Component<{text: string}, {text: string}> {
-
-    constructor(props: { text: string }) {
-        super(props);
-    }
-
-    shouldComponentUpdate(nextProps: {text: string}) {
-        return nextProps.text != this.props.text;
-    }
-
-    render() {
-        return (<div style={{
-            background: '#333',
-            borderRadius: '5px',
-            color: 'white',
-            padding: 10,
-            height: '100%',
-        }}>{this.props.text}</div>);
     }
 
 }

@@ -41,7 +41,7 @@ export class Renderer {
 		this.drawContext = new DrawContext(this.gl, this.deviceInternal.extInstanced);
 
 
-		// @! temporary initialial GL state for 2D drawing
+		// @! temporary initial GL state for 2D drawing
 		// in the future this should be applied to the root 2D node
 		this.gl.enable(this.gl.DEPTH_TEST);
 		this.gl.depthFunc(this.gl.LEQUAL);

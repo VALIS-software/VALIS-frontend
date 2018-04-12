@@ -35,8 +35,6 @@ export class App extends React.Component<Props, State> {
 	}
 
 	render() {
-		const pixelRatio = window.devicePixelRatio || 1;
-
 		return (<div>
 			<header style={{height: this.state.headerHeight}}>Header</header>
 			<Viewer width={this.state.viewerWidth} height={this.state.viewerHeight} />
@@ -46,7 +44,7 @@ export class App extends React.Component<Props, State> {
 	protected onResize = () => {
 		this.setState({
 			viewerWidth: window.innerWidth,
-			viewerHeight: window.innerHeight,
+			viewerHeight: window.innerHeight - this.headerHeight,
 		});
 	}
 

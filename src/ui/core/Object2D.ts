@@ -237,11 +237,11 @@ export class Object2D extends Renderable<Object2D> {
             let m14 = p[10] * this._z + p[14];        // z
 
             // set world matrix
-            let W = this.worldTransformMat4;
-            W[0]  = m0;   W[1] = 0;     W[2] = 0;    W[3] = 0;
-            W[4]  = 0;    W[5] = m5;    W[6] = 0;    W[7] = 0;
-            W[8]  = 0;    W[9] = 0;    W[10] = m10; W[11] = 0;
-            W[12] = m12; W[13] = m13;  W[14] = m14; W[15] = m15;
+            let w = this.worldTransformMat4;
+            w[0]  = m0;   w[1] = 0;     w[2] = 0;    w[3] = 0;
+            w[4]  = 0;    w[5] = m5;    w[6] = 0;    w[7] = 0;
+            w[8]  = 0;    w[9] = 0;    w[10] = m10; w[11] = 0;
+            w[12] = m12; w[13] = m13;  w[14] = m14; w[15] = m15;
 
             this.worldTransformNeedsUpdate = false;
 

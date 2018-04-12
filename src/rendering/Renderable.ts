@@ -35,9 +35,9 @@ export class Renderable<T extends Node<any>> extends Node<T> {
 		super();
 	}
 
+	allocateGPUResources(device: Device) {}
 	releaseGPUResources() {}
 	draw(context: DrawContext) {}
-	protected allocateGPUResources(device: Device) {}
 
 }
 

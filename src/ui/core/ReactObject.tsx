@@ -19,6 +19,10 @@ export class ReactObject extends Object2D {
         this.eventEmitter.addListener('worldTransformUpdated', listener);
     }
 
+    removeWorldTransformUpdated(listener: (...args: Array<any>) => void) {
+        this.eventEmitter.removeListener('worldTransformUpdated', listener);
+    }
+
     applyWorldTransform(transform: Float32Array | null) {
         super.applyWorldTransform(transform);
         this.eventEmitter.emit('worldTransformUpdated', this.worldTransformMat4, this.computedWidth, this.computedHeight);
