@@ -3,7 +3,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Util from '../../helpers/util.js';
 import { GENOME_LENGTH } from '../../helpers/constants.js';
-import { 
+import {
   APP_EVENT_ADD_TRACK,
   APP_EVENT_REMOVE_TRACK,
   APP_EVENT_REORDER_TRACKS,
@@ -45,8 +45,8 @@ class MultiTrackViewer extends React.Component {
     this.classNames = '';
 
     // listen to track change updates
-    props.model.addListener(this.updateViews, [APP_EVENT_ADD_TRACK, 
-                                               APP_EVENT_REORDER_TRACKS, 
+    props.model.addListener(this.updateViews, [APP_EVENT_ADD_TRACK,
+                                               APP_EVENT_REORDER_TRACKS,
                                                APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED,
                                                APP_EVENT_REMOVE_TRACK]);
 
@@ -84,7 +84,7 @@ class MultiTrackViewer extends React.Component {
       this.renderContext = Util.newRenderContext(domElem);
       this.shaders = TrackView.initializeShaders(this.renderContext);
       this.overlayShaders = OverlayView.initializeShaders(this.renderContext);
-      
+
       const renderFrame = () => {
         this.renderGL();
         requestAnimationFrame(renderFrame);
@@ -120,7 +120,7 @@ class MultiTrackViewer extends React.Component {
     const bpp = viewState.basePairsPerPixel;
     const windowSize = viewState.windowSize;
     const end = Util.endBasePair(start, bpp, windowSize);
-    
+
 
     // figure out which track the click was inside of:
     let track = null;
@@ -141,7 +141,7 @@ class MultiTrackViewer extends React.Component {
     let trackCenterPx = null;
     let trackBasePairOffset = null;
     let dataTooltip = null;
-    
+
     if (track) {
       trackHeightPx = this.views[track.guid].getHeight() * windowSize[1];
       trackBasePairOffset = this.views[track.guid].getBasePairOffset();
@@ -165,7 +165,7 @@ class MultiTrackViewer extends React.Component {
 
   handleClick(evt) {
     if (this.hoverElement) {
-      this.props.model.showEntityDetails(this.hoverElement);
+      this.props.model.clickTrackElement(this.hoverElement);
     }
   }
 
@@ -240,10 +240,10 @@ class MultiTrackViewer extends React.Component {
     this.hoverElement = null;
     let currOffset = padding;
 
-    
+
     const overlayViews = _.keys(this.overlayViews).map(key => this.overlayViews[key]);
     overlayViews.forEach(view => view.prepForRender());
-    
+
     for (let i = 0; i < numTracks; i++) {
       // setup track position
       const track = this.views[viewGuids[i]];
@@ -257,7 +257,7 @@ class MultiTrackViewer extends React.Component {
     }
 
     overlayViews.forEach(view => view.render(this.renderContext, this.overlayShaders));
-    
+
     this.forceUpdate();
   }
 
@@ -271,7 +271,7 @@ class MultiTrackViewer extends React.Component {
       const coord = viewState.lastDragCoord.slice();
       const trackInfo = this.getTrackInfoAtCoordinate(coord);
       const x = ANNOTATION_OFFSET + Util.pixelForBasePair(trackInfo.basePair, viewState.startBasePair, viewState.basePairsPerPixel, viewState.windowSize);
-      
+
       if (trackInfo.track !== null && trackInfo.tooltip !== null && trackInfo.tooltip.values) {
         const y = (-trackInfo.tooltip.positionNormalized + 0.5) * trackInfo.trackHeightPx + trackInfo.trackCenterPx;
         const basePair = trackInfo.basePair + trackInfo.basePairOffset;
@@ -286,7 +286,7 @@ class MultiTrackViewer extends React.Component {
     const headers = [];
     const backgrounds = [];
     const viewGuids = _.keys(this.views);
-    
+
     if (this.viewModel) {
       const windowState = this.viewModel.getViewState();
       for (let i = 0; i < viewGuids.length; i++) {
@@ -309,12 +309,12 @@ class MultiTrackViewer extends React.Component {
           {backgrounds}
         </div>
         <XAxis viewModel={this.viewModel} />
-        <canvas 
-          id="webgl-canvas" 
-          className={this.classNames} 
-          onDragOver={this.onDragOver} 
-          onDrop={this.onDrop} 
-          onDragLeave={this.onDragLeave} 
+        <canvas
+          id="webgl-canvas"
+          className={this.classNames}
+          onDragOver={this.onDragOver}
+          onDrop={this.onDrop}
+          onDragLeave={this.onDragLeave}
         />
         <div id="webgl-overlay">
           {tooltip}
