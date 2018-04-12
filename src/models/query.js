@@ -70,6 +70,20 @@ class QueryBuilder {
     this.query.filters['info.p-value'] = { '<': pvalue };
   }
 
+  filterBiosample(biosample) {
+    this.query.filters['info.biosample'] = biosample;
+  }
+
+  filterTargets(targets) {
+    if (targets.length > 0) {
+      this.query.filters['info.targets'] = { $all: targets };
+    }
+  }
+
+  filterInfotypes(type) {
+    this.query.filters['info.types'] = type;
+  }
+
   searchText(text) {
     this.query.filters.$text = text;
   }

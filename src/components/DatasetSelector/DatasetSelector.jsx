@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import GWASSelector from '../GWASSelector/GWASSelector.jsx';
 import GenomeSelector from '../GenomeSelector/GenomeSelector.jsx';
 import TrackSelector from '../TrackSelector/TrackSelector.jsx';
+import ENCODESelector from '../ENCODESelector/ENCODESelector.jsx';
 import DataListItem from '../DataListItem/DataListItem.jsx';
 
 import {
@@ -12,6 +13,7 @@ import {
   TRACK_TYPE_GENOME,
   TRACK_TYPE_GWAS,
   TRACK_TYPE_EQTL,
+  TRACK_TYPE_ENCODE,
   TRACK_TYPE_3D,
   TRACK_TYPE_NETWORK,
 } from '../../helpers/constants.js';
@@ -45,6 +47,8 @@ class DatasetSelector extends Component {
       this.appModel.pushView('Genomic Elements', null, (<GenomeSelector appModel={this.appModel} />));
     } else if (trackType === TRACK_TYPE_GWAS) {
       this.appModel.pushView('GWAS Track', null, (<GWASSelector appModel={this.appModel} />));
+    } else if (trackType === TRACK_TYPE_ENCODE) {
+      this.appModel.pushView('ENCODE Track', null, (<ENCODESelector appModel={this.appModel} />));
     } else if (trackType === TRACK_TYPE_FUNCTIONAL) {
       this.appModel.pushView('Functional Tracks', null, (<TrackSelector trackType={trackType} appModel={this.appModel} />));
     } else if (trackType === TRACK_TYPE_SEQUENCE) {
@@ -64,7 +68,7 @@ class DatasetSelector extends Component {
         <DataListItem
           title={di.title}
           description={di.description}
-          onClick={() =>  this.dataSetSelected(di.track_type)}
+          onClick={() => this.dataSetSelected(di.track_type)}
           key={di.title}
         />
       );

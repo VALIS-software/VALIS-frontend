@@ -42,15 +42,23 @@ class SearchResultsView extends Component {
           results: results,
           needsRefresh: false,
         });
-      }); 
+      });
       return (<div className="navigation-controller-loading"><CircularProgress size={80} thickness={5} /> </div>);
     }
     const searchResultItems = this.state.results.map(result => {
+      let title = '';
+      let description = '';
+      const sourceStr = result.source.join('/');
+      if (result.type === 'trait') {
+        title = result.info.description;
+        description = 'Source: ' + sourceStr;
+      } else {
+        title = result.type + ' ' + result.name;
+        description = result.info.description ? result.info.description : 'Source: ' + sourceStr;
+      }
       return (<DataListItem
-        title={result.name}
-        description={''}
-        entityId={result._id}
-        appModel={this.props.appModel}
+        title={title}
+        description={description}
         onClick={() =>  this.resultSelected(result)}
         key={result._id}
       />);

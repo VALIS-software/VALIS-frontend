@@ -126,8 +126,11 @@ class GenomeAPI {
 		});
 	}
 
-	getQueryResults(query) {
-		const requestUrl = `${this.baseUrl}/query`;
+	getQueryResults(query, full=false) {
+		let requestUrl = `${this.baseUrl}/query/basic`;
+		if (full) {
+			requestUrl = `${this.baseUrl}/query/full`;
+		}
 		return axios.post(requestUrl, query).then(data => {
 			return data.data;
 		});
