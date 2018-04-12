@@ -8,6 +8,7 @@ import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import Checkbox from 'material-ui/Checkbox';
+import Divider from 'material-ui/Divider';
 import CheckCircle from 'material-ui/svg-icons/action/check-circle';
 import HighlightOff from 'material-ui/svg-icons/action/highlight-off';
 import QueryBuilder, { QUERY_TYPE_GENOME } from '../../models/query.js';
@@ -45,8 +46,8 @@ class ENCODESelector extends Component {
     }
     this.state = {
       title: '',
-      biosampleValue: 0,
-      genomeTypeValue: 0,
+      biosampleValue: null,
+      genomeTypeValue: null,
       chromoNameValue: 0,
       minLength : 10,
       maxnumber: 10000,
@@ -63,28 +64,100 @@ class ENCODESelector extends Component {
     for (let i = 0; i < this.availableChromoNames.length; i++) {
       this.chromoNameItems.push(<MenuItem value={i} key={i} primaryText={this.availableChromoNames[i]} />);
     }
-    // use api to pull all available types
+    // use api to pull all available biosamples
+    this.updateAvailableBiosamples();
+    this.updateAvailableTypes();
+    this.updateAvailableTargets();
+  }
+
+  updateAvailableBiosamples() {
+    if (this.selectedBiosample) return;
     const builder = new QueryBuilder();
-    builder.newGenomeQuery();
+    builder.newInfoQuery();
     builder.filterSource(DATA_SOURCE_ENCODE);
-    const genomeQuery = builder.build();
-    this.api.getDistinctValues('type', genomeQuery).then(data => {
-      this.setState({
-        availableTypes: data,
-      });
-    });
-    // use api to pull all available Biosamples
-    this.api.getDistinctValues('info.biosample', genomeQuery).then(data => {
+    builder.filterType('ENCODE_accession');
+    if (this.selectedType) {
+      builder.filterInfotypes(this.selectedType);
+    }
+    if (this.selectedTargets) {
+      builder.filterTargets(this.selectedTargets);
+    }
+    const infoQuery = builder.build();
+    this.api.getDistinctValues('info.biosample', infoQuery).then(data => {
+      // Keep the current selection of biosample
+      let newBiosampleValue = null;
+      if (this.state.biosampleValue !== null) {
+        const currentBiosample = this.state.availableBiosamples[this.state.biosampleValue];
+        newBiosampleValue = data.indexOf(currentBiosample);
+        if (newBiosampleValue < 0) {
+          newBiosampleValue = null;
+        }
+      }
       this.setState({
         availableBiosamples: data,
+        biosampleValue: newBiosampleValue,
       });
     });
-    // use api to pull all available targets
-    this.api.getDistinctValues('info.targets', genomeQuery).then(data => {
-      const checked = new Array(data.length).fill(false);
+  }
+
+  updateAvailableTypes() {
+    if (this.selectedType) return;
+    const builder = new QueryBuilder();
+    builder.newInfoQuery();
+    builder.filterSource(DATA_SOURCE_ENCODE);
+    builder.filterType('ENCODE_accession');
+    if (this.selectedBiosample) {
+      builder.filterBiosample(this.selectedBiosample);
+    }
+    if (this.selectedTargets) {
+      builder.filterTargets(this.selectedTargets);
+    }
+    const infoQuery = builder.build();
+    this.api.getDistinctValues('info.types', infoQuery).then(data => {
+      // Keep the current selection of type
+      let newTypeValue = null;
+      if (this.state.genomeTypeValue !== null) {
+        const currentType = this.state.availableTypes[this.state.genomeTypeValue];
+        newTypeValue = data.indexOf(currentType);
+        if (newTypeValue < 0) {
+          newTypeValue = null;
+        }
+      }
+      this.setState({
+        availableTypes: data,
+        genomeTypeValue: newTypeValue,
+      });
+    });
+  }
+
+  updateAvailableTargets() {
+    if (this.selectedTargets) return;
+    const builder = new QueryBuilder();
+    builder.newInfoQuery();
+    builder.filterSource(DATA_SOURCE_ENCODE);
+    builder.filterType('ENCODE_accession');
+    if (this.selectedBiosample) {
+      builder.filterBiosample(this.selectedBiosample);
+    }
+    if (this.selectedType) {
+      builder.filterInfotypes(this.selectedType);
+    }
+    const infoQuery = builder.build();
+    this.api.getDistinctValues('info.targets', infoQuery).then(data => {
+      // Keep the current selection of targets
+      const newChecked = new Array(data.length).fill(false);
+      for (let i = 0; i < this.state.checked.length; i++) {
+        if (this.state.checked[0]) {
+          const checkedTarget = this.state.availableTargets[i];
+          const newCheckedIndex = data.indexOf(checkedTarget);
+          if (newCheckedIndex > 0) {
+            newChecked[newCheckedIndex] = true;
+          }
+        }
+      }
       this.setState({
         availableTargets: data,
-        checked: checked,
+        checked: newChecked,
       });
     });
   }
@@ -96,26 +169,56 @@ class ENCODESelector extends Component {
     });
   }
 
+  handelUpdateBiosample(event, index, value) {
+    this.setState({
+      biosampleValue: value,
+    });
+    if (!this.state.fixTitle) {
+      const newTitle = (value === null) ? '' : this.state.availableBiosamples[value];
+      this.setState({
+        title: newTitle,
+      });
+    }
+    // Update the available types and targets
+    if (value !== null) {
+      this.selectedBiosample = this.state.availableBiosamples[value];
+      this.updateAvailableTypes();
+      this.updateAvailableTargets();
+    }
+  }
+
   handleUpdateType(event, index, value) {
     this.setState({
       genomeTypeValue: value,
     });
-    if (!this.state.fixTitle) {
-      this.setState({
-        title: this.state.availableTypes[value],
-      });
+    // Update the available biosample and targets
+    if (value !== null) {
+      this.selectedType = this.state.availableTypes[value];
+      this.updateAvailableBiosamples();
+      this.updateAvailableTargets();
     }
+  }
+
+  handleCheckBox(index) {
+    const newChecked = this.state.checked;
+    newChecked[index] = !newChecked[index];
+    this.setState({
+      checked: newChecked,
+    });
+    // Update the available biosamples and types
+    this.selectedTargets = [];
+    for (let i = 0; i < this.state.checked.length; i++) {
+      if (this.state.checked[i]) {
+        this.selectedTargets.push(this.state.availableTargets[i]);
+      }
+    }
+    this.updateAvailableBiosamples();
+    this.updateAvailableTypes();
   }
 
   handleUpdateChromName(event, index, value) {
     this.setState({
       chromoNameValue: value,
-    });
-  }
-
-  handelUpdateBiosample(event, index, value) {
-    this.setState({
-      biosampleValue: value,
     });
   }
 
@@ -128,14 +231,6 @@ class ENCODESelector extends Component {
   handleUpdateMaxNumber(event, value) {
     this.setState({
       maxnumber: transform(value),
-    });
-  }
-
-  handleCheckBox(index) {
-    const newChecked = this.state.checked;
-    newChecked[index] = !newChecked[index];
-    this.setState({
-      checked: newChecked,
     });
   }
 
@@ -171,11 +266,11 @@ class ENCODESelector extends Component {
 
   render() {
     const { availableTypes, availableBiosamples, availableTargets, checked } = this.state;
-    const genomeTypeItems = [];
+    const genomeTypeItems = [<MenuItem value={null} primaryText="" key={-1} />];
     for (let i = 0; i < availableTypes.length; i++) {
       genomeTypeItems.push(<MenuItem value={i} key={i} primaryText={availableTypes[i]} />);
     }
-    const biosampleItems = [];
+    const biosampleItems = [<MenuItem value={null} primaryText="" key={-1} />];
     for (let i = 0; i < availableBiosamples.length; i++) {
       biosampleItems.push(<MenuItem value={i} key={i} primaryText={availableBiosamples[i]} />);
     }
@@ -183,8 +278,6 @@ class ENCODESelector extends Component {
     for (let i = 0; i < availableTargets.length; i++) {
       targetCheckboxes.push(
         <Checkbox
-          checkedIcon={<CheckCircle />}
-          uncheckedIcon={<HighlightOff />}
           key={i}
           label={availableTargets[i]}
           checked={checked[i]}
@@ -199,26 +292,33 @@ class ENCODESelector extends Component {
           floatingLabelText="Track Title"
           onChange={this.handleUpdateTitle}
           errorText={!this.state.title ? 'This field is required' : ''}
-        /><br /> <br />
+        /> <br />
         <SelectField
           value={this.state.biosampleValue}
           floatingLabelText="Biosample"
           onChange={this.handelUpdateBiosample}
           maxHeight={200}
+          errorText={this.state.biosampleValue === null ? 'Pick one' : null}
         >
           {biosampleItems}
-        </SelectField><br /> <br />
-        <div> Target </div> <br />
-        {targetCheckboxes}
-        <br />
+        </SelectField> <br />
         <SelectField
           value={this.state.genomeTypeValue}
           floatingLabelText="Type"
           onChange={this.handleUpdateType}
           maxHeight={200}
+          errorText={this.state.genomeTypeValue === null ? 'Pick one' : null}
         >
           {genomeTypeItems}
-        </SelectField><br /> <br />
+        </SelectField> <br /> <br />
+        { targetCheckboxes && <div>
+          <div className="item-header"> Target </div>
+          <Divider />
+          <div className="target-selections">
+            {targetCheckboxes}
+          </div>
+          </div>
+        }
         <SelectField
           value={this.state.chromoNameValue}
           floatingLabelText="Chromosome"
@@ -226,8 +326,8 @@ class ENCODESelector extends Component {
           maxHeight={200}
         >
           {this.chromoNameItems}
-        </SelectField><br /> <br /> <br />
-        <div> {'Length > '} {this.state.minLength} </div>
+        </SelectField><br /> <br />
+        <div className="item-header"> {'Length > '} {this.state.minLength} </div>
         <Slider
           min={0}
           max={100}
@@ -235,7 +335,7 @@ class ENCODESelector extends Component {
           value={this.state.minLength}
           onChange={this.handleUpdateMinLength}
         />
-        <div> {'Max Number of Results: '} {this.state.maxnumber} </div>
+        <div className="item-header"> {'Max Number of Results: '} {this.state.maxnumber} </div>
         <Slider
           min={logmin}
           max={logmax}
