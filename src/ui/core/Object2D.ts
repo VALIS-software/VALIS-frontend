@@ -113,7 +113,7 @@ export class Object2D extends Renderable<Object2D> {
 
     constructor() {
         super();
-        // set render to false for instances of Objec2D and true for subclasses
+        // set render to false for instances of Object2D and true for subclasses
         let isSubclass = Object.getPrototypeOf(this) !== Object2D.prototype;
         this.render = isSubclass;
     }

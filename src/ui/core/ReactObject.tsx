@@ -1,4 +1,4 @@
-import Object2D from "./Object2D";
+import Object2D, { Object2DInternal } from "./Object2D";
 import React = require("react");
 
 export class ReactObject extends Object2D {
@@ -47,10 +47,12 @@ export class ReactObjectContainer extends React.Component<{
     }) {
         super(props);
 
+        let reactObjectInternal = props.reactObject as any as Object2DInternal;
+
         this.state = {
-            worldTransform: new Float32Array(16),
-            computedWidth: 0,
-            computedHeight: 0
+            worldTransform: reactObjectInternal.worldTransformMat4,
+            computedWidth: reactObjectInternal.computedWidth,
+            computedHeight: reactObjectInternal.computedHeight
         }
 
         props.reactObject.onWorldTransformUpdated((worldTransform, computedWidth, computedHeight) => {
@@ -75,6 +77,7 @@ export class ReactObjectContainer extends React.Component<{
         let sz = w[10] / scene.sz;
 
         return <div
+            className="react-object-container"
             style={{
                 position: 'absolute',
                 transform: `matrix3d(
@@ -85,6 +88,7 @@ export class ReactObjectContainer extends React.Component<{
                 )`,
                 width: this.state.computedWidth,
                 height: this.state.computedHeight,
+                zIndex: 1,
                 willChange: 'transform, width, height',
             }}
         >

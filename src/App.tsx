@@ -1,5 +1,7 @@
 import * as React from "react";
-import { Viewer } from "./Viewer";
+import { AppCanvas } from "./AppCanvas";
+import Object2D from "./ui/core/Object2D";
+import TrackViewer from "./ui/TrackViewer";
 
 interface Props {}
 
@@ -7,6 +9,8 @@ interface State {
 	headerHeight: number;
 	viewerWidth: number;
 	viewerHeight: number;
+
+	canvasContent: Object2D;
 }
 
 export class App extends React.Component<Props, State> {
@@ -15,11 +19,14 @@ export class App extends React.Component<Props, State> {
 
 	constructor(props: Props) {
 		super(props);
+
+		let trackViewer = new TrackViewer();
 		
 		this.state = {
 			headerHeight: this.headerHeight,
 			viewerWidth: window.innerWidth,
-			viewerHeight: window.innerHeight - this.headerHeight
+			viewerHeight: window.innerHeight - this.headerHeight,
+			canvasContent: trackViewer
 		};
 	}
 
@@ -37,7 +44,11 @@ export class App extends React.Component<Props, State> {
 	render() {
 		return (<div>
 			<header style={{height: this.state.headerHeight}}>Header</header>
-			<Viewer width={this.state.viewerWidth} height={this.state.viewerHeight} />
+			<AppCanvas
+				width={this.state.viewerWidth}
+				height={this.state.viewerHeight} 
+				content={this.state.canvasContent}
+			/>
 		</div>)
 	}
 
