@@ -57,15 +57,17 @@ class TrackViewer extends Object2D {
 
         this.add(this.gridContainer);
 
+        let trackHeaderContainer = new Object2D();
+        trackHeaderContainer.w = this._trackHeaderWidth_px;
+        trackHeaderContainer.y = this._regionViewHeaderHeight_px;
+        trackHeaderContainer.x = this.gridLayoutOptions.spacingAbsolute.x * 0.5;
+        this.add(trackHeaderContainer);
+
         let trackHeaders = new Array<Object2D>();
 
         /**/
         // cell = grid[column][row]
         let grid = new Array<Array<Object2D>>();
-        let edges = {
-            vertical: new Array<number>(),
-            horizontal: new Array<number>(),
-        }
 
         let scene = null;
         let paddingXPx = 1;
@@ -73,6 +75,14 @@ class TrackViewer extends Object2D {
 
         let nColumns = this.regionViews.length;
         let nRows = this.tracks.length;
+
+        // create track header objects
+        for (let r = 0; r < nRows; r++) {
+            let track = this.tracks[r];
+            let trackHeader = new ReactObject(this.trackHeaderElement({ name: track.name }), 0, 0);
+            trackHeaders[r] = trackHeader;
+            trackHeaderContainer.add(trackHeader);
+        }
 
         // fill the grid cells up with some rects
         for (let c = 0; c < nColumns; c++) {
@@ -89,14 +99,6 @@ class TrackViewer extends Object2D {
                 rect.layoutH = 1;
                 cell.add(rect);
 
-                if (c === 0) {
-                    let track = this.tracks[r];
-                    let trackHeader = new ReactObject(this.trackHeaderElement({name: track.name}), 0, 0);
-                    trackHeader.layoutX = -1;
-                    trackHeader.w = this._trackHeaderWidth_px;
-                    trackHeader.layoutH = 1;
-                    cell.add(trackHeader);
-                }
                 if (r === 0) {
                     let regionView = this.regionViews[c];
                     let regionViewHeader = new ReactObject(this.regionViewHeaderElement({ name: regionView.name }), 0, 0);
@@ -109,24 +111,41 @@ class TrackViewer extends Object2D {
             }
         }
 
-
-        for (let c = 0; c < nColumns + 1; c++) edges.vertical[c] = c / nColumns;
-        for (let r = 0; r < nRows + 1; r++) edges.horizontal[r] = r * 100;
+        for (let c = 0; c < nColumns + 1; c++) this.edges.vertical[c] = c / nColumns;
+        for (let r = 0; r < nRows + 1; r++) this.edges.horizontal[r] = r * 100;
 
         let layout = () => {
-            GridLayout.layoutGridCells(grid, edges, this.gridLayoutOptions);
+            // layout track headers
+            GridLayout.layoutGridCells(
+                [trackHeaders],
+                {
+                    vertical: [0, this._trackHeaderWidth_px],
+                    horizontal: this.edges.horizontal,
+                },
+                {
+                    layoutVerticalRelative: false,
+                    layoutHorizontalRelative: false,
+                    spacingAbsolute: {
+                        x: 0,
+                        y: this.gridLayoutOptions.spacingAbsolute.y
+                    },
+                    spacingRelative: {x: 0, y: 0},
+                }
+            );
+
+            GridLayout.layoutGridCells(grid, this.edges, this.gridLayoutOptions);
         }
        
         (window as any).removeCol = (i: number) => {
             let col = grid[i];
             if (col != null) {
                 for (let i = 0; i < col.length; i++) {
-                    this.remove(col[i]);
+                    this.gridContainer.remove(col[i]);
                 }
                 grid.splice(i, 1);
             }
 
-            GridLayout.removeColumnSpaceFill(edges.vertical, i);
+            GridLayout.removeColumnSpaceFill(this.edges.vertical, i);
             
             layout();
         }
