@@ -13,10 +13,6 @@ import './NavigationController.scss';
 
 class NavigationController extends Component {
 
-  constructor(props) {
-    super(props);
-  }
-
   static getDerivedStateFromProps(nextProps, prevState) {
     if (!prevState) prevState = {};
     prevState.views = nextProps.views;

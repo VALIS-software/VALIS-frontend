@@ -14,7 +14,7 @@ import NavigationController from '../NavigationController/NavigationController.j
 import AppModel, {
   APP_EVENT_LOADING_STATE_CHANGED,
   APP_EVENT_EDIT_TRACK_VIEW_SETTINGS,
-  APP_EVENT_SHOW_ENTITY_DETAIL,
+  APP_EVENT_CLICK_TRACK_ELEMENT,
   APP_EVENT_DATA_SET_SELECTED,
   APP_EVENT_PUSH_VIEW,
   APP_EVENT_POP_VIEW,
@@ -45,7 +45,7 @@ class App extends React.Component {
     this.pushView = this.pushView.bind(this);
     this.closeView = this.closeView.bind(this);
     this.showTrackSettings = this.showTrackSettings.bind(this);
-    this.showEntityDetails = this.showEntityDetails.bind(this);
+    this.clickTrackElement = this.clickTrackElement.bind(this);
 
     this.viewModel = new ViewModel();
     this.appModel = new AppModel();
@@ -53,7 +53,7 @@ class App extends React.Component {
     this.appModel.addAnnotationTrack('GRCh38');
 
     this.appModel.addListener(this.updateLoadingState, APP_EVENT_LOADING_STATE_CHANGED);
-    this.appModel.addListener(this.showEntityDetails, APP_EVENT_SHOW_ENTITY_DETAIL);
+    this.appModel.addListener(this.clickTrackElement, APP_EVENT_CLICK_TRACK_ELEMENT);
     this.appModel.addListener(this.showTrackSettings, APP_EVENT_EDIT_TRACK_VIEW_SETTINGS);
     this.appModel.addListener(this.dataSetSelected, APP_EVENT_DATA_SET_SELECTED);
     this.appModel.addListener(this.popView, APP_EVENT_POP_VIEW);
@@ -61,25 +61,24 @@ class App extends React.Component {
     this.appModel.addListener(this.closeView, APP_EVENT_CLOSE_VIEW);
   }
 
-  showEntityDetails(event) {
+  clickTrackElement(event) {
     if (event.data !== null) {
       if (event.data.aggregation === true) {
         // if the annotation is an aggregation then zoom
         this.viewModel.setViewRegionUsingRange(event.data.startBp, event.data.endBp);
       } else if (this.currentView() && event.data.id === this.currentView().info) {
+        // if we click on the same element twice we hide the sidebar
         this.appModel.popView();
       } else {
-          let title = '';
-          if (event.data.title) {
-            title = event.data.title;
-          }
-          const dataID = event.data.id;
-          // pop any previous entity detail view:
-          if (this.currentView() && this.currentView().view.type.prototype instanceof EntityDetails) {
-            this.appModel.popView();
-          }
-          const elem = (<EntityDetails appModel={this.appModel} dataID={dataID} />);
-          this.appModel.pushView(title, dataID, elem);
+        // we start a new view history
+        let title = '';
+        if (event.data.title) {
+          title = event.data.title;
+        }
+        const dataID = event.data.id;
+        this.appModel.closeView();
+        const elem = (<EntityDetails appModel={this.appModel} dataID={dataID} />);
+        this.appModel.pushView(title, dataID, elem);
       }
     }
   }

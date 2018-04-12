@@ -57,11 +57,9 @@ class EntityDetails extends Component {
   }
 
   handleClickRelation(relation) {
-    const element = {
-      id: relation.id,
-      title: relation.title,
-    };
-    this.appModel.showEntityDetails(element);
+    const dataID = relation.id;
+    const elem = (<EntityDetails appModel={this.appModel} dataID={dataID} />);
+    this.appModel.pushView(relation.title, dataID, elem);
   }
 
   render() {
