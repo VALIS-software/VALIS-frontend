@@ -75,7 +75,13 @@ class QueryBuilder {
   }
 
   filterTargets(targets) {
-    this.query.filters['info.targets'] = targets;
+    if (targets.length > 0) {
+      this.query.filters['info.targets'] = { $all: targets };
+    }
+  }
+
+  filterInfotypes(type) {
+    this.query.filters['info.types'] = type;
   }
 
   searchText(text) {
