@@ -18,6 +18,7 @@ import AppModel, {
   APP_EVENT_DATA_SET_SELECTED,
   APP_EVENT_PUSH_VIEW,
   APP_EVENT_POP_VIEW,
+  APP_EVENT_CLOSE_VIEW,
 } from '../../models/appModel.js';
 
 
@@ -26,12 +27,6 @@ import ViewModel from '../../models/viewModel.js';
 import './App.scss';
 
 const _ = require('underscore');
-
-const SIDEBAR_TYPE_TRACK_SETTINGS = 'track-settings';
-const SIDEBAR_TYPE_ENTITY_DETAILS = 'entity-details';
-const SIDEBAR_TYPE_BROWSE_DATA = 'browse-data';
-const SIDEBAR_TYPE_BROWSE_DATA_GWAS = 'browse-data-gwas';
-const SIDEBAR_TYPE_BROWSE_DATA_GENOME = 'browse-data-genome';
 
 class App extends React.Component {
   constructor(props) {
@@ -48,6 +43,7 @@ class App extends React.Component {
 
     this.popView = this.popView.bind(this);
     this.pushView = this.pushView.bind(this);
+    this.closeView = this.closeView.bind(this);
     this.showTrackSettings = this.showTrackSettings.bind(this);
     this.showEntityDetails = this.showEntityDetails.bind(this);
 
@@ -62,6 +58,7 @@ class App extends React.Component {
     this.appModel.addListener(this.dataSetSelected, APP_EVENT_DATA_SET_SELECTED);
     this.appModel.addListener(this.popView, APP_EVENT_POP_VIEW);
     this.appModel.addListener(this.pushView, APP_EVENT_PUSH_VIEW);
+    this.appModel.addListener(this.closeView, APP_EVENT_CLOSE_VIEW);
   }
 
   showEntityDetails(event) {
@@ -77,6 +74,10 @@ class App extends React.Component {
             title = event.data.title;
           }
           const dataID = event.data.id;
+          // pop any previous entity detail view:
+          if (this.currentView() && this.currentView().view.type.prototype instanceof EntityDetails) {
+            this.appModel.popView();
+          }
           const elem = (<EntityDetails appModel={this.appModel} dataID={dataID} />);
           this.appModel.pushView(title, dataID, elem);
       }
@@ -96,6 +97,12 @@ class App extends React.Component {
     viewsCopy.push(view.data);
     this.setState({
       views: viewsCopy,
+    });
+  }
+
+  closeView() {
+    this.setState({
+      views: [],
     });
   }
 
@@ -127,7 +134,6 @@ class App extends React.Component {
     const progress =  (<LinearProgress color={color} />);
     const views = this.state.views;
 
-    const title = (this.state.currSideBarType === SIDEBAR_TYPE_TRACK_SETTINGS) ? 'Track Settings' : this.state.currSideBarInfo;
     return (
       <MuiThemeProvider>
         <div className="site-wrapper">

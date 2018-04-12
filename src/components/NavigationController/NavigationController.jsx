@@ -15,11 +15,6 @@ class NavigationController extends Component {
 
   constructor(props) {
     super(props);
-    this.popView = this.popView.bind(this);
-  }
-
-  popView() {
-    this.props.model.popView();
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
@@ -30,9 +25,11 @@ class NavigationController extends Component {
 
   render() {
     if (!this.state) return (<div />);
-    const popView = this.popView;
-    const icon = this.state.views.length === 1 ? <NavigationClose /> : <NavigationArrowBack />;
-    const navButton = (<IconButton onClick={popView}>{icon}</IconButton>);
+    const popView = () => { this.props.model.popView(); };
+    const closeView = () => { this.props.model.closeView(); };
+
+    const navButton = this.state.views.length === 1 ? (<div />) : (<IconButton onClick={popView}><NavigationArrowBack /></IconButton>);
+    const closeButton = (<IconButton onClick={closeView}><NavigationClose /></IconButton>);
 
     const curr = this.state.views[this.state.views.length - 1];
     const visible = curr !== undefined;
@@ -44,6 +41,7 @@ class NavigationController extends Component {
       <AppBar
         title={title}
         iconElementLeft={navButton}
+        iconElementRight={closeButton}
       />
       {view}
     </Drawer>);

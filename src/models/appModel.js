@@ -19,6 +19,7 @@ const APP_EVENT_ADD_DATASET_BROWSER = 'ADD_DATASET_BROWSER';
 const APP_EVENT_DATA_SET_SELECTED = 'DATA_SET_SELECTED';
 const APP_EVENT_PUSH_VIEW = 'PUSH_VIEW';
 const APP_EVENT_POP_VIEW = 'POP_VIEW';
+const APP_EVENT_CLOSE_VIEW = 'CLOSE_VIEW';
 
 export {
   APP_EVENT_ADD_TRACK,
@@ -33,6 +34,7 @@ export {
   APP_EVENT_DATA_SET_SELECTED,
   APP_EVENT_PUSH_VIEW,
   APP_EVENT_POP_VIEW,
+  APP_EVENT_CLOSE_VIEW,
 };
 
 class AppModel extends EventCreator {
@@ -72,6 +74,10 @@ class AppModel extends EventCreator {
 
   popView() {
     this.notifyListeners(APP_EVENT_POP_VIEW);
+  }
+
+  closeView() {
+    this.notifyListeners(APP_EVENT_CLOSE_VIEW);
   }
 
   editTrackViewSettings(viewGuid) {
