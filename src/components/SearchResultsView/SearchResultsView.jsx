@@ -26,7 +26,7 @@ class SearchResultsView extends Component {
     const title = '';
     const dataID = result._id;
     const elem = (<EntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={result._id} />);
-    this.appModel.pushView(title, dataID, elem);
+    this.viewModel.pushView(title, dataID, elem);
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {

@@ -16,8 +16,8 @@ class ZoomToButton extends Component {
   zoom() {
     const { start, end, padding } = this.props;
     const totalRange = (1.0 + padding) * (end - start);
-    const finalStart = (start + end - totalRange) / 2.0;
-    const finalEnd = (start + end + totalRange) / 2.0;
+    const finalStart = start + (start + end - totalRange) / 2.0;
+    const finalEnd = start + (start + end + totalRange) / 2.0;
     this.props.viewModel.setViewRegionUsingRange(finalStart, finalEnd);
   }
 
