@@ -165,7 +165,7 @@ class MultiTrackViewer extends React.Component {
 
   handleClick(evt) {
     if (this.hoverElement) {
-      this.props.viewModel.showEntityDetails(this.hoverElement);
+      this.props.viewModel.clickTrackElement(this.hoverElement);
     }
   }
 

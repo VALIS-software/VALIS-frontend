@@ -9,7 +9,7 @@ const VIEW_EVENT_STATE_CHANGED = 'view_event_state_changed';
 const VIEW_EVENT_CLICK = 'view_event_click';
 const VIEW_EVENT_SELECTION = 'view_event_selection';
 const VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS = 'EDIT_TRACK_VIEW';
-const VIEW_EVENT_SHOW_ENTITY_DETAIL = 'SHOW_ENTITY_DETAIL';
+const VIEW_EVENT_TRACK_ELEMENT_CLICKED = 'TRACK_ELEMENT_CLICKED';
 const VIEW_EVENT_ADD_DATASET_BROWSER = 'ADD_DATASET_BROWSER';
 const VIEW_EVENT_DATA_SET_SELECTED = 'DATA_SET_SELECTED';
 const VIEW_EVENT_PUSH_VIEW = 'PUSH_VIEW';
@@ -21,7 +21,7 @@ export {
   VIEW_EVENT_STATE_CHANGED,
   VIEW_EVENT_CLICK,
   VIEW_EVENT_SELECTION,
-  VIEW_EVENT_SHOW_ENTITY_DETAIL,
+  VIEW_EVENT_TRACK_ELEMENT_CLICKED,
   VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS,
   VIEW_EVENT_DATA_SET_SELECTED,
   VIEW_EVENT_PUSH_VIEW,
@@ -130,8 +130,8 @@ class ViewModel extends EventCreator {
     this.notifyListeners(VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS, viewGuid);
   }
 
-  showEntityDetails(element) {
-    this.notifyListeners(VIEW_EVENT_SHOW_ENTITY_DETAIL, element);
+  clickTrackElement(element) {
+    this.notifyListeners(VIEW_EVENT_TRACK_ELEMENT_CLICKED, element);
   }
 
   dataSetSelected(trackType) {
