@@ -5,8 +5,19 @@
  */
 export class Node<T extends Node<any>> {
 
-	get children(): Iterable<T> { return this._children; }
+	get children(): Iterable<T> { return this._childrenIterable; }
+
 	protected _children = new Array<T>();
+
+	// reverse-order iterate over children to avoid issues if a child is removed while iterating
+	protected _childrenIterable = {
+		*[Symbol.iterator]() {
+			for (let i = this._children.length; i >= i; i--) {
+				let c = this._children[i];
+				yield c;
+			}
+		}
+	}
 
 	add(child: T) {
 		this._children.push(child);
