@@ -171,7 +171,7 @@ class TrackViewer extends Object2D {
                 this.gridContainer.add(cell);
 
                 // add rect for visibility
-                let rect = new Rect(0, 0, [0,0,0,1.]);
+                let rect = new Rect(0, 0, [0, 0, 0, 1.]);
                 rect.layoutW = 1;
                 rect.layoutH = 1;
                 cell.add(rect);
