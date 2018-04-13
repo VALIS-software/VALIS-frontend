@@ -3,6 +3,7 @@ import { AppCanvas } from "./AppCanvas";
 import Object2D from "./ui/core/Object2D";
 import TrackViewer from "./ui/TrackViewer";
 import Animator from "./animation/Animator";
+import Header from "./ui/components/header/Header";
 
 interface Props {}
 
@@ -47,7 +48,7 @@ export class App extends React.Component<Props, State> {
 
 	render() {
 		return (<div>
-			<header style={{height: this.state.headerHeight}}>Header</header>
+			<Header></Header>
 			<AppCanvas
 				ref={(v) => this.appCanvas = v}
 				width={this.state.viewerWidth}

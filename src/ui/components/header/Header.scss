@@ -1,0 +1,12 @@
+.header {
+	position: relative;
+	margin-bottom: 30px;
+
+	box-shadow: 0 2px 20px #0000004f;
+	z-index: 1;
+
+	.search-box {
+		width: 100%;
+		padding-left: 32px;
+	}
+}
