@@ -12,8 +12,6 @@ class GridLayout {
             y: number,
             w: number,
             h: number,
-            layoutX: number,
-            layoutY: number,
             layoutW: number,
             layoutH: number,
             layoutParentX: number,
@@ -23,7 +21,7 @@ class GridLayout {
             vertical: Array<number>,
             horizontal: Array<number>,
         },
-        layoutOptions?: {
+        layoutOptions: {
             layoutVerticalRelative: boolean,
             layoutHorizontalRelative: boolean,
             spacingAbsolute: {
@@ -36,15 +34,6 @@ class GridLayout {
             }
         }
     ) {
-        if (layoutOptions == null) {
-            layoutOptions = {
-                layoutVerticalRelative: false,
-                layoutHorizontalRelative: false,
-                spacingAbsolute: {x: 0, y: 0},
-                spacingRelative: {x: 0, y: 0},
-            }
-        }
-
         let sa = layoutOptions.spacingAbsolute;
         let sr = layoutOptions.spacingRelative;
 
@@ -54,35 +43,74 @@ class GridLayout {
             for (let r = 0; r < col.length; r++) {
                 let cell = col[r];
                 if (cell == null) continue;
-
-                let leftEdge = edges.vertical[c];
-                let rightEdge = edges.vertical[c + 1];
-                let topEdge = edges.horizontal[r];
-                let bottomEdge = edges.horizontal[r + 1];
-
-                if (layoutOptions.layoutVerticalRelative) {
-                    cell.layoutW = (rightEdge - leftEdge) - sr.x;
-                    cell.layoutParentX = leftEdge + sr.x * 0.5;
-                    cell.x = sa.x * 0.5;
-                    cell.w = -sa.x;
-                } else {
-                    cell.x = leftEdge + sa.x * 0.5;
-                    cell.w = (rightEdge - leftEdge) - sa.x;
-                    cell.layoutW = -sr.x;
-                    cell.layoutParentX = sr.x * 0.5;
-                }
-
-                if (layoutOptions.layoutHorizontalRelative) {
-                    cell.layoutH = (bottomEdge - topEdge) - sr.y;
-                    cell.layoutParentY = topEdge + sr.y * 0.5;
-                    cell.h = -sa.y;
-                } else {
-                    cell.y = topEdge + sa.y * 0.5;
-                    cell.h = (bottomEdge - topEdge) - sa.y;
-                    cell.layoutH = -sr.y;
-                    cell.layoutParentY = sr.y * 0.5;
-                }
+                GridLayout.layoutGridCell(cell, c, r, edges, layoutOptions);
             }
+        }
+    }
+
+    static layoutGridCell(
+        cell: {
+            x: number,
+            y: number,
+            w: number,
+            h: number,
+            layoutW: number,
+            layoutH: number,
+            layoutParentX: number,
+            layoutParentY: number,
+        },
+        columnIndex: number,
+        rowIndex: number,
+        edges: {
+            vertical: Array<number>,
+            horizontal: Array<number>,
+        },
+        layoutOptions: {
+            layoutVerticalRelative: boolean,
+            layoutHorizontalRelative: boolean,
+            spacingAbsolute: {
+                x: number,
+                y: number,
+            },
+            spacingRelative: {
+                x: number,
+                y: number,
+            }
+        }
+    ) {
+        let c = columnIndex;
+        let r = rowIndex;
+
+        let sa = layoutOptions.spacingAbsolute;
+        let sr = layoutOptions.spacingRelative;
+
+        let leftEdge = edges.vertical[c];
+        let rightEdge = edges.vertical[c + 1];
+        let topEdge = edges.horizontal[r];
+        let bottomEdge = edges.horizontal[r + 1];
+
+        if (layoutOptions.layoutVerticalRelative) {
+            cell.layoutW = (rightEdge - leftEdge) - sr.x;
+            cell.layoutParentX = leftEdge + sr.x * 0.5;
+            cell.x = sa.x * 0.5;
+            cell.w = -sa.x;
+        } else {
+            cell.x = leftEdge + sa.x * 0.5;
+            cell.w = (rightEdge - leftEdge) - sa.x;
+            cell.layoutW = -sr.x;
+            cell.layoutParentX = sr.x * 0.5;
+        }
+
+        if (layoutOptions.layoutHorizontalRelative) {
+            cell.layoutH = (bottomEdge - topEdge) - sr.y;
+            cell.layoutParentY = topEdge + sr.y * 0.5;
+            cell.y = sa.y * 0.5;
+            cell.h = -sa.y;
+        } else {
+            cell.y = topEdge + sa.y * 0.5;
+            cell.h = (bottomEdge - topEdge) - sa.y;
+            cell.layoutH = -sr.y;
+            cell.layoutParentY = sr.y * 0.5;
         }
     }
 
