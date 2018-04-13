@@ -20,6 +20,7 @@ class TrackSelector extends Component {
   constructor(props) {
     super(props);
     this.appModel = props.appModel;
+    this.viewModel = props.viewModel;
     this.api = this.appModel.api;
     this.state = {
       tracks : [],
@@ -67,6 +68,7 @@ class TrackSelector extends Component {
 
 TrackSelector.propTypes = {
   appModel: PropTypes.object,
+  viewModel: PropTypes.object,
   trackType: PropTypes.string,
 };
 

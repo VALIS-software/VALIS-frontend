@@ -91,13 +91,13 @@ class Header extends Component {
       builder.setLimit(150);
     }
     const query = builder.build();
-    const view = (<SearchResultsView text={text} query={query} appModel={this.props.model} />);
-    this.props.model.pushView('Search Results', query, view);
+    const view = (<SearchResultsView text={text} query={query} viewModel={this.props.viewModel}  appModel={this.props.model} />);
+    this.props.viewModel.pushView('Search Results', query, view);
   }
 
   addDatasetBrowser() {
-    const view = (<DatasetSelector appModel={this.props.model} />);
-    this.props.model.pushView('Select Dataset', null, view);
+    const view = (<DatasetSelector viewModel={this.props.viewModel} appModel={this.props.model} />);
+    this.props.viewModel.pushView('Select Dataset', null, view);
   }
 
   render() {

@@ -35,10 +35,10 @@ class GWASSelector extends Component {
     this.handleUpdatePValue = this.handleUpdatePValue.bind(this);
     this.handleUpdateMaxNumber = this.handleUpdateMaxNumber.bind(this);
     this.updateTraits = this.updateTraits.bind(this);
-    if (props.appModel) {
-      this.appModel = props.appModel;
-      this.api = this.appModel.api;
-    }
+    this.appModel = props.appModel;
+    this.viewModel = props.viewModel;
+    this.api = this.appModel.api;
+    
     this.state = {
       title: '',
       searchTrait: '',
@@ -209,6 +209,7 @@ class GWASSelector extends Component {
 
 GWASSelector.propTypes = {
   appModel: PropTypes.object,
+  viewModel: PropTypes.object,
 };
 
 export default GWASSelector;

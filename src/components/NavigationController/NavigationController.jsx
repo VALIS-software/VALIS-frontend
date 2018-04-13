@@ -13,10 +13,6 @@ import './NavigationController.scss';
 
 class NavigationController extends Component {
 
-  constructor(props) {
-    super(props);
-  }
-
   static getDerivedStateFromProps(nextProps, prevState) {
     if (!prevState) prevState = {};
     prevState.views = nextProps.views;
@@ -25,8 +21,8 @@ class NavigationController extends Component {
 
   render() {
     if (!this.state) return (<div />);
-    const popView = () => { this.props.model.popView(); };
-    const closeView = () => { this.props.model.closeView(); };
+    const popView = () => { this.props.viewModel.popView(); };
+    const closeView = () => { this.props.viewModel.closeView(); };
 
     const navButton = this.state.views.length === 1 ? (<div />) : (<IconButton onClick={popView}><NavigationArrowBack /></IconButton>);
     const closeButton = (<IconButton onClick={closeView}><NavigationClose /></IconButton>);
@@ -49,7 +45,7 @@ class NavigationController extends Component {
 }
 
 NavigationController.propTypes = {
-  model: PropTypes.object,
+  viewModel: PropTypes.object,
   views: PropTypes.array,
 };
 
