@@ -67,8 +67,6 @@ export class AppCanvas extends React.Component<Props, State> {
         SharedResources.initialize(this.device);
 
         console.log(`Viewer created with device %c"${this.device.name}"`, 'font-weight: bold');
-
-        this.frameLoop();
     }
 
     componentWillUnmount() {
@@ -80,8 +78,6 @@ export class AppCanvas extends React.Component<Props, State> {
 
         this.device = null;
         this.renderer = null;
-
-        window.cancelAnimationFrame(this._frameLoopHandle);
     }
 
     componentDidUpdate(prevProps: Props, prevState: State, snapshot: any) {
@@ -124,17 +120,7 @@ export class AppCanvas extends React.Component<Props, State> {
         )
     }
 
-    private _frameLoopHandle: number;
-    protected frameLoop = () => {
-        this._frameLoopHandle = window.requestAnimationFrame(this.frameLoop);
-        let t_ms = window.performance.now();
-        let t_s = t_ms / 1000;
-
-        // handle user input
-        // canvas.style.cursor = ...
-        // step animation
-
-        // -- scene graph must not change after this point --
+    renderCanvas() {
         this.renderer.render(this.mainRenderPass);
         this.updateReactObjects();
     }
