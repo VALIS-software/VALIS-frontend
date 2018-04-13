@@ -1,11 +1,11 @@
 import { tmpdir } from "os";
 
 /**
- * JavaScript port of my haxe physically based animation library
+ * Physically based animation
  */
 export class Animator {
 
-    // @! probably should be linked list
+    // @! maybe better as a linked list
     protected static active = new Array<{
         object: any,
         easingFields: { [key: string]: void },
@@ -43,7 +43,6 @@ export class Animator {
         step: (dt_ms: number, state: DynamicMotionState, parameters: T) => void,
         parameters: T
     ) {
-        
         let entry = Animator.getActive(object);
         if (entry == null) {
             entry = {
@@ -113,7 +112,7 @@ export class Animator {
             let entry = Animator.active[i];
             let object = entry.object;
 
-            // @! todo, support fix-path easings
+            // @! todo, support fixed-path easings
 
             let dynamicMotionFields = Object.keys(entry.dynamicMotionFields);
             for (let field of dynamicMotionFields) {
@@ -127,6 +126,7 @@ export class Animator {
                 let kineticEnergy = .5 * dynamicMotion.state.v * dynamicMotion.state.v;
                 let totalEnergy = dynamicMotion.state.pe + kineticEnergy;
 
+                // @! magic number: can we derive a condition that's linked to user-known properties
                 if (totalEnergy < 0.0001) {
                     delete entry.dynamicMotionFields[field];
                     object[field] = dynamicMotion.target
@@ -145,7 +145,7 @@ export class Animator {
         tension: number,
         friction: number,
     }) {
-        // semi-analytic spring, unconditionally stable
+        // analytic integration (unconditionally stable)
         // references:
         // http://mathworld.wolfram.com/OverdampedSimpleHarmonicMotion.html
         // http://mathworld.wolfram.com/CriticallyDampedSimpleHarmonicMotion.html
