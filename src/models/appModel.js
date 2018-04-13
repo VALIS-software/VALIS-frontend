@@ -10,16 +10,9 @@ const APP_EVENT_ADD_TRACK = 'ADD_TRACK';
 const APP_EVENT_REMOVE_TRACK = 'REMOVE_TRACK';
 const APP_EVENT_REORDER_TRACKS = 'REORDER_TRACKS';
 const APP_EVENT_LOADING_STATE_CHANGED = 'LOADING_CHANGED';
-const APP_EVENT_EDIT_TRACK_VIEW_SETTINGS = 'EDIT_TRACK_VIEW';
-const APP_EVENT_CLICK_TRACK_ELEMENT = 'CLICK_TRACK_ELEMENT';
 const APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED = 'TRACK_VIEW_SETTINGS_UPDATED';
 const APP_EVENT_ADD_OVERLAY = 'ADD_OVERLAY';
 const APP_EVENT_REMOVE_OVERLAY = 'REMOVE_OVERLAY';
-const APP_EVENT_ADD_DATASET_BROWSER = 'ADD_DATASET_BROWSER';
-const APP_EVENT_DATA_SET_SELECTED = 'DATA_SET_SELECTED';
-const APP_EVENT_PUSH_VIEW = 'PUSH_VIEW';
-const APP_EVENT_POP_VIEW = 'POP_VIEW';
-const APP_EVENT_CLOSE_VIEW = 'CLOSE_VIEW';
 
 export {
   APP_EVENT_ADD_TRACK,
@@ -28,13 +21,7 @@ export {
   APP_EVENT_REMOVE_TRACK,
   APP_EVENT_REORDER_TRACKS,
   APP_EVENT_LOADING_STATE_CHANGED,
-  APP_EVENT_CLICK_TRACK_ELEMENT,
-  APP_EVENT_EDIT_TRACK_VIEW_SETTINGS,
-  APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED,
-  APP_EVENT_DATA_SET_SELECTED,
-  APP_EVENT_PUSH_VIEW,
-  APP_EVENT_POP_VIEW,
-  APP_EVENT_CLOSE_VIEW,
+  APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED, 
 };
 
 class AppModel extends EventCreator {
@@ -66,30 +53,6 @@ class AppModel extends EventCreator {
     if (wasLoading !== isLoading) {
       this.notifyListeners(APP_EVENT_LOADING_STATE_CHANGED, isLoading);
     }
-  }
-
-  pushView(title, info, elem) {
-    this.notifyListeners(APP_EVENT_PUSH_VIEW, { title: title, info: info, view: elem });
-  }
-
-  popView() {
-    this.notifyListeners(APP_EVENT_POP_VIEW);
-  }
-
-  closeView() {
-    this.notifyListeners(APP_EVENT_CLOSE_VIEW);
-  }
-
-  editTrackViewSettings(viewGuid) {
-    this.notifyListeners(APP_EVENT_EDIT_TRACK_VIEW_SETTINGS, viewGuid);
-  }
-
-  clickTrackElement(element) {
-    this.notifyListeners(APP_EVENT_CLICK_TRACK_ELEMENT, element);
-  }
-
-  dataSetSelected(trackType) {
-    this.notifyListeners(APP_EVENT_DATA_SET_SELECTED, trackType);
   }
 
   addDataTrack(trackId) {

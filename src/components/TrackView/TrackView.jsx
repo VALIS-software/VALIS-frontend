@@ -19,9 +19,10 @@ import Util from '../../helpers/util.js';
 const GPUTextWebGL = require('../../../lib/gputext/gputext-webgl.js');
 
 class TrackView {
-  constructor(guid, appModel, color=0.6, height=0.1, basePairOffset=0) {
+  constructor(guid, appModel, viewModel, color=0.6, height=0.1, basePairOffset=0) {
     this.guid = guid;
     this.appModel = appModel;
+    this.viewModel = viewModel;
     this.height = height;
     this.yOffset = 0.0;
     this.color = color;
@@ -143,8 +144,8 @@ class TrackView {
     const key = this.guid;
     const model = this.appModel;
     const offset = this.getBasePairOffset();
-
-    return (<TrackHeader key={key} showAxis={showAxis} offset={offset} guid={key} top={top} height={height} min={min} max={max} title={title} appModel={model} />);
+    const viewModel = this.viewModel;
+    return (<TrackHeader key={key} showAxis={showAxis} offset={offset} guid={key} top={top} height={height} min={min} max={max} title={title} appModel={model} viewModel={viewModel} />);
   }
 
   getBackground(windowState) {

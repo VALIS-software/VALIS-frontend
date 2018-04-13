@@ -13,16 +13,18 @@ import NavigationController from '../NavigationController/NavigationController.j
 
 import AppModel, {
   APP_EVENT_LOADING_STATE_CHANGED,
-  APP_EVENT_EDIT_TRACK_VIEW_SETTINGS,
-  APP_EVENT_CLICK_TRACK_ELEMENT,
-  APP_EVENT_DATA_SET_SELECTED,
-  APP_EVENT_PUSH_VIEW,
-  APP_EVENT_POP_VIEW,
-  APP_EVENT_CLOSE_VIEW,
 } from '../../models/appModel.js';
 
 
-import ViewModel from '../../models/viewModel.js';
+import ViewModel, {
+  VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS,
+  VIEW_EVENT_TRACK_ELEMENT_CLICKED,
+  VIEW_EVENT_DATA_SET_SELECTED,
+  VIEW_EVENT_PUSH_VIEW,
+  VIEW_EVENT_POP_VIEW,
+  VIEW_EVENT_CLOSE_VIEW,
+
+} from '../../models/viewModel.js';
 // Styles
 import './App.scss';
 
@@ -53,12 +55,12 @@ class App extends React.Component {
     this.appModel.addAnnotationTrack('GRCh38');
 
     this.appModel.addListener(this.updateLoadingState, APP_EVENT_LOADING_STATE_CHANGED);
-    this.appModel.addListener(this.clickTrackElement, APP_EVENT_CLICK_TRACK_ELEMENT);
-    this.appModel.addListener(this.showTrackSettings, APP_EVENT_EDIT_TRACK_VIEW_SETTINGS);
-    this.appModel.addListener(this.dataSetSelected, APP_EVENT_DATA_SET_SELECTED);
-    this.appModel.addListener(this.popView, APP_EVENT_POP_VIEW);
-    this.appModel.addListener(this.pushView, APP_EVENT_PUSH_VIEW);
-    this.appModel.addListener(this.closeView, APP_EVENT_CLOSE_VIEW);
+    this.viewModel.addListener(this.clickTrackElement, VIEW_EVENT_TRACK_ELEMENT_CLICKED);
+    this.viewModel.addListener(this.showTrackSettings, VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS);
+    this.viewModel.addListener(this.dataSetSelected, VIEW_EVENT_DATA_SET_SELECTED);
+    this.viewModel.addListener(this.popView, VIEW_EVENT_POP_VIEW);
+    this.viewModel.addListener(this.pushView, VIEW_EVENT_PUSH_VIEW);
+    this.viewModel.addListener(this.closeView, VIEW_EVENT_CLOSE_VIEW);
   }
 
   clickTrackElement(event) {
@@ -67,8 +69,7 @@ class App extends React.Component {
         // if the annotation is an aggregation then zoom
         this.viewModel.setViewRegionUsingRange(event.data.startBp, event.data.endBp);
       } else if (this.currentView() && event.data.id === this.currentView().info) {
-        // if we click on the same element twice we hide the sidebar
-        this.appModel.popView();
+        this.viewModel.popView();
       } else {
         // we start a new view history
         let title = '';
@@ -76,9 +77,9 @@ class App extends React.Component {
           title = event.data.title;
         }
         const dataID = event.data.id;
-        this.appModel.closeView();
-        const elem = (<EntityDetails appModel={this.appModel} dataID={dataID} />);
-        this.appModel.pushView(title, dataID, elem);
+        this.viewModel.closeView();
+        const elem = (<EntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={dataID} />);
+        this.viewModel.pushView(title, dataID, elem);
       }
     }
   }
@@ -115,8 +116,8 @@ class App extends React.Component {
       if (this.currentView() && event.data === this.currentView().info) {
         this.appModel.popView();
       } else {
-        const elem = (<TrackViewSettings guid={event.data} model={this.appModel} />);
-        this.appModel.pushView('Track Settings', event.data, elem);
+        const elem = (<TrackViewSettings guid={event.data} viewModel={this.viewModel} model={this.appModel} />);
+        this.viewModel.pushView('Track Settings', event.data, elem);
       }
     }
   }
@@ -136,10 +137,10 @@ class App extends React.Component {
     return (
       <MuiThemeProvider>
         <div className="site-wrapper">
-          <Header model={this.appModel} viewModel={this.viewModel} />
+          <Header viewModel={this.viewModel} model={this.appModel} viewModel={this.viewModel} />
           {progress}
           <MultiTrackViewer model={this.appModel} viewModel={this.viewModel} />
-          <NavigationController model={this.appModel} views={views} popView={this.popView} pushView={this.pushView} />
+          <NavigationController viewModel={this.viewModel} views={views} />
         </div>
       </MuiThemeProvider>);
   }

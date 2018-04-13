@@ -25,10 +25,10 @@ class DatasetSelector extends Component {
   constructor(props) {
     super(props);
     this.dataSetSelected = this.dataSetSelected.bind(this);
-    if (props.appModel) {
-      this.appModel = props.appModel;
-      this.api = this.appModel.api;
-    }
+    this.viewModel = props.viewModel;
+    this.appModel = props.appModel;
+    this.api = this.appModel.api;
+    
     this.state = {
       dataInfo : [],
     };
@@ -44,17 +44,17 @@ class DatasetSelector extends Component {
 
   dataSetSelected(trackType) {
     if (trackType === TRACK_TYPE_GENOME) {
-      this.appModel.pushView('Genomic Elements', null, (<GenomeSelector appModel={this.appModel} />));
+      this.viewModel.pushView('Genomic Elements', null, (<GenomeSelector appModel={this.appModel} viewModel={this.viewModel} />));
     } else if (trackType === TRACK_TYPE_GWAS) {
-      this.appModel.pushView('GWAS Track', null, (<GWASSelector appModel={this.appModel} />));
+      this.viewModel.pushView('GWAS Track', null, (<GWASSelector appModel={this.appModel} viewModel={this.viewModel} />));
     } else if (trackType === TRACK_TYPE_ENCODE) {
-      this.appModel.pushView('ENCODE Track', null, (<ENCODESelector appModel={this.appModel} />));
+      this.viewModel.pushView('ENCODE Track', null, (<ENCODESelector appModel={this.appModel} viewModel={this.viewModel} />));
     } else if (trackType === TRACK_TYPE_FUNCTIONAL) {
-      this.appModel.pushView('Functional Tracks', null, (<TrackSelector trackType={trackType} appModel={this.appModel} />));
+      this.viewModel.pushView('Functional Tracks', null, (<TrackSelector trackType={trackType} appModel={this.appModel} viewModel={this.viewModel} />));
     } else if (trackType === TRACK_TYPE_SEQUENCE) {
-      this.appModel.pushView('Sequence Tracks', null, (<TrackSelector trackType={trackType} appModel={this.appModel} />));
+      this.viewModel.pushView('Sequence Tracks', null, (<TrackSelector trackType={trackType} appModel={this.appModel} viewModel={this.viewModel} />));
     } else if (trackType === TRACK_TYPE_NETWORK) {
-      this.appModel.pushView('Network Tracks', null, (<TrackSelector trackType={trackType} appModel={this.appModel} />));
+      this.viewModel.pushView('Network Tracks', null, (<TrackSelector trackType={trackType} appModel={this.appModel} viewModel={this.viewModel} />));
     }
   }
 
@@ -79,6 +79,7 @@ class DatasetSelector extends Component {
 
 DatasetSelector.propTypes = {
   appModel: PropTypes.object,
+  viewModel: PropTypes.object,
 };
 
 export default DatasetSelector;

@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import DataListItem from '../DataListItem/DataListItem.jsx';
 import EntityDetails from '../EntityDetails/EntityDetails.jsx';
+import ZoomToButton from '../ZoomToButton/ZoomToButton.jsx';
 import CircularProgress from 'material-ui/CircularProgress';
 
 // Styles
@@ -12,6 +13,7 @@ class SearchResultsView extends Component {
   constructor(props) {
     super(props);
     this.appModel = props.appModel;
+    this.viewModel = props.viewModel;
     this.api = this.appModel.api;
     this.state = {
       query: null,
@@ -23,8 +25,8 @@ class SearchResultsView extends Component {
   resultSelected(result) {
     const title = '';
     const dataID = result._id;
-    const elem = (<EntityDetails appModel={this.appModel} dataID={result._id} />);
-    this.appModel.pushView(title, dataID, elem);
+    const elem = (<EntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={result._id} />);
+    this.viewModel.pushView(title, dataID, elem);
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
@@ -56,6 +58,7 @@ class SearchResultsView extends Component {
         title = result.type + ' ' + result.name;
         description = result.info.description ? result.info.description : 'Source: ' + sourceStr;
       }
+
       return (<DataListItem
         title={title}
         description={description}
@@ -72,6 +75,7 @@ class SearchResultsView extends Component {
 
 SearchResultsView.propTypes = {
   appModel: PropTypes.object,
+  viewModel: PropTypes.object,
   query: PropTypes.object,
   text: PropTypes.string,
 };
