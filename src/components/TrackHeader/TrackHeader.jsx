@@ -28,7 +28,7 @@ class TrackHeader extends Component {
   }
 
   onClick(evt) {
-    this.props.appModel.editTrackViewSettings(this.props.guid);
+    this.props.viewModel.editTrackViewSettings(this.props.guid);
   }
 
   onDragStart(evt) {
@@ -133,6 +133,7 @@ TrackHeader.propTypes = {
    title: PropTypes.string,
    offset: PropTypes.number,
    appModel: PropTypes.object,
+   viewModel: PropTypes.object,
    guid: PropTypes.string,
 };
 

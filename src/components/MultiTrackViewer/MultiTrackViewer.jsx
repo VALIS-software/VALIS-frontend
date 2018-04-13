@@ -165,7 +165,7 @@ class MultiTrackViewer extends React.Component {
 
   handleClick(evt) {
     if (this.hoverElement) {
-      this.props.model.showEntityDetails(this.hoverElement);
+      this.props.viewModel.showEntityDetails(this.hoverElement);
     }
   }
 
@@ -208,7 +208,7 @@ class MultiTrackViewer extends React.Component {
     this.tracks = event.sender.tracks;
     event.sender.tracks.forEach(track => {
       if (!this.views[track.guid]) {
-        newViews[track.guid] = new TrackView(track.guid, this.props.model, track.color, track.height, track.basePairOffset);
+        newViews[track.guid] = new TrackView(track.guid, this.props.model, this.props.viewModel, track.color, track.height, track.basePairOffset);
       } else {
         newViews[track.guid] = this.views[track.guid];
       }

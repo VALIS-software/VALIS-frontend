@@ -14,7 +14,7 @@ import Paper from 'material-ui/Paper';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import CircularProgress from 'material-ui/CircularProgress';
 import DataListItem from '../DataListItem/DataListItem.jsx';
-
+import ZoomToButton from '../ZoomToButton/ZoomToButton.jsx';
 // Styles
 import './EntityDetails.scss';
 
@@ -24,6 +24,7 @@ class EntityDetails extends Component {
     super(props);
     if (props.appModel) {
       this.appModel = props.appModel;
+      this.viewModel = props.viewModel;
       this.api = this.appModel.api;
     }
     this.state = {
@@ -67,11 +68,12 @@ class EntityDetails extends Component {
   render() {
     if (!this.state.details) return (<div className="navigation-controller-loading"><CircularProgress size={80} thickness={5} /> </div>);
     const details = this.state.details;
+    const viewModel = this.viewModel;
     // we ignore the relations with 'data not found' for now
     const relations = this.state.relations.filter((r) => { return (r.description !== 'data not found'); });
     return (
       <div className="entity-details">
-        <DetailsHeader details={details} />
+        <DetailsHeader details={details} viewModel={viewModel} />
         <br />
         <Paper style={{ borderRadius: '10px', overflow: 'hidden' }}>
           <DetailsTable details={details} />
@@ -97,6 +99,7 @@ class EntityDetails extends Component {
 EntityDetails.propTypes = {
   dataID: PropTypes.string,
   appModel: PropTypes.object,
+  viewModel: PropTypes.object,
 };
 
 function DetailsHeader(props) {
@@ -107,9 +110,11 @@ function DetailsHeader(props) {
   if (details.info.description) {
     description = unescape(details.info.description);
   }
+  
+  const zoomBtn = (<ZoomToButton viewModel={props.viewModel} start={details.start} end={details.end} padding={0.2} />);
   return (
     <div className="entity-header">
-      <div className="entity-name">{name}</div>
+      <div className="entity-name">{name}{zoomBtn}</div>
       <div className="entity-desc">{description}</div>
     </div>
   );
@@ -117,6 +122,7 @@ function DetailsHeader(props) {
 
 DetailsHeader.propTypes = {
   details: PropTypes.object,
+  viewModel: PropTypes.object,
 };
 
 function DetailsTable(props) {
