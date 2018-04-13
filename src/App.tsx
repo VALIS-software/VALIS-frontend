@@ -80,7 +80,7 @@ export class App extends React.Component<Props, State> {
 		// canvas.style.cursor = ...
 		// convert mouse coordinates into clip-space for bounds checking
 		// step animation
-		Animator.step(dt_ms / 1000);
+		Animator.step(Math.min(dt_ms / 1000, 1/30));
 
 		// -- scene graph must not change after this point --
 		this.appCanvas.renderCanvas();
