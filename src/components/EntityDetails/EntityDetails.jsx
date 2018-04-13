@@ -110,9 +110,15 @@ function DetailsHeader(props) {
   if (details.info.description) {
     description = unescape(details.info.description);
   }
-  const absoluteStart = Util.chromosomeRelativeToUniversalBasePair(details.chromid, details.start);
-  const absoluteEnd = Util.chromosomeRelativeToUniversalBasePair(details.chromid, details.end);
-  const zoomBtn = (<ZoomToButton viewModel={props.viewModel} start={absoluteStart} end={absoluteEnd} padding={0.2} />);
+  
+  let zoomBtn = (<div />);
+
+  if (details.chromid) {
+    const absoluteStart = Util.chromosomeRelativeToUniversalBasePair(details.chromid, details.start);
+    const absoluteEnd = Util.chromosomeRelativeToUniversalBasePair(details.chromid, details.end);
+    zoomBtn = (<ZoomToButton viewModel={props.viewModel} start={absoluteStart} end={absoluteEnd} padding={0.2} />);    
+  }
+
   return (
     <div className="entity-header">
       <div className="entity-name">{name}{zoomBtn}</div>

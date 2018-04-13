@@ -69,7 +69,7 @@ class App extends React.Component {
         // if the annotation is an aggregation then zoom
         this.viewModel.setViewRegionUsingRange(event.data.startBp, event.data.endBp);
       } else if (this.currentView() && event.data.id === this.currentView().info) {
-        this.appModel.popView();
+        this.viewModel.popView();
       } else {
         // we start a new view history
         let title = '';
