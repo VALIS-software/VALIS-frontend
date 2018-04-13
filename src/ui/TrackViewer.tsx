@@ -3,6 +3,10 @@ import GridLayout from "./GridLayout";
 import Rect from "./core/Rect";
 import React = require("react");
 import ReactObject from "./core/ReactObject";
+import Animator from "../animation/Animator";
+
+import IconButton from 'material-ui/IconButton';
+import SvgClose from "material-ui/svg-icons/navigation/close";
 
 class TrackViewer extends Object2D {
 
@@ -34,11 +38,17 @@ class TrackViewer extends Object2D {
         }
     }
 
-    protected gridContainer = new Object2D();
+    protected trackHeaderWidth_px: number = 210;
+    protected regionViewHeaderHeight_px: number = 50;
+    protected defaultTrackHeight_px: number = 100;
 
-    protected _trackHeaderWidth_px: number = 250;
-    protected _regionViewHeaderHeight_px: number = 50;
-    protected _defaultTrackHeight_px: number = 100;
+    protected gridContainer: Object2D;
+    protected trackHeaderContainer: Object2D;
+
+    // cell = grid[column][row]
+    protected gridCells:Array<Array<Object2D>>;
+    protected trackHeaders:Array<Object2D>;
+    protected regionViewHeaders:Array<ReactObject>;
 
     constructor() {
         super();
@@ -48,31 +58,98 @@ class TrackViewer extends Object2D {
         this.layoutW = 1;
         this.layoutH = 1;
 
-        this.gridContainer.x = this._trackHeaderWidth_px;
-        this.gridContainer.w = -this._trackHeaderWidth_px;
-        this.gridContainer.y = this._regionViewHeaderHeight_px;
-        this.gridContainer.h = -this._regionViewHeaderHeight_px;
+        this.gridContainer = new Object2D();
+        this.add(this.gridContainer);
+        this.trackHeaderContainer = new Object2D();
+        this.add(this.trackHeaderContainer);
+
+        this.gridCells = new Array<Array<Object2D>>();
+        this.trackHeaders = new Array<Object2D>();
+        this.regionViewHeaders = new Array<ReactObject>();
+
+        this.initializeWithDummyData();
+
+        this.layout(false);
+
+       (window as any).removeCol = (i:number) => {
+           this.removeRegionViewIndex(i);
+       }
+    }
+
+    protected removeRegionView(regionView: RegionView) {
+        this.removeRegionViewIndex(this.regionViews.indexOf(regionView));
+    }
+    
+    protected removeRegionViewIndex(columnIndex: number) {
+        let col = this.gridCells[columnIndex];
+        if (col != null) {
+            for (let i = 0; i < col.length; i++) {
+                this.gridContainer.remove(col[i]);
+            }
+            this.gridCells.splice(columnIndex, 1);
+            this.regionViews.splice(columnIndex, 1);
+            this.regionViewHeaders.splice(columnIndex, 1);
+        }
+
+        for (let i = 0; i < this.regionViews.length; i++) {
+            this.regionViewHeaders[i].content = this.regionViewHeaderElement({
+                name: this.regionViews[i].name,
+                onClose: () => {
+                    this.removeRegionView(this.regionViews[i]);
+                },
+                enableClose: this.regionViews.length > 1
+            });
+        }
+
+        GridLayout.removeColumnSpaceFill(this.edges.vertical, columnIndex);
+        this.layout();
+    }
+
+    protected layout(animate: boolean = true) {
+        // layout grid container
+        this.gridContainer.x = this.trackHeaderWidth_px + this.gridLayoutOptions.spacingAbsolute.x * 0.5;
+        this.gridContainer.w = -this.trackHeaderWidth_px - this.gridLayoutOptions.spacingAbsolute.x;
+        this.gridContainer.y = this.regionViewHeaderHeight_px;
+        this.gridContainer.h = -this.regionViewHeaderHeight_px;
         this.gridContainer.layoutW = 1;
         this.gridContainer.layoutH = 1;
+        // layout track header container
+        this.trackHeaderContainer.w = this.trackHeaderWidth_px;
+        this.trackHeaderContainer.y = this.regionViewHeaderHeight_px;
+        this.trackHeaderContainer.x = this.gridLayoutOptions.spacingAbsolute.x;
 
-        this.add(this.gridContainer);
+        // layout track headers as a 1 column grid
+        // this is done so this fix-widths grid is independent from any changes in the flexible width grid
+        GridLayout.layoutGridCells(
+            [this.trackHeaders],
+            {
+                vertical: [0, this.trackHeaderWidth_px],
+                horizontal: this.edges.horizontal,
+            },
+            {
+                layoutVerticalRelative: false,
+                layoutHorizontalRelative: false,
+                spacingAbsolute: {
+                    x: 0,
+                    y: this.gridLayoutOptions.spacingAbsolute.y
+                },
+                spacingRelative: { x: 0, y: 0 },
+            }
+        );
 
-        let trackHeaderContainer = new Object2D();
-        trackHeaderContainer.w = this._trackHeaderWidth_px;
-        trackHeaderContainer.y = this._regionViewHeaderHeight_px;
-        trackHeaderContainer.x = this.gridLayoutOptions.spacingAbsolute.x * 0.5;
-        this.add(trackHeaderContainer);
+        for (let c = 0; c < this.gridCells.length; c++) {
+            let column = this.gridCells[c];
+            for (let r = 0; r < column.length; r++) {
+                let cell = column[r];
 
-        let trackHeaders = new Array<Object2D>();
+                let fieldTargets = {};
+                GridLayout.layoutGridCell(fieldTargets as any, c, r, this.edges, this.gridLayoutOptions);
+                Animator.springTo(cell, fieldTargets, animate ? 1 : 0, 600, 80);
+            }
+        }
+    }
 
-        /**/
-        // cell = grid[column][row]
-        let grid = new Array<Array<Object2D>>();
-
-        let scene = null;
-        let paddingXPx = 1;
-        let paddingYPx = 1;
-
+    protected initializeWithDummyData() {
         let nColumns = this.regionViews.length;
         let nRows = this.tracks.length;
 
@@ -80,32 +157,39 @@ class TrackViewer extends Object2D {
         for (let r = 0; r < nRows; r++) {
             let track = this.tracks[r];
             let trackHeader = new ReactObject(this.trackHeaderElement({ name: track.name }), 0, 0);
-            trackHeaders[r] = trackHeader;
-            trackHeaderContainer.add(trackHeader);
+            this.trackHeaders[r] = trackHeader;
+            this.trackHeaderContainer.add(trackHeader);
         }
 
         // fill the grid cells up with some rects
         for (let c = 0; c < nColumns; c++) {
             let col = new Array<Object2D>(nRows);
-            grid[c] = col;
+            this.gridCells[c] = col;
             for (let r = 0; r < nRows; r++) {
                 let cell = new Object2D();
                 col[r] = cell;
                 this.gridContainer.add(cell);
 
                 // add rect for visibility
-                let rect = new Rect(0, 0, [c / nColumns, r / nRows, 0., 1.]);
+                let rect = new Rect(0, 0, [0,0,0,1.]);
                 rect.layoutW = 1;
                 rect.layoutH = 1;
                 cell.add(rect);
 
                 if (r === 0) {
                     let regionView = this.regionViews[c];
-                    let regionViewHeader = new ReactObject(this.regionViewHeaderElement({ name: regionView.name }), 0, 0);
+                    let regionViewHeader = new ReactObject(this.regionViewHeaderElement({
+                        name: regionView.name,
+                        onClose: () => {
+                            this.removeRegionView(regionView);
+                        },
+                        enableClose: this.regionViews.length > 1
+                    }), 0, 0);
                     regionViewHeader.layoutW = 1;
-                    regionViewHeader.h = this._regionViewHeaderHeight_px;
+                    regionViewHeader.h = this.regionViewHeaderHeight_px;
                     regionViewHeader.layoutY = -1;
                     regionViewHeader.y = -this.gridLayoutOptions.spacingAbsolute.y * 0.5;
+                    this.regionViewHeaders[c] = regionViewHeader;
                     cell.add(regionViewHeader);
                 }
             }
@@ -113,48 +197,9 @@ class TrackViewer extends Object2D {
 
         for (let c = 0; c < nColumns + 1; c++) this.edges.vertical[c] = c / nColumns;
         for (let r = 0; r < nRows + 1; r++) this.edges.horizontal[r] = r * 100;
-
-        let layout = () => {
-            // layout track headers
-            GridLayout.layoutGridCells(
-                [trackHeaders],
-                {
-                    vertical: [0, this._trackHeaderWidth_px],
-                    horizontal: this.edges.horizontal,
-                },
-                {
-                    layoutVerticalRelative: false,
-                    layoutHorizontalRelative: false,
-                    spacingAbsolute: {
-                        x: 0,
-                        y: this.gridLayoutOptions.spacingAbsolute.y
-                    },
-                    spacingRelative: {x: 0, y: 0},
-                }
-            );
-
-            GridLayout.layoutGridCells(grid, this.edges, this.gridLayoutOptions);
-        }
-       
-        (window as any).removeCol = (i: number) => {
-            let col = grid[i];
-            if (col != null) {
-                for (let i = 0; i < col.length; i++) {
-                    this.gridContainer.remove(col[i]);
-                }
-                grid.splice(i, 1);
-            }
-
-            GridLayout.removeColumnSpaceFill(this.edges.vertical, i);
-            
-            layout();
-        }
-
-        layout();
-        /**/
     }
 
-    trackHeaderElement(props: {
+    protected trackHeaderElement(props: {
         name: string
     }) {
         return <div
@@ -180,8 +225,10 @@ class TrackViewer extends Object2D {
         </div>
     }
 
-    regionViewHeaderElement(props: {
-        name: string
+    protected regionViewHeaderElement(props: {
+        name: string,
+        enableClose: boolean,
+        onClose: () => void
     }) {
         return <div
             style={{
@@ -204,6 +251,21 @@ class TrackViewer extends Object2D {
             }}>
                 {props.name}
             </div>
+            {props.enableClose ?
+                <div style={{
+                    position: 'absolute',
+                    width: '100%',
+                    textAlign: 'right',
+                    top: '50%',
+                    transform: 'translate(0, -50%)',
+                }}>
+                    <IconButton onClick={props.onClose}>
+                        <SvgClose color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)'/>
+                    </IconButton>
+                </div>
+
+                : null
+            }
         </div>
     }
 

@@ -6,13 +6,13 @@ export class ReactObject extends Object2D {
     reactUid: number;
     content: React.ReactNode;
 
-    constructor(content: React.ReactNode, w: number, h: number) {
+    constructor(content?: React.ReactNode, w?: number, h?: number) {
         super();
         this.render = false;
-        this.content = content;
         this.reactUid = ReactObject.uidCounter++;
-        this.w = w;
-        this.h = h;
+        this.content = content;
+        if (w != null) this.w = w;
+        if (h != null) this.h = h;
     }
 
     onWorldTransformUpdated(listener: (worldTransform: Float32Array, computedWidth: number, computedHeight: number) => void) {
