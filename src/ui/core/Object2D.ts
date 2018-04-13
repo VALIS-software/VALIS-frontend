@@ -154,14 +154,14 @@ export class Object2D extends Renderable<Object2D> {
 
     applyTreeTransforms(root: boolean = true) {
         if (root && this.worldTransformNeedsUpdate) {
-            this.layout(0, 0);
+            this.computeLayout(0, 0);
             this.applyWorldTransform(null);
         }
 
         // apply world transform to children
         for (let child of this._children) {
             if (child.worldTransformNeedsUpdate) {
-                child.layout(this.computedWidth, this.computedHeight);
+                child.computeLayout(this.computedWidth, this.computedHeight);
                 child.applyWorldTransform(this.worldTransformMat4);
             }
 
@@ -198,7 +198,7 @@ export class Object2D extends Renderable<Object2D> {
         }
     }
 
-    protected layout(parentWidth: number, parentHeight: number) {
+    protected computeLayout(parentWidth: number, parentHeight: number) {
         this.computedWidth = this._w + parentWidth * this._layoutW;
         this.computedHeight = this._h + parentHeight * this._layoutH;
 
