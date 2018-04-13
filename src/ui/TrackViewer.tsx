@@ -88,6 +88,15 @@ class TrackViewer extends Object2D {
        (window as any).addRegion = () => {
            this.addRegionView();
        }
+
+       let test = new Rect(30, 30, [0.1, 0.4, 0.8, 1]);
+       test.z = 1;
+       this.add(test);
+
+       let k = 80;
+       window.addEventListener('mousemove', (e) => {
+           Animator.springTo(test, { x: e.clientX, y: e.clientY }, 1, k, Math.sqrt(k) * 2);
+       });
     }
 
     protected addRegionView() {
@@ -179,6 +188,9 @@ class TrackViewer extends Object2D {
             }
         );
 
+        let tension = 240;
+        let friction = Math.sqrt(tension) * 2;
+
         for (let c = 0; c < this.gridCells.length; c++) {
             let column = this.gridCells[c];
             for (let r = 0; r < column.length; r++) {
@@ -186,7 +198,7 @@ class TrackViewer extends Object2D {
 
                 let fieldTargets = {};
                 GridLayout.layoutGridCell(fieldTargets as any, c, r, this.edges, this.gridLayoutOptions);
-                Animator.springTo(cell, fieldTargets, animate ? 1 : 0, 600, 80);
+                Animator.springTo(cell, fieldTargets, animate ? 1 : 0, tension, friction);
             }
         }
     }
