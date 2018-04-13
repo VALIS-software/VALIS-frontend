@@ -6,9 +6,7 @@
   "directories": {
     "lib": "lib"
   },
-  "scripts": {
-    
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/haxiomic/VALIS-frontend.git"
@@ -23,6 +21,7 @@
     "@types/node": "^9.6.1",
     "@types/react": "^16.1.0",
     "@types/react-dom": "^16.0.4",
+    "@types/material-ui": "^0.20.0",
     "awesome-typescript-loader": "5.0.0-1",
     "css-loader": "^0.28.11",
     "node-sass": "^4.8.3",
@@ -35,6 +34,7 @@
   },
   "dependencies": {
     "react": "^16.2.0",
-    "react-dom": "^16.2.0"
+    "react-dom": "^16.2.0",
+    "material-ui": "^0.20.0"
   }
 }
