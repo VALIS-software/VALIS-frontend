@@ -43,6 +43,22 @@ class Util {
     }
   }
 
+  static chromosomeNameToIndex(name) {
+    const suffix = name.slice(3);
+    if (suffix === 'X') {
+      return CHROMOSOME_START_BASE_PAIRS.length - 2;
+    } else if (suffix === 'Y') {
+      return CHROMOSOME_START_BASE_PAIRS.length - 1;
+    } else {
+      return parseInt(suffix, 10) - 1;
+    }
+  }
+
+  static chromosomeRelativeToUniversalBasePair(chr, bp) {
+    const idx = typeof chr !== 'string' ? chr - 1 : this.chromosomeNameToIndex(chr);
+    return CHROMOSOME_START_BASE_PAIRS[idx] + bp;
+  }
+
   static floorToMultiple(x, k) {
     return Math.round((x % k === 0) ? x :  x + k - x % k - k);
   }

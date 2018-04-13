@@ -15,6 +15,8 @@ import { Card, CardHeader, CardText } from 'material-ui/Card';
 import CircularProgress from 'material-ui/CircularProgress';
 import DataListItem from '../DataListItem/DataListItem.jsx';
 import ZoomToButton from '../ZoomToButton/ZoomToButton.jsx';
+import Util from '../../helpers/util.js';
+
 // Styles
 import './EntityDetails.scss';
 
@@ -110,8 +112,9 @@ function DetailsHeader(props) {
   if (details.info.description) {
     description = unescape(details.info.description);
   }
-  
-  const zoomBtn = (<ZoomToButton viewModel={props.viewModel} start={details.start} end={details.end} padding={0.2} />);
+  const absoluteStart = Util.chromosomeRelativeToUniversalBasePair(details.chromid, details.start);
+  const absoluteEnd = Util.chromosomeRelativeToUniversalBasePair(details.chromid, details.end);
+  const zoomBtn = (<ZoomToButton viewModel={props.viewModel} start={absoluteStart} end={absoluteEnd} padding={0.2} />);
   return (
     <div className="entity-header">
       <div className="entity-name">{name}{zoomBtn}</div>
