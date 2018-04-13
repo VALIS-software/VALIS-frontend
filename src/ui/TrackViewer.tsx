@@ -7,6 +7,7 @@ import Animator from "../animation/Animator";
 
 import IconButton from 'material-ui/IconButton';
 import SvgClose from "material-ui/svg-icons/navigation/close";
+import SvgAdd from "material-ui/svg-icons/content/add";
 
 class TrackViewer extends Object2D {
 
@@ -50,6 +51,8 @@ class TrackViewer extends Object2D {
     protected trackHeaders:Array<Object2D>;
     protected regionViewHeaders:Array<ReactObject>;
 
+    protected addRegionButton: ReactObject;
+
     constructor() {
         super();
         this.render = false;
@@ -67,13 +70,45 @@ class TrackViewer extends Object2D {
         this.trackHeaders = new Array<Object2D>();
         this.regionViewHeaders = new Array<ReactObject>();
 
-        this.initializeWithDummyData();
+        this.dummyInitialize();
+        
+        // add addRegion button to the last regionView
+        this.addRegionButton = new ReactObject(this.addRegionButtonElement({ onAdd: () => this.addRegionView() }), this.regionViewHeaderHeight_px, this.regionViewHeaderHeight_px);
+        this.addRegionButton.layoutParentX = 1;
+        this.addRegionButton.x = this.gridLayoutOptions.spacingAbsolute.x;
+        
+        this.regionViewHeaders[this.regionViewHeaders.length - 1].add(this.addRegionButton);
+        
 
         this.layout(false);
 
        (window as any).removeCol = (i:number) => {
            this.removeRegionViewIndex(i);
        }
+       (window as any).addRegion = () => {
+           this.addRegionView();
+       }
+    }
+
+    protected addRegionView() {
+        this.regionViewHeaders[this.regionViewHeaders.length - 1].remove(this.addRegionButton);
+
+        this.regionViews.push({name: 'New'});
+        this.dummyInitializeColumn(this.regionViews.length - 1);
+
+        this.regionViewHeaders[this.regionViewHeaders.length - 1].add(this.addRegionButton);
+
+        let edges = this.edges.vertical;
+        let newEdge = 1 + 1 / (this.edges.vertical.length - 1);
+        edges.push(newEdge);
+        this.layout(false);
+
+        let multiplier = 1 / newEdge;
+        for (let e = 0; e < edges.length; e++) {
+            edges[e] *= multiplier;
+        }
+
+        this.layout(true);
     }
 
     protected removeRegionView(regionView: RegionView) {
@@ -83,6 +118,11 @@ class TrackViewer extends Object2D {
     protected removeRegionViewIndex(columnIndex: number) {
         let col = this.gridCells[columnIndex];
         if (col != null) {
+            if (columnIndex === (this.regionViewHeaders.length - 1)) {
+                this.regionViewHeaders[this.regionViewHeaders.length - 1].remove(this.addRegionButton);
+                this.regionViewHeaders[this.regionViewHeaders.length - 2].add(this.addRegionButton);
+            }
+
             for (let i = 0; i < col.length; i++) {
                 this.gridContainer.remove(col[i]);
             }
@@ -108,7 +148,9 @@ class TrackViewer extends Object2D {
     protected layout(animate: boolean = true) {
         // layout grid container
         this.gridContainer.x = this.trackHeaderWidth_px + this.gridLayoutOptions.spacingAbsolute.x * 0.5;
-        this.gridContainer.w = -this.trackHeaderWidth_px - this.gridLayoutOptions.spacingAbsolute.x;
+        this.gridContainer.w =
+            -this.trackHeaderWidth_px - this.gridLayoutOptions.spacingAbsolute.x
+            -this.addRegionButton.w;
         this.gridContainer.y = this.regionViewHeaderHeight_px;
         this.gridContainer.h = -this.regionViewHeaderHeight_px;
         this.gridContainer.layoutW = 1;
@@ -149,7 +191,7 @@ class TrackViewer extends Object2D {
         }
     }
 
-    protected initializeWithDummyData() {
+    protected dummyInitialize() {
         let nColumns = this.regionViews.length;
         let nRows = this.tracks.length;
 
@@ -163,40 +205,47 @@ class TrackViewer extends Object2D {
 
         // fill the grid cells up with some rects
         for (let c = 0; c < nColumns; c++) {
-            let col = new Array<Object2D>(nRows);
-            this.gridCells[c] = col;
-            for (let r = 0; r < nRows; r++) {
-                let cell = new Object2D();
-                col[r] = cell;
-                this.gridContainer.add(cell);
-
-                // add rect for visibility
-                let rect = new Rect(0, 0, [0, 0, 0, 1.]);
-                rect.layoutW = 1;
-                rect.layoutH = 1;
-                cell.add(rect);
-
-                if (r === 0) {
-                    let regionView = this.regionViews[c];
-                    let regionViewHeader = new ReactObject(this.regionViewHeaderElement({
-                        name: regionView.name,
-                        onClose: () => {
-                            this.removeRegionView(regionView);
-                        },
-                        enableClose: this.regionViews.length > 1
-                    }), 0, 0);
-                    regionViewHeader.layoutW = 1;
-                    regionViewHeader.h = this.regionViewHeaderHeight_px;
-                    regionViewHeader.layoutY = -1;
-                    regionViewHeader.y = -this.gridLayoutOptions.spacingAbsolute.y * 0.5;
-                    this.regionViewHeaders[c] = regionViewHeader;
-                    cell.add(regionViewHeader);
-                }
-            }
+            this.dummyInitializeColumn(c);
         }
 
         for (let c = 0; c < nColumns + 1; c++) this.edges.vertical[c] = c / nColumns;
         for (let r = 0; r < nRows + 1; r++) this.edges.horizontal[r] = r * 100;
+    }
+
+    protected dummyInitializeColumn(c: number) {
+        let nColumns = this.regionViews.length;
+        let nRows = this.tracks.length;
+
+        let col = new Array<Object2D>(nRows);
+        this.gridCells[c] = col;
+        for (let r = 0; r < nRows; r++) {
+            let cell = new Object2D();
+            col[r] = cell;
+            this.gridContainer.add(cell);
+
+            // add rect for visibility
+            let rect = new Rect(0, 0, [0, 0, 0, 1.]);
+            rect.layoutW = 1;
+            rect.layoutH = 1;
+            cell.add(rect);
+
+            if (r === 0) {
+                let regionView = this.regionViews[c];
+                let regionViewHeader = new ReactObject(this.regionViewHeaderElement({
+                    name: regionView.name,
+                    onClose: () => {
+                        this.removeRegionView(regionView);
+                    },
+                    enableClose: this.regionViews.length > 1
+                }), 0, 0);
+                regionViewHeader.layoutW = 1;
+                regionViewHeader.h = this.regionViewHeaderHeight_px;
+                regionViewHeader.layoutY = -1;
+                regionViewHeader.y = -this.gridLayoutOptions.spacingAbsolute.y * 0.5;
+                this.regionViewHeaders[c] = regionViewHeader;
+                cell.add(regionViewHeader);
+            }
+        }
     }
 
     protected trackHeaderElement(props: {
@@ -266,6 +315,33 @@ class TrackViewer extends Object2D {
 
                 : null
             }
+        </div>
+    }
+
+    protected addRegionButtonElement(props: {
+        onAdd: () => void
+    }) {
+        return <div
+            style={{
+                position: 'relative',
+                width: '100%',
+                height: '100%',
+                color: '#e8e8e8',
+                backgroundColor: '#171615',
+                borderRadius: '8px 0px 0px 8px',
+            }}
+        >
+            <div style={{
+                position: 'absolute',
+                width: '100%',
+                textAlign: 'right',
+                top: '50%',
+                transform: 'translate(0, -50%)',
+            }}>
+                <IconButton onClick={props.onAdd}>
+                    <SvgAdd color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' />
+                </IconButton>
+            </div>
         </div>
     }
 
