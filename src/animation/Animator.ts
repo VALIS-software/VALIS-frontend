@@ -1,9 +1,3 @@
-type DynamicMotionState = {
-    x: number,
-    v: number,
-    a: number,
-}
-
 /**
  * JavaScript port of my haxe physically based animation library
  */
@@ -25,15 +19,18 @@ export class Animator {
     public static springTo(
         object: any,
         fieldTargets: {[key: string]: number},
-        duration_s: number,
-        parameter: number
+
+        duration_s: number = 1, // todo
+
+        tension: number,
+        friction: number
     ) {
         if (duration_s == 0) {
             Animator.setObjectFields(object, fieldTargets);
         } else {
             Animator.stepTo(object, fieldTargets, Animator.stringStep, {
-                stiffness: 10,
-                damping: 4,
+                tension: tension,
+                friction: friction,
             });
         }
     }
@@ -129,14 +126,14 @@ export class Animator {
     }
 
     private static stringStep(dt_s: number, state: DynamicMotionState, parameters: {
-        stiffness: number,
-        damping: number,
+        tension: number,
+        friction: number,
     }) {
         let iterations = 1;
         let idt_s = dt_s / iterations;
         for (let i = 0; i < iterations; i++) {
             // F = -kx - vc, m = 1
-            state.a = -parameters.stiffness * state.x - parameters.damping * state.v;
+            state.a = -parameters.tension * state.x - parameters.friction * state.v;
             // semi-implicit euler
             state.v += state.a * idt_s;
             state.x += state.v * idt_s;
@@ -177,6 +174,12 @@ export class Animator {
         }
     }
 
+}
+
+type DynamicMotionState = {
+    x: number,
+    v: number,
+    a: number,
 }
 
 export default Animator;
