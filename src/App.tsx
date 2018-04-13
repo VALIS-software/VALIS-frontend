@@ -67,11 +67,11 @@ export class App extends React.Component<Props, State> {
 
 	protected stopFrameLoop() {
 		window.cancelAnimationFrame(this._frameLoopHandle);
-		
 	}
 
 	protected frameLoop = () => {
 		this._frameLoopHandle = window.requestAnimationFrame(this.frameLoop);
+
 		let t_ms = window.performance.now();
 		let dt_ms = t_ms - this._lastFrameT_ms;
 		this._lastFrameT_ms = t_ms;
@@ -81,7 +81,7 @@ export class App extends React.Component<Props, State> {
 		// canvas.style.cursor = ...
 		// convert mouse coordinates into clip-space for bounds checking
 		// step animation
-		Animator.step(Math.min(dt_ms / 1000, 1/30));
+		Animator.step(dt_ms / 1000);
 
 		// -- scene graph must not change after this point --
 		this.appCanvas.renderCanvas();

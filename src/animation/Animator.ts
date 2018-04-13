@@ -1,3 +1,5 @@
+import { tmpdir } from "os";
+
 /**
  * JavaScript port of my haxe physically based animation library
  */
@@ -59,6 +61,7 @@ export class Animator {
 
             let target = fieldTargets[field];
             let current = object[field];
+            if (target === current) continue;
 
             let dynamicMotion = entry.dynamicMotionFields[field];
             // create or update dynamic motion fields
@@ -68,7 +71,7 @@ export class Animator {
                         // initial state
                         x: target - current,
                         v: 0,
-                        a: 0
+                        pe: 0,
                     },
 
                     target: fieldTargets[field],
@@ -119,9 +122,22 @@ export class Animator {
                 dynamicMotion.state.x = dynamicMotion.target - object[field];
                 dynamicMotion.step(dt_s, dynamicMotion.state, dynamicMotion.parameters);
                 object[field] = dynamicMotion.target - dynamicMotion.state.x;
+
+                // in joules
+                let kineticEnergy = .5 * dynamicMotion.state.v * dynamicMotion.state.v;
+                let totalEnergy = dynamicMotion.state.pe + kineticEnergy;
+
+                if (totalEnergy < 0.0001) {
+                    delete entry.dynamicMotionFields[field];
+                    object[field] = dynamicMotion.target
+                }
             }
 
-            // @! todo, delete completed animations
+            // if there's no field animations left then remove the entry
+            if ((Object.keys(entry.dynamicMotionFields).length + Object.keys(entry.easingFields).length) === 0) {
+                Animator.active.splice(i, 1);
+                console.log('deleted obj', object);
+            }
         }
     }
 
@@ -129,15 +145,55 @@ export class Animator {
         tension: number,
         friction: number,
     }) {
-        let iterations = 1;
-        let idt_s = dt_s / iterations;
-        for (let i = 0; i < iterations; i++) {
-            // F = -kx - vc, m = 1
-            state.a = -parameters.tension * state.x - parameters.friction * state.v;
-            // semi-implicit euler
-            state.v += state.a * idt_s;
-            state.x += state.v * idt_s;
+        // semi-analytic spring, unconditionally stable
+        // references:
+        // http://mathworld.wolfram.com/OverdampedSimpleHarmonicMotion.html
+        // http://mathworld.wolfram.com/CriticallyDampedSimpleHarmonicMotion.html
+        
+        let k = parameters.tension;
+        let f = parameters.friction;
+        let t = dt_s;
+        let v0 = state.v;
+        let x0 = state.x;
+
+        // useful quantities
+        let critical = k * 4 - f * f;
+
+        // over-damped, requires an alternative solution
+        if (critical === 0) {
+            let w = Math.sqrt(k);
+            let A = x0;
+            let B = v0 + w * x0;
+            
+            let e = Math.exp(-w * t);
+            state.x = (A + B * t) * e;
+            state.v = (B - w * (A + B * t)) * e;
+        } else if (critical <= 0) {
+            let sqrt = Math.sqrt(-critical);
+            let rp = 0.5 * (-f + sqrt);
+            let rn = 0.5 * (-f - sqrt);
+
+            let B = (rn * x0 - v0) / (rn - rp);
+            let A = x0 - B;
+
+            let en = Math.exp(rn * t);
+            let ep = Math.exp(rp * t);
+            state.x = A * en + B * ep;
+            state.v = A * rn * en + B * rp * ep;
+        } else {
+            let a = -f/2;
+            let b = Math.sqrt(critical * 0.25);
+            let phaseShift = Math.atan(b / ((v0/x0) - a));
+
+            let A = x0 / Math.sin(phaseShift);
+            let e = Math.exp(a * t);
+            let s = Math.sin(b * t + phaseShift);
+            let c = Math.cos(b * t + phaseShift);
+            state.x = A * e * s;
+            state.v = A * e * (a * s + b * c);
         }
+
+        state.pe = 0.5 * k * state.x * state.x;        
     }
 
     private static getActive(object: any) {
@@ -179,7 +235,7 @@ export class Animator {
 type DynamicMotionState = {
     x: number,
     v: number,
-    a: number,
+    pe: number,
 }
 
 export default Animator;
