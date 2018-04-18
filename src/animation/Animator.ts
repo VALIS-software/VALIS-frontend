@@ -1,88 +1,103 @@
-import { tmpdir } from "os";
-
 /**
  * Physically based animation
+ * 
+ * Todo:
+ * - should have separate animations
+ * - implement easings via step functions
+ * - implement a ease-blended spring so the spring has a fixed duration
+ *  - pick spring parameters for a given duration and combine with a lerp to 0 as we approach duration
+ * 
  */
 export class Animator {
 
-    // @! maybe better as a linked list
+    // @! maybe better as a linked list - less error prone and potentially faster
     protected static active = new Array<{
         object: any,
-        easingFields: { [key: string]: void },
-        dynamicMotionFields: { [key: string]: {
-            state: DynamicMotionState,
-
+        animatingFields: { [key: string]: {
+            state: AnimationState,
             target: number,
-            step: (dt_ms: number, state: DynamicMotionState, parameters: any) => void,
+            step: (dt_ms: number, state: AnimationState, parameters: any) => void,
             parameters: any,
         } },
     }>();
 
+
+    protected static stepCallbacks = new Array<(steppedAnimationCount: number) => void>();
+    protected static animationCompleteCallbacks = new Array<{
+        callback: (object: any) => void,
+        object: any,
+        field: string,
+    }>();
+
     public static springTo(
         object: any,
-        fieldTargets: {[key: string]: number},
+        fieldTargets: { [key: string]: number },
 
-        duration_s: number = 1, // todo
-
-        tension: number,
-        friction: number
+        /* @! Parameterization thoughts:
+            - Resolution / or the size for which no change will be perceived
+            - Duration to reach this state
+            - [Some sort of normalized wobblyness control], 0 = no energy loss, 0.5 = critical, 1 = ?
+        */
+        parameters: {
+            tension: number,
+            friction: number,
+        },
+        velocity?: number,
     ) {
-        if (duration_s == 0) {
-            Animator.setObjectFields(object, fieldTargets);
-        } else {
-            Animator.stepTo(object, fieldTargets, Animator.stringStep, {
-                tension: tension,
-                friction: friction,
-            });
-        }
+        Animator.stepTo(object, fieldTargets, Animator.stringStep, parameters, velocity);
     }
 
     public static stepTo<T>(
         object: any,
         fieldTargets: { [key: string]: number },
-        step: (dt_ms: number, state: DynamicMotionState, parameters: T) => void,
-        parameters: T
+        step: (dt_ms: number, state: AnimationState, parameters: T) => void,
+        parameters: T,
+        velocity?: number
     ) {
+        let t_s = window.performance.now() / 1000;
+
         let entry = Animator.getActive(object);
         if (entry == null) {
             entry = {
                 object: object,
-                easingFields: {},
-                dynamicMotionFields: {},
+                animatingFields: {},
             }
             Animator.active.push(entry);
         }
 
         let fields = Object.keys(fieldTargets);
         for (let field of fields) {
-            // remove an easing entry if it exists
-            delete entry.easingFields[field];
-
             let target = fieldTargets[field];
             let current = object[field];
             if (target === current) continue;
 
-            let dynamicMotion = entry.dynamicMotionFields[field];
+            let animation = entry.animatingFields[field];
             // create or update dynamic motion fields
-            if (dynamicMotion == null) {
-                dynamicMotion = {
+            if (animation == null) {
+                animation = {
                     state: {
                         // initial state
                         x: target - current,
-                        v: 0,
+                        v: velocity == null ? 0 : velocity,
                         pe: 0,
+
+                        t0: t_s,
+                        lastT: t_s,
                     },
 
                     target: fieldTargets[field],
                     step: step,
                     parameters: parameters,
                 };
-                entry.dynamicMotionFields[field] = dynamicMotion;
+                entry.animatingFields[field] = animation;
             } else {
-                dynamicMotion.state.x = target - current;
-                dynamicMotion.target = target;
-                dynamicMotion.step = step;
-                dynamicMotion.parameters = parameters;
+                // animation is already active, update state
+                animation.state.x = target - current;
+                animation.state.v = velocity == null ? animation.state.v : velocity;
+                animation.state.t0 = t_s; // set t0 so easings are reset
+                animation.target = target;
+                animation.step = step;
+                animation.parameters = parameters;
             }
         }
     }
@@ -93,58 +108,125 @@ export class Animator {
         } else {
             let {entry: entry, i: i} = Animator.getActiveAndIndex(object);
 
+            if (entry === null) return;
+            
             let fieldNames = Array.isArray(fields) ? fields : Object.keys(fields);
 
             for (let field of fieldNames) {
-                delete entry.dynamicMotionFields[field];
-                delete entry.easingFields[field];
+                delete entry.animatingFields[field];
             }
 
             // if there's no field animations left then remove the entry
-            if ((Object.keys(entry.dynamicMotionFields).length + Object.keys(entry.easingFields).length) === 0) {
+            if (Object.keys(entry.animatingFields).length === 0) {
                 Animator.active.splice(i, 1);
             }
         }
     }
 
-    public static step(dt_s: number) {
+    public static step() {
+        let t_s = window.performance.now() / 1000;
+
+        let steppedAnimationCount = 0;
+
         for (let i = Animator.active.length - 1; i >= 0; i--) {
             let entry = Animator.active[i];
             let object = entry.object;
 
-            // @! todo, support fixed-path easings
+            // @! todo, support normal fixed-path easings
 
-            let dynamicMotionFields = Object.keys(entry.dynamicMotionFields);
-            for (let field of dynamicMotionFields) {
-                let dynamicMotion = entry.dynamicMotionFields[field];
+            let animatingFields = Object.keys(entry.animatingFields);
+            for (let field of animatingFields) {
+                let animation = entry.animatingFields[field];
                 
-                dynamicMotion.state.x = dynamicMotion.target - object[field];
-                dynamicMotion.step(dt_s, dynamicMotion.state, dynamicMotion.parameters);
-                object[field] = dynamicMotion.target - dynamicMotion.state.x;
+                animation.state.x = animation.target - object[field];
+                animation.step(t_s, animation.state, animation.parameters);
+                object[field] = animation.target - animation.state.x;
+
+                steppedAnimationCount++;
 
                 // in joules
-                let kineticEnergy = .5 * dynamicMotion.state.v * dynamicMotion.state.v;
-                let totalEnergy = dynamicMotion.state.pe + kineticEnergy;
+                let kineticEnergy = .5 * animation.state.v * animation.state.v;
+                let totalEnergy = animation.state.pe + kineticEnergy;
 
                 // @! magic number: can we derive a condition that's linked to user-known properties
                 if (totalEnergy < 0.0001) {
-                    delete entry.dynamicMotionFields[field];
-                    object[field] = dynamicMotion.target
+                    delete entry.animatingFields[field];
+                    object[field] = animation.target;
+
+                    // fire and remove any field-complete registered callbacks
+                    for (let j = Animator.animationCompleteCallbacks.length - 1; j >=0; j--) {
+                        let e = Animator.animationCompleteCallbacks[j];
+                        if (e.object === object && e.field === field) {
+                            e.callback(object);
+                        }
+                    }
                 }
             }
 
             // if there's no field animations left then remove the entry
-            if ((Object.keys(entry.dynamicMotionFields).length + Object.keys(entry.easingFields).length) === 0) {
+            // we cannot assume Animator.active[i] still referes to the entry as a callback may have removed it
+            if (Object.keys(entry.animatingFields).length === 0 && Animator.active[i] === entry) {
                 Animator.active.splice(i, 1);
-                console.log('deleted obj', object);
             }
+        }
+
+        // execute post-step callbacks
+        for (let i = Animator.stepCallbacks.length - 1; i >= 0; i--) {
+            Animator.stepCallbacks[i](steppedAnimationCount);
         }
     }
 
-    private static stringStep(dt_s: number, state: DynamicMotionState, parameters: {
+    public static hasActiveAnimations(): boolean {
+        return Animator.active.length > 0;
+    }
+
+    public static addAnimationCompleteCallback<T>(object: T, field: string, callback: (object: T) => void) {
+        Animator.animationCompleteCallbacks.push({
+            callback: callback,
+            object: object,
+            field: field,
+        });
+    }
+
+    public static removeAnimationCompleteCallback<T>(object: T, field: string, callback: (object: T) => void) {
+        let idx = -1;
+        for (let i = 0; i < Animator.animationCompleteCallbacks.length; i++) {
+            let e = Animator.animationCompleteCallbacks[i];
+            if (
+                e.callback === callback &&
+                e.field === field &&
+                e.object === object
+            ) {
+                idx = i;
+                break;
+            }
+        }
+        if (idx === -1) return false;
+        Animator.animationCompleteCallbacks.slice(idx, 1);
+        return true;
+    }
+
+    /**
+     * It's often useful to be able to execute code straight after the global animation step has finished
+     */
+    public static addStepCompleteCallback(callback: (steppedAnimationCount: number) => void) {
+        Animator.stepCallbacks.push(callback);
+    }
+
+    public static removeStepCompleteCallback(callback: (steppedAnimationCount: number) => void) {
+        let i = Animator.stepCallbacks.indexOf(callback);
+        if (i === -1) return false;
+        Animator.stepCallbacks.splice(i, 1);
+        return true;
+    }
+
+    private static stringStep(t_s: number, state: AnimationState, parameters: {
         tension: number,
         friction: number,
     }) {
+        let dt_s = t_s - state.lastT;
+        state.lastT = t_s;
+
         // analytic integration (unconditionally stable)
         // references:
         // http://mathworld.wolfram.com/OverdampedSimpleHarmonicMotion.html
@@ -156,11 +238,10 @@ export class Animator {
         let v0 = state.v;
         let x0 = state.x;
 
-        // useful quantities
         let critical = k * 4 - f * f;
 
-        // over-damped, requires an alternative solution
         if (critical === 0) {
+            // critically damped
             let w = Math.sqrt(k);
             let A = x0;
             let B = v0 + w * x0;
@@ -169,6 +250,7 @@ export class Animator {
             state.x = (A + B * t) * e;
             state.v = (B - w * (A + B * t)) * e;
         } else if (critical <= 0) {
+            // over-damped
             let sqrt = Math.sqrt(-critical);
             let rp = 0.5 * (-f + sqrt);
             let rn = 0.5 * (-f - sqrt);
@@ -181,6 +263,7 @@ export class Animator {
             state.x = A * en + B * ep;
             state.v = A * rn * en + B * rp * ep;
         } else {
+            // under-damped
             let a = -f/2;
             let b = Math.sqrt(critical * 0.25);
             let phaseShift = Math.atan(b / ((v0/x0) - a));
@@ -193,7 +276,7 @@ export class Animator {
             state.v = A * e * (a * s + b * c);
         }
 
-        state.pe = 0.5 * k * state.x * state.x;        
+        state.pe = 0.5 * k * state.x * state.x;
     }
 
     private static getActive(object: any) {
@@ -204,14 +287,17 @@ export class Animator {
     }
 
     private static getActiveAndIndex(object: any) {
-        for (let i = 0; i < Animator.active.length; i++) {
+        for (let i = Animator.active.length - 1; i >= 0; i--) {
             let entry = Animator.active[i];
             if (entry.object === object) return {
                 i: i,
                 entry: entry
             }
         }
-        return null;
+        return {
+            i: -1,
+            entry: null
+        };
     }
 
     private static removeActive(object: any) {
@@ -232,10 +318,13 @@ export class Animator {
 
 }
 
-type DynamicMotionState = {
+type AnimationState = {
     x: number,
     v: number,
     pe: number,
+
+    lastT: number,
+    t0: number
 }
 
 export default Animator;

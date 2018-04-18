@@ -48,7 +48,7 @@ export class App extends React.Component<Props, State> {
 
 	render() {
 		return (<div>
-			<Header></Header>
+			<Header />
 			<AppCanvas
 				ref={(v) => this.appCanvas = v}
 				width={this.state.viewerWidth}
@@ -81,7 +81,7 @@ export class App extends React.Component<Props, State> {
 		// canvas.style.cursor = ...
 		// convert mouse coordinates into clip-space for bounds checking
 		// step animation
-		Animator.step(dt_ms / 1000);
+		Animator.step();
 
 		// -- scene graph must not change after this point --
 		this.appCanvas.renderCanvas();
