@@ -1,3 +1,12 @@
+/*
+    ! Problem: We don't want to be applying layout every frame because that means we've got to rebuild the scene-graph world nodes
+
+    -> Track -> TrackModel
+    Track class has a reference to all asccoaited objects
+    - perofrmans layout itself
+*/
+
+
 import Object2D from "./core/Object2D";
 import GridLayout from "./GridLayout";
 import Rect from "./core/Rect";
@@ -9,24 +18,22 @@ import IconButton from 'material-ui/IconButton';
 import SvgClose from "material-ui/svg-icons/navigation/close";
 import SvgAdd from "material-ui/svg-icons/content/add";
 
+const SPRING_TENSION = 250;
+ 
 class TrackViewer extends Object2D {
 
-    protected tracks: Array<Track> = [
-        new Track('Sequence'),
-        new Track('GRCh38'),
-        new Track('GM12878-DNase'),
-    ];
+    protected trackHeaderWidth_px: number = 180;
+    protected panelHeaderHeight_px: number = 50;
+    protected defaultTrackHeight_px: number = 100;
+    protected spacing = {
+        x: 10,
+        y: 10
+    }
 
-    protected regionViews: Array<RegionView> = [
-        { name: 'PCSK9' },
-        { name: 'HER2' },
-        { name: 'MAOA' },
-    ];
-
-    protected edges = {
-        vertical: new Array<number>(),
-        horizontal: new Array<number>(),
-    };
+    protected springOptions = {
+        tension: SPRING_TENSION,
+        friction: Math.sqrt(SPRING_TENSION) * 2,
+    }
 
     protected gridLayoutOptions = {
         layoutVerticalRelative: true,
@@ -39,19 +46,19 @@ class TrackViewer extends Object2D {
         }
     }
 
-    protected trackHeaderWidth_px: number = 210;
-    protected regionViewHeaderHeight_px: number = 50;
-    protected defaultTrackHeight_px: number = 100;
+    protected edges = {
+        vertical: new Array<number>(),
+        horizontal: new Array<number>(),
+    }
 
-    protected gridContainer: Object2D;
-    protected trackHeaderContainer: Object2D;
+    // be aware that the array index does not correspond to row or column
+    protected tracks = new Array<Track>();
+    protected panels = new Array<Panel>();
 
-    // cell = grid[column][row]
-    protected gridCells:Array<Array<Object2D>>;
-    protected trackHeaders:Array<Object2D>;
-    protected regionViewHeaders:Array<ReactObject>;
+    protected grid: Object2D;
+    protected columnHeaders: Object2D;
 
-    protected addRegionButton: ReactObject;
+    protected addPanelButton: ReactObject;
 
     constructor() {
         super();
@@ -61,288 +68,444 @@ class TrackViewer extends Object2D {
         this.layoutW = 1;
         this.layoutH = 1;
 
-        this.gridContainer = new Object2D();
-        this.add(this.gridContainer);
-        this.trackHeaderContainer = new Object2D();
-        this.add(this.trackHeaderContainer);
+        this.grid = new Object2D();
+        this.add(this.grid);
+        this.columnHeaders = new Object2D();
+        this.grid.add(this.columnHeaders);
+        this.addPanelButton = new ReactObject(
+            <AddPanelButton onClick={() => {
+                this.addPanel({ name: 'new' }, true);
+            }} />,
+            this.panelHeaderHeight_px,
+            this.panelHeaderHeight_px
+        );
+        this.addPanelButton.x = this.spacing.x * 0.5;
+        this.addPanelButton.layoutParentX = 1;
+        this.columnHeaders.add(this.addPanelButton);
 
-        this.gridCells = new Array<Array<Object2D>>();
-        this.trackHeaders = new Array<Object2D>();
-        this.regionViewHeaders = new Array<ReactObject>();
+        for (let track of [
+            {name: 'Sequence'},
+            {name: 'GRCh38'},
+            {name: 'GM12878-DNase'},
+        ]) {
+            this.addTrack(track);
+        }
 
-        this.dummyInitialize();
-        
-        // add addRegion button to the last regionView
-        this.addRegionButton = new ReactObject(this.addRegionButtonElement({ onAdd: () => this.addRegionView() }), this.regionViewHeaderHeight_px, this.regionViewHeaderHeight_px);
-        this.addRegionButton.layoutParentX = 1;
-        this.addRegionButton.x = this.gridLayoutOptions.spacingAbsolute.x;
-        
-        this.regionViewHeaders[this.regionViewHeaders.length - 1].add(this.addRegionButton);
-        
+        for (let panel of [
+            { name: 'PCSK9' },
+            { name: 'HER2' },
+            { name: 'MAOA' },
+        ]) {
+            this.addPanel(panel, false);
+        }
 
-        this.layout(false);
+        this.layoutGridContainer();
 
-       (window as any).removeCol = (i:number) => {
-           this.removeRegionViewIndex(i);
-       }
-       (window as any).addRegion = () => {
-           this.addRegionView();
-       }
+        (window as any).addPanel = () => {
+            this.addPanel({name: 'new'}, true);
+        }
 
-       let test = new Rect(30, 30, [0.1, 0.4, 0.8, 1]);
-       test.z = 1;
-       this.add(test);
-
-       let k = 80;
-       window.addEventListener('mousemove', (e) => {
-           Animator.springTo(test, { x: e.clientX, y: e.clientY }, 1, k, Math.sqrt(k) * 2);
-       });
+        (window as any).addTrack = () => {
+            this.addTrack({name: 'new track'});
+        }
     }
 
-    protected addRegionView() {
-        this.regionViewHeaders[this.regionViewHeaders.length - 1].remove(this.addRegionButton);
+    onAdded() {
+        super.onAdded();
+        Animator.addStepCompleteCallback(this.onAnimationStep);
+    }
 
-        this.regionViews.push({name: 'New'});
-        this.dummyInitializeColumn(this.regionViews.length - 1);
+    onRemoved() {
+        super.onRemoved();
+        Animator.removeStepCompleteCallback(this.onAnimationStep);
+    }
 
-        this.regionViewHeaders[this.regionViewHeaders.length - 1].add(this.addRegionButton);
+    // state deltas
+    addTrack(model: TrackModel) {
+        let edges = this.edges.horizontal;
+        let newRowIndex = Math.max(edges.length - 1, 0);
 
-        let edges = this.edges.vertical;
-        let newEdge = 1 + 1 / (this.edges.vertical.length - 1);
+        if (edges.length === 0) edges.push(0);
+        let lastEdge = edges[edges.length - 1];
+        edges.push(lastEdge + this.defaultTrackHeight_px);
+
+        // create a tack and add the header element to the grid
+        let track = new Track(model, newRowIndex, this.layoutTrack);
+        // add track tile to all panels
+        for (let i = 0; i < this.panels.length; i++) {
+            this.panels[i].trackTiles[newRowIndex] = this.createTrackTile(model);
+        }
+        this.tracks.push(track);
+
+        track.header.x = -this.trackHeaderWidth_px;
+        track.header.w = this.trackHeaderWidth_px;
+        this.grid.add(track.header);
+        this.positionTrack(track, false);
+    }
+
+    addPanel(model: PanelModel, animate: boolean) {
+        let edges = this.edges.vertical;        
+        let newColumnIndex = Math.max(edges.length - 1, 0);
+
+        // add a new column edge, overflow the grid so the panel extends off the screen
+        if (edges.length === 0) edges.push(0);
+        let newWidth = newColumnIndex == 0 ? 1 : 1 / newColumnIndex;
+        let newEdge = 1 + newWidth;
         edges.push(newEdge);
-        this.layout(false);
 
+        // create panel object and add header to the scene graph
+        let panel = new Panel(model, newColumnIndex, this.removePanel, this.layoutPanel);
+        // initialize tracks for this panel
+        for (let i = 0; i < this.tracks.length; i++) {
+            panel.trackTiles[i] = this.createTrackTile(this.tracks[i].model);
+        }
+        this.panels.push(panel);
+        panel.header.y = 0;
+        panel.header.h = this.panelHeaderHeight_px;
+        this.columnHeaders.add(panel.header);
+
+        // update header state
+        let openPanelCount = 0;
+        for (let p of this.panels) if (!p.closing) openPanelCount++;
+
+        for (let p of this.panels) {
+            p.closable = openPanelCount > 1;
+        }
+
+        // set initial position
+        this.positionPanel(panel, false);
+
+        // scale the edges down to fit within the grid space
         let multiplier = 1 / newEdge;
         for (let e = 0; e < edges.length; e++) {
             edges[e] *= multiplier;
         }
 
-        this.layout(true);
+        // animate all panels to new edge coordinates
+        for (let p of this.panels) {
+            this.positionPanel(p, animate);
+        }
     }
 
-    protected removeRegionView(regionView: RegionView) {
-        this.removeRegionViewIndex(this.regionViews.indexOf(regionView));
+    removePanel = (panel: Panel) => {
+        if (panel.closing) {
+            console.error(`Trying to remove already removed panel`);
+            return;
+        }
+
+        let edges = this.edges.vertical;
+
+        panel.closing = true;
+
+        // remove column from edges
+        this.removeColumnSpaceFill(edges, panel.column);
+
+        // remove panel from set so that it no it is no longer affected by other actions
+        this.positionPanel(panel, true);
+        
+        Animator.springTo(panel, { layoutW: 0 }, this.springOptions);
+        Animator.addAnimationCompleteCallback(panel, 'layoutW', this.cleanupPanel);
+
+        // update column indexes of remaining panels
+        for (let p of this.panels) {
+            if (p.column > panel.column) {
+                p.column = p.column - 1;
+            }
+        }
+
+        let openPanelCount = 0;
+        for (let p of this.panels) if (!p.closing) openPanelCount++;
+
+        // animate all other panels to new column positions
+        for (let p of this.panels) {
+            if (p === panel) continue;
+            this.positionPanel(p, true);
+            p.closable = openPanelCount > 1;
+        }
+
+        if (edges.length < 2) {
+            edges.length = 0;
+        }
+    }
+
+    protected cleanupPanel = (panel: Panel) => {
+        Animator.stop(panel);
+        Animator.removeAnimationCompleteCallback(panel, 'layoutW', this.cleanupPanel);
+
+        // remove from panel list
+        let idx = this.panels.indexOf(panel);
+        if (idx === -1) {
+            console.error('Cleanup executed twice on a panel');
+            return;
+        }
+        this.panels.splice(idx, 1);
+        // remove elements from the scene-graph
+        this.columnHeaders.remove(panel.header);
+        for (let i = 0; i < panel.trackTiles.length; i++) {
+            this.removeTrackTile(panel.trackTiles[i]);
+        }
+
+        console.log('cleaned up panel', panel);
+    }
+
+    /**
+     * Remove a column from a set of edges in a physically natural way; the edges either side together as if either side was expanding under spring forces to fill the empty space
+     */
+    removeColumnSpaceFill(edges: Array<number>, index: number) {
+        if (index >= edges.length || index < 0) return false;
+
+        let leftmostEdge = edges[0];
+        let rightmostEdge = edges[edges.length - 1];
+        let leftEdge = edges[index];
+        let rightEdge = edges[index + 1] || rightmostEdge;
+
+        let lSpan = leftEdge - leftmostEdge;
+        let rSpan = rightmostEdge - rightEdge;
+        let totalSpan = rSpan + lSpan;
+
+        // determine where the left and right edges should come together
+        let relativeMergePoint = totalSpan == 0 ? 0.5 : (lSpan / totalSpan);
+        let edgeMergeTarget = relativeMergePoint * (rightEdge - leftEdge) + leftEdge;
+
+        // evenly redistribute all the edges ether side to fill the new space
+        let newRSpan = rightmostEdge - edgeMergeTarget;
+        let newLSpan = edgeMergeTarget - leftmostEdge;
+
+        let rSpanMultiplier = rSpan == 0 ? 0 : newRSpan / rSpan;
+        for (let i = index + 1; i < edges.length; i++) {
+            edges[i] = edgeMergeTarget + (edges[i] - rightEdge) * rSpanMultiplier;
+        }
+
+        let lSpanMultiplier = newLSpan / lSpan;
+        for (let i = 0; i < index; i++) {
+            edges[i] = leftmostEdge + (edges[i] - leftmostEdge) * lSpanMultiplier;
+        }
+
+        // remove edge from list
+        edges.splice(index, 1);
+
+        return true;
+    }
+
+    protected createTrackTile(model: TrackModel): Object2D {
+        let trackTile = new Rect(0, 0, [0, 0, 0, 1]);
+        this.grid.add(trackTile);
+        return trackTile;
+    }
+
+    protected removeTrackTile(trackTile: Object2D) {
+        this.grid.remove(trackTile);
+        trackTile.releaseGPUResources();
+    }
+
+    // @! needs better name?
+    protected positionPanel(panel: Panel, animate: boolean) {
+        let edges = this.edges.vertical;
+        let layoutParentX = edges[panel.column];
+        let layoutW = panel.closing ? panel.layoutW : edges[panel.column + 1] - edges[panel.column];
+        if (animate) {
+            Animator.springTo(panel, { layoutParentX: layoutParentX, layoutW: layoutW }, this.springOptions);
+        } else {
+            Animator.stop(panel, ['layoutParentX', 'layoutW']);
+            panel.layoutParentX = layoutParentX;
+            panel.layoutW = layoutW;
+        }
+    }
+
+    protected positionTrack(track: Track, animate: boolean) {
+        let edges = this.edges.horizontal;
+        let y = edges[track.row];
+        let h = edges[track.row + 1] - edges[track.row];
+        if (animate) {
+            Animator.springTo(track, { y: y, h: h }, this.springOptions);
+        } else {
+            Animator.stop(track, ['y', 'h']);
+            track.y = y;
+            track.h = h;
+        }
+    }
+
+    // - Layout methods - //
+    protected onAnimationStep = () => {
+        let maxX = 1;
+        for (let i = 0; i < this.panels.length; i++) {
+            maxX = Math.max(this.panels[i].layoutParentX + this.panels[i].layoutW, maxX);
+        }
+        this.addPanelButton.layoutParentX = maxX;
+    }
+
+    protected layoutTrack = (track: Track) => {
+        this.layoutYInTrack(track.header, track);
+        for (let j = 0; j < this.panels.length; j++) {
+            let panel = this.panels[j];
+            let trackTile = panel.trackTiles[track.row];
+            this.layoutXInPanel(trackTile, panel);
+            this.layoutYInTrack(trackTile, track);
+        }
+    }
+
+    protected layoutPanel = (panel: Panel) => {
+        this.layoutXInPanel(panel.header, panel);
+        for (let i = 0; i < this.tracks.length; i++) {
+            let track = this.tracks[i];
+            let trackTile = panel.trackTiles[track.row];
+            this.layoutXInPanel(trackTile, panel);
+            this.layoutYInTrack(trackTile, track);
+        }
+    }
+
+    protected layoutXInPanel(obj: Object2D, panel: Panel) {
+        obj.layoutParentX = panel.layoutParentX;
+        obj.layoutW = panel.layoutW;
+        obj.x = this.spacing.x * 0.5;
+        obj.w = -this.spacing.x;
+    }
+
+    protected layoutYInTrack(obj: Object2D, track: Track) {
+        obj.y = track.y + this.spacing.y * 0.5;
+        obj.h = track.h - this.spacing.y;
     }
     
-    protected removeRegionViewIndex(columnIndex: number) {
-        let col = this.gridCells[columnIndex];
-        if (col != null) {
-            if (columnIndex === (this.regionViewHeaders.length - 1)) {
-                this.regionViewHeaders[this.regionViewHeaders.length - 1].remove(this.addRegionButton);
-                this.regionViewHeaders[this.regionViewHeaders.length - 2].add(this.addRegionButton);
-            }
-
-            for (let i = 0; i < col.length; i++) {
-                this.gridContainer.remove(col[i]);
-            }
-            this.gridCells.splice(columnIndex, 1);
-            this.regionViews.splice(columnIndex, 1);
-            this.regionViewHeaders.splice(columnIndex, 1);
-        }
-
-        for (let i = 0; i < this.regionViews.length; i++) {
-            this.regionViewHeaders[i].content = this.regionViewHeaderElement({
-                name: this.regionViews[i].name,
-                onClose: () => {
-                    this.removeRegionView(this.regionViews[i]);
-                },
-                enableClose: this.regionViews.length > 1
-            });
-        }
-
-        GridLayout.removeColumnSpaceFill(this.edges.vertical, columnIndex);
-        this.layout();
-    }
-
-    protected layout(animate: boolean = true) {
-        // layout grid container
-        this.gridContainer.x = this.trackHeaderWidth_px + this.gridLayoutOptions.spacingAbsolute.x * 0.5;
-        this.gridContainer.w =
+    protected layoutGridContainer() {
+        this.grid.x = this.trackHeaderWidth_px + this.gridLayoutOptions.spacingAbsolute.x * 0.5;
+        this.grid.w =
             -this.trackHeaderWidth_px - this.gridLayoutOptions.spacingAbsolute.x
-            -this.addRegionButton.w;
-        this.gridContainer.y = this.regionViewHeaderHeight_px;
-        this.gridContainer.h = -this.regionViewHeaderHeight_px;
-        this.gridContainer.layoutW = 1;
-        this.gridContainer.layoutH = 1;
-        // layout track header container
-        this.trackHeaderContainer.w = this.trackHeaderWidth_px;
-        this.trackHeaderContainer.y = this.regionViewHeaderHeight_px;
-        this.trackHeaderContainer.x = this.gridLayoutOptions.spacingAbsolute.x;
-
-        // layout track headers as a 1 column grid
-        // this is done so this fix-widths grid is independent from any changes in the flexible width grid
-        GridLayout.layoutGridCells(
-            [this.trackHeaders],
-            {
-                vertical: [0, this.trackHeaderWidth_px],
-                horizontal: this.edges.horizontal,
-            },
-            {
-                layoutVerticalRelative: false,
-                layoutHorizontalRelative: false,
-                spacingAbsolute: {
-                    x: 0,
-                    y: this.gridLayoutOptions.spacingAbsolute.y
-                },
-                spacingRelative: { x: 0, y: 0 },
-            }
-        );
-
-        let tension = 240;
-        let friction = Math.sqrt(tension) * 2;
-
-        for (let c = 0; c < this.gridCells.length; c++) {
-            let column = this.gridCells[c];
-            for (let r = 0; r < column.length; r++) {
-                let cell = column[r];
-
-                let fieldTargets = {};
-                GridLayout.layoutGridCell(fieldTargets as any, c, r, this.edges, this.gridLayoutOptions);
-                Animator.springTo(cell, fieldTargets, animate ? 1 : 0, tension, friction);
-            }
-        }
+            -this.addPanelButton.w;
+        this.grid.y = this.panelHeaderHeight_px;
+        this.grid.h = -this.panelHeaderHeight_px;
+        this.grid.layoutW = 1;
+        this.grid.layoutH = 1;
+        
+        this.columnHeaders.w = 0;
+        this.columnHeaders.layoutW = 1;
+        this.columnHeaders.h = this.panelHeaderHeight_px;
+        this.columnHeaders.layoutH = 0;
+        this.columnHeaders.x = 0;
+        this.columnHeaders.y = -this.panelHeaderHeight_px;
     }
 
-    protected dummyInitialize() {
-        let nColumns = this.regionViews.length;
-        let nRows = this.tracks.length;
+}
 
-        // create track header objects
-        for (let r = 0; r < nRows; r++) {
-            let track = this.tracks[r];
-            let trackHeader = new ReactObject(this.trackHeaderElement({ name: track.name }), 0, 0);
-            this.trackHeaders[r] = trackHeader;
-            this.trackHeaderContainer.add(trackHeader);
-        }
+class Track {
 
-        // fill the grid cells up with some rects
-        for (let c = 0; c < nColumns; c++) {
-            this.dummyInitializeColumn(c);
-        }
+    active: boolean = true;
+    row: number;
 
-        for (let c = 0; c < nColumns + 1; c++) this.edges.vertical[c] = c / nColumns;
-        for (let r = 0; r < nRows + 1; r++) this.edges.horizontal[r] = r * 100;
+    get y(): number { return this._y; }
+    get h(): number { return this._h; }
+
+    set y(v: number) { this._y = v; this.onLayoutChanged(this); }
+    set h(v: number) { this._h = v; this.onLayoutChanged(this); }
+
+    protected _y: number;
+    protected _h: number;
+
+    readonly header: Object2D;
+
+    constructor(readonly model: TrackModel, row: number, public onLayoutChanged: (t:Track) => void = () => {}) {
+        this.row = row;
+        this.header = new ReactObject(<TrackHeader track={this} />);
     }
 
-    protected dummyInitializeColumn(c: number) {
-        let nColumns = this.regionViews.length;
-        let nRows = this.tracks.length;
+}
 
-        let col = new Array<Object2D>(nRows);
-        this.gridCells[c] = col;
-        for (let r = 0; r < nRows; r++) {
-            let cell = new Object2D();
-            col[r] = cell;
-            this.gridContainer.add(cell);
+class Panel {
 
-            // add rect for visibility
-            let rect = new Rect(0, 0, [0, 0, 0, 1.]);
-            rect.layoutW = 1;
-            rect.layoutH = 1;
-            cell.add(rect);
+    trackTiles = new Array<Object2D>();
+    column: number;
 
-            if (r === 0) {
-                let regionView = this.regionViews[c];
-                let regionViewHeader = new ReactObject(this.regionViewHeaderElement({
-                    name: regionView.name,
-                    onClose: () => {
-                        this.removeRegionView(regionView);
-                    },
-                    enableClose: this.regionViews.length > 1
-                }), 0, 0);
-                regionViewHeader.layoutW = 1;
-                regionViewHeader.h = this.regionViewHeaderHeight_px;
-                regionViewHeader.layoutY = -1;
-                regionViewHeader.y = -this.gridLayoutOptions.spacingAbsolute.y * 0.5;
-                this.regionViewHeaders[c] = regionViewHeader;
-                cell.add(regionViewHeader);
-            }
-        }
+    get layoutParentX(): number { return this._layoutParentX; }
+    get layoutW(): number { return this._layoutW; }
+    get closable(): boolean { return this._closable; }
+    get closing(): boolean { return this._closing; }
+
+    set layoutParentX(v: number) { this._layoutParentX = v; this.onLayoutChanged(this); }
+    set layoutW(v: number) { this._layoutW = v; this.onLayoutChanged(this); }
+
+    set closable(v: boolean) { this._closable = v; this.updatePanelHeader(); }
+    set closing(v: boolean) { this._closing = v; this.updatePanelHeader(); }
+
+    protected _layoutParentX: number = 0;
+    protected _layoutW: number = 0;
+    protected _closable: boolean = false;
+    protected _closing: boolean = false;
+
+    readonly header: ReactObject;
+
+    constructor(readonly model: PanelModel, column: number, protected onClose: (t: Panel) => void, public onLayoutChanged: (t: Panel) => void = () => { }) {
+        this.column = column;
+        this.header = new ReactObject();
     }
 
-    protected trackHeaderElement(props: {
-        name: string
-    }) {
-        return <div
-            style={{
-                position: 'relative',
-                width: '100%',
-                height: '100%',
-                color: '#e8e8e8',
-                backgroundColor: '#171615',
-                borderRadius: '8px 0px 0px 8px',
-                fontSize: '15px',
-            }}
-        >
-            <div style={{
-                position: 'absolute',
-                width: '100%',
-                textAlign: 'center',
-                top: '50%',
-                transform: 'translate(0, -50%)',
-            }}>
-                {props.name}
-            </div>
+    protected updatePanelHeader() {
+        this.header.content = <PanelHeader panel={this} enableClose={this._closable && !this.closing} onClose={this.onClose} />;
+    }
+
+}
+
+type TrackModel = {
+    name: string;
+}
+
+type PanelModel = {
+    name: string
+}
+
+function TrackHeader(props: {
+    track: Track
+}) {
+    return <div
+        style={{
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            color: '#e8e8e8',
+            backgroundColor: '#171615',
+            borderRadius: '8px 0px 0px 8px',
+            fontSize: '15px',
+            overflow: 'hidden',
+        }}
+    >
+        <div style={{
+            position: 'absolute',
+            width: '100%',
+            textAlign: 'center',
+            top: '50%',
+            transform: 'translate(0, -50%)',
+        }}>
+            {props.track.model.name}
         </div>
-    }
+    </div>
+}
 
-    protected regionViewHeaderElement(props: {
-        name: string,
-        enableClose: boolean,
-        onClose: () => void
-    }) {
-        return <div
-            style={{
-                position: 'relative',
-                width: '100%',
-                height: '100%',
-                color: '#e8e8e8',
-                backgroundColor: '#171615',
-                borderRadius: '8px',
-                fontSize: '12px',
-                fontWeight: 200,
-            }}
-        >
-            <div style={{
-                position: 'absolute',
-                width: '100%',
-                textAlign: 'center',
-                top: '50%',
-                transform: 'translate(0, -50%)',
-            }}>
-                {props.name}
-            </div>
-            {props.enableClose ?
-                <div style={{
-                    position: 'absolute',
-                    width: '100%',
-                    textAlign: 'right',
-                    top: '50%',
-                    transform: 'translate(0, -50%)',
-                }}>
-                    <IconButton onClick={props.onClose}>
-                        <SvgClose color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)'/>
-                    </IconButton>
-                </div>
-
-                : null
-            }
+function PanelHeader(props: {
+    panel: Panel,
+    enableClose: boolean,
+    onClose: (panel: Panel) => void
+}) {
+    return <div
+        style={{
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            color: '#e8e8e8',
+            backgroundColor: '#171615',
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontWeight: 200,
+            overflow: 'hidden',
+        }}
+    >
+        <div style={{
+            position: 'absolute',
+            width: '100%',
+            textAlign: 'center',
+            top: '50%',
+            transform: 'translate(0, -50%)',
+        }}>
+            {props.panel.model.name}
         </div>
-    }
-
-    protected addRegionButtonElement(props: {
-        onAdd: () => void
-    }) {
-        return <div
-            style={{
-                position: 'relative',
-                width: '100%',
-                height: '100%',
-                color: '#e8e8e8',
-                backgroundColor: '#171615',
-                borderRadius: '8px 0px 0px 8px',
-            }}
-        >
+        {props.enableClose ?
             <div style={{
                 position: 'absolute',
                 width: '100%',
@@ -350,27 +513,41 @@ class TrackViewer extends Object2D {
                 top: '50%',
                 transform: 'translate(0, -50%)',
             }}>
-                <IconButton onClick={props.onAdd}>
-                    <SvgAdd color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' />
+                <IconButton onClick={() => props.onClose(props.panel)}>
+                    <SvgClose color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' />
                 </IconButton>
             </div>
+
+            : null
+        }
+    </div>
+}
+
+function AddPanelButton(props: {
+    onClick: () => void
+}) {
+    return <div
+    style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        color: '#e8e8e8',
+        backgroundColor: '#171615',
+        borderRadius: '8px 0px 0px 8px',
+    }}
+    >
+        <div style={{
+            position: 'absolute',
+            width: '100%',
+            textAlign: 'right',
+            top: '50%',
+            transform: 'translate(0, -50%)',
+        }}>
+            <IconButton onClick={props.onClick}>
+                <SvgAdd color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' />
+            </IconButton>
         </div>
-    }
-
-}
-
-class Track {
-
-    name: string;
-
-    constructor(name: string) {
-        this.name = name;
-    }
-
-}
-
-type RegionView = {
-    name: string
+    </div>
 }
 
 export default TrackViewer;
