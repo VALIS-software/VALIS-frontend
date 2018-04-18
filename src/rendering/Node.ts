@@ -27,6 +27,7 @@ export class Node<T extends Node<any>> {
 		let i = this._children.indexOf(child);
 		if (i === -1) return false;
 		this._children.splice(i, 1);
+		return true;
 	}
 
 	applyTreeTransforms(root: boolean = true) {
