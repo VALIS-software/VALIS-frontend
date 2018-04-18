@@ -114,7 +114,11 @@ export class AppCanvas extends React.Component<Props, State> {
                         zIndex: 0,
                     }}
                 />
-                {this.state.reactObjects.map((ro) => <ReactObjectContainer key={ro.reactUid} reactObject={ro} scene={this.scene} />)}
+                {
+                    this.state.reactObjects.map(
+                        (ro) => <ReactObjectContainer key={ro.reactUid} reactObject={ro} scene={this.scene} />
+                    )
+                }
             </div>
         )
     }
