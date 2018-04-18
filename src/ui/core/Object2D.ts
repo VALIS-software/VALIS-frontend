@@ -143,9 +143,6 @@ export class Object2D extends Renderable<Object2D> implements Layout {
         }
     }
 
-    onAdded() {}
-    onRemoved() {}
-
     // @! todo, event and detail type
     onPointerDown(listener: (event: any) => void) {
         this.eventEmitter.on('pointerdown', listener);
@@ -207,6 +204,9 @@ export class Object2D extends Renderable<Object2D> implements Layout {
             b: w[5] * b.b + w[13],
         }
     }
+
+    protected onAdded() { }
+    protected onRemoved() { }
 
     /**
      * Returns bounds in local-space coordinate after layout has been applied

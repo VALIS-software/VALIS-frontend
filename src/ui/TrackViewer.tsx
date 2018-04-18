@@ -8,7 +8,6 @@
 
 
 import Object2D from "./core/Object2D";
-import GridLayout from "./GridLayout";
 import Rect from "./core/Rect";
 import React = require("react");
 import ReactObject from "./core/ReactObject";
@@ -83,6 +82,7 @@ class TrackViewer extends Object2D {
         this.addPanelButton.layoutParentX = 1;
         this.columnHeaders.add(this.addPanelButton);
 
+        // initialize with some dummy data
         for (let track of [
             {name: 'Sequence'},
             {name: 'GRCh38'},
@@ -100,22 +100,14 @@ class TrackViewer extends Object2D {
         }
 
         this.layoutGridContainer();
-
-        (window as any).addPanel = () => {
-            this.addPanel({name: 'new'}, true);
-        }
-
-        (window as any).addTrack = () => {
-            this.addTrack({name: 'new track'});
-        }
     }
 
-    onAdded() {
+    protected onAdded() {
         super.onAdded();
         Animator.addStepCompleteCallback(this.onAnimationStep);
     }
 
-    onRemoved() {
+    protected onRemoved() {
         super.onRemoved();
         Animator.removeStepCompleteCallback(this.onAnimationStep);
     }
