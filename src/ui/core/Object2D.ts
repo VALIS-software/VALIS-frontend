@@ -13,11 +13,22 @@ export type Object2DInternal = RenderableInternal & {
     computedHeight: number,
 }
 
+export interface Layout {
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    layoutW: number,
+    layoutH: number,
+    layoutParentX: number,
+    layoutParentY: number,
+}
+
 /**
  * Implements 2D transforms, hierarchical layout and user interaction event handling
  * - Doesn't imply any particular display units
  */
-export class Object2D extends Renderable<Object2D> {
+export class Object2D extends Renderable<Object2D> implements Layout {
 
     // position
     set x(v: number) { this._x = v; this.worldTransformNeedsUpdate = true; }
@@ -121,7 +132,19 @@ export class Object2D extends Renderable<Object2D> {
     add(child: Object2D) {
         super.add(child);
         child.worldTransformNeedsUpdate = true;
+        child.onAdded();
     }
+
+    remove(child: Object2D) {
+        if (super.remove(child)) {
+            child.onRemoved();
+        } else {
+            return false;
+        }
+    }
+
+    onAdded() {}
+    onRemoved() {}
 
     // @! todo, event and detail type
     onPointerDown(listener: (event: any) => void) {
@@ -199,8 +222,8 @@ export class Object2D extends Renderable<Object2D> {
     }
 
     protected computeLayout(parentWidth: number, parentHeight: number) {
-        this.computedWidth = this._w + parentWidth * this._layoutW;
-        this.computedHeight = this._h + parentHeight * this._layoutH;
+        this.computedWidth = Math.max(this._w + parentWidth * this._layoutW, 0);
+        this.computedHeight = Math.max(this._h + parentHeight * this._layoutH, 0);
 
         this.computedX = this._x + parentWidth * this._layoutParentX + this.computedWidth * this._layoutX;
         this.computedY = this._y + parentHeight * this._layoutParentY + this.computedHeight * this._layoutY;
