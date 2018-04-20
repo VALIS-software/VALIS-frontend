@@ -1,12 +1,7 @@
-/*
-    ! Problem: We don't want to be applying layout every frame because that means we've got to rebuild the scene-graph world nodes
-
-    -> Track -> TrackModel
-    Track class has a reference to all asccoaited objects
-    - perofrmans layout itself
+/* 
+    - Track shouldn't use row to link with track tiles, since track tiles are permanently bound to a track
+    - We've got a column-headers element but not a row headers element - why? Which approach is better
 */
-
-
 import Object2D from "./core/Object2D";
 import Rect from "./core/Rect";
 import React = require("react");
@@ -34,17 +29,6 @@ class TrackViewer extends Object2D {
         friction: Math.sqrt(SPRING_TENSION) * 2,
     }
 
-    protected gridLayoutOptions = {
-        layoutVerticalRelative: true,
-        layoutHorizontalRelative: false,
-        spacingAbsolute: {
-            x: 10, y: 10,
-        },
-        spacingRelative: {
-            x: 0.0, y: 0.0,
-        }
-    }
-
     protected edges = {
         vertical: new Array<number>(),
         horizontal: new Array<number>(),
@@ -70,7 +54,7 @@ class TrackViewer extends Object2D {
         this.grid = new Object2D();
         this.add(this.grid);
         this.columnHeaders = new Object2D();
-        this.grid.add(this.columnHeaders);
+        this.add(this.columnHeaders);
         this.addPanelButton = new ReactObject(
             <AddPanelButton onClick={() => {
                 this.addPanel({ name: 'new' }, true);
@@ -129,8 +113,9 @@ class TrackViewer extends Object2D {
         }
         this.tracks.push(track);
 
-        track.header.x = -this.trackHeaderWidth_px;
+        track.header.x = -this.trackHeaderWidth_px + this.spacing.x * 0.5;
         track.header.w = this.trackHeaderWidth_px;
+
         this.grid.add(track.header);
         this.positionTrack(track, false);
     }
@@ -359,21 +344,21 @@ class TrackViewer extends Object2D {
     }
     
     protected layoutGridContainer() {
-        this.grid.x = this.trackHeaderWidth_px + this.gridLayoutOptions.spacingAbsolute.x * 0.5;
+        this.grid.x = this.trackHeaderWidth_px + this.spacing.x * 0.5;
         this.grid.w =
-            -this.trackHeaderWidth_px - this.gridLayoutOptions.spacingAbsolute.x
+            -this.trackHeaderWidth_px - this.spacing.x
             -this.addPanelButton.w;
-        this.grid.y = this.panelHeaderHeight_px;
+        this.grid.y = this.panelHeaderHeight_px + this.spacing.y * 0.5 + 30;
         this.grid.h = -this.panelHeaderHeight_px;
         this.grid.layoutW = 1;
         this.grid.layoutH = 1;
-        
-        this.columnHeaders.w = 0;
-        this.columnHeaders.layoutW = 1;
+
+        this.columnHeaders.x = this.grid.x;
+        this.columnHeaders.w = this.grid.w;
+        this.columnHeaders.y = 0;
         this.columnHeaders.h = this.panelHeaderHeight_px;
-        this.columnHeaders.layoutH = 0;
-        this.columnHeaders.x = 0;
-        this.columnHeaders.y = -this.panelHeaderHeight_px;
+        this.columnHeaders.layoutW = this.grid.layoutW;
+        this.columnHeaders.layoutH = this.grid.layoutH;
     }
 
 }
