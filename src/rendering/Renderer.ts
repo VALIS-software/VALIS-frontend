@@ -39,13 +39,6 @@ export class Renderer {
 		this.gl = this.deviceInternal.gl;
 		this.extVao = this.deviceInternal.extVao;
 		this.drawContext = new DrawContext(this.gl, this.deviceInternal.extInstanced);
-
-
-		// @! temporary initial GL state for 2D drawing
-		// in the future this should be applied to the root 2D node
-		this.gl.enable(this.gl.DEPTH_TEST);
-		this.gl.depthFunc(this.gl.LEQUAL);
-		this.gl.disable(this.gl.CULL_FACE);
 	}
 
 	private _opaque = new Array<Renderable<any>>();

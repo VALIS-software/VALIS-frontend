@@ -61,12 +61,18 @@ export class AppCanvas extends React.Component<Props, State> {
             throw 'WebGL not supported';
         }
 
+        // @! temporary initial GL state for 2D drawing
+        // in the future this should be applied to the root 2D node
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LEQUAL);
+        gl.disable(gl.CULL_FACE);
+
         this.device = new Device(gl);
         this.renderer = new Renderer(this.device);
 
         SharedResources.initialize(this.device);
 
-        console.log(`Viewer created with device %c"${this.device.name}"`, 'font-weight: bold');
+        console.log(`AppCanvas created with device %c"${this.device.name}"`, 'font-weight: bold');
     }
 
     componentWillUnmount() {
