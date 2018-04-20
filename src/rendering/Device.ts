@@ -1,11 +1,15 @@
 /**
 
-Dev notes
-
+Dev Notes:
 - Should be dependency free, doesn't know about Renderer
 - Should not have any state fields, purely object management
 - TextureManager
 	"Performance problems have been observed on some implementations when using uniform1i to update sampler uniforms. To change the texture referenced by a sampler uniform, binding a new texture to the texture unit referenced by the uniform should be preferred over using uniform1i to update the uniform itself."
+
+Todo:
+- Textures
+- Device capabilities fields
+- UNSIGNED_INT index buffer extension + basic fallback behavior
 
 **/
 
@@ -83,6 +87,7 @@ export class Device {
 					case 1: dataType = IndexDataType.UNSIGNED_BYTE; break;
 					case 2: dataType = IndexDataType.UNSIGNED_SHORT; break;
 					case 4: dataType = IndexDataType.UNSIGNED_INT; break;
+					// @! UNSIGNED_INT requires extension, should enable when required and fallback to re-interpreting as UNSIGNED_SHORT
 				}
 			} else {
 				throw 'dataType field is required if data is not set';
@@ -192,7 +197,6 @@ export class Device {
 	}
 
 	createVertexState(vertexStateDescriptor: VertexStateDescriptor) {
-		// handle doesn't already exist, create one
 		const gl = this.gl;
 		const extVao = this.extVao;
 
@@ -398,23 +402,26 @@ class IdManager {
 	top: number = 0;
 	availableIdQueue = new Array<number>();
 
-	constructor(protected minimize: boolean) {}
+	constructor(protected minimize: boolean) { }
 
 	assign(): number {
 		if (this.availableIdQueue.length > 0) {
 			return this.availableIdQueue.pop();
 		}
+
 		return this.top++;
 	}
 
 	release(id: number) {
-		if (this.availableIdQueue.indexOf(id) !== -1) return;
+		if (this.availableIdQueue.indexOf(id) !== -1) return false;
 
 		this.availableIdQueue.push(id);
 
 		if (this.minimize) {
-			this.availableIdQueue.sort((a, b) => a - b);
+			this.availableIdQueue.sort((a, b) => b - a);
 		}
+
+		return true;
 	}
 
 	count(): number {
