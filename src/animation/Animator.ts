@@ -2,11 +2,10 @@
  * Physically based animation
  * 
  * Todo:
- * - should have separate animations
- * - implement easings via step functions
- * - implement a ease-blended spring so the spring has a fixed duration
- *  - pick spring parameters for a given duration and combine with a lerp to 0 as we approach duration
- * 
+ * - Parameterize springs by duration and normalized dampening
+ * - Replace energy threshold with some user-controlled parameter
+ * - Implement traditional easings via step functions
+ * - For fixed time springs we can implement a fix/physical blended version of springStep, that lerps to 0 as t -> duration
  */
 export class Animator {
 
@@ -149,11 +148,11 @@ export class Animator {
                 let totalEnergy = animation.state.pe + kineticEnergy;
 
                 // @! magic number: can we derive a condition that's linked to user-known properties
-                if (totalEnergy < 0.0001) {
+                if (totalEnergy < 0.000001) {
                     delete entry.animatingFields[field];
                     object[field] = animation.target;
 
-                    // fire and remove any field-complete registered callbacks
+                    // fire any field-complete callbacks
                     for (let j = Animator.animationCompleteCallbacks.length - 1; j >=0; j--) {
                         let e = Animator.animationCompleteCallbacks[j];
                         if (e.object === object && e.field === field) {
