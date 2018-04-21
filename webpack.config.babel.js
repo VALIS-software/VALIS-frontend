@@ -67,12 +67,26 @@ export default (env = defaultEnv) => ({
   module: {
     rules: [
       {
-        test: /\.(jpe?g|gif|png|svg|woff|ttf|wav|mp3|frag|vert|json)$/,
+        test: /\.(jpe?g|gif|png|svg|woff|ttf|wav|mp3|frag|vert)$/,
         loader: "file-loader",
         query: {
           limit: 10000,
           name: 'static/[hash].[ext]',
         }
+      },
+      {
+        // https://github.com/webpack/webpack/issues/6586
+        type: 'javascript/auto',
+        test: /\.(json)/,
+        exclude: /(node_modules)/,
+        use: [{
+          loader: 'file-loader',
+          options: { name: '[name].[ext]' },
+        }],
+      },
+      {
+        // All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
+        test: /\.tsx?$/, loader: "awesome-typescript-loader"
       },
       {
         test: /.jsx?$/,
