@@ -7,14 +7,14 @@
 */
 
 import * as React from "react";
-import Node from './rendering/Node';
-import Device from './rendering/Device';
-import RenderPass from './rendering/RenderPass';
-import Renderer from './rendering/Renderer';
-import Renderable from './rendering/Renderable';
-import SharedResources from './ui/core/SharedResources';
-import { Object2D, Object2DInternal } from './ui/core/Object2D';
-import { ReactObject, ReactObjectContainer } from "./ui/core/ReactObject";
+import Node from '../../rendering/Node';
+import Device from '../../rendering/Device';
+import RenderPass from '../../rendering/RenderPass';
+import Renderer from '../../rendering/Renderer';
+import Renderable from '../../rendering/Renderable';
+import SharedResources from './SharedResources';
+import { Object2D, Object2DInternal } from './Object2D';
+import { ReactObject, ReactObjectContainer } from "./ReactObject";
 
 
 interface Props {
@@ -72,6 +72,8 @@ export class AppCanvas extends React.Component<Props, State> {
 
         SharedResources.initialize(this.device);
 
+        this.addInputListeners();
+
         console.log(`AppCanvas created with device %c"${this.device.name}"`, 'font-weight: bold');
     }
 
@@ -84,6 +86,8 @@ export class AppCanvas extends React.Component<Props, State> {
 
         this.device = null;
         this.renderer = null;
+
+        this.removeInputListeners();
     }
 
     componentDidUpdate(prevProps: Props, prevState: State, snapshot: any) {
@@ -153,7 +157,7 @@ export class AppCanvas extends React.Component<Props, State> {
 
     /**
 	 * Apply DOM pixel coordinate system to the scene via a transform on the root node
-	 * - Flip z-axis from default OpenGL coordinates so that 1 = 'above' the screen and -1 is inside the screen
+	 * - Flip z-axis from default OpenGL coordinates so that 1 = in front the screen and -1 is inside the screen
 	 * - z coordinates clip outside of -1 to 1
 	 * - (0, 0) corresponds to the top-left of the canvas
 	 * - (canvas.clientWidth, canvas.clientHeight) corresponds to the bottom left
@@ -216,6 +220,83 @@ export class AppCanvas extends React.Component<Props, State> {
                 reactObjects: this._reactObjects
             });
         }
+    }
+
+    protected addInputListeners() {
+        this.canvas.addEventListener('mousedown', this.onMouseDown);
+        window.addEventListener('mouseup', this.onMouseUp);
+        window.addEventListener('mousemove', this.onMouseMove);
+        window.addEventListener('wheel', this.onWheel);
+    }
+
+    protected removeInputListeners() {
+        this.canvas.removeEventListener('mousedown', this.onMouseDown);
+        window.removeEventListener('mouseup', this.onMouseUp);
+        window.removeEventListener('mousemove', this.onMouseMove);
+        window.removeEventListener('wheel', this.onWheel);
+    }
+
+    protected canvasCoordinates(e: MouseEvent) {
+        let x: number = 0;
+        let y: number = 0;
+
+        let canvasRect = this.canvas.getBoundingClientRect();
+        let canvasX = window.scrollX + this.canvas.clientLeft;
+        let canvasY = window.scrollY + canvasRect.top;
+        x = e.pageX - canvasX;
+        y = e.pageY - canvasY;
+
+        return  {
+            x: x,
+            y: y,
+        }
+    }
+
+    protected worldSpaceCoordinates(canvasSpaceCoordinates: {x: number, y: number}) {
+        return {
+            x: (canvasSpaceCoordinates.x / this.props.width)  * 2 - 1,
+            y: -((canvasSpaceCoordinates.y / this.props.height) * 2 - 1),
+        }
+    }
+
+    protected onMouseMove = (e: MouseEvent) => {
+        let worldSpacePosition = this.worldSpaceCoordinates(this.canvasCoordinates(e));
+        let hitNodes = [];
+
+        for (let node of this.scene) {
+            if (node instanceof Object2D) {
+                let nodeInternal = node as any as Object2DInternal;
+                if (!nodeInternal.handlesPointerEvents) continue;
+
+                let worldSpaceBounds = node.getWorldBounds();
+                
+                // hit-test position with object bounds
+                if (
+                    worldSpacePosition.x >= worldSpaceBounds.l &&
+                    worldSpacePosition.x <= worldSpaceBounds.r &&
+                    worldSpacePosition.y >= worldSpaceBounds.b &&
+                    worldSpacePosition.y <= worldSpaceBounds.t
+                ) {
+                    hitNodes.push(node);
+                }
+            }
+        }
+
+        hitNodes.sort(this.compareZ);
+
+        for (let i = 0; i < hitNodes.length; i++) {
+            let node = hitNodes[i];
+            // node.emit('mousemove', e)
+            // e.stopPropagation()
+            // if (e.defaultPrevented) break;
+        }
+    }
+    protected onMouseDown = (e: MouseEvent) => { }
+    protected onMouseUp = (e: MouseEvent) => { }
+    protected onWheel = (e: WheelEvent) => { }
+
+    protected compareZ(a: Object2D, b: Object2D) {
+        return a.getWorldZ() - b.getWorldZ();
     }
 
 }

@@ -25,7 +25,8 @@ const dataSourceConfig = {
 };
 
 type Props = {
-
+    height: number,
+    marginBottom: number,
 }
 
 class Header extends React.Component<Props> {
@@ -106,8 +107,14 @@ class Header extends React.Component<Props> {
 
     render() {
         // const addDatasetBrowser = this.addDatasetBrowser;
-        return (<div className="header">
-            <Toolbar>
+        return (<div className="header"
+            style={{
+                marginBottom: this.props.marginBottom
+            }}
+        >
+            <Toolbar style={{
+                height: this.props.height
+            }}>
                 <ToolbarGroup firstChild={true} style={{ width: '512px' }}>
                     <div className="search-box">
                         <AutoComplete

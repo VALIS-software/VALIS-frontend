@@ -205,6 +205,10 @@ export class Object2D extends Renderable<Object2D> implements Layout {
         }
     }
 
+    getWorldZ() {
+        return this.worldTransformMat4[14];
+    }
+
     protected onAdded() { }
     protected onRemoved() { }
 

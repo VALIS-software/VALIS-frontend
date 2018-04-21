@@ -266,6 +266,9 @@ class TrackViewer extends Object2D {
 
     protected createTrackTile(model: TrackModel): Object2D {
         let trackTile = new Rect(0, 0, [0, 0, 0, 1]);
+        trackTile.onPointerDown(() => {
+            console.log('Pointer Down on track-tile')
+        });
         this.grid.add(trackTile);
         return trackTile;
     }

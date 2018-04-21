@@ -1,5 +1,5 @@
 import * as React from "react";
-import { AppCanvas } from "./AppCanvas";
+import { AppCanvas } from "./ui/core/AppCanvas";
 import Object2D from "./ui/core/Object2D";
 import TrackViewer from "./ui/TrackViewer";
 import Animator from "./animation/Animator";
@@ -18,6 +18,7 @@ interface State {
 export class App extends React.Component<Props, State> {
 
 	readonly headerHeight: number = 50;
+	readonly headerMargin: number = 30;
 	protected appCanvas: AppCanvas;
 
 	constructor(props: Props) {
@@ -28,7 +29,7 @@ export class App extends React.Component<Props, State> {
 		this.state = {
 			headerHeight: this.headerHeight,
 			viewerWidth: window.innerWidth,
-			viewerHeight: window.innerHeight - this.headerHeight,
+			viewerHeight: this.canvasHeight(),
 			canvasContent: trackViewer
 		};
 	}
@@ -48,7 +49,7 @@ export class App extends React.Component<Props, State> {
 
 	render() {
 		return (<div>
-			<Header />
+			<Header marginBottom={this.headerMargin} height={this.headerHeight}/>
 			<AppCanvas
 				ref={(v) => this.appCanvas = v}
 				width={this.state.viewerWidth}
@@ -87,10 +88,14 @@ export class App extends React.Component<Props, State> {
 		this.appCanvas.renderCanvas();
 	}
 
+	protected canvasHeight() {
+		return window.innerHeight - this.headerHeight - this.headerMargin;
+	}
+
 	protected onResize = () => {
 		this.setState({
 			viewerWidth: window.innerWidth,
-			viewerHeight: window.innerHeight - this.headerHeight,
+			viewerHeight: this.canvasHeight(),
 		});
 	}
 

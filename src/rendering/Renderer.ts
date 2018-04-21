@@ -60,7 +60,7 @@ export class Renderer {
 		let opaque = this._opaque;
 		let transparent = this._transparent;
 
-		// iterate nodes, build optimized list for rendering
+		// iterate nodes, build state-change minimizing list for rendering
 		for (let node of pass.root) {
 			if (node instanceof Renderable) {
 				if (!node.render) continue;
@@ -84,6 +84,7 @@ export class Renderer {
 					nodeInternal.gpuResourcesNeedAllocate = false;
 				}
 
+				// store most important state in 32-bit key
 				nodeInternal._renderStateKey = this.encodeRenderState(
 					nodeInternal.gpuProgram.id,
 					nodeInternal.gpuVertexState.id,
