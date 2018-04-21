@@ -1,9 +1,9 @@
 import { Renderable, RenderableInternal } from '../../rendering/Renderable';
 import { EventEmitter } from 'events';
 import { debug } from 'util';
+import { InteractionEvent, InteractionEventMap } from './InteractionEvent';
 
 export type Object2DInternal = RenderableInternal & {
-    handlesPointerEvents: boolean,
     eventEmitter: EventEmitter,
     worldTransformNeedsUpdate: boolean,
     worldTransformMat4: Float32Array,
@@ -11,6 +11,7 @@ export type Object2DInternal = RenderableInternal & {
     computedY: number,
     computedWidth: number,
     computedHeight: number,
+    interactionEventListenerCount: { [Name in keyof InteractionEventMap]: number },
 }
 
 export interface Layout {
@@ -84,6 +85,8 @@ export class Object2D extends Renderable<Object2D> implements Layout {
     set layoutH(h: number) { this._layoutH = h; this.worldTransformNeedsUpdate = true; }
     get layoutH() { return this._layoutH; }
 
+    cursorStyle: null | string = null;
+
     // transform parameters
     protected _x: number = 0;
     protected _y: number = 0;
@@ -103,9 +106,15 @@ export class Object2D extends Renderable<Object2D> implements Layout {
     protected _layoutW: number = 0;
     protected _layoutH: number = 0;
 
-    protected handlesPointerEvents: Boolean = false;
-    protected pointerEventCount = 0;
-    protected cursorStyle: null | string = null;
+    // we track the number of listeners for each interaction event to prevent work when emitting events
+    protected interactionEventListenerCount: { [Name in keyof InteractionEventMap]: number } = {
+        pointermove: 0,
+        pointerdown: 0,
+        pointerup: 0,
+        click: 0,
+        dblclick: 0,
+        wheel: 0
+    };
 
     protected worldTransformNeedsUpdate = true;
     protected worldTransformMat4 = new Float32Array([
@@ -143,33 +152,16 @@ export class Object2D extends Renderable<Object2D> implements Layout {
         }
     }
 
-    // @! todo, event and detail type
-    onPointerDown(listener: (event: any) => void) {
-        this.eventEmitter.on('pointerdown', listener);
-        this.pointerEventCount++;
-        this.handlesPointerEvents = true;
+    addInteractionEventListener<K extends keyof InteractionEventMap>(event: K, listener: (e: InteractionEventMap[K]) => void) {
+        this.eventEmitter.on(event, listener);
+        this.interactionEventListenerCount[event]++;
     }
 
-    onPointerUp(listener: (event: any) => void) {
-        this.eventEmitter.on('pointerup', listener);
-        this.pointerEventCount++;
-        this.handlesPointerEvents = true;
-    }
-
-    removePointerDown(listener: (event: any) => void) {
-        this.eventEmitter.removeListener('pointerdown', listener);
-        this.pointerEventCount--;
-        this.handlesPointerEvents = this.pointerEventCount > 0;
-    }
-
-    removePointerUp(listener: (event: any) => void) {
-        this.eventEmitter.removeListener('pointerup', listener);
-        this.pointerEventCount--;
-        this.handlesPointerEvents = this.pointerEventCount > 0;
-    }
-    
-    emitPointerDown(detail: any) {
-        this.eventEmitter.emit('pointerdown', detail);
+    removeInteractionEventListener<K extends keyof InteractionEventMap>(event: K, listener: (e: InteractionEventMap[K]) => void) {
+        if (this.eventEmitter.rawListeners(event).indexOf(listener) !== -1) {
+            this.eventEmitter.removeListener(event, listener);
+            this.interactionEventListenerCount[event]--;
+        }
     }
 
     applyTreeTransforms(root: boolean = true) {
