@@ -84,6 +84,9 @@ class TrackViewer extends Object2D {
         }
 
         this.layoutGridContainer();
+
+        // @! temp for debug
+        (window as any).trackViewer = this;
     }
 
     protected onAdded() {
@@ -266,9 +269,54 @@ class TrackViewer extends Object2D {
 
     protected createTrackTile(model: TrackModel): Object2D {
         let trackTile = new Rect(0, 0, [0, 0, 0, 1]);
-        trackTile.onPointerDown(() => {
-            console.log('Pointer Down on track-tile')
+
+        // @! temp debug
+        let cursors = [
+            'alias',
+            'all-scroll',
+            'auto',
+            'cell',
+            'context-menu',
+            'col-resize',
+            'copy',
+            'crosshair',
+            'default',
+            'e-resize',
+            'ew-resize',
+            'grab',
+            'grabbing',
+            'help',
+            'move',
+            'n-resize',
+            'ne-resize',
+            'nesw-resize',
+            'ns-resize',
+            'nw-resize',
+            'nwse-resize',
+            'no-drop',
+            'none',
+            'not-allowed',
+            'pointer',
+            'progress',
+            'row-resize',
+            's-resize',
+            'se-resize',
+            'sw-resize',
+            'text',
+            'w-resize',
+            'wait',
+            'zoom-in',
+            'zoom-out',
+        ];
+        trackTile.cursorStyle = cursors[Math.floor(Math.random() * cursors.length)];
+        trackTile.addInteractionEventListener('pointermove', (e) => {
+            console.log('interaction event pointermove', e);
         });
+        trackTile.addInteractionEventListener('pointerup', (e) => {
+            trackTile.color = new Float32Array([Math.random(), Math.random(), Math.random(), 1]);
+        });
+
+
         this.grid.add(trackTile);
         return trackTile;
     }
@@ -444,6 +492,7 @@ function TrackHeader(props: {
             borderRadius: '8px 0px 0px 8px',
             fontSize: '15px',
             overflow: 'hidden',
+            userSelect: 'none',
         }}
     >
         <div style={{
@@ -474,6 +523,7 @@ function PanelHeader(props: {
             fontSize: '12px',
             fontWeight: 200,
             overflow: 'hidden',
+            userSelect: 'none',
         }}
     >
         <div style={{
