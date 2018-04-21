@@ -29,7 +29,9 @@ export default (env = defaultEnv) => ({
     ...env.dev ? [
       new HotModuleReplacementPlugin(),
     ] : [
-      new MiniCssExtractPlugin()
+      new MiniCssExtractPlugin({
+        filename: 'static/[name].css'
+      })
     ],
     new HtmlWebpackPlugin({
       // Here we do a little hack, to allow webpack-dev-server to find the index.html, but also use URL like static/bundle.js in the packed version in /dist
@@ -81,7 +83,7 @@ export default (env = defaultEnv) => ({
         exclude: /(node_modules)/,
         use: [{
           loader: 'file-loader',
-          options: { name: '[name].[ext]' },
+          options: { name: 'static/[name].[ext]' },
         }],
       },
       {
