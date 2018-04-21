@@ -1,7 +1,7 @@
 const path = require('path');
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import {HotModuleReplacementPlugin} from 'webpack';
-import ExtractTextPlugin from 'extract-text-webpack-plugin';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import {DefinePlugin} from 'webpack';
 import WebpackGoogleCloudStoragePlugin from 'webpack-google-cloud-storage-plugin';
 var ZipPlugin = require('zip-webpack-plugin');
@@ -29,7 +29,7 @@ export default (env = defaultEnv) => ({
     ...env.dev ? [
       new HotModuleReplacementPlugin(),
     ] : [
-      new ExtractTextPlugin('static/[name].css'),
+      new MiniCssExtractPlugin()
     ],
     new HtmlWebpackPlugin({
       // Here we do a little hack, to allow webpack-dev-server to find the index.html, but also use URL like static/bundle.js in the packed version in /dist
@@ -118,10 +118,11 @@ export default (env = defaultEnv) => ({
       },
       {
         test: /\.(css|scss|sass)$/,
-        loader: env.dev ? 'style-loader!css-loader!sass-loader' : ExtractTextPlugin.extract({
-          fallbackLoader: 'style-loader',
-          loader: 'css-loader!sass-loader'
-        })
+        use: [
+          env.dev ? 'style-loader' : MiniCssExtractPlugin.loader,
+          'css-loader',
+          'sass-loader',
+        ],
       },
     ]
   },
