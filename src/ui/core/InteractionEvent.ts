@@ -4,9 +4,14 @@ export interface InteractionEventMap {
     'pointermove': InteractionEvent;
     'pointerdown': InteractionEvent;
     'pointerup': InteractionEvent;
+
     'click': InteractionEvent;
     'dblclick': InteractionEvent;
     'wheel': WheelInteractionEvent;
+
+    'dragstart': InteractionEvent;
+    'dragmove': InteractionEvent;
+    'dragend': InteractionEvent;
 }
 
 export type InteractionEventInternal = {
@@ -17,6 +22,8 @@ export type InteractionEventInternal = {
 export interface InteractionEventInit {
     target: Object2D;
 
+    worldX: number;
+    worldY: number;
     canvasX: number;
     canvasY: number;
     localX: number;
@@ -24,8 +31,8 @@ export interface InteractionEventInit {
     fractionX: number;
     fractionY: number;
 
-    button: number;
-    buttons: number;
+    buttonChange: number;
+    buttonState: number;
     altKey: boolean;
     ctrlKey: boolean;
     shiftKey: boolean;
@@ -49,6 +56,8 @@ export class InteractionEvent {
     
     readonly target: Object2D;
 
+    readonly worldX: number;
+    readonly worldY: number;
     readonly canvasX: number;
     readonly canvasY: number;
     readonly localX: number;
@@ -56,8 +65,8 @@ export class InteractionEvent {
     readonly fractionX: number;
     readonly fractionY: number;
 
-    readonly button: number;
-    readonly buttons: number;
+    readonly buttonChange: number;
+    readonly buttonState: number;
     readonly altKey: boolean;
     readonly ctrlKey: boolean;
     readonly shiftKey: boolean;
@@ -75,16 +84,18 @@ export class InteractionEvent {
     readonly tiltX: number;
     readonly tiltY: number;
 
-    constructor(init: InteractionEventInit) {
+    constructor(init: InteractionEventInit, protected readonly sourceEvent: Event) {
         this.target = init.target;
+        this.worldX = init.worldX;
+        this.worldY = init.worldY;
         this.canvasX = init.canvasX;
         this.canvasY = init.canvasY;
         this.localX = init.localX;
         this.localY = init.localY;
         this.fractionX = init.fractionX;
         this.fractionY = init.fractionY;
-        this.button = init.button;
-        this.buttons = init.buttons;
+        this.buttonChange = init.buttonChange;
+        this.buttonState = init.buttonState;
         this.altKey = init.altKey;
         this.ctrlKey = init.ctrlKey;
         this.shiftKey = init.shiftKey;
@@ -102,6 +113,7 @@ export class InteractionEvent {
 
     preventDefault() {
         this.defaultPrevented = true;
+        this.sourceEvent.preventDefault();
     }
 
     stopPropagation() {
@@ -121,8 +133,8 @@ export class WheelInteractionEvent extends InteractionEvent {
     readonly wheelDeltaY: number;
     readonly wheelDeltaZ: number;
 
-    constructor(init: WheelInteractionEventInit) {
-        super(init);
+    constructor(init: WheelInteractionEventInit, sourceEvent: Event) {
+        super(init, sourceEvent);
         this.wheelDeltaX = init.wheelDeltaX;
         this.wheelDeltaY = init.wheelDeltaY;
         this.wheelDeltaZ = init.wheelDeltaZ;

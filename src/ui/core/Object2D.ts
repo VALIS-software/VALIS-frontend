@@ -113,7 +113,10 @@ export class Object2D extends Renderable<Object2D> implements Layout {
         pointerup: 0,
         click: 0,
         dblclick: 0,
-        wheel: 0
+        wheel: 0,
+        dragstart: 0,
+        dragmove: 0,
+        dragend: 0,
     };
 
     protected worldTransformNeedsUpdate = true;
@@ -152,12 +155,12 @@ export class Object2D extends Renderable<Object2D> implements Layout {
         }
     }
 
-    addInteractionEventListener<K extends keyof InteractionEventMap>(event: K, listener: (e: InteractionEventMap[K]) => void) {
+    addEventListener<K extends keyof InteractionEventMap>(event: K, listener: (e: InteractionEventMap[K]) => void) {
         this.eventEmitter.on(event, listener);
         this.interactionEventListenerCount[event]++;
     }
 
-    removeInteractionEventListener<K extends keyof InteractionEventMap>(event: K, listener: (e: InteractionEventMap[K]) => void) {
+    removeEventListener<K extends keyof InteractionEventMap>(event: K, listener: (e: InteractionEventMap[K]) => void) {
         if (this.eventEmitter.rawListeners(event).indexOf(listener) !== -1) {
             this.eventEmitter.removeListener(event, listener);
             this.interactionEventListenerCount[event]--;
