@@ -1,7 +1,7 @@
 const path = require('path');
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import {HotModuleReplacementPlugin} from 'webpack';
-import ExtractTextPlugin from 'extract-text-webpack-plugin';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import {DefinePlugin} from 'webpack';
 import WebpackGoogleCloudStoragePlugin from 'webpack-google-cloud-storage-plugin';
 var ZipPlugin = require('zip-webpack-plugin');
@@ -29,7 +29,9 @@ export default (env = defaultEnv) => ({
     ...env.dev ? [
       new HotModuleReplacementPlugin(),
     ] : [
-      new ExtractTextPlugin('static/[name].css'),
+      new MiniCssExtractPlugin({
+        filename: 'static/[name].css'
+      })
     ],
     new HtmlWebpackPlugin({
       // Here we do a little hack, to allow webpack-dev-server to find the index.html, but also use URL like static/bundle.js in the packed version in /dist
@@ -67,12 +69,26 @@ export default (env = defaultEnv) => ({
   module: {
     rules: [
       {
-        test: /\.(jpe?g|gif|png|svg|woff|ttf|wav|mp3|frag|vert|json)$/,
+        test: /\.(jpe?g|gif|png|svg|woff|ttf|wav|mp3|frag|vert)$/,
         loader: "file-loader",
         query: {
           limit: 10000,
           name: 'static/[hash].[ext]',
         }
+      },
+      {
+        // https://github.com/webpack/webpack/issues/6586
+        type: 'javascript/auto',
+        test: /\.(json)/,
+        exclude: /(node_modules)/,
+        use: [{
+          loader: 'file-loader',
+          options: { name: 'static/[name].[ext]' },
+        }],
+      },
+      {
+        // All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
+        test: /\.tsx?$/, loader: "awesome-typescript-loader"
       },
       {
         test: /.jsx?$/,
@@ -104,10 +120,11 @@ export default (env = defaultEnv) => ({
       },
       {
         test: /\.(css|scss|sass)$/,
-        loader: env.dev ? 'style-loader!css-loader!sass-loader' : ExtractTextPlugin.extract({
-          fallbackLoader: 'style-loader',
-          loader: 'css-loader!sass-loader'
-        })
+        use: [
+          env.dev ? 'style-loader' : MiniCssExtractPlugin.loader,
+          'css-loader',
+          'sass-loader',
+        ],
       },
     ]
   },
