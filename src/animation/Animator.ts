@@ -2,6 +2,9 @@
  * Physically based animation
  * 
  * Todo:
+ * - Improve data structures:
+ *      - Swap out array for linked list?
+ *      - Can we avoid searches?
  * - Parameterize springs by duration and normalized dampening
  * - Replace energy threshold with some user-controlled parameter
  * - Implement traditional easings via step functions
@@ -20,8 +23,8 @@ export class Animator {
         } },
     }>();
 
-
     protected static stepCallbacks = new Array<(steppedAnimationCount: number) => void>();
+
     protected static animationCompleteCallbacks = new Array<{
         callback: (object: any) => void,
         object: any,
@@ -68,7 +71,12 @@ export class Animator {
         for (let field of fields) {
             let target = fieldTargets[field];
             let current = object[field];
-            if (target === current) continue;
+
+            if (target === current) {
+                delete entry.animatingFields[field];
+                Animator.fieldComplete(object, field);
+                continue;
+            }
 
             let animation = entry.animatingFields[field];
             // create or update dynamic motion fields
@@ -152,18 +160,12 @@ export class Animator {
                     delete entry.animatingFields[field];
                     object[field] = animation.target;
 
-                    // fire any field-complete callbacks
-                    for (let j = Animator.animationCompleteCallbacks.length - 1; j >=0; j--) {
-                        let e = Animator.animationCompleteCallbacks[j];
-                        if (e.object === object && e.field === field) {
-                            e.callback(object);
-                        }
-                    }
+                    Animator.fieldComplete(object, field);
                 }
             }
 
             // if there's no field animations left then remove the entry
-            // we cannot assume Animator.active[i] still referes to the entry as a callback may have removed it
+            // we cannot assume Animator.active[i] still refers to the entry as a callback may have removed it
             if (Object.keys(entry.animatingFields).length === 0 && Animator.active[i] === entry) {
                 Animator.active.splice(i, 1);
             }
@@ -217,6 +219,16 @@ export class Animator {
         if (i === -1) return false;
         Animator.stepCallbacks.splice(i, 1);
         return true;
+    }
+
+    private static fieldComplete(object: any, field: string) {
+        // fire any field-complete callbacks
+        for (let j = Animator.animationCompleteCallbacks.length - 1; j >= 0; j--) {
+            let e = Animator.animationCompleteCallbacks[j];
+            if (e.object === object && e.field === field) {
+                e.callback(object);
+            }
+        }
     }
 
     private static stringStep(t_s: number, state: AnimationState, parameters: {
