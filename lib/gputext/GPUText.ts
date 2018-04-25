@@ -185,7 +185,7 @@ class GPUText {
 
 }
 
-interface TextureAtlasGlyph {
+export interface TextureAtlasGlyph {
 	// location of glyph within the text atlas, in units of pixels
 	atlasRect: { x: number, y: number, w: number, h: number },
 	atlasScale: number, // (normalized font units) * atlasScale = (pixels in texture atlas)
@@ -194,13 +194,13 @@ interface TextureAtlasGlyph {
 	offset: { x: number, y: number },
 }
 
-interface TextureAtlasCharacter {
+export interface TextureAtlasCharacter {
 	// the distance from the glyph's x = 0 coordinate to the x = 0 coordinate of the next glyph, in normalized font units
 	advance: number,
 	glyph?: TextureAtlasGlyph,
 }
 
-interface ResourceReference {
+export interface ResourceReference {
 	// range of bytes within the file's binary payload
 	payloadByteRange?: {
 		start: number,

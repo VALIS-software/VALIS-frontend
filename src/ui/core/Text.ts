@@ -2,38 +2,57 @@ import { Device, GPUProgram, GPUVertexState, GPUBuffer, BufferUsageHint, VertexA
 import { SharedResources } from "./SharedResources";
 import { DrawContext, DrawMode } from "../../rendering/Renderer";
 import { Object2D } from "./Object2D";
-import GPUText, { GPUTextFont } from "../../../lib/gputext/GPUText";
+import GPUText, { GPUTextFont, GlyphLayout, ResourceReference } from "../../../lib/gputext/GPUText";
+import { ReactObjectContainer } from "./ReactObject";
 
 /**
  * Text
  * 
  * Todo:
  * - Glow and shadow
+ * - Bake color into verticies
+ * - Vertex index buffer
  */
 export class Text extends Object2D {
 
-    set text(v: string) {
-        this._text = v;
-        this.gpuResourcesNeedAllocate = true;
+    set string(v: string) {
+        this._string = v;
+        this.updateGlyphLayout();
     }
-    get text() { return this._text; }
+    get string() {
+        return this._string;
+    }
 
-    color: Float32Array = new Float32Array([1, 1, 1, 1]);
-    
+    set fontPath(v: string) {
+        this._fontPath = v;
+        this.updateFontPath();
+    }
+    get fontPath() {
+        return this._fontPath;
+    }
+
+    color: Float32Array = new Float32Array([0, 0, 0, 1]);
+
+    protected _fontPath: string;
     protected _font: GPUTextFont;
-    protected _text: string = null;
+
+    protected _string: string;
+    protected _glyphLayout: GlyphLayout;
+    
     protected _kerningEnabled = true;
     protected _ligaturesEnabled = true;
     protected _lineHeight = 1.0;
 
     // additional vertex state
-    protected gpuVertexBuffer: GPUBuffer = null;
+    protected gpuVertexBuffer: GPUBuffer;
     protected vertexCount = 0;
 
-    protected glyphAtlas: GPUTexture = null;
+    //@! protected glyphAtlas: GPUTexture = null;
 
-    constructor() {
+    constructor(fontPath?: string, string?: string) {
         super();
+        this.fontPath = fontPath;
+        this.string = string;
     }
 
     allocateGPUResources(device: Device) {
@@ -113,13 +132,8 @@ export class Text extends Object2D {
         this.deleteGPUVertexResources();
 
         // re-create text vertex buffer
-        if (this._text != null) {
-            let glyphLayout = GPUText.layout(this._text, this._font, {
-                lineHeight: this._lineHeight,
-                ligaturesEnabled: this._ligaturesEnabled,
-                kerningEnabled: this._kerningEnabled,
-            });
-            let vertexData = GPUText.generateVertexData(glyphLayout);
+        if (this._glyphLayout != null) {
+            let vertexData = GPUText.generateVertexData(this._glyphLayout);
 
             this.vertexCount = vertexData.vertexCount;
 
@@ -159,14 +173,12 @@ export class Text extends Object2D {
     }
 
     draw(context: DrawContext) {
-        if (this.vertexCount === 0) return;
-
         // renderpass/shader
         context.uniform2f('viewportSize', context.viewport.w, context.viewport.h);
 
         // font
         context.uniform1f('fieldRange', this._font.fieldRange_px);
-        context.uniformSampler2D('glyphAtlas', this.glyphAtlas);
+        // @! context.uniformSampler2D('glyphAtlas', this.glyphAtlas);
 
         context.uniform4fv('color', this.color);
         context.uniformMatrix4fv('transform', false, this.worldTransformMat4);
@@ -187,6 +199,130 @@ export class Text extends Object2D {
         this.vertexCount = 0;
     }
 
+    protected updateFontPath() {
+        Text.getFontAsset(this._fontPath, (asset) => {
+            console.log('font ready', asset);
+            this._font = asset.descriptor;
+            this.updateGlyphLayout();
+        });
+    }
+
+    protected updateGlyphLayout() {
+        if (this._string != null && this._font != null) {
+            this._glyphLayout = GPUText.layout(this._string, this._font, {
+                lineHeight: this._lineHeight,
+                ligaturesEnabled: this._ligaturesEnabled,
+                kerningEnabled: this._kerningEnabled,
+            });
+        } else {
+            this._glyphLayout = null;
+        }
+
+        this.render = this._string != null && this._glyphLayout != null;
+        this.gpuResourcesNeedAllocate = true;
+    }
+
+    // Font loading and caching
+    protected static fontMap: {
+        [path: string]: Promise<FontAsset>
+    } = {} 
+
+    protected static getFontAsset(path: string, onReady: (asset: FontAsset) => void, onError?: (msg: string) => void) {
+        let promise = Text.fontMap[path];
+
+        if (promise == null) {
+            promise = Text.fontMap[path] = new Promise<FontAsset>((resolve, reject) => {
+                console.log('requesting', path);
+
+                // parse path
+                let directory = path.substr(0, path.lastIndexOf('/'));
+                let ext = path.substr(path.lastIndexOf('.') + 1).toLowerCase();
+
+                if (ext !== 'json') {
+                    console.warn('Only the JSON form of GPUText is implemented');
+                }
+
+                let descriptor: GPUTextFont;
+                let images = new Array<Array<HTMLImageElement>>();
+
+                let complete = false;
+
+                loadDescriptor(path);
+
+                function tryComplete() {
+                    for (let page of images) {
+                        for (let mip of page) {
+                            if (!mip.complete) return;
+                        }
+                    }
+
+                    if (descriptor == null) return;
+
+                    if (complete) return;
+
+                    resolve({
+                        descriptor: descriptor,
+                        images: images
+                    });
+
+                    complete = true;
+                }
+
+                function loadDescriptor(path: string) {
+                    let req = new XMLHttpRequest();
+                    req.open('GET', path);
+                    req.responseType = ext === 'json' ? 'json' : 'arraybuffer';
+                    req.onerror = (e) => {
+                        reject(`Could not load font ${path}`);
+                    }
+                    req.onload = (e) => {
+                        descriptor = req.responseType === 'json' ? req.response : parseDescriptorBuffer(req.response);
+                        loadImages(descriptor.textures);
+                        tryComplete();
+                    }
+                    req.send();
+                }
+
+                function loadImages(pages: Array<Array<ResourceReference>>) {
+                    for (let i = 0; i < pages.length; i++) {
+                        let page = pages[i];
+                        images[i] = new Array<HTMLImageElement>();
+
+                        for (let j = 0; j < page.length; j++) {
+                            let mipResource = page[j];
+
+                            if (mipResource.localPath) {
+                                let image = new Image();
+                                image.onload = tryComplete;
+                                image.src = directory + '/' + mipResource.localPath;
+                                images[i][j] = image;
+                            } else if (ext === 'bin' && mipResource.payloadByteRange) {
+                                reject(`Textures in binary payload not yet supported`);
+                            } else {
+                                reject(`Could not load resource "${mipResource}`);
+                            }
+                        }
+                    }
+
+                    tryComplete();
+                }
+
+                function parseDescriptorBuffer(arraybuffer: ArrayBuffer): GPUTextFont {
+                    reject('Binary GPUText files are not supported');
+                    return null;
+                }
+
+            });
+        }
+
+        promise.then(onReady).catch(onError);
+    }
+
+}
+
+type FontAsset = {
+    descriptor: GPUTextFont,
+    images: Array<Array<HTMLImageElement>>
 }
 
 export default Text;
