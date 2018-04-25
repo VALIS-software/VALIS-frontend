@@ -345,9 +345,20 @@ export class AppCanvas extends React.Component<Props, State> {
             button: e.button,
         };
 
-        let hitNodes = this.hitTestNodesForInteraction(eventName, interactionData.worldX, interactionData.worldY);
+        // we need collect dragstart as well as pointerdown receiver to make sure dragstart is emitted
+        let pointerdownNodes = this.hitTestNodesForInteraction(eventName, interactionData.worldX, interactionData.worldY).slice();
+        let dragStartNodes = this.hitTestNodesForInteraction('dragstart', interactionData.worldX, interactionData.worldY).slice();
+
+        let uniqueNodes: Array<Object2D> = [];
+        for (let n of pointerdownNodes.concat(dragStartNodes)) {
+            if (uniqueNodes.indexOf(n) === -1) {
+                uniqueNodes.push(n);
+            }
+        }
+        uniqueNodes.sort(this.compareZ);
+
         this.executePointerInteraction(
-            hitNodes,
+            uniqueNodes,
             eventName,
             interactionData,
             (init) => {
