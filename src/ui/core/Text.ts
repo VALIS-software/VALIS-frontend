@@ -34,7 +34,7 @@ export class Text extends Object2D {
     color: Float32Array = new Float32Array([0, 0, 0, 1]);
 
     protected _fontPath: string;
-    protected _font: GPUTextFont;
+    protected _fontAsset: FontAsset;
 
     protected _string: string;
     protected _glyphLayout: GlyphLayout;
@@ -51,8 +51,12 @@ export class Text extends Object2D {
 
     constructor(fontPath?: string, string?: string) {
         super();
+        // cannot allocate GPU resource until font asset is available
+        this.gpuResourcesNeedAllocate = false;
+
         this.fontPath = fontPath;
         this.string = string;
+
     }
 
     allocateGPUResources(device: Device) {
@@ -127,45 +131,44 @@ export class Text extends Object2D {
         // @! initialize font resources
         // get a hash for the font texture
         // if the font's textures hasn't been uploaded as a shared resource, upload it
+        let textureKey = this._fontAsset.descriptor.metadata.postScriptName;
 
         // recreate vertex buffers and vertex state object
         this.deleteGPUVertexResources();
 
         // re-create text vertex buffer
-        if (this._glyphLayout != null) {
-            let vertexData = GPUText.generateVertexData(this._glyphLayout);
+        let vertexData = GPUText.generateVertexData(this._glyphLayout);
 
-            this.vertexCount = vertexData.vertexCount;
+        this.vertexCount = vertexData.vertexCount;
 
-            this.gpuVertexBuffer = device.createBuffer({
-                data: vertexData.vertexArray,
-                usageHint: BufferUsageHint.STATIC
-            });
+        this.gpuVertexBuffer = device.createBuffer({
+            data: vertexData.vertexArray,
+            usageHint: BufferUsageHint.STATIC
+        });
 
-            // re-create text vertex state
-            this.gpuVertexState = device.createVertexState({
-                attributes: [
-                    // position
-                    {
-                        buffer: this.gpuVertexBuffer,
-                        size: vertexData.vertexLayout.position.elements,
-                        dataType: VertexAttributeDataType.FLOAT,
-                        offsetBytes: vertexData.vertexLayout.position.offsetBytes,
-                        strideBytes: vertexData.vertexLayout.position.strideBytes,
-                        normalize: false,
-                    },
-                    // uv
-                    {
-                        buffer: this.gpuVertexBuffer,
-                        size: vertexData.vertexLayout.uv.elements,
-                        dataType: VertexAttributeDataType.FLOAT,
-                        offsetBytes: vertexData.vertexLayout.uv.offsetBytes,
-                        strideBytes: vertexData.vertexLayout.uv.strideBytes,
-                        normalize: false,
-                    }
-                ]
-            });
-        }
+        // re-create text vertex state
+        this.gpuVertexState = device.createVertexState({
+            attributes: [
+                // position
+                {
+                    buffer: this.gpuVertexBuffer,
+                    size: vertexData.vertexLayout.position.elements,
+                    dataType: VertexAttributeDataType.FLOAT,
+                    offsetBytes: vertexData.vertexLayout.position.offsetBytes,
+                    strideBytes: vertexData.vertexLayout.position.strideBytes,
+                    normalize: false,
+                },
+                // uv
+                {
+                    buffer: this.gpuVertexBuffer,
+                    size: vertexData.vertexLayout.uv.elements,
+                    dataType: VertexAttributeDataType.FLOAT,
+                    offsetBytes: vertexData.vertexLayout.uv.offsetBytes,
+                    strideBytes: vertexData.vertexLayout.uv.strideBytes,
+                    normalize: false,
+                }
+            ]
+        });
     }
 
     releaseGPUResources() {
@@ -177,7 +180,7 @@ export class Text extends Object2D {
         context.uniform2f('viewportSize', context.viewport.w, context.viewport.h);
 
         // font
-        context.uniform1f('fieldRange', this._font.fieldRange_px);
+        context.uniform1f('fieldRange', this._fontAsset.descriptor.fieldRange_px);
         // @! context.uniformSampler2D('glyphAtlas', this.glyphAtlas);
 
         context.uniform4fv('color', this.color);
@@ -202,14 +205,14 @@ export class Text extends Object2D {
     protected updateFontPath() {
         Text.getFontAsset(this._fontPath, (asset) => {
             console.log('font ready', asset);
-            this._font = asset.descriptor;
+            this._fontAsset = asset;
             this.updateGlyphLayout();
         });
     }
 
     protected updateGlyphLayout() {
-        if (this._string != null && this._font != null) {
-            this._glyphLayout = GPUText.layout(this._string, this._font, {
+        if (this._string != null && this._fontAsset != null) {
+            this._glyphLayout = GPUText.layout(this._string, this._fontAsset.descriptor, {
                 lineHeight: this._lineHeight,
                 ligaturesEnabled: this._ligaturesEnabled,
                 kerningEnabled: this._kerningEnabled,
