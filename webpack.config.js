@@ -1,5 +1,8 @@
+const path = require('path');
+
 module.exports = {
-	entry: "./src/index.tsx",
+	context: path.resolve(__dirname, "src"),
+	entry: "./index.tsx",
 	output: {
 		filename: "bundle.js",
 		path: __dirname + "/dist"
@@ -10,6 +13,7 @@ module.exports = {
 
 	resolve: {
 		// Add '.ts' and '.tsx' as resolvable extensions.
+		modules: ['../node_modules', '../lib'],
 		extensions: [".ts", ".tsx", ".js", "jsx", ".json"]
 	},
 
@@ -26,9 +30,28 @@ module.exports = {
 				}]
 			},
 
+			// this enables us to copy index.html into dist/
+			{
+				test: /\.html/,
+				type: 'javascript/auto',
+				use: [{
+					loader: 'file-loader',
+					options: { name: '[name].[ext]' },
+				}],
+			},
+
+			// copy assets into dist/static/
+			{
+				test: /\.json|\.png/,
+				type: 'javascript/auto',
+				use: [{
+					loader: 'file-loader',
+					options: { name: 'static/[path][name].[ext]' },
+				}],
+			},
+
 			// All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
 			{ test: /\.tsx?$/, loader: "ts-loader" },
-
 
 			// All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
 			{ enforce: "pre", test: /\.js$/, loader: "source-map-loader" },
