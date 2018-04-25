@@ -121,8 +121,8 @@ class TrackViewer extends Object2D {
                 ex0 = this.edges.vertical[c0];
                 x0 = e.fractionX;
             }
+
             if (this._activeResizeTrack != null) {
-                console.log(this._activeResizeTrack);
                 r0 = this._activeResizeTrack.row + 1;
                 ey0 = this.edges.horizontal[r0];
                 y0 = e.localY;
@@ -166,24 +166,6 @@ class TrackViewer extends Object2D {
             e.preventDefault();
             this._activeResizePanel = null;
             this._activeResizeTrack = null;
-            // delete panels if they've been shrunk out of visibility
-            /*
-            let gridWidthPx = this.grid.getComputedWidth();
-            let panelsToRemove = [];
-            for (let c of [c0 - 1, c0]) {
-                let p = this.panels.find((p) => p.column == c);
-                if (p == null) continue;
-                let l = this.edges.vertical[c] || 0; let r = this.edges.vertical[c + 1] || 1;
-                let colSize = gridWidthPx * (r - l) - this.spacing.x;
-                if (colSize < this.minColumnSizeBeforeDelete) {
-                    panelsToRemove.push(p);
-                }
-            }
-
-            for (let p of panelsToRemove) {
-                this.removePanel(p);
-            }
-            */
         });
     }
 
@@ -231,7 +213,7 @@ class TrackViewer extends Object2D {
         edges.push(newEdge);
 
         // create panel object and add header to the scene graph
-        let panel = new Panel(model, newColumnIndex, this.removePanel, this.layoutPanel);
+        let panel = new Panel(model, newColumnIndex, (p) => this.removePanel(p), this.layoutPanel);
         // initialize tracks for this panel
         for (let i = 0; i < this.tracks.length; i++) {
             panel.trackTiles[i] = this.createTrackTile(this.tracks[i].model);
@@ -272,7 +254,7 @@ class TrackViewer extends Object2D {
         }
     }
 
-    removePanel = (panel: Panel) => {
+    removePanel(panel: Panel){
         if (panel.closing) {
             console.error(`Trying to remove already removed panel`);
             return;
