@@ -9,19 +9,29 @@
 
 **/
 
-"use strict";
-
-const GPUText = {
+class GPUText {
 
 	// y increases from top-down (like HTML/DOM coordinates)
-	layout: function(text, font, layoutOptions) {
-		const opts = layoutOptions != null ? layoutOptions : {};
+	static layout(
+		text: string,
+		font: GPUTextFont,
+		layoutOptions: {
+			kerningEnabled?: boolean,
+			ligaturesEnabled?: boolean,
+			lineHeight?: number,
+		}
+	): GlyphLayout {
+		const opts = {
+			kerningEnabled: true,
+			ligaturesEnabled: true,
+			lineHeight: 1.0,
+			...layoutOptions
+		}
 
-		const kerningEnabled = opts.kerningEnabled != null ? opts.kerningEnabled : true;
-		const ligaturesEnabled = opts.ligaturesEnabled != null ? opts.ligaturesEnabled : false;
-		const lineHeight = opts.lineHeight != null ? opts.lineHeight : 1.0;
+		// pre-allocate for each character having a glyph
+		const sequence = new Array(text.length);
+		let sequenceIndex = 0;
 
-		const sequence = new Array();
 		const bounds = {
 			l: 0, r: 0,
 			t: 0, b: 0,
@@ -37,19 +47,19 @@ const GPUText = {
 			// @! layout
 			switch (charCode) {
 				case 0xA0:
-					// space character that prevents an automatic line break at its position. In some formats, including HTML, it also prevents consecutive whitespace characters from collapsing into a single space.
-					// @! todo
+				// space character that prevents an automatic line break at its position. In some formats, including HTML, it also prevents consecutive whitespace characters from collapsing into a single space.
+				// @! todo
 				case '\n'.charCodeAt(0): // newline
-					y += lineHeight;
+					y += opts.lineHeight;
 					x = 0;
 					continue;
 			}
 
-			if (ligaturesEnabled) {
+			if (opts.ligaturesEnabled) {
 				// @! todo, replace char and charCode if sequence maps to a ligature
 			}
 
-			if (kerningEnabled && c > 0) {
+			if (opts.kerningEnabled && c > 0) {
 				let kerningKey = text[c - 1] + char;
 				x += font.kerning[kerningKey] || 0.0;
 			}
@@ -66,16 +76,16 @@ const GPUText = {
 				// character has a glyph
 
 				// this corresponds top-left coordinate of the glyph, like hanging letters on a line
-				sequence.push({
+				sequence[sequenceIndex++] = {
 					char: char,
 					x: x,
 					y: y
-				});
+				};
 
 				// width of a character is considered to be its 'advance'
 				// height of a character is considered to be the lineHeight
 				bounds.r = Math.max(bounds.r, x + fontCharacter.advance);
-				bounds.b = Math.max(bounds.b, y + lineHeight);
+				bounds.b = Math.max(bounds.b, y + opts.lineHeight);
 			}
 
 			// advance glyph position
@@ -83,21 +93,26 @@ const GPUText = {
 			x += fontCharacter.advance;
 		}
 
+		// trim empty entries
+		if (sequence.length > sequenceIndex) {
+			sequence.length = sequenceIndex;
+		}
+
 		return {
 			font: font,
 			sequence: sequence,
 			bounds: bounds,
 		}
-	},
+	}
 
 	/**
 		Todo: docs
 
 		Generates OpenGL coordinates where y increases from bottom to top
 
-		 => float32, [p, p, u, u, u], triangles with CCW face winding
+		=> float32, [p, p, u, u, u], triangles with CCW face winding
 	**/
-	generateVertexData: function(glyphLayout) {
+	static generateVertexData(glyphLayout: GlyphLayout) {
 		// memory layout details
 		const elementSizeBytes = 4; // (float32)
 		const positionElements = 2;
@@ -117,7 +132,7 @@ const GPUText = {
 			const glyph = fontCharacter.glyph;
 
 			// quad dimensions
-			let px =   item.x - glyph.offset.x;
+			let px = item.x - glyph.offset.x;
 			// y = 0 in the glyph corresponds to the baseline, which is font.ascender from the top of the glyph
 			let py = -(item.y + font.ascender + glyph.offset.y);
 
@@ -134,13 +149,13 @@ const GPUText = {
 			uh = -uh;
 			// two-triangle quad with ccw face winding
 			vertexArray.set([
-				px     , py     , ux      , uy      , glyph.atlasScale, // bottom left
-				px + w , py + h , ux + uw , uy + uh , glyph.atlasScale, // top right
-				px     , py + h , ux      , uy + uh , glyph.atlasScale, // top left
+				px, py, ux, uy, glyph.atlasScale, // bottom left
+				px + w, py + h, ux + uw, uy + uh, glyph.atlasScale, // top right
+				px, py + h, ux, uy + uh, glyph.atlasScale, // top left
 
-				px     , py     , ux      , uy      , glyph.atlasScale, // bottom left
-				px + w , py     , ux + uw , uy      , glyph.atlasScale, // bottom right
-				px + w , py + h , ux + uw , uy + uh , glyph.atlasScale, // top right
+				px, py, ux, uy, glyph.atlasScale, // bottom left
+				px + w, py, ux + uw, uy, glyph.atlasScale, // bottom right
+				px + w, py + h, ux + uw, uy + uh, glyph.atlasScale, // top right
 			], characterOffset_vx * elementsPerVertex);
 
 			// advance character quad in vertex array
@@ -167,8 +182,94 @@ const GPUText = {
 			}
 		}
 	}
+
 }
 
-if (typeof module != 'undefined' && module.exports != null) {
-	module.exports = GPUText;
+interface TextureAtlasGlyph {
+	// location of glyph within the text atlas, in units of pixels
+	atlasRect: { x: number, y: number, w: number, h: number },
+	atlasScale: number, // (normalized font units) * atlasScale = (pixels in texture atlas)
+
+	// the offset within the atlasRect in normalized font units
+	offset: { x: number, y: number },
 }
+
+interface TextureAtlasCharacter {
+	// the distance from the glyph's x = 0 coordinate to the x = 0 coordinate of the next glyph, in normalized font units
+	advance: number,
+	glyph?: TextureAtlasGlyph,
+}
+
+interface ResourceReference {
+	// range of bytes within the file's binary payload
+	payloadByteRange?: {
+		start: number,
+		length: number
+	},
+
+	// path relative to font file
+	// an implementation should not allow resource paths to be in directories _above_ the font file
+	localPath?: string,
+}
+
+export interface GPUTextFont {
+	format: 'TextureAtlasFont',
+	version: number,
+
+	technique: 'msdf' | 'sdf' | 'bitmap',
+
+	characters: { [character: string]: TextureAtlasCharacter },
+	kerning: { [characterPair: string]: number },
+
+	textures: Array<
+		// array of mipmap levels, where 0 = largest and primary texture (mipmaps may be omitted)
+		Array<ResourceReference>
+	>,
+
+	textureSize: {
+		w: number,
+		h: number,
+	},
+
+	// normalized font units
+	ascender: number,
+	descender: number,
+
+	metadata: {
+		family: string,
+		subfamily: string,
+		version: string,
+		postScriptName: string,
+
+		copyright: string,
+		trademark: string,
+		manufacturer: string,
+		manufacturerURL: string,
+		designerURL: string,
+		license: string,
+		licenseURL: string,
+
+		// original authoring height
+		// this can be used to reproduce the unnormalized source values of the font
+		height_funits: number,
+		funitsPerEm: number,
+	},
+
+	fieldRange_px: number,
+
+	// glyph bounding boxes in normalized font units
+	// not guaranteed to be included in the font file
+	glyphBounds?: { [character: string]: { left: number, bottom: number, right: number, top: number } }
+}
+
+export interface GlyphLayout {
+	font: GPUTextFont,
+	sequence: Array<{
+		char: string,
+		x: number,
+		y: number
+	}>,
+	bounds: { l: number, r: number, t: number, b: number }
+}
+
+export default GPUText;
