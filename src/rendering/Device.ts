@@ -42,6 +42,7 @@ export class Device {
 	private _programCount = 0;
 	private _vertexStateCount = 0;
 	private _bufferCount = 0;
+	private _textureCount = 0;
 
 	constructor(gl: WebGLRenderingContext) {
 		this.gl = gl;
@@ -129,6 +130,118 @@ export class Device {
 		this._bufferCount--;
 	}
 
+	createVertexState(vertexStateDescriptor: VertexStateDescriptor) {
+		const gl = this.gl;
+		const extVao = this.extVao;
+
+		let indexDataType = vertexStateDescriptor.index != null ? vertexStateDescriptor.index.dataType : null;
+
+		let vaoSupported = extVao != null;
+
+		let vertexStateHandle: GPUVertexState;
+		if (vaoSupported) {
+			let vao = extVao.createVertexArrayOES();
+			extVao.bindVertexArrayOES(vao);
+			this.applyVertexStateDescriptor(vertexStateDescriptor);
+			extVao.bindVertexArrayOES(null);
+
+			vertexStateHandle = new GPUVertexState(this, this.vertexStateIds.assign(), vao, true, indexDataType);
+		} else {
+			// when VAO is not supported, pass in the descriptor so vertex state can be applied when rendering
+			vertexStateHandle = new GPUVertexState(this, this.vertexStateIds.assign(), vertexStateDescriptor, false, indexDataType);
+		}
+
+		this._vertexStateCount++;
+
+		return vertexStateHandle;
+	}
+
+	deleteVertexState(handle: GPUVertexState) {
+		this.extVao.deleteVertexArrayOES(handle.native);
+		this.vertexStateIds.release(handle.id);
+		this._vertexStateCount--;
+	}
+
+	createTexture(textureDescriptor: TextureDescriptor) {
+		const gl = this.gl;
+
+		let t = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, t);
+
+		// sampling parameters
+		let samplingParameters = {
+			magFilter: TextureMagFilter.LINEAR,
+			minFilter: TextureMagFilter.LINEAR,
+			wrapT: TextureWrapMode.CLAMP_TO_EDGE,
+			wrapS: TextureWrapMode.CLAMP_TO_EDGE,
+			...textureDescriptor.samplingParameters,
+		}
+
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, samplingParameters.magFilter);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, samplingParameters.minFilter);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, samplingParameters.wrapS);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, samplingParameters.wrapT);
+
+		// set _global_ data upload parameters
+		let pixelStorageParameters = {
+			packAlignment: 4,
+			unpackAlignment: 4,
+			flipY: false,
+			premultiplyAlpha: false,
+			colorSpaceConversion: ColorSpaceConversion.DEFAULT,
+			...textureDescriptor.pixelStorage,
+		}
+
+		gl.pixelStorei(gl.PACK_ALIGNMENT, pixelStorageParameters.packAlignment);
+		gl.pixelStorei(gl.UNPACK_ALIGNMENT, pixelStorageParameters.unpackAlignment);
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, pixelStorageParameters.flipY);
+		gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, pixelStorageParameters.premultiplyAlpha);
+		gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, pixelStorageParameters.colorSpaceConversion);
+
+		// upload data if supplied
+		if (textureDescriptor.mipmapData != null) {
+			for (let i = 0; i < textureDescriptor.mipmapData.length; i++) {
+				let data = textureDescriptor.mipmapData[i];
+				if (ArrayBuffer.isView(data)) {
+					gl.texImage2D(
+						gl.TEXTURE_2D,
+						i,
+						textureDescriptor.sourceFormat,
+						textureDescriptor.width,
+						textureDescriptor.height,
+						0,
+						textureDescriptor.format,
+						textureDescriptor.dataType,
+						data
+					);
+				} else {
+					gl.texImage2D(
+						gl.TEXTURE_2D,
+						i,
+						textureDescriptor.sourceFormat,
+						textureDescriptor.format,
+						textureDescriptor.dataType,
+						data
+					);
+				}
+			}
+		}
+
+		if (textureDescriptor.generateMipmaps && textureDescriptor.mipmapData != null && textureDescriptor.mipmapData.length > 0) {
+			gl.generateMipmap(gl.TEXTURE_2D);
+		}
+
+		let handle = new GPUTexture(this, t);
+
+		this._textureCount++;
+		return handle;
+	}
+
+	deleteTexture(handle: GPUTexture) {
+		this.gl.deleteTexture(handle.native);
+		this._textureCount--;
+	}
+
 	/**
 	 * @throws string if shaders cannot be compiled or program cannot be linked
 	 */
@@ -194,38 +307,6 @@ export class Device {
 		this.fragmentShaderCache.release(handle.fragmentCode);
 		this.programIds.release(handle.id);
 		this._programCount--;
-	}
-
-	createVertexState(vertexStateDescriptor: VertexStateDescriptor) {
-		const gl = this.gl;
-		const extVao = this.extVao;
-
-		let indexDataType = vertexStateDescriptor.index != null ? vertexStateDescriptor.index.dataType : null;
-
-		let vaoSupported = extVao != null;
-
-		let vertexStateHandle: GPUVertexState;
-		if (vaoSupported) {
-			let vao = extVao.createVertexArrayOES();
-			extVao.bindVertexArrayOES(vao);
-			this.applyVertexStateDescriptor(vertexStateDescriptor);
-			extVao.bindVertexArrayOES(null);
-
-			vertexStateHandle = new GPUVertexState(this, this.vertexStateIds.assign(), vao, true, indexDataType);
-		} else {
-			// when VAO is not supported, pass in the descriptor so vertex state can be applied when rendering
-			vertexStateHandle = new GPUVertexState(this, this.vertexStateIds.assign(), vertexStateDescriptor, false, indexDataType);
-		}
-
-		this._vertexStateCount++;
-
-		return vertexStateHandle;
-	}
-
-	deleteVertexState(handle: GPUVertexState) {
-		this.extVao.deleteVertexArrayOES(handle.native);
-		this.vertexStateIds.release(handle.id);
-		this._vertexStateCount--;
 	}
 
 	protected compileShader(code: string, type: number): WebGLShader {
@@ -330,6 +411,88 @@ export type VertexStateDescriptor = {
 	attributes: Array<VertexAttribute>
 }
 
+export enum TextureDataType {
+	UNSIGNED_BYTE = WebGLRenderingContext.UNSIGNED_BYTE,
+	UNSIGNED_SHORT_5_6_5 = WebGLRenderingContext.UNSIGNED_SHORT_5_6_5,
+	UNSIGNED_SHORT_4_4_4_4 = WebGLRenderingContext.UNSIGNED_SHORT_4_4_4_4,
+	UNSIGNED_SHORT_5_5_5_1 = WebGLRenderingContext.UNSIGNED_SHORT_5_5_5_1,
+	FLOAT = WebGLRenderingContext.FLOAT,
+	// Extension HALF_FLOAT = 
+}
+
+export enum TextureFormat {
+	ALPHA = WebGLRenderingContext.ALPHA,
+	RGB = WebGLRenderingContext.RGB,
+	RGBA = WebGLRenderingContext.RGBA,
+	LUMINANCE = WebGLRenderingContext.LUMINANCE,
+	LUMINANCE_ALPHA = WebGLRenderingContext.LUMINANCE_ALPHA,
+}
+
+export enum SourceTextureFormat {
+	ALPHA = WebGLRenderingContext.ALPHA,
+	RGB = WebGLRenderingContext.RGB,
+	RGBA = WebGLRenderingContext.RGBA,
+	LUMINANCE = WebGLRenderingContext.LUMINANCE,
+	LUMINANCE_ALPHA = WebGLRenderingContext.LUMINANCE_ALPHA,
+
+	// @! should include compressed texture formats from extensions
+}
+
+export enum ColorSpaceConversion {
+	NONE = WebGLRenderingContext.NONE,
+	DEFAULT = WebGLRenderingContext.BROWSER_DEFAULT_WEBGL,
+}
+
+export enum TextureMagFilter {
+	NEAREST = WebGLRenderingContext.NEAREST,
+	LINEAR = WebGLRenderingContext.LINEAR,
+}
+
+export enum TextureMinFilter {
+	NEAREST = WebGLRenderingContext.NEAREST,
+	LINEAR = WebGLRenderingContext.LINEAR,
+	NEAREST_MIPMAP_NEAREST = WebGLRenderingContext.NEAREST_MIPMAP_NEAREST,
+	LINEAR_MIPMAP_NEAREST = WebGLRenderingContext.LINEAR_MIPMAP_NEAREST,
+	NEAREST_MIPMAP_LINEAR = WebGLRenderingContext.NEAREST_MIPMAP_LINEAR,
+	LINEAR_MIPMAP_LINEAR = WebGLRenderingContext.LINEAR_MIPMAP_LINEAR,
+}
+
+export enum TextureWrapMode {
+	REPEAT = WebGLRenderingContext.REPEAT,
+	CLAMP_TO_EDGE = WebGLRenderingContext.CLAMP_TO_EDGE,
+	MIRRORED_REPEAT = WebGLRenderingContext.MIRRORED_REPEAT,
+}
+
+export type TexImageSource = ImageBitmap | ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement;
+
+export type TextureDescriptor = {
+
+	sourceFormat: SourceTextureFormat,
+	format: TextureFormat,
+	generateMipmaps: boolean,
+
+	mipmapData?: Array<ArrayBufferView | TexImageSource>,
+	width?: number,
+	height?: number,
+	dataType?: TextureDataType,
+
+	samplingParameters?: {
+		magFilter?: TextureMagFilter,
+		minFilter?: TextureMinFilter,
+		wrapS?: TextureWrapMode,
+		wrapT?: TextureWrapMode,
+	}
+
+	pixelStorage?: {
+		packAlignment?: number,
+		unpackAlignment?: number,
+		flipY?: boolean,
+		premultiplyAlpha?: boolean,
+		colorSpaceConversion?: ColorSpaceConversion,
+	}
+
+}
+
 // Object Handles
 
 interface GPUObjectHandle {
@@ -370,6 +533,16 @@ export class GPUVertexState implements GPUObjectHandle {
 
 	delete() {
 		this.device.deleteVertexState(this);
+	}
+
+}
+
+export class GPUTexture implements GPUObjectHandle {
+
+	constructor(protected readonly device: Device, readonly native: WebGLTexture) { }
+
+	delete() {
+		this.device.deleteTexture(this);
 	}
 
 }
