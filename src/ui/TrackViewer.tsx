@@ -18,11 +18,14 @@ class TrackViewer extends Object2D {
 
     protected trackHeaderWidth_px: number = 180;
     protected panelHeaderHeight_px: number = 50;
-    protected defaultTrackHeight_px: number = 100;
+    protected defaultTrackHeight_px: number = 200;
     protected spacing = {
         x: 10,
         y: 10
     }
+
+    protected minTrackHeightPx = 35;
+    protected minPanelWidthPx = 35;
 
     protected springOptions = {
         tension: SPRING_TENSION,
@@ -53,6 +56,8 @@ class TrackViewer extends Object2D {
 
         this.grid = new Object2D();
         this.add(this.grid);
+        this.initializeGridResizing();
+
         this.columnHeaders = new Object2D();
         this.add(this.columnHeaders);
         this.addPanelButton = new ReactObject(
@@ -67,26 +72,24 @@ class TrackViewer extends Object2D {
         this.columnHeaders.add(this.addPanelButton);
 
         // initialize with some dummy data
+        let i = 0;
         for (let track of [
             {name: 'Sequence'},
             {name: 'GRCh38'},
             {name: 'GM12878-DNase'},
         ]) {
-            this.addTrack(track);
+            this.addTrack(track, i++ === 0 ? 50 : undefined);
         }
 
         for (let panel of [
             { name: 'PCSK9' },
-            { name: 'HER2' },
-            { name: 'MAOA' },
+            // { name: 'HER2' },
+            // { name: 'MAOA' },
         ]) {
             this.addPanel(panel, false);
         }
 
         this.layoutGridContainer();
-
-        // @! temp for debug
-        (window as any).trackViewer = this;
     }
 
     protected onAdded() {
@@ -99,14 +102,99 @@ class TrackViewer extends Object2D {
         Animator.removeStepCompleteCallback(this.onAnimationStep);
     }
 
+    private _activeResizePanel: Panel = null;
+    private _activeResizeTrack: Track = null;
+    protected initializeGridResizing() {
+        // drag state
+        let c0 = -1;
+        let r0 = -1;
+        let x0 = 0;
+        let y0 = 0;
+        let ex0 = 0;
+        let ey0 = 0;
+
+        this.grid.addEventListener('dragstart', (e) => {
+            e.preventDefault();
+
+            if (this._activeResizePanel != null) {
+                c0 = this._activeResizePanel.column;
+                ex0 = this.edges.vertical[c0];
+                x0 = e.fractionX;
+            }
+            if (this._activeResizeTrack != null) {
+                console.log(this._activeResizeTrack);
+                r0 = this._activeResizeTrack.row + 1;
+                ey0 = this.edges.horizontal[r0];
+                y0 = e.localY;
+            }
+        });
+
+        this.grid.addEventListener('dragmove', (e) => {
+            e.preventDefault();
+
+            if (this._activeResizePanel != null) {
+                let dx = e.fractionX - x0;
+                let gridWidthPx = this.grid.getComputedWidth();
+                let minFWidth = this.minTrackHeightPx / gridWidthPx;
+                let min = ((this.edges.vertical[c0 - 1] + minFWidth) || 0);
+                let max = ((this.edges.vertical[c0 + 1] - minFWidth) || 1);
+                this.edges.vertical[c0] = Math.min(Math.max(ex0 + dx, min), max);
+
+                for (let p of this.panels) {
+                    if ((p.column === c0) || (p.column === (c0 - 1))) {
+                        this.positionPanel(p, false);
+                    }
+                }
+            }
+
+            if (this._activeResizeTrack != null) {
+                let dy = e.localY - y0;
+                let gridHeightPx = this.grid.getComputedHeight();
+                let min = ((this.edges.horizontal[r0 - 1] + this.minTrackHeightPx) || 0);
+                let max = ((this.edges.horizontal[r0 + 1] - this.minTrackHeightPx) || gridHeightPx);
+                this.edges.horizontal[r0] = Math.min(Math.max(ey0 + dy, min), max);
+
+                for (let t of this.tracks) {
+                    if (t.row === r0 || (t.row === (r0 - 1))) {
+                        this.positionTrack(t, false);
+                    }
+                }
+            }
+        });
+
+        this.grid.addEventListener('dragend', (e) => {
+            e.preventDefault();
+            this._activeResizePanel = null;
+            this._activeResizeTrack = null;
+            // delete panels if they've been shrunk out of visibility
+            /*
+            let gridWidthPx = this.grid.getComputedWidth();
+            let panelsToRemove = [];
+            for (let c of [c0 - 1, c0]) {
+                let p = this.panels.find((p) => p.column == c);
+                if (p == null) continue;
+                let l = this.edges.vertical[c] || 0; let r = this.edges.vertical[c + 1] || 1;
+                let colSize = gridWidthPx * (r - l) - this.spacing.x;
+                if (colSize < this.minColumnSizeBeforeDelete) {
+                    panelsToRemove.push(p);
+                }
+            }
+
+            for (let p of panelsToRemove) {
+                this.removePanel(p);
+            }
+            */
+        });
+    }
+
     // state deltas
-    addTrack(model: TrackModel) {
+    addTrack(model: TrackModel, heightPx: number = this.defaultTrackHeight_px) {
         let edges = this.edges.horizontal;
         let newRowIndex = Math.max(edges.length - 1, 0);
 
         if (edges.length === 0) edges.push(0);
         let lastEdge = edges[edges.length - 1];
-        edges.push(lastEdge + this.defaultTrackHeight_px);
+        edges.push(lastEdge + heightPx);
 
         // create a tack and add the header element to the grid
         let track = new Track(model, newRowIndex, this.layoutTrack);
@@ -120,6 +208,15 @@ class TrackViewer extends Object2D {
         track.header.w = this.trackHeaderWidth_px;
 
         this.grid.add(track.header);
+        this.grid.add(track.handle);
+
+        track.handle.layoutW = 1;
+        track.handle.z = 1;
+        track.handle.addEventListener('dragstart', (e) => {
+            this._activeResizeTrack = track;
+        });
+        track.setResizable(true);
+
         this.positionTrack(track, false);
     }
 
@@ -143,6 +240,13 @@ class TrackViewer extends Object2D {
         panel.header.y = 0;
         panel.header.h = this.panelHeaderHeight_px;
         this.columnHeaders.add(panel.header);
+        panel.handle.layoutH = 1;
+        panel.handle.z = 1;
+        this.grid.add(panel.handle);
+
+        panel.handle.addEventListener('dragstart', (e) => {
+            this._activeResizePanel = panel;
+        });
 
         // update header state
         let openPanelCount = 0;
@@ -163,6 +267,7 @@ class TrackViewer extends Object2D {
 
         // animate all panels to new edge coordinates
         for (let p of this.panels) {
+            p.setResizable(p.column > 0);
             this.positionPanel(p, animate);
         }
     }
@@ -183,15 +288,19 @@ class TrackViewer extends Object2D {
         // remove panel from set so that it no it is no longer affected by other actions
         this.positionPanel(panel, true);
         
-        Animator.springTo(panel, { layoutW: 0 }, this.springOptions);
         Animator.addAnimationCompleteCallback(panel, 'layoutW', this.cleanupPanel);
+        Animator.springTo(panel, { layoutW: 0 }, this.springOptions);
 
         // update column indexes of remaining panels
         for (let p of this.panels) {
             if (p.column > panel.column) {
                 p.column = p.column - 1;
             }
+
+            p.setResizable(p.column > 0);
         }
+
+        panel.setResizable(false);
 
         let openPanelCount = 0;
         for (let p of this.panels) if (!p.closing) openPanelCount++;
@@ -220,6 +329,8 @@ class TrackViewer extends Object2D {
         }
         this.panels.splice(idx, 1);
         // remove elements from the scene-graph
+        this.grid.remove(panel.handle);
+        panel.handle.removeAllListeners(true);
         this.columnHeaders.remove(panel.header);
         for (let i = 0; i < panel.trackTiles.length; i++) {
             this.removeTrackTile(panel.trackTiles[i]);
@@ -315,6 +426,11 @@ class TrackViewer extends Object2D {
     }
 
     protected layoutTrack = (track: Track) => {
+        let handle = track.handle;
+        handle.layoutY = -0.5;
+        handle.h = this.spacing.y * 0.8;
+        handle.y = track.y + track.h;
+
         this.layoutYInTrack(track.header, track);
         for (let j = 0; j < this.panels.length; j++) {
             let panel = this.panels[j];
@@ -325,6 +441,12 @@ class TrackViewer extends Object2D {
     }
 
     protected layoutPanel = (panel: Panel) => {
+        let handle = panel.handle;
+        handle.layoutParentX = panel.layoutParentX;
+        handle.layoutX = -0.5;
+        handle.layoutH = 1.0;
+        handle.w = this.spacing.x * 0.8;
+
         this.layoutXInPanel(panel.header, panel);
         for (let i = 0; i < this.tracks.length; i++) {
             let track = this.tracks[i];
@@ -381,10 +503,19 @@ class Track {
     protected _h: number;
 
     readonly header: Object2D;
+    readonly handle: Rect;
 
     constructor(readonly model: TrackModel, row: number, public onLayoutChanged: (t:Track) => void = () => {}) {
         this.row = row;
         this.header = new ReactObject(<TrackHeader track={this} />);
+        this.handle = new Rect(0, 0, [1, 0, 0, 1]);
+        this.handle.render = false;
+        this.setResizable(false);
+    }
+
+    setResizable(v: boolean) {
+        this.handle.cursorStyle = v ? 'row-resize' : null;
+        this.handle.color = new Float32Array(v ? [0, 1, 0, 1] : [0.3, 0.3, 0.3, 1]);
     }
 
 }
@@ -411,10 +542,19 @@ class Panel {
     protected _closing: boolean = false;
 
     readonly header: ReactObject;
+    readonly handle: Rect;
 
     constructor(readonly model: PanelModel, column: number, protected onClose: (t: Panel) => void, public onLayoutChanged: (t: Panel) => void = () => { }) {
-        this.column = column;
         this.header = new ReactObject();
+        this.handle = new Rect(0, 0, [1, 0, 0, 1]);
+        this.handle.render = false;
+        this.column = column;
+        this.setResizable(false);
+    }
+
+    setResizable(v: boolean) {
+        this.handle.cursorStyle = v ? 'col-resize' : null;
+        this.handle.color = new Float32Array(v ? [0, 1, 0, 1] : [0.3, 0.3, 0.3, 1]);
     }
 
     protected updatePanelHeader() {
