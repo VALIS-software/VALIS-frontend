@@ -72,12 +72,6 @@ export class Animator {
             let target = fieldTargets[field];
             let current = object[field];
 
-            if (target === current) {
-                delete entry.animatingFields[field];
-                Animator.fieldComplete(object, field);
-                continue;
-            }
-
             let animation = entry.animatingFields[field];
             // create or update dynamic motion fields
             if (animation == null) {
