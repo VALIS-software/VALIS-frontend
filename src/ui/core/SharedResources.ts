@@ -20,6 +20,19 @@ export class SharedResources {
         return gpuProgram;
     }
 
+    static deleteProgram(vertexCode: string, fragmentCode: string, attributeBindings: Array<string>) {
+        let key = vertexCode + '\x35' + fragmentCode + '\x35' + attributeBindings.join('\x37');
+        let gpuProgram = SharedResources.programs[key];
+
+        if (gpuProgram != null) {
+            gpuProgram.delete();
+            delete SharedResources.programs[key];
+            return true;
+        }
+
+        return false;
+    }
+
     static initialize(device: Device) {
         this.quadIndicies = device.createIndexBuffer({
             data: new Uint8Array([
@@ -40,7 +53,7 @@ export class SharedResources {
                              1.0, -1.0,
                         ]),
                     }),
-                    elementsPerVertex: 2,
+                    size: 2,
                     dataType: VertexAttributeDataType.FLOAT,
                     offsetBytes: 0,
                     strideBytes: 2 * 4
@@ -60,7 +73,7 @@ export class SharedResources {
                             1.0, 0,
                         ]),
                     }),
-                    elementsPerVertex: 2,
+                    size: 2,
                     dataType: VertexAttributeDataType.FLOAT,
                     offsetBytes: 0,
                     strideBytes: 2 * 4

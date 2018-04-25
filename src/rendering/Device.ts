@@ -265,7 +265,7 @@ export class Device {
 			} else {
 				gl.bindBuffer(gl.ARRAY_BUFFER, attribute.buffer.native);
 				gl.enableVertexAttribArray(i);
-				gl.vertexAttribPointer(i, attribute.elementsPerVertex, attribute.dataType, !!attribute.normalize, attribute.strideBytes, attribute.offsetBytes);
+				gl.vertexAttribPointer(i, attribute.size, attribute.dataType, !!attribute.normalize, attribute.strideBytes, attribute.offsetBytes);
 				if (attribute.instanceDivisor != null && this.extInstanced) {
 					this.extInstanced.vertexAttribDivisorANGLE(i, attribute.instanceDivisor);
 				}
@@ -317,7 +317,7 @@ export type VertexConstant = Float32Array;
 
 export type VertexAttribute = VertexConstant | {
 	buffer: GPUBuffer,
-	elementsPerVertex: number,
+	size: number,
 	dataType: VertexAttributeDataType,
 	offsetBytes: number,
 	strideBytes: number,

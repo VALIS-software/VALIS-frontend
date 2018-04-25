@@ -5,6 +5,7 @@ import { Object2D } from "./Object2D";
 
 /**
  * Rectangle UI element
+ * 
  * Todo:
  * - Support rounded corners, stroke, glow & shadows, background shaders
  */
