@@ -107,17 +107,7 @@ export class Object2D extends Renderable<Object2D> implements Layout {
     protected _layoutH: number = 0;
 
     // we track the number of listeners for each interaction event to prevent work when emitting events
-    protected interactionEventListenerCount: { [Name in keyof InteractionEventMap]: number } = {
-        pointermove: 0,
-        pointerdown: 0,
-        pointerup: 0,
-        click: 0,
-        dblclick: 0,
-        wheel: 0,
-        dragstart: 0,
-        dragmove: 0,
-        dragend: 0,
-    };
+    protected interactionEventListenerCount: { [Name in keyof InteractionEventMap]: number } = null;
 
     protected worldTransformNeedsUpdate = true;
     protected worldTransformMat4 = new Float32Array([
@@ -136,6 +126,7 @@ export class Object2D extends Renderable<Object2D> implements Layout {
 
     constructor() {
         super();
+        this.resetEventListenerCount();
         // set render to false for instances of Object2D and true for subclasses
         let isSubclass = Object.getPrototypeOf(this) !== Object2D.prototype;
         this.render = isSubclass;
@@ -164,6 +155,16 @@ export class Object2D extends Renderable<Object2D> implements Layout {
         if (this.eventEmitter.rawListeners(event).indexOf(listener) !== -1) {
             this.eventEmitter.removeListener(event, listener);
             this.interactionEventListenerCount[event]--;
+        }
+    }
+
+    removeAllListeners(recursive: boolean) {
+        this.eventEmitter.removeAllListeners();
+        this.resetEventListenerCount();
+        if (recursive) {
+            for (let child of this._children) {
+                child.removeAllListeners(recursive);
+            }
         }
     }
 
@@ -202,6 +203,22 @@ export class Object2D extends Renderable<Object2D> implements Layout {
 
     getWorldZ() {
         return this.worldTransformMat4[14];
+    }
+
+    getComputedWidth() {
+        return this.computedWidth;
+    }
+
+    getComputedHeight() {
+        return this.computedHeight;
+    }
+
+    getComputedX() {
+        return this.computedX;
+    }
+
+    getComputedY() {
+        return this.computedY;
     }
 
     protected onAdded() { }
@@ -270,6 +287,20 @@ export class Object2D extends Renderable<Object2D> implements Layout {
             // if the world matrix of the child has changed, then we must inform the children that they're out of sync also
             for (let cc of this._children) cc.worldTransformNeedsUpdate = true;
         }
+    }
+
+    protected resetEventListenerCount() {
+        this.interactionEventListenerCount = {
+            pointermove: 0,
+            pointerdown: 0,
+            pointerup: 0,
+            click: 0,
+            dblclick: 0,
+            wheel: 0,
+            dragstart: 0,
+            dragmove: 0,
+            dragend: 0,
+        };
     }
 
 }
