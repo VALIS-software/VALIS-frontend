@@ -206,7 +206,7 @@ export class Device {
 					gl.texImage2D(
 						gl.TEXTURE_2D,
 						i,
-						textureDescriptor.sourceFormat,
+						textureDescriptor.format,
 						textureDescriptor.width,
 						textureDescriptor.height,
 						0,
@@ -218,7 +218,7 @@ export class Device {
 					gl.texImage2D(
 						gl.TEXTURE_2D,
 						i,
-						textureDescriptor.sourceFormat,
+						textureDescriptor.format,
 						textureDescriptor.format,
 						textureDescriptor.dataType,
 						data
@@ -426,14 +426,6 @@ export enum TextureFormat {
 	RGBA = WebGLRenderingContext.RGBA,
 	LUMINANCE = WebGLRenderingContext.LUMINANCE,
 	LUMINANCE_ALPHA = WebGLRenderingContext.LUMINANCE_ALPHA,
-}
-
-export enum SourceTextureFormat {
-	ALPHA = WebGLRenderingContext.ALPHA,
-	RGB = WebGLRenderingContext.RGB,
-	RGBA = WebGLRenderingContext.RGBA,
-	LUMINANCE = WebGLRenderingContext.LUMINANCE,
-	LUMINANCE_ALPHA = WebGLRenderingContext.LUMINANCE_ALPHA,
 
 	// @! should include compressed texture formats from extensions
 }
@@ -467,7 +459,6 @@ export type TexImageSource = ImageBitmap | ImageData | HTMLImageElement | HTMLCa
 
 export type TextureDescriptor = {
 
-	sourceFormat: SourceTextureFormat,
 	format: TextureFormat,
 	generateMipmaps: boolean,
 
