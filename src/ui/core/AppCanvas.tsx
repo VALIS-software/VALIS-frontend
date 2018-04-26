@@ -252,8 +252,10 @@ export class AppCanvas extends React.Component<Props, State> {
         }
     }
 
+    protected pointerEventSupport = 'PointerEvent' in (window as any);
+
     protected addInputListeners() {
-        if ('PointerEvent' in (window as any)) {
+        if (this.pointerEventSupport) {
             this.canvas.addEventListener('pointerdown', this.onPointerDown);
             window.addEventListener('pointerup', this.onPointerUp);
             window.addEventListener('pointermove', this.onPointerMove);
@@ -528,7 +530,7 @@ export class AppCanvas extends React.Component<Props, State> {
         }
 
         // set pointer event data if it's available
-        if (e instanceof PointerEvent) {
+        if (this.pointerEventSupport && e instanceof PointerEvent) {
             interactionData.pointerId = e.pointerId;
             interactionData.pointerType = e.pointerType;
             interactionData.isPrimary = e.isPrimary;
