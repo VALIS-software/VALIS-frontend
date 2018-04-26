@@ -5,13 +5,15 @@
 	Provides text layout and vertex buffer generation
 
 	Dev notes:
-	- Should have progressive layout, where text can be appended to an existing layout
+	- Should have progressive layout where text can be appended to an existing layout
 
 **/
 
 class GPUText {
 
 	// y increases from top-down (like HTML/DOM coordinates)
+	// y = 0 is set to be the font's ascender: https://i.stack.imgur.com/yjbKI.png
+	// https://stackoverflow.com/a/50047090/4038621
 	static layout(
 		text: string,
 		font: GPUTextFont,
@@ -19,7 +21,8 @@ class GPUText {
 			kerningEnabled?: boolean,
 			ligaturesEnabled?: boolean,
 			lineHeight?: number,
-		}
+		},
+		fontSize?: number,
 	): GlyphLayout {
 		const opts = {
 			kerningEnabled: true,
@@ -27,6 +30,17 @@ class GPUText {
 			lineHeight: 1.0,
 			...layoutOptions
 		}
+
+		let scale = 1;
+
+		// in browsers, font-size corresponds to the difference between typoAscender and typoDescender
+		if (fontSize != null) {
+			let typoDelta = font.typoAscender - font.typoDescender;
+			scale = fontSize / typoDelta;
+		}
+
+		// scale text-wrap container
+		// @! let containerWidth /= scale;
 
 		// pre-allocate for each character having a glyph
 		const sequence = new Array(text.length);
@@ -102,6 +116,7 @@ class GPUText {
 			font: font,
 			sequence: sequence,
 			bounds: bounds,
+			scale: scale,
 		}
 	}
 
@@ -138,6 +153,7 @@ class GPUText {
 
 			let w = glyph.atlasRect.w / glyph.atlasScale; // convert width to normalized font units
 			let h = glyph.atlasRect.h / glyph.atlasScale;
+
 			// uv
 			// add half-text offset to map to texel centers
 			let ux = (glyph.atlasRect.x + 0.5) / font.textureSize.w;
@@ -231,9 +247,12 @@ export interface GPUTextFont {
 		h: number,
 	},
 
-	// normalized font units
+	// the following are in normalized font units where (ascender - descender) = 1.0
 	ascender: number,
 	descender: number,
+	typoAscender: number,
+	typoDescender: number,
+	lowercaseHeight: number,
 
 	metadata: {
 		family: string,
@@ -269,7 +288,8 @@ export interface GlyphLayout {
 		x: number,
 		y: number
 	}>,
-	bounds: { l: number, r: number, t: number, b: number }
+	bounds: { l: number, r: number, t: number, b: number },
+	scale: number,
 }
 
 export default GPUText;

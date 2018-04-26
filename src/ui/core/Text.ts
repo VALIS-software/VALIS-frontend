@@ -1,13 +1,13 @@
-import { Device, GPUProgram, GPUVertexState, GPUBuffer, BufferUsageHint, VertexAttributeDataType } from "../../rendering/Device";
+import { Device, GPUProgram, GPUVertexState, GPUBuffer, BufferUsageHint, VertexAttributeDataType, GPUTexture, TextureFormat, TextureDataType, TextureMagFilter, TextureMinFilter, TextureWrapMode, ColorSpaceConversion } from "../../rendering/Device";
 import { SharedResources } from "./SharedResources";
-import { DrawContext, DrawMode } from "../../rendering/Renderer";
+import { DrawContext, DrawMode, BlendMode } from "../../rendering/Renderer";
 import { Object2D } from "./Object2D";
 import GPUText, { GPUTextFont, GlyphLayout, ResourceReference } from "../../../lib/gputext/GPUText";
 import { ReactObjectContainer } from "./ReactObject";
 
 /**
  * Text
- * 
+ *
  * Todo:
  * - Glow and shadow
  * - Bake color into verticies
@@ -31,32 +31,42 @@ export class Text extends Object2D {
         return this._fontPath;
     }
 
+    set fontSizePx(v: number) {
+        this._fontSizePx = v;
+        this.updateGlyphLayout();
+    }
+    get fontSizePx() {
+        return this._fontSizePx;
+    }
+
     color: Float32Array = new Float32Array([0, 0, 0, 1]);
 
+    protected _fontSizePx: number;
     protected _fontPath: string;
     protected _fontAsset: FontAsset;
 
     protected _string: string;
     protected _glyphLayout: GlyphLayout;
-    
+
     protected _kerningEnabled = true;
     protected _ligaturesEnabled = true;
     protected _lineHeight = 1.0;
 
-    // additional vertex state
+    // text-specific gpu resources
     protected gpuVertexBuffer: GPUBuffer;
+    protected glyphAtlas: GPUTexture = null;
     protected vertexCount = 0;
 
-    //@! protected glyphAtlas: GPUTexture = null;
-
-    constructor(fontPath?: string, string?: string) {
+    constructor(string?: string, fontSizePx: number = 16, fontPath?: string) {
         super();
+        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
+
         // cannot allocate GPU resource until font asset is available
         this.gpuResourcesNeedAllocate = false;
 
+        this._fontSizePx = fontSizePx;
         this.fontPath = fontPath;
         this.string = string;
-
     }
 
     allocateGPUResources(device: Device) {
@@ -76,6 +86,7 @@ export class Text extends Object2D {
                 uniform mat4 transform;
                 uniform float fieldRange;
                 uniform vec2 viewportSize;
+                uniform float glyphScale;
 
                 varying vec2 vUv;
                 varying float vFieldRangeDisplay_px;
@@ -84,25 +95,26 @@ export class Text extends Object2D {
                     vUv = uv.xy;
 
                     // determine the field range in pixels when drawn to the framebuffer
-                    vec2 scale = abs(vec2(transform[0][0], transform[1][1]));
+                    vec2 scale = abs(vec2(transform[0][0], transform[1][1])) * glyphScale;
                     float atlasScale = uv.z;
                     vFieldRangeDisplay_px = fieldRange * scale.y * (viewportSize.y * 0.5) / atlasScale;
                     vFieldRangeDisplay_px = max(vFieldRangeDisplay_px, 1.0);
 
-                    vec2 p = vec2(position.x * viewportSize.y / viewportSize.x, position.y);
-
-                    gl_Position = transform * vec4(p, 0.0, 1.0);
+                    // flip-y axis
+                    gl_Position = transform * vec4(vec2(position.x, -position.y) * glyphScale, 0.0, 1.0);
                 }
                 `,
                 `
                 #version 100
 
-                precision mediump float;     
+                precision mediump float;
 
                 uniform vec4 color;
                 uniform sampler2D glyphAtlas;
 
                 uniform mat4 transform;
+
+                uniform float debug; // @!
 
                 varying vec2 vUv;
                 varying float vFieldRangeDisplay_px;
@@ -121,17 +133,45 @@ export class Text extends Object2D {
 
                     float alpha = sigDist;
 
-                    gl_FragColor = color * alpha;
+                    gl_FragColor = mix(color * alpha, vec4(1., 0., 0., 1.), debug);
                 }
                 `,
                 ['position', 'uv']
             );
         }
-        
+
         // @! initialize font resources
         // get a hash for the font texture
         // if the font's textures hasn't been uploaded as a shared resource, upload it
+        // add usage hint to stick around long-term
         let textureKey = this._fontAsset.descriptor.metadata.postScriptName;
+
+        // only support for 1 glyph page at the moment
+        let mipmapsProvided = this._fontAsset.images[0].length > 1;
+        this.glyphAtlas = device.createTexture({
+            format: TextureFormat.RGBA,
+            generateMipmaps: !mipmapsProvided,
+
+            mipmapData: this._fontAsset.images[0],
+            dataType: TextureDataType.UNSIGNED_BYTE,
+
+            samplingParameters: {
+                magFilter: TextureMagFilter.LINEAR,
+                minFilter: TextureMinFilter.LINEAR_MIPMAP_LINEAR,
+                wrapS: TextureWrapMode.CLAMP_TO_EDGE,
+                wrapT: TextureWrapMode.CLAMP_TO_EDGE,
+            },
+
+            pixelStorage: {
+                flipY: false,
+                premultiplyAlpha: false,
+                colorSpaceConversion: ColorSpaceConversion.NONE,
+            }
+        });
+        console.log('Created atlas', this.glyphAtlas);
+        console.warn('Atlas should be shared resource');
+        console.warn('Atlas should have usage hint');
+        // this.glyphAtlas = SharedResources.getTexture(textureKey, descriptor)
 
         // recreate vertex buffers and vertex state object
         this.deleteGPUVertexResources();
@@ -183,9 +223,16 @@ export class Text extends Object2D {
         context.uniform1f('fieldRange', this._fontAsset.descriptor.fieldRange_px);
         // @! context.uniformSampler2D('glyphAtlas', this.glyphAtlas);
 
+        // text instance
+        context.uniform1f('glyphScale', this._glyphLayout.scale);
         context.uniform4fv('color', this.color);
         context.uniformMatrix4fv('transform', false, this.worldTransformMat4);
+
+        context.uniform1f('debug', 0);
         context.draw(DrawMode.TRIANGLES, this.vertexCount, 0);
+
+        // context.uniform1f('debug', 1);
+        // context.draw(DrawMode.LINE_STRIP, this.vertexCount, 0);
     }
 
     protected deleteGPUVertexResources() {
@@ -216,7 +263,7 @@ export class Text extends Object2D {
                 lineHeight: this._lineHeight,
                 ligaturesEnabled: this._ligaturesEnabled,
                 kerningEnabled: this._kerningEnabled,
-            });
+            }, this._fontSizePx);
         } else {
             this._glyphLayout = null;
         }
@@ -228,7 +275,7 @@ export class Text extends Object2D {
     // Font loading and caching
     protected static fontMap: {
         [path: string]: Promise<FontAsset>
-    } = {} 
+    } = {};
 
     protected static getFontAsset(path: string, onReady: (asset: FontAsset) => void, onError?: (msg: string) => void) {
         let promise = Text.fontMap[path];
@@ -311,7 +358,7 @@ export class Text extends Object2D {
                 }
 
                 function parseDescriptorBuffer(arraybuffer: ArrayBuffer): GPUTextFont {
-                    reject('Binary GPUText files are not supported');
+                    reject('Binary GPUText files are not yet supported');
                     return null;
                 }
 
