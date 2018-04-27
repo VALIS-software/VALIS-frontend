@@ -77,14 +77,8 @@ export class App extends React.Component<Props, State> {
 		let dt_ms = t_ms - this._lastFrameT_ms;
 		this._lastFrameT_ms = t_ms;
 
-		// handle user input
-		// this.appCanvas.*mouseEvents(...)
-		// canvas.style.cursor = ...
-		// convert mouse coordinates into clip-space for bounds checking
-		// step animation
 		Animator.step();
 
-		// -- scene graph must not change after this point --
 		this.appCanvas.renderCanvas();
 	}
 
