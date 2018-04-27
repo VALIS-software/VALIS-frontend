@@ -4,7 +4,7 @@
  */
 
 import Node from '../rendering/Node';
-import Device, { GPUProgram, GPUVertexState, DeviceInternal, VertexStateDescriptor, VertexAttribute } from '../rendering/Device';
+import Device, { GPUProgram, GPUVertexState, DeviceInternal, VertexStateDescriptor, VertexAttribute, GPUTexture, GPUTextureInternal, GPUProgramInternal } from '../rendering/Device';
 import RenderPass from '../rendering/RenderPass';
 import { Renderable, RenderableInternal } from '../rendering/Renderable';
 
@@ -38,7 +38,7 @@ export class Renderer {
 		this.deviceInternal = device as any as DeviceInternal;
 		this.gl = this.deviceInternal.gl;
 		this.extVao = this.deviceInternal.extVao;
-		this.drawContext = new DrawContext(this.gl, this.deviceInternal.extInstanced);
+		this.drawContext = new DrawContext(device, this.deviceInternal.extInstanced);
 	}
 
 	private _opaque = new Array<Renderable<any>>();
@@ -259,6 +259,8 @@ export type DrawContextInternal = {
 
 export class DrawContext {
 
+	readonly gl: WebGLRenderingContext;
+
 	// current state
 	readonly viewport: {
 		x: number, y: number,
@@ -267,7 +269,10 @@ export class DrawContext {
 	readonly program: GPUProgram;
 	readonly vertexState: GPUVertexState;
 
-	constructor(protected readonly gl: WebGLRenderingContext, protected readonly extInstanced: ANGLE_instanced_arrays) {}
+	constructor(protected readonly device: Device, protected readonly extInstanced: ANGLE_instanced_arrays) {
+		const gl = (device as any as DeviceInternal).gl;
+		this.gl = gl;
+	}
 
 	uniform1f(name: string, x: GLfloat) {
 		this.gl.uniform1f(this.program.uniformLocation[name], x);
@@ -325,6 +330,44 @@ export class DrawContext {
 	}
 	uniformMatrix4fv(name: string, transpose: boolean, value: Float32Array) {
 		this.gl.uniformMatrix4fv(this.program.uniformLocation[name], transpose, value);
+	}
+
+	uniformTexture2D(name: string, texture: GPUTexture) {
+		const gl = this.gl;
+		const deviceInternal = this.device as any as DeviceInternal;
+		const textureInternal = texture as any as GPUTextureInternal;
+		const programInternal = this.program as any as GPUProgramInternal;
+
+		let currentUniformValue = programInternal.stateCache[name];
+
+		// uniform is already pointing to the correct unit
+		if (textureInternal.boundUnit === currentUniformValue) {
+			return;
+		}
+
+		if (textureInternal.boundUnit === -1) {
+			// texture is not resident in a texture unit, find free slot
+
+			for (let i = 0; i < deviceInternal.textureUnitState.length; i++) {
+				let unitContents = deviceInternal.textureUnitState[i];
+				if (unitContents === void 0) {
+					console.log('%cBinding texture to free unit ' + i, 'color: blue');
+
+					deviceInternal.bindTextureToUnit(texture, i);
+
+					gl.uniform1i(this.program.uniformLocation[name], i);
+					programInternal.stateCache[name] = textureInternal.boundUnit;
+					return;
+				}
+			}
+
+			throw 'TODO: system for replacing the last-used texture unit';
+
+		} else {
+			// texture is resident in a texture unit but the uniform is not yet pointing at it
+			gl.uniform1i(this.program.uniformLocation[name], textureInternal.boundUnit);
+			programInternal.stateCache[name] = textureInternal.boundUnit;
+		}
 	}
 
 	draw(mode: DrawMode, indexCount: number, indexOffset: number) {

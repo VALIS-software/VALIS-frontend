@@ -19,6 +19,8 @@ export type DeviceInternal = {
 	extInstanced: ANGLE_instanced_arrays,
 	compileShader: (code: string, type: number) => WebGLShader,
 	applyVertexStateDescriptor: (vertexStateDescriptor: VertexStateDescriptor) => void,
+	textureUnitState: Array<GPUTexture>,
+	bindTextureToUnit: (texture: GPUTexture, unit: number) => void;
 }
 
 export class Device {
@@ -39,6 +41,8 @@ export class Device {
 	protected extVao: null | OES_vertex_array_object;
 	protected extInstanced: null | ANGLE_instanced_arrays;
 
+	protected textureUnitState: Array<GPUTexture>;
+
 	private _programCount = 0;
 	private _vertexStateCount = 0;
 	private _bufferCount = 0;
@@ -53,6 +57,8 @@ export class Device {
 
 		let extDebugInfo = gl.getExtension('WEBGL_debug_renderer_info');
 		this.name = gl.getParameter(extDebugInfo == null ? gl.RENDERER : extDebugInfo.UNMASKED_RENDERER_WEBGL);
+
+		this.textureUnitState = new Array(gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS));
 	}
 
 	createBuffer(bufferDescriptor: BufferDescriptor) {
@@ -231,14 +237,21 @@ export class Device {
 			gl.generateMipmap(gl.TEXTURE_2D);
 		}
 
-		let handle = new GPUTexture(this, t);
+		let handle = new GPUTexture(this, t, textureDescriptor.usageHint == null ? TextureUsageHint.UNKNOWN : textureDescriptor.usageHint);
 
 		this._textureCount++;
 		return handle;
 	}
 
 	deleteTexture(handle: GPUTexture) {
-		this.gl.deleteTexture(handle.native);
+		const gl = this.gl;
+		// if texture is bound to a texture unit, unbind it and free the unit
+		let handleInternal = handle as any as GPUTextureInternal;
+		if (handleInternal.boundUnit !== -1) {
+			this.freeTextureUnit(handleInternal.boundUnit);
+		}
+
+		gl.deleteTexture(handle.native);
 		this._textureCount--;
 	}
 
@@ -354,6 +367,25 @@ export class Device {
 		}
 	}
 
+	protected bindTextureToUnit(texture: GPUTexture, unit: number) {
+		const gl = this.gl;
+		const textureInternal = texture as any as GPUTextureInternal;
+		gl.activeTexture(gl.TEXTURE0 + unit);
+		gl.bindTexture(gl.TEXTURE_2D, texture.native);
+		textureInternal.boundUnit = unit;
+		this.textureUnitState[unit] = texture;
+	}
+
+	protected freeTextureUnit(unit: number) {
+		const gl = this.gl;
+		let texture = this.textureUnitState[unit];
+		const textureInternal = texture as any as GPUTextureInternal;
+		gl.activeTexture(gl.TEXTURE0 + unit);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+		textureInternal.boundUnit = -1;
+		this.textureUnitState[unit] = void 0;
+	}
+
 }
 
 // Object Descriptors
@@ -430,6 +462,12 @@ export enum TextureFormat {
 	// @! should include compressed texture formats from extensions
 }
 
+// Non-standard, used to help inform which texture slots to free first
+export enum TextureUsageHint {
+	UNKNOWN = 0,
+	HIGH_USAGE = 2,
+}
+
 export enum ColorSpaceConversion {
 	NONE = WebGLRenderingContext.NONE,
 	DEFAULT = WebGLRenderingContext.BROWSER_DEFAULT_WEBGL,
@@ -467,6 +505,8 @@ export type TextureDescriptor = {
 	height?: number,
 	dataType?: TextureDataType,
 
+	usageHint?: TextureUsageHint,
+
 	samplingParameters?: {
 		magFilter?: TextureMagFilter,
 		minFilter?: TextureMinFilter,
@@ -480,7 +520,7 @@ export type TextureDescriptor = {
 		flipY?: boolean,
 		premultiplyAlpha?: boolean,
 		colorSpaceConversion?: ColorSpaceConversion,
-	}
+	},
 
 }
 
@@ -528,9 +568,19 @@ export class GPUVertexState implements GPUObjectHandle {
 
 }
 
+export type GPUTextureInternal = {
+	boundUnit: number;
+}
+
 export class GPUTexture implements GPUObjectHandle {
 
-	constructor(protected readonly device: Device, readonly native: WebGLTexture) { }
+	protected boundUnit: number = -1;
+
+	constructor(
+		protected readonly device: Device,
+		readonly native: WebGLTexture,
+		protected readonly usageHint: TextureUsageHint
+	) {}
 
 	delete() {
 		this.device.deleteTexture(this);
@@ -538,7 +588,13 @@ export class GPUTexture implements GPUObjectHandle {
 
 }
 
+export type GPUProgramInternal = {
+	stateCache: { [key: string]: any };
+}
+
 export class GPUProgram implements GPUObjectHandle {
+
+	protected stateCache: { [key: string]: any } = {};
 
 	constructor(
 		protected readonly device: Device,
