@@ -58,7 +58,7 @@ export class Text extends Object2D {
     protected glyphAtlas: GPUTexture = null;
     protected vertexCount = 0;
 
-    constructor(string?: string, fontSizePx: number = 16, fontPath?: string) {
+    constructor(fontPath: string, string?: string, fontSizePx: number = 16) {
         super();
         this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
 
@@ -154,7 +154,7 @@ export class Text extends Object2D {
 
             samplingParameters: {
                 magFilter: TextureMagFilter.LINEAR,
-                minFilter: TextureMinFilter.LINEAR_MIPMAP_LINEAR,
+                minFilter: mipmapsProvided ? TextureMinFilter.LINEAR_MIPMAP_LINEAR : TextureMinFilter.LINEAR,
                 wrapS: TextureWrapMode.CLAMP_TO_EDGE,
                 wrapT: TextureWrapMode.CLAMP_TO_EDGE,
             },
@@ -256,7 +256,8 @@ export class Text extends Object2D {
             let typoDelta = font.typoAscender - font.typoDescender;
             this._glyphScale = this._fontSizePx / typoDelta;
 
-            // @! if only the scale changed they we can avoid GPU realloc by just changing this._glyphLayout.glyphScale
+            // @! performance improvement:
+            // if only the scale changed they we can avoid GPU realloc by just changing this._glyphLayout.glyphScale
 
             this._glyphLayout = GPUText.layout(
                 this._string,
@@ -268,6 +269,9 @@ export class Text extends Object2D {
                     kerningEnabled: this._kerningEnabled,
                 }
             );
+
+            this.w = (this._glyphLayout.bounds.r - this._glyphLayout.bounds.l) * this._glyphLayout.glyphScale;
+            this.h = (this._glyphLayout.bounds.b - this._glyphLayout.bounds.t) * this._glyphLayout.glyphScale;
 
             glyphLayoutChanged = true;
 
