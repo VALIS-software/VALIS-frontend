@@ -1,7 +1,7 @@
 /**
  * Scene tree node
  * - Type parameter is used to constrain the type of the node's children
- * - Scene information flows from the roots to the leaves – by design nodes only have knowledge about their children, not their parents
+ * - Scene information flows from the roots to the leaves – by design, nodes only have knowledge about their children, not their parents
  */
 export class Node<T extends Node<any>> {
 

@@ -30,8 +30,9 @@ interface State {
 
 /**
  * AppCanvas
- * - Manages frame loop
- * - Manages root scene node and coordinate system
+ * - root scene node and coordinate system
+ * - entry point for canvas rendering
+ * - emits user interaction events on scene nodes
  */
 export class AppCanvas extends React.Component<Props, State> {
 

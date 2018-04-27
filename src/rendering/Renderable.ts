@@ -13,11 +13,14 @@ export type RenderableInternal = {
 
 /**
  * Renderable is the base type for a node that can be rendered via Renderer
+ * 
  * Renderer will call:
  * - `allocateGPUResources(device)` just before rendering the first time or if `gpuResourcesNeedAllocate` is true.
- * 		- This must set the `gpu` fields before the instance is valid for rendering
  * - `draw(context)` when executing `gpuProgram` with `gpuVertexState`
+ * 
  * Renderer will not call `releaseGPUResources()`, this is up to the Renderable instance or owner to call
+ * 
+ * `allocateGPUResources(device)` must set the `gpu` prefixed fields before the instance is valid for rendering
  */
 export class Renderable<T extends Node<any>> extends Node<T> {
 

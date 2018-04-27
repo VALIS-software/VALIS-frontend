@@ -4,7 +4,7 @@
  * Todo:
  * - Improve data structures:
  *      - Swap out array for linked list?
- *      - Can we avoid searches?
+ *      - Can we avoid brute-force searches?
  * - Parameterize springs by duration and normalized dampening
  * - Replace energy threshold with some user-controlled parameter
  * - Implement traditional easings via step functions
