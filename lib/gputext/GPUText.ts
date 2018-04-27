@@ -18,29 +18,22 @@ class GPUText {
 		text: string,
 		font: GPUTextFont,
 		layoutOptions: {
+			glyphScale: number,
 			kerningEnabled?: boolean,
 			ligaturesEnabled?: boolean,
 			lineHeight?: number,
-		},
-		fontSize?: number,
+		}
 	): GlyphLayout {
 		const opts = {
+			glyphScale: 1.0,
 			kerningEnabled: true,
 			ligaturesEnabled: true,
 			lineHeight: 1.0,
 			...layoutOptions
 		}
 
-		let scale = 1;
-
-		// in browsers, font-size corresponds to the difference between typoAscender and typoDescender
-		if (fontSize != null) {
-			let typoDelta = font.typoAscender - font.typoDescender;
-			scale = fontSize / typoDelta;
-		}
-
 		// scale text-wrap container
-		// @! let containerWidth /= scale;
+		// @! let wrapWidth /= glyphScale;
 
 		// pre-allocate for each character having a glyph
 		const sequence = new Array(text.length);
@@ -116,14 +109,14 @@ class GPUText {
 			font: font,
 			sequence: sequence,
 			bounds: bounds,
-			scale: scale,
+			glyphScale: opts.glyphScale,
 		}
 	}
 
 	/**
-		Todo: docs
-
 		Generates OpenGL coordinates where y increases from bottom to top
+
+		@! improve docs
 
 		=> float32, [p, p, u, u, u], triangles with CCW face winding
 	**/
@@ -199,6 +192,141 @@ class GPUText {
 		}
 	}
 
+	/**
+	 * Given buffer containing a binary GPUText file, parse it and generate a GPUTextFont object
+	 *
+	 * @throws string on parse errors
+	 */
+	static parse(buffer: ArrayBuffer): GPUTextFont {
+		let _t0 = window.performance.now();
+
+		let dataView = new DataView(buffer);
+		let littleEndian = true;
+
+		// read header string, assume utf-8 encoded
+		let jsonHeader = '';
+		let p = 0;
+		for (; p < buffer.byteLength; p++) {
+			let byte = dataView.getInt8(p);
+			if (byte === 0) break;
+			jsonHeader += String.fromCharCode(byte);
+		}
+
+		let payloadStart = p + 1;
+
+		let header: GPUTextFontHeader = JSON.parse(jsonHeader);
+
+		let gpuTextFont: GPUTextFont = {
+			format: header.format,
+			version: header.version,
+			technique: header.technique,
+
+			ascender: header.ascender,
+			descender: header.descender,
+			typoAscender: header.typoAscender,
+			typoDescender: header.typoDescender,
+			lowercaseHeight: header.lowercaseHeight,
+			metadata: header.metadata,
+			fieldRange_px: header.fieldRange_px,
+
+			characters: {},
+			kerning: {},
+			glyphBounds: null,
+
+			textures: [],
+			textureSize: header.textureSize,
+		};
+
+		// parse payloads into font data
+		let characterDataView = new DataView(buffer, payloadStart + header.characters.start, header.characters.length);
+		let characterBlockLength_bytes = 4 + (4 * 2) + (3 * 4);
+		for (let i = 0; i < header.charList.length; i++) {
+			let char = header.charList[i];
+			let b0 = i * characterBlockLength_bytes;
+
+			let characterData: TextureAtlasCharacter = {
+				advance: characterDataView.getFloat32(b0 + 0, littleEndian),
+				glyph: {
+					atlasRect: {
+						x: characterDataView.getUint16(b0 + 4, littleEndian),
+						y: characterDataView.getUint16(b0 + 6, littleEndian),
+						w: characterDataView.getUint16(b0 + 8, littleEndian),
+						h: characterDataView.getUint16(b0 + 10, littleEndian),
+					},
+					atlasScale: characterDataView.getFloat32(b0 + 12, littleEndian),
+					offset: {
+						x: characterDataView.getFloat32(b0 + 16, littleEndian),
+						y: characterDataView.getFloat32(b0 + 20, littleEndian),
+					}
+				}
+			}
+
+			if (characterData.glyph.atlasRect.w === 0 || characterData.glyph.atlasRect.h === 0) {
+				characterData.glyph = null;
+			}
+
+			gpuTextFont.characters[char] = characterData;
+		}
+
+		// kerning payload
+		let kerningDataView = new DataView(buffer, payloadStart + header.kerning.start, header.kerning.length);
+		let kerningLength_bytes = 4;
+		for (let i = 0; i < header.kerningPairs.length; i++) {
+			let pair = header.kerningPairs[i];
+			let b0 = i * kerningLength_bytes;
+			let kerning = kerningDataView.getFloat32(b0, littleEndian);
+			gpuTextFont.kerning[pair] = kerning;
+		}
+
+		// glyph bounds payload
+		if (header.glyphBounds != null) {
+			gpuTextFont.glyphBounds = {};
+
+			let glyphBoundsDataView = new DataView(buffer, payloadStart + header.glyphBounds.start, header.glyphBounds.length);
+			let glyphBoundsBlockLength_bytes = 4 * 4;
+			for (let i = 0; i < header.charList.length; i++) {
+				let char = header.charList[i];
+				let b0 = i * glyphBoundsBlockLength_bytes;
+				// t r b l
+				let bounds = {
+					top: glyphBoundsDataView.getFloat32(b0 + 0, littleEndian),
+					right: glyphBoundsDataView.getFloat32(b0 + 4, littleEndian),
+					bottom: glyphBoundsDataView.getFloat32(b0 + 8, littleEndian),
+					left: glyphBoundsDataView.getFloat32(b0 + 12, littleEndian),
+				}
+
+				gpuTextFont.glyphBounds[char] = bounds;
+			}
+		}
+
+		// texture payload
+		// convert png bytes into local blob
+		for (let p = 0; p < header.textures.length; p++) {
+			let page = header.textures[p];
+			gpuTextFont.textures[p] = [];
+
+			for (let m = 0; m < page.length; m++) {
+				let mipmap = page[m];
+
+				// textures may be in the payload or an external reference
+				if (mipmap.payloadBytes	!= null) {
+					let imageBlob = new Blob([new Uint8Array(buffer, payloadStart + mipmap.payloadBytes.start, mipmap.payloadBytes.length)], { type: "image/png" });
+					let image = new Image();
+					image.src = URL.createObjectURL(imageBlob);
+					gpuTextFont.textures[p][m] = image;
+				} else if (mipmap.localPath != null) {
+					gpuTextFont.textures[p][m] = {
+						localPath: mipmap.localPath
+					};
+				}
+
+			}
+
+		}
+
+		return gpuTextFont;
+	}
+
 }
 
 export interface TextureAtlasGlyph {
@@ -218,7 +346,7 @@ export interface TextureAtlasCharacter {
 
 export interface ResourceReference {
 	// range of bytes within the file's binary payload
-	payloadByteRange?: {
+	payloadBytes?: {
 		start: number,
 		length: number
 	},
@@ -228,19 +356,34 @@ export interface ResourceReference {
 	localPath?: string,
 }
 
-export interface GPUTextFont {
-	format: 'TextureAtlasFont',
+type GPUTextFormat = 'TextureAtlasFontJson' | 'TextureAtlasFontBinary';
+type GPUTextTechnique = 'msdf' | 'sdf' | 'bitmap';
+
+interface GPUTextFontMetadata {
+	family: string,
+	subfamily: string,
+	version: string,
+	postScriptName: string,
+
+	copyright: string,
+	trademark: string,
+	manufacturer: string,
+	manufacturerURL: string,
+	designerURL: string,
+	license: string,
+	licenseURL: string,
+
+	// original authoring height
+	// this can be used to reproduce the unnormalized source values of the font
+	height_funits: number,
+	funitsPerEm: number,
+}
+
+interface GPUTextFontBase {
+	format: GPUTextFormat,
 	version: number,
 
-	technique: 'msdf' | 'sdf' | 'bitmap',
-
-	characters: { [character: string]: TextureAtlasCharacter },
-	kerning: { [characterPair: string]: number },
-
-	textures: Array<
-		// array of mipmap levels, where 0 = largest and primary texture (mipmaps may be omitted)
-		Array<ResourceReference>
-	>,
+	technique: GPUTextTechnique,
 
 	textureSize: {
 		w: number,
@@ -254,31 +397,37 @@ export interface GPUTextFont {
 	typoDescender: number,
 	lowercaseHeight: number,
 
-	metadata: {
-		family: string,
-		subfamily: string,
-		version: string,
-		postScriptName: string,
-
-		copyright: string,
-		trademark: string,
-		manufacturer: string,
-		manufacturerURL: string,
-		designerURL: string,
-		license: string,
-		licenseURL: string,
-
-		// original authoring height
-		// this can be used to reproduce the unnormalized source values of the font
-		height_funits: number,
-		funitsPerEm: number,
-	},
+	metadata: GPUTextFontMetadata,
 
 	fieldRange_px: number,
+}
 
+// binary text file JSON header
+interface GPUTextFontHeader extends GPUTextFontBase {
+	charList: Array<string>,
+	kerningPairs: Array<string>,
+	characters: {
+		start: number,
+		length: number,
+	},
+	kerning: {
+		start: number,
+		length: number,
+	},
+	glyphBounds?: {
+		start: number,
+		length: number,
+	},
+	textures: Array<Array<ResourceReference>>,
+}
+
+export interface GPUTextFont extends GPUTextFontBase {
+	characters: { [character: string]: TextureAtlasCharacter },
+	kerning: { [characterPair: string]: number },
 	// glyph bounding boxes in normalized font units
 	// not guaranteed to be included in the font file
-	glyphBounds?: { [character: string]: { left: number, bottom: number, right: number, top: number } }
+	glyphBounds?: { [character: string]: { left: number, bottom: number, right: number, top: number } },
+	textures: Array<Array<{ localPath: string } | HTMLImageElement>>,
 }
 
 export interface GlyphLayout {
@@ -289,7 +438,7 @@ export interface GlyphLayout {
 		y: number
 	}>,
 	bounds: { l: number, r: number, t: number, b: number },
-	scale: number,
+	glyphScale: number,
 }
 
 export default GPUText;

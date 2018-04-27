@@ -1,4 +1,4 @@
-import { Device, GPUProgram, GPUVertexState, GPUBuffer, BufferUsageHint, VertexAttributeDataType, GPUTexture, TextureFormat, TextureDataType, TextureMagFilter, TextureMinFilter, TextureWrapMode, ColorSpaceConversion } from "../../rendering/Device";
+import { Device, GPUProgram, GPUVertexState, GPUBuffer, BufferUsageHint, VertexAttributeDataType, GPUTexture, TextureFormat, TextureDataType, TextureMagFilter, TextureMinFilter, TextureWrapMode, ColorSpaceConversion, TextureUsageHint } from "../../rendering/Device";
 import { SharedResources } from "./SharedResources";
 import { DrawContext, DrawMode, BlendMode } from "../../rendering/Renderer";
 import { Object2D } from "./Object2D";
@@ -44,9 +44,10 @@ export class Text extends Object2D {
     protected _fontSizePx: number;
     protected _fontPath: string;
     protected _fontAsset: FontAsset;
+    protected _glyphLayout: GlyphLayout;
+    protected _glyphScale: number;
 
     protected _string: string;
-    protected _glyphLayout: GlyphLayout;
 
     protected _kerningEnabled = true;
     protected _ligaturesEnabled = true;
@@ -114,8 +115,6 @@ export class Text extends Object2D {
 
                 uniform mat4 transform;
 
-                uniform float debug; // @!
-
                 varying vec2 vUv;
                 varying float vFieldRangeDisplay_px;
 
@@ -132,8 +131,6 @@ export class Text extends Object2D {
                     sigDist = clamp((sigDist - 0.5) * vFieldRangeDisplay_px + 0.5, 0.0, 1.0);
 
                     float alpha = sigDist;
-
-                    gl_FragColor = mix(color * alpha, vec4(1., 0., 0., 1.), debug);
                 }
                 `,
                 ['position', 'uv']
@@ -148,12 +145,15 @@ export class Text extends Object2D {
 
         // only support for 1 glyph page at the moment
         let mipmapsProvided = this._fontAsset.images[0].length > 1;
-        this.glyphAtlas = device.createTexture({
+
+        this.glyphAtlas = SharedResources.getTexture(device, textureKey, {
             format: TextureFormat.RGBA,
             generateMipmaps: !mipmapsProvided,
 
             mipmapData: this._fontAsset.images[0],
             dataType: TextureDataType.UNSIGNED_BYTE,
+
+            usageHint: TextureUsageHint.HIGH_USAGE,
 
             samplingParameters: {
                 magFilter: TextureMagFilter.LINEAR,
@@ -168,10 +168,6 @@ export class Text extends Object2D {
                 colorSpaceConversion: ColorSpaceConversion.NONE,
             }
         });
-        console.log('Created atlas', this.glyphAtlas);
-        console.warn('Atlas should be shared resource');
-        console.warn('Atlas should have usage hint');
-        // this.glyphAtlas = SharedResources.getTexture(textureKey, descriptor)
 
         // recreate vertex buffers and vertex state object
         this.deleteGPUVertexResources();
@@ -221,18 +217,14 @@ export class Text extends Object2D {
 
         // font
         context.uniform1f('fieldRange', this._fontAsset.descriptor.fieldRange_px);
-        // @! context.uniformSampler2D('glyphAtlas', this.glyphAtlas);
+        context.uniformTexture2D('glyphAtlas', this.glyphAtlas);
 
         // text instance
-        context.uniform1f('glyphScale', this._glyphLayout.scale);
+        context.uniform1f('glyphScale', this._glyphLayout.glyphScale);
         context.uniform4fv('color', this.color);
         context.uniformMatrix4fv('transform', false, this.worldTransformMat4);
 
-        context.uniform1f('debug', 0);
         context.draw(DrawMode.TRIANGLES, this.vertexCount, 0);
-
-        // context.uniform1f('debug', 1);
-        // context.draw(DrawMode.LINE_STRIP, this.vertexCount, 0);
     }
 
     protected deleteGPUVertexResources() {
@@ -251,25 +243,44 @@ export class Text extends Object2D {
 
     protected updateFontPath() {
         Text.getFontAsset(this._fontPath, (asset) => {
-            console.log('font ready', asset);
             this._fontAsset = asset;
             this.updateGlyphLayout();
         });
     }
 
     protected updateGlyphLayout() {
+        let glyphLayoutChanged = false;
+
         if (this._string != null && this._fontAsset != null) {
-            this._glyphLayout = GPUText.layout(this._string, this._fontAsset.descriptor, {
-                lineHeight: this._lineHeight,
-                ligaturesEnabled: this._ligaturesEnabled,
-                kerningEnabled: this._kerningEnabled,
-            }, this._fontSizePx);
+
+            // generate glyphScale from css font-size px
+            // in browsers, font-size corresponds to the difference between typoAscender and typoDescender
+            let font = this._fontAsset.descriptor;
+            let typoDelta = font.typoAscender - font.typoDescender;
+            this._glyphScale = this._fontSizePx / typoDelta;
+
+            // @! if only the scale changed they we can avoid GPU realloc by just changing this._glyphLayout.glyphScale
+
+            this._glyphLayout = GPUText.layout(
+                this._string,
+                this._fontAsset.descriptor,
+                {
+                    glyphScale: this._glyphScale,
+                    lineHeight: this._lineHeight,
+                    ligaturesEnabled: this._ligaturesEnabled,
+                    kerningEnabled: this._kerningEnabled,
+                }
+            );
+
+            glyphLayoutChanged = true;
+
         } else {
+            glyphLayoutChanged = this._glyphLayout === null;
             this._glyphLayout = null;
         }
 
         this.render = this._string != null && this._glyphLayout != null;
-        this.gpuResourcesNeedAllocate = true;
+        this.gpuResourcesNeedAllocate = glyphLayoutChanged;
     }
 
     // Font loading and caching
@@ -277,20 +288,15 @@ export class Text extends Object2D {
         [path: string]: Promise<FontAsset>
     } = {};
 
-    protected static getFontAsset(path: string, onReady: (asset: FontAsset) => void, onError?: (msg: string) => void) {
+    static getFontAsset(path: string, onReady: (asset: FontAsset) => void, onError?: (msg: string) => void) {
         let promise = Text.fontMap[path];
 
         if (promise == null) {
             promise = Text.fontMap[path] = new Promise<FontAsset>((resolve, reject) => {
-                console.log('requesting', path);
-
                 // parse path
                 let directory = path.substr(0, path.lastIndexOf('/'));
                 let ext = path.substr(path.lastIndexOf('.') + 1).toLowerCase();
-
-                if (ext !== 'json') {
-                    console.warn('Only the JSON form of GPUText is implemented');
-                }
+                let jsonFormat = ext === 'json';
 
                 let descriptor: GPUTextFont;
                 let images = new Array<Array<HTMLImageElement>>();
@@ -321,19 +327,23 @@ export class Text extends Object2D {
                 function loadDescriptor(path: string) {
                     let req = new XMLHttpRequest();
                     req.open('GET', path);
-                    req.responseType = ext === 'json' ? 'json' : 'arraybuffer';
-                    req.onerror = (e) => {
-                        reject(`Could not load font ${path}`);
-                    }
+                    req.responseType = jsonFormat ? 'json' : 'arraybuffer';
+                    req.onerror = (e) => reject(`Could not load font ${path}`);
                     req.onload = (e) => {
-                        descriptor = req.responseType === 'json' ? req.response : parseDescriptorBuffer(req.response);
+                        descriptor = jsonFormat ? req.response : parseDescriptorBuffer(req.response);
+
+                        if (descriptor == null) {
+                            reject(`Failed to parse font`);
+                            return;
+                        }
+
                         loadImages(descriptor.textures);
                         tryComplete();
                     }
                     req.send();
                 }
 
-                function loadImages(pages: Array<Array<ResourceReference>>) {
+                function loadImages(pages: Array<Array<{ localPath: string } | HTMLImageElement>>) {
                     for (let i = 0; i < pages.length; i++) {
                         let page = pages[i];
                         images[i] = new Array<HTMLImageElement>();
@@ -341,31 +351,35 @@ export class Text extends Object2D {
                         for (let j = 0; j < page.length; j++) {
                             let mipResource = page[j];
 
-                            if (mipResource.localPath) {
-                                let image = new Image();
-                                image.onload = tryComplete;
-                                image.src = directory + '/' + mipResource.localPath;
-                                images[i][j] = image;
-                            } else if (ext === 'bin' && mipResource.payloadByteRange) {
-                                reject(`Textures in binary payload not yet supported`);
+                            let image: HTMLImageElement;
+                            if (mipResource instanceof HTMLImageElement) {
+                                image = mipResource;
                             } else {
-                                reject(`Could not load resource "${mipResource}`);
+                                image = new Image();
+                                image.src = directory + '/' + mipResource.localPath;
                             }
+
+                            image.onload = tryComplete;
+                            images[i][j] = image;
                         }
                     }
 
                     tryComplete();
                 }
 
-                function parseDescriptorBuffer(arraybuffer: ArrayBuffer): GPUTextFont {
-                    reject('Binary GPUText files are not yet supported');
-                    return null;
+                function parseDescriptorBuffer(buffer: ArrayBuffer): GPUTextFont {
+                    try {
+                        return GPUText.parse(buffer);
+                    } catch (e) {
+                        reject(`Error parsing binary GPUText file: ${e}`);
+                        return null;
+                    }
                 }
 
             });
         }
 
-        promise.then(onReady).catch(onError);
+        promise.catch(onError).then(onReady);
     }
 
 }
