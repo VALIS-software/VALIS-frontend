@@ -1,4 +1,4 @@
-import { Device, GPUVertexState, VertexAttributeDataType, GPUProgram, GPUBuffer, GPUIndexBuffer } from "../../rendering/Device";
+import { Device, GPUVertexState, VertexAttributeDataType, GPUProgram, GPUBuffer, GPUIndexBuffer, TextureDescriptor, GPUTexture, BufferDescriptor } from "../../rendering/Device";
 
 export class SharedResources {
 
@@ -7,6 +7,8 @@ export class SharedResources {
     static quad1x1VertexState: GPUVertexState;
 
     private static programs: { [key: string]: GPUProgram } = {};
+    private static textures: { [key: string]: GPUTexture } = {};
+    private static buffers: { [key: string]: GPUBuffer } = {};
 
     static getProgram(device: Device, vertexCode: string, fragmentCode: string, attributeBindings: Array<string>) {
         let key = vertexCode + '\x35' + fragmentCode + '\x35' + attributeBindings.join('\x37');
@@ -27,6 +29,52 @@ export class SharedResources {
         if (gpuProgram != null) {
             gpuProgram.delete();
             delete SharedResources.programs[key];
+            return true;
+        }
+
+        return false;
+    }
+
+    static getTexture(device: Device, key: string, descriptor: TextureDescriptor) {
+        let gpuTexture = SharedResources.textures[key];
+
+        if (gpuTexture == null) {
+            gpuTexture = device.createTexture(descriptor);
+            SharedResources.textures[key] = gpuTexture;
+        }
+
+        return gpuTexture;
+    }
+
+    static deleteTexture(key: string) {
+        let gpuTexture = SharedResources.textures[key];
+
+        if (gpuTexture != null) {
+            gpuTexture.delete();
+            delete SharedResources.textures[key];
+            return true;
+        }
+
+        return false;
+    }
+
+    static getBuffer(device: Device, key: string, descriptor: BufferDescriptor) {
+        let gpuBuffer = SharedResources.buffers[key];
+
+        if (gpuBuffer == null) {
+            gpuBuffer = device.createBuffer(descriptor);
+            SharedResources.buffers[key] = gpuBuffer;
+        }
+
+        return gpuBuffer;
+    }
+
+    static deleteBuffer(key: string) {
+        let gpuBuffer = SharedResources.buffers[key];
+
+        if (gpuBuffer != null) {
+            gpuBuffer.delete();
+            delete SharedResources.buffers[key];
             return true;
         }
 
@@ -94,6 +142,16 @@ export class SharedResources {
             SharedResources.programs[key].delete();
         }
         SharedResources.programs = {};
+
+        for (let key of Object.keys(SharedResources.textures)) {
+            SharedResources.textures[key].delete();
+        }
+        SharedResources.textures = {};
+
+        for (let key of Object.keys(SharedResources.buffers)) {
+            SharedResources.buffers[key].delete();
+        }
+        SharedResources.buffers = {};
     }
 
 }
