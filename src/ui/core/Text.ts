@@ -131,6 +131,8 @@ export class Text extends Object2D {
                     sigDist = clamp((sigDist - 0.5) * vFieldRangeDisplay_px + 0.5, 0.0, 1.0);
 
                     float alpha = sigDist;
+
+                    gl_FragColor = color * alpha;
                 }
                 `,
                 ['position', 'uv']
