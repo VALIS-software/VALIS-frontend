@@ -198,8 +198,6 @@ class GPUText {
 	 * @throws string on parse errors
 	 */
 	static parse(buffer: ArrayBuffer): GPUTextFont {
-		let _t0 = window.performance.now();
-
 		let dataView = new DataView(buffer);
 		let littleEndian = true;
 
