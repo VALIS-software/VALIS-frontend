@@ -139,15 +139,10 @@ export class Text extends Object2D {
             );
         }
 
-        // @! initialize font resources
-        // get a hash for the font texture
-        // if the font's textures hasn't been uploaded as a shared resource, upload it
-        // add usage hint to stick around long-term
+        // initialize atlas texture if not already created
         let textureKey = this._fontAsset.descriptor.metadata.postScriptName;
-
         // only support for 1 glyph page at the moment
         let mipmapsProvided = this._fontAsset.images[0].length > 1;
-
         this.glyphAtlas = SharedResources.getTexture(device, textureKey, {
             format: TextureFormat.RGBA,
             generateMipmaps: !mipmapsProvided,
@@ -214,7 +209,7 @@ export class Text extends Object2D {
     }
 
     draw(context: DrawContext) {
-        // renderpass/shader
+        // renderPass/shader
         context.uniform2f('viewportSize', context.viewport.w, context.viewport.h);
 
         // font
@@ -337,6 +332,10 @@ export class Text extends Object2D {
                         if (descriptor == null) {
                             reject(`Failed to parse font`);
                             return;
+                        }
+
+                        if (descriptor.textures.length > 1) {
+                            console.warn('Multiple-page glyph atlases are not yet supported');
                         }
 
                         loadImages(descriptor.textures);

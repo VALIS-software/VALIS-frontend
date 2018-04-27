@@ -194,14 +194,13 @@ class GPUText {
 
 	/**
 	 * Given buffer containing a binary GPUText file, parse it and generate a GPUTextFont object
-	 *
 	 * @throws string on parse errors
 	 */
 	static parse(buffer: ArrayBuffer): GPUTextFont {
-		let dataView = new DataView(buffer);
-		let littleEndian = true;
+		const dataView = new DataView(buffer);
 
-		// read header string, assume utf-8 encoded
+		// read header string, expect utf-8 encoded
+		// the end of the header string is marked by a null character
 		let jsonHeader = '';
 		let p = 0;
 		for (; p < buffer.byteLength; p++) {
@@ -210,10 +209,13 @@ class GPUText {
 			jsonHeader += String.fromCharCode(byte);
 		}
 
-		let payloadStart = p + 1;
+		// payload is starts from the first byte after the null character
+		const payloadStart = p + 1;
+		const littleEndian = true;
 
-		let header: GPUTextFontHeader = JSON.parse(jsonHeader);
+		const header: GPUTextFontHeader = JSON.parse(jsonHeader);
 
+		// initialize GPUTextFont object
 		let gpuTextFont: GPUTextFont = {
 			format: header.format,
 			version: header.version,
@@ -235,7 +237,7 @@ class GPUText {
 			textureSize: header.textureSize,
 		};
 
-		// parse payloads into font data
+		// parse character data payload into GPUTextFont characters map
 		let characterDataView = new DataView(buffer, payloadStart + header.characters.start, header.characters.length);
 		let characterBlockLength_bytes = 4 + (4 * 2) + (3 * 4);
 		for (let i = 0; i < header.charList.length; i++) {
@@ -271,8 +273,7 @@ class GPUText {
 		let kerningLength_bytes = 4;
 		for (let i = 0; i < header.kerningPairs.length; i++) {
 			let pair = header.kerningPairs[i];
-			let b0 = i * kerningLength_bytes;
-			let kerning = kerningDataView.getFloat32(b0, littleEndian);
+			let kerning = kerningDataView.getFloat32(i * kerningLength_bytes, littleEndian);
 			gpuTextFont.kerning[pair] = kerning;
 		}
 
@@ -308,7 +309,8 @@ class GPUText {
 
 				// textures may be in the payload or an external reference
 				if (mipmap.payloadBytes	!= null) {
-					let imageBlob = new Blob([new Uint8Array(buffer, payloadStart + mipmap.payloadBytes.start, mipmap.payloadBytes.length)], { type: "image/png" });
+					let imageBufferView = new Uint8Array(buffer, payloadStart + mipmap.payloadBytes.start, mipmap.payloadBytes.length);
+					let imageBlob = new Blob([imageBufferView], { type: "image/png" });
 					let image = new Image();
 					image.src = URL.createObjectURL(imageBlob);
 					gpuTextFont.textures[p][m] = image;
@@ -317,14 +319,32 @@ class GPUText {
 						localPath: mipmap.localPath
 					};
 				}
-
 			}
-
 		}
 
 		return gpuTextFont;
 	}
 
+}
+
+export interface GPUTextFont extends GPUTextFontBase {
+	characters: { [character: string]: TextureAtlasCharacter },
+	kerning: { [characterPair: string]: number },
+	// glyph bounding boxes in normalized font units
+	// not guaranteed to be included in the font file
+	glyphBounds?: { [character: string]: { left: number, bottom: number, right: number, top: number } },
+	textures: Array<Array<{ localPath: string } | HTMLImageElement>>,
+}
+
+export interface GlyphLayout {
+	font: GPUTextFont,
+	sequence: Array<{
+		char: string,
+		x: number,
+		y: number
+	}>,
+	bounds: { l: number, r: number, t: number, b: number },
+	glyphScale: number,
 }
 
 export interface TextureAtlasGlyph {
@@ -417,26 +437,6 @@ interface GPUTextFontHeader extends GPUTextFontBase {
 		length: number,
 	},
 	textures: Array<Array<ResourceReference>>,
-}
-
-export interface GPUTextFont extends GPUTextFontBase {
-	characters: { [character: string]: TextureAtlasCharacter },
-	kerning: { [characterPair: string]: number },
-	// glyph bounding boxes in normalized font units
-	// not guaranteed to be included in the font file
-	glyphBounds?: { [character: string]: { left: number, bottom: number, right: number, top: number } },
-	textures: Array<Array<{ localPath: string } | HTMLImageElement>>,
-}
-
-export interface GlyphLayout {
-	font: GPUTextFont,
-	sequence: Array<{
-		char: string,
-		x: number,
-		y: number
-	}>,
-	bounds: { l: number, r: number, t: number, b: number },
-	glyphScale: number,
 }
 
 export default GPUText;
