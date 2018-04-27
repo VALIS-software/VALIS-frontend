@@ -1,14 +1,9 @@
 /**
-
-	# GPU Text Core
-
-	Provides text layout and vertex buffer generation
+	Provides text layout, vertex buffer generation and file parsing
 
 	Dev notes:
 	- Should have progressive layout where text can be appended to an existing layout
-
 **/
-
 class GPUText {
 
 	// y increases from top-down (like HTML/DOM coordinates)
@@ -18,10 +13,12 @@ class GPUText {
 		text: string,
 		font: GPUTextFont,
 		layoutOptions: {
-			glyphScale: number,
 			kerningEnabled?: boolean,
 			ligaturesEnabled?: boolean,
 			lineHeight?: number,
+
+			glyphScale?: number, // scale of characters when wrapping text
+			                     // doesn't affect the scale of the generated sequence or vertices
 		}
 	): GlyphLayout {
 		const opts = {

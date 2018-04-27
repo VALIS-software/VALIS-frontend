@@ -285,10 +285,6 @@ export class Text extends Object2D {
     }
 
     // Font loading and caching
-    protected static fontMap: {
-        [path: string]: Promise<FontAsset>
-    } = {};
-
     static getFontAsset(path: string, onReady: (asset: FontAsset) => void, onError?: (msg: string) => void) {
         let promise = Text.fontMap[path];
 
@@ -386,6 +382,10 @@ export class Text extends Object2D {
 
         promise.catch(onError).then(onReady);
     }
+
+    protected static fontMap: {
+        [path: string]: Promise<FontAsset>
+    } = {};
 
 }
 
