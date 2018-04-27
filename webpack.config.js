@@ -42,7 +42,7 @@ module.exports = {
 
 			// copy assets into dist/static/
 			{
-				test: /\.json|\.png/,
+				test: /\.json|\.png|\.bin/,
 				type: 'javascript/auto',
 				use: [{
 					loader: 'file-loader',
