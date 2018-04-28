@@ -166,9 +166,6 @@ export class Text extends Object2D {
             }
         });
 
-        // recreate vertex buffers and vertex state object
-        this.deleteGPUVertexResources();
-
         // re-create text vertex buffer
         let vertexData = GPUText.generateVertexData(this._glyphLayout);
 
@@ -205,7 +202,17 @@ export class Text extends Object2D {
     }
 
     releaseGPUResources() {
-        this.deleteGPUVertexResources();
+        if (this.gpuVertexState != null) {
+            this.gpuVertexState.delete();
+            this.gpuVertexState = null;
+        }
+
+        if (this.gpuVertexBuffer != null) {
+            this.gpuVertexBuffer.delete();
+            this.gpuVertexBuffer = null;
+        }
+
+        this.vertexCount = 0;
     }
 
     draw(context: DrawContext) {
@@ -224,20 +231,6 @@ export class Text extends Object2D {
         context.draw(DrawMode.TRIANGLES, this.vertexCount, 0);
     }
 
-    protected deleteGPUVertexResources() {
-        if (this.gpuVertexState != null) {
-            this.gpuVertexState.delete();
-            this.gpuVertexState = null;
-        }
-
-        if (this.gpuVertexBuffer != null) {
-            this.gpuVertexBuffer.delete();
-            this.gpuVertexBuffer = null;
-        }
-
-        this.vertexCount = 0;
-    }
-
     protected updateFontPath() {
         Text.getFontAsset(this._fontPath, (asset) => {
             this._fontAsset = asset;
@@ -249,7 +242,6 @@ export class Text extends Object2D {
         let glyphLayoutChanged = false;
 
         if (this._string != null && this._fontAsset != null) {
-
             // generate glyphScale from css font-size px
             // in browsers, font-size corresponds to the difference between typoAscender and typoDescender
             let font = this._fontAsset.descriptor;
@@ -257,7 +249,7 @@ export class Text extends Object2D {
             this._glyphScale = this._fontSizePx / typoDelta;
 
             // @! performance improvement:
-            // if only the scale changed they we can avoid GPU realloc by just changing this._glyphLayout.glyphScale
+            // if only the _glyphScale changed they we can avoid GPU realloc by just changing this._glyphLayout.glyphScale
 
             this._glyphLayout = GPUText.layout(
                 this._string,
@@ -274,14 +266,23 @@ export class Text extends Object2D {
             this.h = (this._glyphLayout.bounds.b - this._glyphLayout.bounds.t) * this._glyphLayout.glyphScale;
 
             glyphLayoutChanged = true;
-
         } else {
-            glyphLayoutChanged = this._glyphLayout === null;
+            glyphLayoutChanged = this._glyphLayout !== null;
+
             this._glyphLayout = null;
+            this._glyphScale = 1;
+            this.w = 0;
+            this.h = 0;
         }
 
         this.render = this._string != null && this._glyphLayout != null;
+
+        // if the vertex data has changed, we need to reallocate the GPU resources
         this.gpuResourcesNeedAllocate = glyphLayoutChanged;
+
+        if (this.gpuResourcesNeedAllocate) {
+            this.releaseGPUResources();
+        }
     }
 
     // Font loading and caching
