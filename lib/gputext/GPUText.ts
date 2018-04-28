@@ -236,7 +236,11 @@ class GPUText {
 
 		// parse character data payload into GPUTextFont characters map
 		let characterDataView = new DataView(buffer, payloadStart + header.characters.start, header.characters.length);
-		let characterBlockLength_bytes = 4 + (4 * 2) + (3 * 4);
+		let characterBlockLength_bytes =
+			4 +     // advance: F32
+			2 * 4 + // atlasRect(x, y, w, h): UI16
+			4 +     // atlasScale: F32
+			4 * 2;  // offset(x, y): F32
 		for (let i = 0; i < header.charList.length; i++) {
 			let char = header.charList[i];
 			let b0 = i * characterBlockLength_bytes;
@@ -258,6 +262,7 @@ class GPUText {
 				}
 			}
 
+			// A glyph with 0 size is considered to be a null-glyph
 			if (characterData.glyph.atlasRect.w === 0 || characterData.glyph.atlasRect.h === 0) {
 				characterData.glyph = null;
 			}
@@ -285,10 +290,10 @@ class GPUText {
 				let b0 = i * glyphBoundsBlockLength_bytes;
 				// t r b l
 				let bounds = {
-					top: glyphBoundsDataView.getFloat32(b0 + 0, littleEndian),
-					right: glyphBoundsDataView.getFloat32(b0 + 4, littleEndian),
-					bottom: glyphBoundsDataView.getFloat32(b0 + 8, littleEndian),
-					left: glyphBoundsDataView.getFloat32(b0 + 12, littleEndian),
+					t: glyphBoundsDataView.getFloat32(b0 + 0, littleEndian),
+					r: glyphBoundsDataView.getFloat32(b0 + 4, littleEndian),
+					b: glyphBoundsDataView.getFloat32(b0 + 8, littleEndian),
+					l: glyphBoundsDataView.getFloat32(b0 + 12, littleEndian),
 				}
 
 				gpuTextFont.glyphBounds[char] = bounds;
@@ -296,7 +301,7 @@ class GPUText {
 		}
 
 		// texture payload
-		// convert png bytes into local blob
+		// textures may be in the payload or an external reference
 		for (let p = 0; p < header.textures.length; p++) {
 			let page = header.textures[p];
 			gpuTextFont.textures[p] = [];
@@ -304,14 +309,15 @@ class GPUText {
 			for (let m = 0; m < page.length; m++) {
 				let mipmap = page[m];
 
-				// textures may be in the payload or an external reference
 				if (mipmap.payloadBytes	!= null) {
+					// convert payload's image bytes into a HTMLImageElement object
 					let imageBufferView = new Uint8Array(buffer, payloadStart + mipmap.payloadBytes.start, mipmap.payloadBytes.length);
 					let imageBlob = new Blob([imageBufferView], { type: "image/png" });
 					let image = new Image();
 					image.src = URL.createObjectURL(imageBlob);
 					gpuTextFont.textures[p][m] = image;
 				} else if (mipmap.localPath != null) {
+					// payload contains no image bytes; the image is store externally, pass on the path
 					gpuTextFont.textures[p][m] = {
 						localPath: mipmap.localPath
 					};
@@ -325,11 +331,11 @@ class GPUText {
 }
 
 export interface GPUTextFont extends GPUTextFontBase {
-	characters: { [character: string]: TextureAtlasCharacter },
+	characters: { [character: string]: TextureAtlasCharacter | null },
 	kerning: { [characterPair: string]: number },
 	// glyph bounding boxes in normalized font units
 	// not guaranteed to be included in the font file
-	glyphBounds?: { [character: string]: { left: number, bottom: number, right: number, top: number } },
+	glyphBounds?: { [character: string]: { l: number, b: number, r: number, t: number } },
 	textures: Array<Array<{ localPath: string } | HTMLImageElement>>,
 }
 
