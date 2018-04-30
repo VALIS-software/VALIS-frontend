@@ -324,7 +324,7 @@ export class AppCanvas extends React.Component<Props, State> {
 
         if (!defaultPrevented) {
             let eventName: keyof InteractionEventMap = 'pointermove';
-            let hitNodes = this.hitTestNodesForInteraction(eventName, interactionData.worldX, interactionData.worldY);
+            let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
             this.executePointerInteraction( hitNodes, eventName, interactionData, (init) => {
                 return new InteractionEvent(init, e);
             });
@@ -342,20 +342,10 @@ export class AppCanvas extends React.Component<Props, State> {
             button: e.button,
         };
 
-        // we need collect dragstart as well as pointerdown receiver to make sure dragstart is emitted
-        let pointerdownNodes = this.hitTestNodesForInteraction(eventName, interactionData.worldX, interactionData.worldY).slice();
-        let dragStartNodes = this.hitTestNodesForInteraction('dragstart', interactionData.worldX, interactionData.worldY).slice();
-
-        let uniqueNodes: Array<Object2D> = [];
-        for (let n of pointerdownNodes.concat(dragStartNodes)) {
-            if (uniqueNodes.indexOf(n) === -1) {
-                uniqueNodes.push(n);
-            }
-        }
-        uniqueNodes.sort(this.compareZ);
-
+        // we need collect drag event nodes as well as pointerdown receiver to make sure drag events are emitted
+        let hitNodes = this.hitTestNodesForInteraction([eventName, 'dragstart', 'dragmove', 'dragend'], interactionData.worldX, interactionData.worldY).slice();
         this.executePointerInteraction(
-            uniqueNodes,
+            hitNodes,
             eventName,
             interactionData,
             (init) => {
@@ -380,28 +370,28 @@ export class AppCanvas extends React.Component<Props, State> {
         }
 
         let eventName: keyof InteractionEventMap = 'pointerup';
-        let hitNodes = this.hitTestNodesForInteraction(eventName, interactionData.worldX, interactionData.worldY);
+        let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
         this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
     }
     protected onClick = (e: MouseEvent) => {
         this.resetCursor();
         let eventName: keyof InteractionEventMap = 'click';
         let interactionData = this.interactionDataFromEvent(e);
-        let hitNodes = this.hitTestNodesForInteraction(eventName, interactionData.worldX, interactionData.worldY);
+        let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
         this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
     }
     protected onDoubleClick = (e: MouseEvent) => {
         this.resetCursor();
         let eventName: keyof InteractionEventMap = 'dblclick';
         let interactionData = this.interactionDataFromEvent(e);
-        let hitNodes = this.hitTestNodesForInteraction(eventName, interactionData.worldX, interactionData.worldY);
+        let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
         this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
     }
     protected onWheel = (e: WheelEvent) => {
         this.resetCursor();
         let eventName: keyof InteractionEventMap = 'wheel';
         let interactionData = this.interactionDataFromEvent(e);
-        let hitNodes = this.hitTestNodesForInteraction(eventName, interactionData.worldX, interactionData.worldY);
+        let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
         this.executePointerInteraction(
             hitNodes,
             eventName,
@@ -418,7 +408,7 @@ export class AppCanvas extends React.Component<Props, State> {
     }
 
     private _hitNodes = new Array<Object2D>(); // micro-optimization: reuse array between events to prevent re-allocation
-    protected hitTestNodesForInteraction<K extends keyof InteractionEventMap>(interactionEventName: K, worldX: number, worldY: number): Array<Object2D> {
+    protected hitTestNodesForInteraction<K extends keyof InteractionEventMap>(interactionEventNames: Array<K>, worldX: number, worldY: number): Array<Object2D> {
         let hitNodeIndex = 0;
         let hitNodes = this._hitNodes;
 
@@ -427,9 +417,14 @@ export class AppCanvas extends React.Component<Props, State> {
                 let nodeInternal = node as any as Object2DInternal;
 
                 // we can skip this node if we know it doesn't have any interaction behaviors
+                let listeners = 0;
+                for (let name of interactionEventNames) {
+                    listeners += nodeInternal.interactionEventListenerCount[name];
+                }
+
                 if (
                     node.cursorStyle == null &&
-                    nodeInternal.interactionEventListenerCount[interactionEventName] <= 0
+                    listeners <= 0
                 ) continue;
 
                 let worldSpaceBounds = node.getWorldBounds();
