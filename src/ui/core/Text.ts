@@ -41,13 +41,12 @@ export class Text extends Object2D {
 
     color: Float32Array = new Float32Array([0, 0, 0, 1]);
 
-    protected _fontSizePx: number;
+    protected _string: string;
+
     protected _fontPath: string;
+    protected _fontSizePx: number;
     protected _fontAsset: FontAsset;
     protected _glyphLayout: GlyphLayout;
-    protected _glyphScale: number;
-
-    protected _string: string;
 
     protected _kerningEnabled = true;
     protected _ligaturesEnabled = true;
@@ -55,7 +54,7 @@ export class Text extends Object2D {
 
     // text-specific gpu resources
     protected gpuVertexBuffer: GPUBuffer;
-    protected glyphAtlas: GPUTexture = null;
+    protected glyphAtlas: GPUTexture;
     protected vertexCount = 0;
 
     constructor(fontPath: string, string?: string, fontSizePx: number = 16) {
@@ -64,6 +63,8 @@ export class Text extends Object2D {
 
         // cannot allocate GPU resource until font asset is available
         this.gpuResourcesNeedAllocate = false;
+        // disable rendering initially, rendering will be enabled when the font assets are available and a glyph layout has been created
+        this.render = false;
 
         this._fontSizePx = fontSizePx;
         this.fontPath = fontPath;
@@ -246,16 +247,17 @@ export class Text extends Object2D {
             // in browsers, font-size corresponds to the difference between typoAscender and typoDescender
             let font = this._fontAsset.descriptor;
             let typoDelta = font.typoAscender - font.typoDescender;
-            this._glyphScale = this._fontSizePx / typoDelta;
+            let glyphScale = this._fontSizePx / typoDelta;
 
             // @! performance improvement:
-            // if only the _glyphScale changed they we can avoid GPU realloc by just changing this._glyphLayout.glyphScale
+            // if only the glyphScale changed they we can avoid GPU realloc by just changing this._glyphLayout.glyphScale
+            let glyphScaleChanged = this._glyphLayout !== null ? this._glyphLayout.glyphScale !== glyphScale : true; 
 
             this._glyphLayout = GPUText.layout(
                 this._string,
                 this._fontAsset.descriptor,
                 {
-                    glyphScale: this._glyphScale,
+                    glyphScale: glyphScale,
                     lineHeight: this._lineHeight,
                     ligaturesEnabled: this._ligaturesEnabled,
                     kerningEnabled: this._kerningEnabled,
@@ -270,16 +272,18 @@ export class Text extends Object2D {
             glyphLayoutChanged = this._glyphLayout !== null;
 
             this._glyphLayout = null;
-            this._glyphScale = 1;
             this.w = 0;
             this.h = 0;
         }
 
-        this.render = this._string != null && this._glyphLayout != null;
+        // we're only able to render if we have a glyphLayout (and implicitly font assets)
+        this.render = this._glyphLayout != null;
 
-        // if the vertex data has changed, we need to reallocate the GPU resources
+        // if the glyph layout has changed then the vertex data must be updated on the GPU
         this.gpuResourcesNeedAllocate = glyphLayoutChanged;
 
+        // if the vertex data has changed, we need to reallocate the GPU resources
+        // delete any existing resources
         if (this.gpuResourcesNeedAllocate) {
             this.releaseGPUResources();
         }
@@ -377,16 +381,13 @@ export class Text extends Object2D {
                         return null;
                     }
                 }
-
             });
         }
 
         promise.catch(onError).then(onReady);
     }
 
-    protected static fontMap: {
-        [path: string]: Promise<FontAsset>
-    } = {};
+    protected static fontMap: { [path: string]: Promise<FontAsset> } = {};
 
 }
 
