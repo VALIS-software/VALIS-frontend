@@ -1,25 +1,23 @@
 - X-Axis
     - Mouse wheel on panel
-    - Model for zooming/panning large linear space (log?)
-
-- We have issues with touch events, test and resolve
+    - Model for zooming/panning large linear space
 
 - When texture slots are full we should swap out the last used
 - Text elements
     - Implement transparent
 - depth-based z
 
+- state management, undo/redo
+
 - GPUText.ts should be moved into gputext repo
     - build gputext.js
     - update example
 - Publish GPUText on NPM
 
-- multiple panel/track handles should be draggable simultaneously
-- onPointerUp after dragging does not change cursor
+- Issues when dragging handles with touch events in the simulator, test and resolve
 
-- state management, undo/redo
 
-- Validate z-ordering works in pointer event system
+---- consider
 
 - Animator field removal
     - Can we improve on the condition? Currently a magic number
