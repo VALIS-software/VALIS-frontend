@@ -249,7 +249,7 @@ export class Text extends Object2D {
             let typoDelta = font.typoAscender - font.typoDescender;
             let glyphScale = this._fontSizePx / typoDelta;
 
-            // @! performance improvement:
+            // @! potential performance improvement:
             // if only the glyphScale changed they we can avoid GPU realloc by just changing this._glyphLayout.glyphScale
             let glyphScaleChanged = this._glyphLayout !== null ? this._glyphLayout.glyphScale !== glyphScale : true; 
 

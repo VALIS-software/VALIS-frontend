@@ -1,5 +1,10 @@
 import Object2D from "./Object2D";
 
+/**
+ * Interaction Events
+ * - Similar to PointerEvents but with a few new events and coordinates tuned for the scene-graph
+ */
+
 export interface InteractionEventMap {
     'pointermove': InteractionEvent;
     'pointerdown': InteractionEvent;
