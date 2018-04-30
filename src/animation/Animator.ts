@@ -29,6 +29,7 @@ export class Animator {
         callback: (object: any) => void,
         object: any,
         field: string,
+        once: boolean,
     }>();
 
     public static springTo(
@@ -175,30 +176,29 @@ export class Animator {
         return Animator.active.length > 0;
     }
 
-    public static addAnimationCompleteCallback<T>(object: T, field: string, callback: (object: T) => void) {
+    public static addAnimationCompleteCallback<T>(object: T, field: string, callback: (object: T) => void, once: boolean = true) {
         Animator.animationCompleteCallbacks.push({
             callback: callback,
             object: object,
             field: field,
+            once: once,
         });
     }
 
-    public static removeAnimationCompleteCallback<T>(object: T, field: string, callback: (object: T) => void) {
-        let idx = -1;
-        for (let i = 0; i < Animator.animationCompleteCallbacks.length; i++) {
-            let e = Animator.animationCompleteCallbacks[i];
+    public static removeAnimationCompleteCallbacks<T>(object: T, field: string, callback: (object: T) => void) {
+        let removed = 0;
+        for (let j = Animator.animationCompleteCallbacks.length - 1; j >= 0; j--) {
+            let e = Animator.animationCompleteCallbacks[j];
             if (
                 e.callback === callback &&
                 e.field === field &&
                 e.object === object
             ) {
-                idx = i;
-                break;
+                Animator.animationCompleteCallbacks.splice(j, 1);
+                removed++;
             }
         }
-        if (idx === -1) return false;
-        Animator.animationCompleteCallbacks.slice(idx, 1);
-        return true;
+        return removed > 0;
     }
 
     /**
@@ -220,6 +220,10 @@ export class Animator {
         for (let j = Animator.animationCompleteCallbacks.length - 1; j >= 0; j--) {
             let e = Animator.animationCompleteCallbacks[j];
             if (e.object === object && e.field === field) {
+                // delete the callback if set to 'once'
+                if (e.once) {
+                    Animator.animationCompleteCallbacks.splice(j, 1);
+                }
                 e.callback(object);
             }
         }
