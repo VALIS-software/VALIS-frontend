@@ -293,13 +293,17 @@ export class AppCanvas extends React.Component<Props, State> {
         }
     } = {};
 
+    // when cursor is false, the canvas cursor style can be set by a node when an interaction event is triggered
+    protected cursorSet: boolean = false;
+    // we use the root node of the document to set the cursor style because it lets us maintain the cursor when dragging beyond the canvas
+    readonly cursorTarget = window.document.documentElement;
+    protected resetCursor() {
+        this.cursorSet = false;
+        this.cursorTarget.style.cursor = '';
+    }
+
     protected onPointerMove = (e: MouseEvent | PointerEvent) => {
-        let cursorStyle: string = null;
-
-        function setCursorStyle(v: string) {
-            if (cursorStyle == null && v != null) cursorStyle = v;
-        }
-
+        this.resetCursor();
         let interactionData = this.interactionDataFromEvent(e);
         interactionData.buttonChange = -1; // normalize between MouseEvent and PointerEvent
 
@@ -308,14 +312,12 @@ export class AppCanvas extends React.Component<Props, State> {
         let defaultPrevented = false;
         if (dragData !== void 0) {
             defaultPrevented = defaultPrevented || this.executePointerInteraction(dragData.inactiveNodes, 'dragstart', interactionData, (init) => {
-                setCursorStyle(init.target.cursorStyle);
                 dragData.activeNodes.push(init.target);
                 return new InteractionEvent(init, e);
             });
             dragData.inactiveNodes = [];
 
             defaultPrevented = defaultPrevented || this.executePointerInteraction(dragData.activeNodes, 'dragmove', interactionData, (init) => {
-                setCursorStyle(init.target.cursorStyle);
                 return new InteractionEvent(init, e);
             });
         }
@@ -324,20 +326,12 @@ export class AppCanvas extends React.Component<Props, State> {
             let eventName: keyof InteractionEventMap = 'pointermove';
             let hitNodes = this.hitTestNodesForInteraction(eventName, interactionData.worldX, interactionData.worldY);
             this.executePointerInteraction( hitNodes, eventName, interactionData, (init) => {
-                setCursorStyle(init.target.cursorStyle);
                 return new InteractionEvent(init, e);
             });
         }
-
-        if (cursorStyle === null) {
-            cursorStyle = '';
-        }
-
-        if (this.canvas.style.cursor !== cursorStyle) {
-            this.canvas.style.cursor = cursorStyle;
-        }
     }
     protected onPointerDown = (e: MouseEvent | PointerEvent) => {
+        this.resetCursor();
         let eventName: keyof InteractionEventMap = 'pointerdown';
         let interactionData = this.interactionDataFromEvent(e);
 
@@ -373,6 +367,7 @@ export class AppCanvas extends React.Component<Props, State> {
         );
     }
     protected onPointerUp = (e: MouseEvent | PointerEvent) => {
+        this.resetCursor();
         let interactionData = this.interactionDataFromEvent(e);
 
         let dragData = this.dragData[interactionData.pointerId];
@@ -389,18 +384,21 @@ export class AppCanvas extends React.Component<Props, State> {
         this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
     }
     protected onClick = (e: MouseEvent) => {
+        this.resetCursor();
         let eventName: keyof InteractionEventMap = 'click';
         let interactionData = this.interactionDataFromEvent(e);
         let hitNodes = this.hitTestNodesForInteraction(eventName, interactionData.worldX, interactionData.worldY);
         this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
     }
     protected onDoubleClick = (e: MouseEvent) => {
+        this.resetCursor();
         let eventName: keyof InteractionEventMap = 'dblclick';
         let interactionData = this.interactionDataFromEvent(e);
         let hitNodes = this.hitTestNodesForInteraction(eventName, interactionData.worldX, interactionData.worldY);
         this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
     }
     protected onWheel = (e: WheelEvent) => {
+        this.resetCursor();
         let eventName: keyof InteractionEventMap = 'wheel';
         let interactionData = this.interactionDataFromEvent(e);
         let hitNodes = this.hitTestNodesForInteraction(eventName, interactionData.worldX, interactionData.worldY);
@@ -487,6 +485,12 @@ export class AppCanvas extends React.Component<Props, State> {
 
             // trigger event on node
             nodeInternal.eventEmitter.emit(interactionEventName, eventObject);
+
+            // update canvas cursor style
+            if (this.cursorSet === false && node.cursorStyle != null) {
+                this.cursorTarget.style.setProperty('cursor', node.cursorStyle, 'important');
+                this.cursorSet = true;
+            }
 
             defaultPrevented = eventObjectInternal.defaultPrevented || defaultPrevented;
             // if user has executed stopPropagation() then do not emit on subsequent nodes
