@@ -1,6 +1,6 @@
 - X-Axis
-    - Mouse wheel on panel
-    - Model for zooming/panning large linear space
+    - Algorithm for laying out labels
+    - Clear event listeners when tile is removed
 
 - When texture slots are full we should swap out the last used
 - Text elements
