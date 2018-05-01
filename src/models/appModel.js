@@ -21,7 +21,7 @@ export {
   APP_EVENT_REMOVE_TRACK,
   APP_EVENT_REORDER_TRACKS,
   APP_EVENT_LOADING_STATE_CHANGED,
-  APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED, 
+  APP_EVENT_TRACK_VIEW_SETTINGS_UPDATED,
 };
 
 class AppModel extends EventCreator {
@@ -72,7 +72,7 @@ class AppModel extends EventCreator {
     });
   }
 
-  addAnnotationTrack(annotationId, query=null) {
+  addAnnotationTrack(annotationId, query = null) {
     return this.api.getAnnotation(annotationId, query).then(model => {
       const track = {
         guid: uuid(),
