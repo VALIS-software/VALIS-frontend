@@ -10,7 +10,7 @@ export class Track {
 
     row: number;
 
-    readonly tiles = new Array<TrackTile>();
+    readonly tiles = new Set<TrackTile>();
     readonly header: Object2D;
     readonly resizeHandle: Rect;
 
@@ -45,16 +45,13 @@ export class Track {
 
     createTrackTile() {
         let tile = new TrackTile(this, [0, 0, 0, 1]);
-        this.tiles.push(tile);
+        this.tiles.add(tile);
         return tile;
     }
 
     deleteTrackTile(tile: TrackTile) {
         tile.releaseGPUResources();
-        let i = this.tiles.indexOf(tile);
-        if (i === -1) return false;
-        this.tiles.splice(i, 1);
-        return true;
+        return this.tiles.delete(tile);
     }
 
 }
