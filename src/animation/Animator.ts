@@ -208,7 +208,6 @@ export class Animator {
 
     public static removeStepCompleteCallback(callback: (steppedAnimationCount: number) => void) {
         return Animator.stepCallbacks.delete(callback);
-        return true;
     }
 
     private static fieldComplete(object: any, field: string) {
