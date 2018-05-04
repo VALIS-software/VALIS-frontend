@@ -3,8 +3,7 @@
  * 
  * Todo:
  * - Improve data structures:
- *      - Swap out array for linked list?
- *      - Can we avoid brute-force searches?
+ *      - Can we avoid brute-force searches? (We should store hidden fields on the object, ugly but fast)
  * - Parameterize springs by duration and normalized dampening
  * - Replace energy threshold with some user-controlled parameter
  * - Implement traditional easings via step functions
@@ -13,7 +12,7 @@
 export class Animator {
 
     // @! maybe better as a linked list - less error prone and potentially faster
-    protected static active = new Array<{
+    protected static active = new Set<{
         object: any,
         animatingFields: { [key: string]: {
             state: AnimationState,
@@ -23,9 +22,9 @@ export class Animator {
         } },
     }>();
 
-    protected static stepCallbacks = new Array<(steppedAnimationCount: number) => void>();
+    protected static stepCallbacks = new Set<(steppedAnimationCount: number) => void>();
 
-    protected static animationCompleteCallbacks = new Array<{
+    protected static animationCompleteCallbacks = new Set<{
         callback: (object: any) => void,
         object: any,
         field: string,
@@ -65,7 +64,7 @@ export class Animator {
                 object: object,
                 animatingFields: {},
             }
-            Animator.active.push(entry);
+            Animator.active.add(entry);
         }
 
         let fields = Object.keys(fieldTargets);
@@ -108,7 +107,7 @@ export class Animator {
         if (fields == null) {
             Animator.removeActive(object);
         } else {
-            let {entry: entry, i: i} = Animator.getActiveAndIndex(object);
+            let entry = Animator.getActive(object);
 
             if (entry === null) return;
             
@@ -120,7 +119,7 @@ export class Animator {
 
             // if there's no field animations left then remove the entry
             if (Object.keys(entry.animatingFields).length === 0) {
-                Animator.active.splice(i, 1);
+                Animator.active.delete(entry);
             }
         }
     }
@@ -130,8 +129,7 @@ export class Animator {
 
         let steppedAnimationCount = 0;
 
-        for (let i = Animator.active.length - 1; i >= 0; i--) {
-            let entry = Animator.active[i];
+        for (let entry of Animator.active) {
             let object = entry.object;
 
             // @! todo, support normal fixed-path easings
@@ -160,24 +158,23 @@ export class Animator {
             }
 
             // if there's no field animations left then remove the entry
-            // we cannot assume Animator.active[i] still refers to the entry as a callback may have removed it
-            if (Object.keys(entry.animatingFields).length === 0 && Animator.active[i] === entry) {
-                Animator.active.splice(i, 1);
+            if (Object.keys(entry.animatingFields).length === 0) {
+                Animator.active.delete(entry);
             }
         }
 
         // execute post-step callbacks
-        for (let i = Animator.stepCallbacks.length - 1; i >= 0; i--) {
-            Animator.stepCallbacks[i](steppedAnimationCount);
+        for (let callback of Animator.stepCallbacks) {
+            callback(steppedAnimationCount);
         }
     }
 
     public static hasActiveAnimations(): boolean {
-        return Animator.active.length > 0;
+        return Animator.active.size > 0;
     }
 
     public static addAnimationCompleteCallback<T>(object: T, field: string, callback: (object: T) => void, once: boolean = true) {
-        Animator.animationCompleteCallbacks.push({
+        Animator.animationCompleteCallbacks.add({
             callback: callback,
             object: object,
             field: field,
@@ -187,17 +184,18 @@ export class Animator {
 
     public static removeAnimationCompleteCallbacks<T>(object: T, field: string, callback: (object: T) => void) {
         let removed = 0;
-        for (let j = Animator.animationCompleteCallbacks.length - 1; j >= 0; j--) {
-            let e = Animator.animationCompleteCallbacks[j];
+
+        for (let e of Animator.animationCompleteCallbacks) {
             if (
                 e.callback === callback &&
                 e.field === field &&
                 e.object === object
             ) {
-                Animator.animationCompleteCallbacks.splice(j, 1);
+                Animator.animationCompleteCallbacks.delete(e);
                 removed++;
             }
         }
+
         return removed > 0;
     }
 
@@ -205,24 +203,20 @@ export class Animator {
      * It's often useful to be able to execute code straight after the global animation step has finished
      */
     public static addStepCompleteCallback(callback: (steppedAnimationCount: number) => void) {
-        Animator.stepCallbacks.push(callback);
+        Animator.stepCallbacks.add(callback);
     }
 
     public static removeStepCompleteCallback(callback: (steppedAnimationCount: number) => void) {
-        let i = Animator.stepCallbacks.indexOf(callback);
-        if (i === -1) return false;
-        Animator.stepCallbacks.splice(i, 1);
+        return Animator.stepCallbacks.delete(callback);
         return true;
     }
 
     private static fieldComplete(object: any, field: string) {
-        // fire any field-complete callbacks
-        for (let j = Animator.animationCompleteCallbacks.length - 1; j >= 0; j--) {
-            let e = Animator.animationCompleteCallbacks[j];
+        for (let e of this.animationCompleteCallbacks) {
             if (e.object === object && e.field === field) {
                 // delete the callback if set to 'once'
                 if (e.once) {
-                    Animator.animationCompleteCallbacks.splice(j, 1);
+                    Animator.animationCompleteCallbacks.delete(e);
                 }
                 e.callback(object);
             }
@@ -295,24 +289,10 @@ export class Animator {
         return null;
     }
 
-    private static getActiveAndIndex(object: any) {
-        for (let i = Animator.active.length - 1; i >= 0; i--) {
-            let entry = Animator.active[i];
-            if (entry.object === object) return {
-                i: i,
-                entry: entry
-            }
-        }
-        return {
-            i: -1,
-            entry: null
-        };
-    }
-
     private static removeActive(object: any) {
-        for (let i = Animator.active.length - 1; i >= 0; i--) {
-            if (Animator.active[i].object === object) {
-                Animator.active.splice(i, 1);
+        for (let entry of Animator.active) {
+            if (entry.object === object) {
+                Animator.active.delete(entry);
                 return;
             }
         }
