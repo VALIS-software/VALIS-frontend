@@ -255,19 +255,21 @@ class XAxis extends Object2D {
         if (str.length > maxLength) {
             // if default print of string is too long, try to reduce it with a exponent symbol
             let exp10 = this.log10(Math.abs(x));
-            let exp10Sign = this.sign(exp10);
-            let exp1000Int = Math.floor(Math.abs(exp10 / 3)) * exp10Sign;
+            let expSign = this.sign(exp10);
+            let exp1000Int = Math.floor(Math.abs(exp10 / 3)) * expSign;
 
             let symbol = XAxis.siPrefixes[exp1000Int.toFixed(0)];
+            let reductionFactor = Math.pow(1000, exp1000Int);
 
             if (symbol === void 0) {
-                let exp10Int = Math.floor(Math.abs(exp10)) * exp10Sign;
+                let exp10Int = Math.floor(Math.abs(exp10)) * expSign;
                 symbol = exp10Int <= 3 ? '' : 'e' + exp10Int.toFixed(0);
             }
 
-            let m = x / Math.pow(1000, exp1000Int);
-            let dp = maxLength - (Math.round(m).toString()).length - symbol.length;
-            let mStr = dp > 0 ? m.toFixed(dp) : Math.round(m).toString();
+            let reducedX = x / reductionFactor;
+            let reducedXIntStr = Math.round(reducedX).toString();
+            let dp = maxLength - reducedXIntStr.length - symbol.length;
+            let mStr = dp > 0 ? reducedX.toFixed(dp) : reducedXIntStr;
             str = mStr + symbol;
         }
 
@@ -291,7 +293,6 @@ class XAxis extends Object2D {
         let entry = this._labelCache[key];
 
         if (entry === void 0) {
-            console.log('new Text', str);
             let label = new Label(this.fontPath, str, this.fontSizePx);
             label.layoutParentY = 1;
             this.add(label);
@@ -345,9 +346,7 @@ class XAxis extends Object2D {
 
         // let t0x = tickRatio * range; // x-space location of first tick after 0
 
-
-
-        let n = this.log2(tickRatio / snap) + this.log2(range);
+        let n = this.log2(tickRatio * range / snap);
 
         let lMajor = Math.ceil(n);
         let lMinor = Math.floor(n);
@@ -383,7 +382,6 @@ class XAxis extends Object2D {
                 textMajor.label.setColor(0, 0, 0, 1);
             }
         }
-
 
         this.labelCacheDeleteUnused();
         this.labelsNeedUpdate = false;
