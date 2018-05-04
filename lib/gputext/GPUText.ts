@@ -69,14 +69,13 @@ class GPUText {
 			}
 
 			const fontCharacter = font.characters[char];
-			const glyph = fontCharacter.glyph;
 
 			if (fontCharacter == null) {
 				console.warn(`Font does not contain character for "${char}" (${charCode})`);
 				continue;
 			}
 
-			if (glyph != null) {
+			if (fontCharacter.glyph != null) {
 				// character has a glyph
 
 				// this corresponds top-left coordinate of the glyph, like hanging letters on a line
