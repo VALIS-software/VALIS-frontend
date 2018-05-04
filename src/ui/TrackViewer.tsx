@@ -37,9 +37,8 @@ class TrackViewer extends Object2D {
         horizontal: new Array<number>(),
     }
 
-    // be aware that the array index does not correspond to row or column
-    protected tracks = new Array<Track>();
-    protected panels = new Array<Panel>();
+    protected tracks = new Set<Track>();
+    protected panels = new Set<Panel>();
 
     /** used to collectively position panels and track tiles */
     protected grid: Object2D;
@@ -107,7 +106,7 @@ class TrackViewer extends Object2D {
         for (let panel of this.panels) {
             panel.addTrackTile(track.createTrackTile());
         }
-        this.tracks.push(track);
+        this.tracks.add(track);
 
         track.header.x = -this.trackHeaderWidth + this.spacing.x * 0.5;
         track.header.w = this.trackHeaderWidth;
@@ -145,7 +144,7 @@ class TrackViewer extends Object2D {
            this.layoutTrack(track);
        }
 
-        this.panels.push(panel);
+        this.panels.add(panel);
 
         panel.resizeHandle.addEventListener('dragstart', (e) => { e.preventDefault(); this.startResizingPanel(panel); });
         panel.resizeHandle.addEventListener('dragend', (e) => { e.preventDefault(); this.endResizingPanel(panel); });
@@ -211,12 +210,11 @@ class TrackViewer extends Object2D {
             this.closePanel(panel, false);
         }
         // remove from panel list
-        let idx = this.panels.indexOf(panel);
-        if (idx === -1) {
+        if (this.panels.has(panel)) {
             console.error('Cleanup executed twice on a panel');
             return;
         }
-        this.panels.splice(idx, 1);
+        this.panels.delete(panel);
 
         // stop any active animations on the panel
         Animator.stop(panel);
@@ -331,8 +329,8 @@ class TrackViewer extends Object2D {
 
     protected onAnimationStep = () => {
         let maxX = 1;
-        for (let i = 0; i < this.panels.length; i++) {
-            maxX = Math.max(this.panels[i].layoutParentX + this.panels[i].layoutW, maxX);
+        for (let panel of this.panels) {
+            maxX = Math.max(panel.layoutParentX + panel.layoutW, maxX);
         }
         this.addPanelButton.layoutParentX = maxX;
     }
