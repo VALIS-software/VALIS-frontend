@@ -37,11 +37,6 @@ class MultiTrackViewer extends React.Component {
     this.overlayViews = {};
     this.tracks = [];
     this.overlays = [];
-    this.updateViews = this.updateViews.bind(this);
-    this.updateOverlays = this.updateOverlays.bind(this);
-    this.updateViewState = this.updateViewState.bind(this);
-    this.updateSelection = this.updateSelection.bind(this);
-    this.handleClick = this.handleClick.bind(this);
     this.classNames = '';
 
     // listen to track change updates
@@ -52,9 +47,6 @@ class MultiTrackViewer extends React.Component {
 
     props.model.addListener(this.updateOverlays, [APP_EVENT_ADD_OVERLAY, APP_EVENT_REMOVE_OVERLAY]);
     this.viewModel = props.viewModel;
-    this.onDrop = this.onDrop.bind(this);
-    this.onDragOver = this.onDragOver.bind(this);
-    this.onDragLeave = this.onDragLeave.bind(this);
   }
 
   componentDidMount() {
@@ -98,18 +90,18 @@ class MultiTrackViewer extends React.Component {
     });
   }
 
-  onDrop(evt) {
+  onDrop = (evt) => {
     this.props.model.removeTrack(evt.dataTransfer.getData('guid'));
     this.removeTrackHintVisible = false;
   }
 
-  onDragOver(evt) {
+  onDragOver = (evt) => {
     evt.dataTransfer.dropEffect = 'move';
     evt.preventDefault();
     this.removeTrackHintVisible = true;
   }
 
-  onDragLeave(evt) {
+  onDragLeave = (evt) => {
     this.removeTrackHintVisible = false;
   }
 
@@ -163,13 +155,13 @@ class MultiTrackViewer extends React.Component {
     };
   }
 
-  handleClick(evt) {
+  handleClick = (evt) => {
     if (this.hoverElement) {
       this.props.viewModel.clickTrackElement(this.hoverElement);
     }
   }
 
-  updateViewState(event) {
+  updateViewState = (event) => {
     const classes = [];
     const viewState = event.data.currentViewState;
     if (viewState.selectEnabled) {
@@ -185,11 +177,11 @@ class MultiTrackViewer extends React.Component {
     this.forceUpdate();
   }
 
-  updateSelection(event) {
+  updateSelection = (event) => {
     this.viewModel.setViewRegionUsingRange(event.data.startBp, event.data.endBp);
   }
 
-  updateOverlays(event) {
+  updateOverlays = (event) => {
     const newViews = {};
     this.overlays = event.sender.overlays;
     this.overlays.forEach(overlay => {
@@ -203,7 +195,7 @@ class MultiTrackViewer extends React.Component {
     this.overlayViews = newViews;
   }
 
-  updateViews(event) {
+  updateViews = (event) => {
     const newViews = {};
     this.tracks = event.sender.tracks;
     event.sender.tracks.forEach(track => {

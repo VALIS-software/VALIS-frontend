@@ -11,15 +11,6 @@ const d3 = require('d3');
 const TICK_SPACING_PIXELS = 15.0;
 
 class TrackHeader extends Component {
-  constructor(props) {
-    super(props);
-    this.onDragStart = this.onDragStart.bind(this);
-    this.onDragOver = this.onDragOver.bind(this);
-    this.onDragLeave = this.onDragLeave.bind(this);
-    this.onDrop = this.onDrop.bind(this);
-    this.onDragStart = this.onDragStart.bind(this);
-    this.onClick = this.onClick.bind(this);
-  }
 
   componentDidMount() {
     this.setState({
@@ -27,16 +18,16 @@ class TrackHeader extends Component {
     });
   }
 
-  onClick(evt) {
+  onClick = (evt) => {
     this.props.viewModel.editTrackViewSettings(this.props.guid);
   }
 
-  onDragStart(evt) {
+  onDragStart = (evt) => {
     evt.dataTransfer.setData('guid', this.props.guid);
     evt.dataTransfer.effectAllowed = 'all';
   }
 
-  onDragOver(evt) {
+  onDragOver = (evt) => {
     this.setState({
       borderTop: true,
     });
@@ -44,13 +35,13 @@ class TrackHeader extends Component {
     evt.preventDefault();
   }
 
-  onDragLeave(evt) {
+  onDragLeave = (evt) => {
     this.setState({
       borderTop: false,
     });
   }
 
-  onDrop(evt) {
+  onDrop = (evt) => {
     this.setState({
       borderTop: false,
     });
