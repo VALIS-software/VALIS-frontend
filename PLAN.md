@@ -1,6 +1,20 @@
+
+- Tile grid lines
+- Tile cursor line
+
 - X-Axis
     - Algorithm for laying out labels
+        - Labels with 1/n split
+        - Custom level labels (chromosomes)
+        - Currently using absolute units, could be more precise without using range until the end
+        - Optimize for large floats
+    - Momentum in panel zoom and pan via Animator
+
     - Clear event listeners when tile is removed
+
+- add removeTrack and cleanupTrack
+
+- Panels should display a single chromosome
 
 - When texture slots are full we should swap out the last used
 - Text elements
