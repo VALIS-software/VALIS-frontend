@@ -7,10 +7,13 @@ export class Node<T extends Node<any>> {
 
 	get children(): Iterable<T> { return this._childrenIterable; }
 
-	protected _children = new Array<T>();
+	protected _children = new Set<T>();
 
+	protected _childrenIterable = this._children;
+	/*
+	// for :Array children
 	// reverse-order iterate over children to avoid issues if a child is removed while iterating
-	protected _childrenIterable = {
+	{
 		*[Symbol.iterator]() {
 			for (let i = this._children.length; i >= i; i--) {
 				let c = this._children[i];
@@ -18,16 +21,14 @@ export class Node<T extends Node<any>> {
 			}
 		}
 	}
+	*/
 
 	add(child: T) {
-		this._children.push(child);
+		this._children.add(child);
 	}
 
 	remove(child: T) {
-		let i = this._children.indexOf(child);
-		if (i === -1) return false;
-		this._children.splice(i, 1);
-		return true;
+		return this._children.delete(child);
 	}
 
 	applyTreeTransforms(root: boolean = true) {
