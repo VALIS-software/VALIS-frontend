@@ -6,6 +6,9 @@ export class TrackTile extends Rect {
 
     panel: Panel;
 
+    protected x0: number;
+    protected x1: number;
+
     constructor(readonly track: Track, color: ArrayLike<number>) {
         super(0, 0, color);
         this.cursorStyle = 'crosshair';
@@ -20,6 +23,12 @@ export class TrackTile extends Rect {
         });
 
     }
+
+    setRange(x0: number, x1: number) {
+        this.x0 = x0;
+        this.x1 = x1;
+    }
+
 }
 
 export default TrackTile;
