@@ -3,7 +3,7 @@ import { Igloo } from '../../lib/igloojs/igloo.js';
 const d3 = require('d3');
 const _ = require('underscore');
 
-import { CHROMOSOME_START_BASE_PAIRS } from './constants.js';
+import { CHROMOSOME_START_BASE_PAIRS, CHROMOSOME_SIZES } from './constants.js';
 
 const formatSi = d3.format('.6s');
 
@@ -39,6 +39,24 @@ class Util {
       return  {
         chromosomeIndex: chromosomeIndex,
         basePair: absoluteBasePair - CHROMOSOME_START_BASE_PAIRS[chromosomeIndex],
+      };
+    }
+  }
+
+  static chromosomeRelativeRange(startBp, endBp) {
+    const start = this.chromosomeRelativeBasePair(startBp);
+    const end = this.chromosomeRelativeBasePair(endBp);
+    if (end.chromosomeIndex !== start.chromosomeIndex) {
+      return {
+        chromosomeIndex: start.chromosomeIndex,
+        start: start.basePair,
+        end: CHROMOSOME_SIZES[start.chromosomeIndex] - 1,
+      };
+    } else {
+      return {
+        chromosomeIndex: start.chromosomeIndex,
+        start: start.basePair,
+        end: end.basePair,
       };
     }
   }

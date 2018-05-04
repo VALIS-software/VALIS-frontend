@@ -51,7 +51,6 @@ class App extends React.Component {
 
     this.viewModel = new ViewModel();
     this.appModel = new AppModel();
-    this.appModel.addDataTrack('sequence');
     this.appModel.addAnnotationTrack('GRCh38');
 
     this.appModel.addListener(this.updateLoadingState, APP_EVENT_LOADING_STATE_CHANGED);

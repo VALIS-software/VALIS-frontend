@@ -56,10 +56,10 @@ class TrackSelector extends Component {
   render() {
     const trackItems = this.state.tracks.map(track => {
       return (<DataListItem
-        title={track}
+        title={track.name}
         description={''}
-        onClick={() =>  this.trackSelected(track)}
-        key={track}
+        onClick={() =>  this.trackSelected(track.id)}
+        key={track.id}
       />);
     });
     return (<div className="track-selector">{ trackItems }</div>);
