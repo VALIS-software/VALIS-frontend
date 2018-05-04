@@ -29,12 +29,6 @@ function reverse(value) {
 class GWASSelector extends Component {
   constructor(props) {
     super(props);
-    this.handleUpdateTitle = this.handleUpdateTitle.bind(this);
-    this.handleUpdateTraitInput = this.handleUpdateTraitInput.bind(this);
-    this.handleUpdateSearchSource = this.handleUpdateSearchSource.bind(this);
-    this.handleUpdatePValue = this.handleUpdatePValue.bind(this);
-    this.handleUpdateMaxNumber = this.handleUpdateMaxNumber.bind(this);
-    this.updateTraits = this.updateTraits.bind(this);
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
     this.api = this.appModel.api;
@@ -61,7 +55,7 @@ class GWASSelector extends Component {
     this.updateTraits(0);
   }
 
-  updateTraits(value) {
+  updateTraits = (value) => {
     const builder = new QueryBuilder();
     builder.newInfoQuery();
     if (value === 1) {
@@ -78,14 +72,14 @@ class GWASSelector extends Component {
     });
   }
 
-  handleUpdateTitle(event) {
+  handleUpdateTitle = (event) => {
     this.setState({
       title: event.target.value,
       fixTitle: true,
     });
   }
 
-  handleUpdateTraitInput(searchText) {
+  handleUpdateTraitInput = (searchText) => {
     this.setState({
       searchTrait: searchText,
     });
@@ -96,20 +90,20 @@ class GWASSelector extends Component {
     }
   }
 
-  handleUpdateSearchSource(event, index, value) {
+  handleUpdateSearchSource = (event, index, value) => {
     this.setState({
       searchSourceValue: value,
     });
     this.updateTraits(value);
   }
 
-  handleUpdatePValue(event, value) {
+  handleUpdatePValue = (event, value) => {
     this.setState({
       pvalue: value,
     });
   }
 
-  handleUpdateMaxNumber(event, value) {
+  handleUpdateMaxNumber = (event, value) => {
     this.setState({
       maxnumber: transform(value),
     });

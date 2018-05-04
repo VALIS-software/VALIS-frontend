@@ -29,11 +29,6 @@ function reverse(value) {
 class GenomeSelector extends Component {
   constructor(props) {
     super(props);
-    this.handleUpdateTitle = this.handleUpdateTitle.bind(this);
-    this.handleUpdateType = this.handleUpdateType.bind(this);
-    this.handleUpdateChromName = this.handleUpdateChromName.bind(this);
-    this.handleUpdateMinLength = this.handleUpdateMinLength.bind(this);
-    this.handleUpdateMaxNumber = this.handleUpdateMaxNumber.bind(this);
     if (props.appModel) {
       this.appModel = props.appModel;
       this.api = this.appModel.api;
@@ -78,14 +73,14 @@ class GenomeSelector extends Component {
     });
   }
 
-  handleUpdateTitle(event) {
+  handleUpdateTitle = (event) => {
     this.setState({
       title: event.target.value,
       fixTitle: true,
     });
   }
 
-  handleUpdateType(event, index, value) {
+  handleUpdateType = (event, index, value) => {
     this.setState({
       genomeTypeValue: value,
     });
@@ -96,19 +91,19 @@ class GenomeSelector extends Component {
     }
   }
 
-  handleUpdateChromName(event, index, value) {
+  handleUpdateChromName = (event, index, value) => {
     this.setState({
       chromoNameValue: value,
     });
   }
 
-  handleUpdateMinLength(event, value) {
+  handleUpdateMinLength = (event, value) => {
     this.setState({
       minLength: value,
     });
   }
 
-  handleUpdateMaxNumber(event, value) {
+  handleUpdateMaxNumber = (event, value) => {
     this.setState({
       maxnumber: transform(value),
     });

@@ -31,10 +31,6 @@ import './App.scss';
 const _ = require('underscore');
 
 class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.updateLoadingState = this.updateLoadingState.bind(this);
-  }
 
   componentDidMount() {
     this.setState({
@@ -42,12 +38,6 @@ class App extends React.Component {
       views: [],
       loading: false,
     });
-
-    this.popView = this.popView.bind(this);
-    this.pushView = this.pushView.bind(this);
-    this.closeView = this.closeView.bind(this);
-    this.showTrackSettings = this.showTrackSettings.bind(this);
-    this.clickTrackElement = this.clickTrackElement.bind(this);
 
     this.viewModel = new ViewModel();
     this.appModel = new AppModel();
@@ -63,7 +53,7 @@ class App extends React.Component {
     this.viewModel.addListener(this.closeView, VIEW_EVENT_CLOSE_VIEW);
   }
 
-  clickTrackElement(event) {
+  clickTrackElement = (event) => {
     if (event.data !== null) {
       if (event.data.aggregation === true) {
         // if the annotation is an aggregation then zoom
@@ -84,7 +74,7 @@ class App extends React.Component {
     }
   }
 
-  popView() {
+  popView = () => {
     const viewsCopy = this.state ? this.state.views.slice() : [];
     viewsCopy.pop();
     this.setState({
@@ -92,7 +82,7 @@ class App extends React.Component {
     });
   }
 
-  pushView(view) {
+  pushView = (view) => {
     const viewsCopy = this.state ? this.state.views.slice() : [];
     viewsCopy.push(view.data);
     this.setState({
@@ -100,7 +90,7 @@ class App extends React.Component {
     });
   }
 
-  closeView() {
+  closeView = () => {
     this.setState({
       views: [],
     });
@@ -122,7 +112,7 @@ class App extends React.Component {
     }
   }
 
-  updateLoadingState(event) {
+  updateLoadingState = (event) => {
     this.setState({
       loading: event.data,
     });
