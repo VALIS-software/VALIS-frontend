@@ -271,7 +271,7 @@ export class AppCanvas extends React.Component<Props, State> {
     }
 
     protected removeInputListeners() {
-        if ('PointerEvent' in (window as any)) {
+        if (this.pointerEventSupport) {
             this.canvas.removeEventListener('pointerdown', this.onPointerDown);
             window.removeEventListener('pointerup', this.onPointerUp);
             window.removeEventListener('pointermove', this.onPointerMove);
@@ -293,17 +293,24 @@ export class AppCanvas extends React.Component<Props, State> {
         }
     } = {};
 
-    // when cursor is false, the canvas cursor style can be set by a node when an interaction event is triggered
-    protected cursorSet: boolean = false;
     // we use the root node of the document to set the cursor style because it lets us maintain the cursor when dragging beyond the canvas
     readonly cursorTarget = window.document.documentElement;
+    private _cursorStyle: string = '';
+
     protected resetCursor() {
-        this.cursorSet = false;
-        this.cursorTarget.style.cursor = '';
+        this._cursorStyle = null;
+    }
+
+    protected applyCursor() {
+        let newStyle = this._cursorStyle === null ? '' : this._cursorStyle;
+        if (this.cursorTarget.style.cursor !== newStyle) {
+            this.cursorTarget.style.setProperty('cursor', newStyle, 'important');
+        }
     }
 
     protected onPointerMove = (e: MouseEvent | PointerEvent) => {
         this.resetCursor();
+
         let interactionData = this.interactionDataFromEvent(e);
         interactionData.buttonChange = -1; // normalize between MouseEvent and PointerEvent
 
@@ -329,9 +336,12 @@ export class AppCanvas extends React.Component<Props, State> {
                 return new InteractionEvent(init, e);
             });
         }
+
+        this.applyCursor();
     }
     protected onPointerDown = (e: MouseEvent | PointerEvent) => {
         this.resetCursor();
+
         let eventName: keyof InteractionEventMap = 'pointerdown';
         let interactionData = this.interactionDataFromEvent(e);
 
@@ -355,40 +365,44 @@ export class AppCanvas extends React.Component<Props, State> {
                 return new InteractionEvent(init, e);
             }
         );
+
+        this.applyCursor();
     }
     protected onPointerUp = (e: MouseEvent | PointerEvent) => {
         this.resetCursor();
+
         let interactionData = this.interactionDataFromEvent(e);
 
         let dragData = this.dragData[interactionData.pointerId];
+        let defaultPrevented = false;
         if (dragData !== void 0 && dragData.button === e.button) {
             // clear drag data entry
             delete this.dragData[interactionData.pointerId];
             // fire 'dragend' on any nodes where drag was started
-            let defaultPrevented = this.executePointerInteraction(dragData.activeNodes, 'dragend', interactionData, (init) => new InteractionEvent(init, e));
-            if (defaultPrevented) return;
+            defaultPrevented = this.executePointerInteraction(dragData.activeNodes, 'dragend', interactionData, (init) => new InteractionEvent(init, e), false);
         }
 
-        let eventName: keyof InteractionEventMap = 'pointerup';
-        let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
-        this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
+        if (!defaultPrevented){
+            let eventName: keyof InteractionEventMap = 'pointerup';
+            let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
+            this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
+        }
+
+        this.applyCursor();
     }
     protected onClick = (e: MouseEvent) => {
-        this.resetCursor();
         let eventName: keyof InteractionEventMap = 'click';
         let interactionData = this.interactionDataFromEvent(e);
         let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
         this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
     }
     protected onDoubleClick = (e: MouseEvent) => {
-        this.resetCursor();
         let eventName: keyof InteractionEventMap = 'dblclick';
         let interactionData = this.interactionDataFromEvent(e);
         let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
         this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
     }
     protected onWheel = (e: WheelEvent) => {
-        this.resetCursor();
         let eventName: keyof InteractionEventMap = 'wheel';
         let interactionData = this.interactionDataFromEvent(e);
         let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
@@ -456,7 +470,8 @@ export class AppCanvas extends React.Component<Props, State> {
         nodes: Array<Object2D>,
         interactionEventName: K,
         interactionData: InteractionEventInit,
-        constructEvent: (init: InteractionEventInit) => InteractionEventMap[K]
+        constructEvent: (init: InteractionEventInit) => InteractionEventMap[K],
+        setCursor = true
     ) {
         let defaultPrevented = false;
 
@@ -481,10 +496,9 @@ export class AppCanvas extends React.Component<Props, State> {
             // trigger event on node
             nodeInternal.eventEmitter.emit(interactionEventName, eventObject);
 
-            // update canvas cursor style
-            if (this.cursorSet === false && node.cursorStyle != null) {
-                this.cursorTarget.style.setProperty('cursor', node.cursorStyle, 'important');
-                this.cursorSet = true;
+            // update cursor style
+            if (setCursor && this._cursorStyle == null && node.cursorStyle != null) {
+                this._cursorStyle = node.cursorStyle;
             }
 
             defaultPrevented = eventObjectInternal.defaultPrevented || defaultPrevented;
