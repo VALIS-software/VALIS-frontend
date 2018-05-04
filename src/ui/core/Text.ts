@@ -16,24 +16,33 @@ import { ReactObjectContainer } from "./ReactObject";
 export class Text extends Object2D {
 
     set string(v: string) {
+        let changed = this._string !== v;
         this._string = v;
-        this.updateGlyphLayout();
+        if (changed) {
+            this.updateGlyphLayout();
+        }
     }
     get string() {
         return this._string;
     }
 
     set fontPath(v: string) {
+        let changed = this._fontPath !== v;
         this._fontPath = v;
-        this.updateFontPath();
+        if (changed) {
+            this.updateFontPath();
+        }
     }
     get fontPath() {
         return this._fontPath;
     }
 
     set fontSizePx(v: number) {
+        let changed = v !== this._fontSizePx;
         this._fontSizePx = v;
-        this.updateGlyphLayout();
+        if (changed) {
+            this.updateGlyphLayout();
+        }
     }
     get fontSizePx() {
         return this._fontSizePx;
@@ -291,6 +300,12 @@ export class Text extends Object2D {
 
     // Font loading and caching
     static getFontAsset(path: string, onReady: (asset: FontAsset) => void, onError?: (msg: string) => void) {
+        let cachedAsset = Text.fontCache[path];
+        if (cachedAsset != null) {
+            onReady(cachedAsset);
+            return;
+        }
+
         let promise = Text.fontMap[path];
 
         if (promise == null) {
@@ -318,12 +333,15 @@ export class Text extends Object2D {
 
                     if (complete) return;
 
-                    resolve({
+                    let fontAsset = {
                         descriptor: descriptor,
                         images: images
-                    });
+                    }
 
                     complete = true;
+
+                    Text.fontCache[path] = fontAsset;
+                    resolve(fontAsset);
                 }
 
                 function loadDescriptor(path: string) {
@@ -388,6 +406,7 @@ export class Text extends Object2D {
     }
 
     protected static fontMap: { [path: string]: Promise<FontAsset> } = {};
+    protected static fontCache: { [path: string]: FontAsset } = {};
 
 }
 
