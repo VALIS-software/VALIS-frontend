@@ -57,7 +57,13 @@ export class AppCanvas extends React.Component<Props, State> {
             console.error('Component mounted twice');
         }
 
-        let gl = this.canvas.getContext('webgl', { antialias: true });
+        let glOptions: WebGLContextAttributes = {
+            antialias: true,
+            stencil: true, // to enable masking on the canvas framebuffer
+            alpha: false, // it can be expensive to blend the canvas with the DOM behind, avoid where possible
+        }
+
+        let gl = this.canvas.getContext('webgl', glOptions);
 
         if (gl == null) {
             throw 'WebGL not supported';
@@ -77,6 +83,8 @@ export class AppCanvas extends React.Component<Props, State> {
         this.addInputListeners();
 
         console.log(`AppCanvas created with device %c"${this.device.name}"`, 'font-weight: bold');
+        let vao = this.device.capabilities.vertexArrayObjects;
+        console.log(`\tVertex Array Objects: %c${vao ? 'enabled' : 'disabled'}`, `font-weight: bold; color: ${vao ? 'green' : 'red'}`);
     }
 
     componentWillUnmount() {
@@ -150,7 +158,8 @@ export class AppCanvas extends React.Component<Props, State> {
             this.scene,
             {
                 clearColor: [1, 1, 1, 1],
-                clearDepth: 1
+                clearDepth: 1,
+                clearStencil: 0x00
             }
         );
         this.updateSceneTransform();
