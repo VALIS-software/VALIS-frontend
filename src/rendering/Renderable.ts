@@ -8,6 +8,7 @@ export type RenderableInternal = {
 	gpuProgram: GPUProgram,
 	gpuVertexState: GPUVertexState,
 	_renderStateKey: number,
+	_maskIndex: number,
 	allocateGPUResources: (device: Device) => void,
 }
 
@@ -24,8 +25,11 @@ export type RenderableInternal = {
  */
 export class Renderable<T extends Node<any>> extends Node<T> {
 
-	// set to false to disable rendering of this object
+	// set to false to disable any interaction with the rendering system (including masking)
+	// if this is true, the instance must have gpu* fields set before the rendering
 	render = true;
+	// set to false to disable writing to the color buffer, however the object will still be drawn to the stencil buffer if it's used as a mask
+	visible = true;
 	// influences render order if transparent and sets precedence between otherwise equal state objects
 	z: number;
 	// when true, object is rendered in the transparency pass, this has a performance cost because z ordering has to take precedence over state-change-minimization ordering
@@ -34,6 +38,8 @@ export class Renderable<T extends Node<any>> extends Node<T> {
 	dependentRenderPasses = new Array<RenderPass>();
 	blendMode = BlendMode.NONE;
 
+	mask: Renderable<any> = null;
+
 	// @:device-local
 	protected gpuProgram: GPUProgram = null;
 	protected gpuVertexState: GPUVertexState = null;
@@ -41,6 +47,7 @@ export class Renderable<T extends Node<any>> extends Node<T> {
 
 	// non-owned fields
 	private _renderStateKey: number = 0 | 0;
+	private _maskIndex: number = -1;
 
 	constructor() {
 		super();

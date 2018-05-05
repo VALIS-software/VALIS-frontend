@@ -33,6 +33,9 @@ export class Renderer {
 	protected extVao: null | OES_vertex_array_object;
 	protected drawContext: DrawContext;
 
+	// if number of unique masks used exceeds MAX_SAFE_MASKS then there may be mask-collisions when nodes overlap
+	readonly MAX_SAFE_MASKS = 254;
+
 	constructor(device: Device) {
 		this.device = device;
 		this.deviceInternal = device as any as DeviceInternal;
@@ -41,6 +44,7 @@ export class Renderer {
 		this.drawContext = new DrawContext(device, this.deviceInternal.extInstanced);
 	}
 
+	private _masks = new Array<Renderable<any>>();
 	private _opaque = new Array<Renderable<any>>();
 	private _transparent = new Array<Renderable<any>>();
 	render(pass: RenderPass) {
@@ -56,9 +60,13 @@ export class Renderer {
 
 		// to avoid re-allocating a new array each frame, we reuse display list arrays from the previous frame and trim any excess
 		let opaqueIndex = 0;
-		let transparentIndex = 0;
 		let opaque = this._opaque;
+
+		let transparentIndex = 0;
 		let transparent = this._transparent;
+
+		let maskIndex = 0;
+		let masks = this._masks;
 
 		// iterate nodes, build state-change minimizing list for rendering
 		for (let node of pass.root) {
@@ -72,14 +80,35 @@ export class Renderer {
 					this.render(subpass);
 				}
 
+				if (node.mask != null) {
+					
+					// we can't used indexOf because masks may contain data from previous frame
+					let existingMaskIndex = -1;
+					for (let i = 0; i < maskIndex; i++) {
+						if (masks[i] === node.mask) {
+							existingMaskIndex = i;
+							break;
+						}
+					}
+
+					if (existingMaskIndex === -1) {
+						nodeInternal._maskIndex = maskIndex;
+						masks[maskIndex++] = node.mask;
+					} else {
+						nodeInternal._maskIndex = existingMaskIndex;
+					}
+				} else {
+					nodeInternal._maskIndex = -1;
+				}
+
 				// perform any necessary allocations
 				if (nodeInternal.gpuResourcesNeedAllocate) {
 					nodeInternal.allocateGPUResources(this.device);
 					if (nodeInternal.gpuProgram == null) {
-						throw `Renderable field "gpuProgram" must be set before rendering`;
+						throw `Renderable field "gpuProgram" must be set before rendering (or set node's render field to false)`;
 					}
 					if (nodeInternal.gpuVertexState == null) {
-						throw `Renderable field "gpuVertexState" must be set before rendering`;
+						throw `Renderable field "gpuVertexState" must be set before rendering (or set node's render field to false)`;
 					}
 					nodeInternal.gpuResourcesNeedAllocate = false;
 				}
@@ -107,6 +136,9 @@ export class Renderer {
 		if (transparentIndex < transparent.length) {
 			transparent.length = transparentIndex;
 		}
+		if (maskIndex < masks.length) {
+			masks.length = maskIndex;
+		}
 
 		// sort opaque objects for rendering
 		// @! this could be optimized by bucketing
@@ -117,7 +149,12 @@ export class Renderer {
 		});
 
 		// begin rendering
-		gl.bindFramebuffer(gl.FRAMEBUFFER, pass.target);
+		this.resetGLStateAssumptions();
+
+		if (this.currentFramebuffer !== pass.target) {
+			gl.bindFramebuffer(gl.FRAMEBUFFER, pass.target);
+			this.currentFramebuffer = pass.target;
+		}
 
 		let clearFlags = 0;
 		if (pass.clearOptions.clearColor != null) {
@@ -149,75 +186,184 @@ export class Renderer {
 
 		gl.clear(clearFlags);
 
+		// draw masks to stencil buffer
+		if (masks.length > 0) {
+			// enable stencil operations (required to write to the stencil buffer)
+			gl.enable(gl.STENCIL_TEST);
+			this.currentStencilTestEnabled = 1;
+			// disable writing to the color buffer
+			gl.colorMask(false, false, false, false);
+			// disable writing to the depth buffer
+			gl.depthMask(true);
+			// @! do we actually need to disable blending if we're false across the colorMask?
+			gl.disable(gl.BLEND);
+			// (depth-testing is assumed to be enabled)
+
+			// stencil write
+			gl.stencilFunc(gl.ALWAYS, 0xFF, 0xFF);
+			this.currentMaskTestValue = -1;
+			gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+
+			// draw mask nodes, each with a stencil write-mask
+			for (let i = 0; i < masks.length; i++) {
+				let renderable = masks[i];
+				let internal = renderable as any as RenderableInternal;
+
+				this.setProgram(internal);
+				this.setVertexState(internal);
+
+				// write (i + 1) into the stencil buffer
+				let writeMaskValue = i + 1;
+				gl.stencilMask(writeMaskValue);
+
+				renderable.draw(this.drawContext);
+			}
+
+			// clear depth for main pass
+			if (pass.clearOptions.clearDepth != null) {
+				clearFlags |= gl.DEPTH_BUFFER_BIT;
+				gl.clearDepth(pass.clearOptions.clearDepth);
+			}
+		}
+
 		// draw opaque objects
-		let lastProgramId = -1;
-		let lastVertexId = -1;
-		let lastBlendMode = -1;
-		let vaoFallback_lastAttributes: Array<VertexAttribute> = null;
+		gl.colorMask(true, true, true, true);
+		gl.depthMask(true);
+		// disable writing to the stencil buffer
+		gl.stencilMask(0x00);
+
+		if (masks.length === 0) {
+			gl.disable(gl.STENCIL_TEST);
+			this.currentStencilTestEnabled = 0;
+		} else {
+			gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+		}
+
 		for (let i = 0; i < opaque.length; i++) {
 			let renderable = opaque[i];
+			if (!renderable.visible) continue;
+
 			let internal = renderable as any as RenderableInternal;
 
-			let programId = (internal._renderStateKey & this.stateSMask) >>> this.stateSOffset;
-			let vertexId = (internal._renderStateKey & this.stateBMask) >>> this.stateBOffset;
-			let blendMode = (internal._renderStateKey & this.stateMMask) >>> this.stateMOffset;
+			let blendMode = renderable.blendMode;
 
-			// Update state
-			// @! to avoid id max limits we should compare the GPU handle objects for change rather than the ID instance
-			if (programId !== lastProgramId) {
-				gl.useProgram(internal.gpuProgram.native);
-				drawContextInternal.program = internal.gpuProgram;
-				lastProgramId = programId;
-			}
-
-			if (vertexId !== lastVertexId) {
-				if (internal.gpuVertexState.isVao) {
-					this.extVao.bindVertexArrayOES(internal.gpuVertexState.native);
-				} else {
-					// disable unused attribute arrays
-					// assume the only enabled attributes are the ones from the last fallback descriptor
-					if (vaoFallback_lastAttributes != null) {
-						for (let a = 0; a < vaoFallback_lastAttributes.length; a++) {
-							gl.disableVertexAttribArray(a);
-						}
-					}
-
-					let descriptor = internal.gpuVertexState.native as VertexStateDescriptor;
-					this.deviceInternal.applyVertexStateDescriptor(descriptor);
-					vaoFallback_lastAttributes = descriptor.attributes;
-				}
-
-				drawContextInternal.vertexState = internal.gpuVertexState;
-				lastVertexId = vertexId;
-			}
-
-			if (blendMode !== lastBlendMode) {
-
-				if (blendMode === 0) {
-					gl.disable(gl.BLEND);
-				} else {
-					if (lastBlendMode <= 0) {
-						gl.enable(gl.BLEND);
-					}
-
-					switch (blendMode) {
-						case BlendMode.PREMULTIPLIED_ALPHA:
-							gl.blendEquation(gl.FUNC_ADD);
-							gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-							break;
-						default:
-							throw `Blend mode "${BlendMode[blendMode]}" not yet implemented`;
-					}
-				}
-
-				lastBlendMode = blendMode;
-			}
+			// set state for renderable
+			this.setProgram(internal);
+			this.setVertexState(internal);
+			this.setBlendMode(blendMode);
+			// mask state
+			this.setMaskTest(internal._maskIndex !== -1, (internal._maskIndex + 1) % (0xFF + 1));
 
 			renderable.draw(this.drawContext);
 		}
 	}
 
-	// In JavaScript we only get bitwise operations on 32-bit integers
+	// gl state assumptions
+	protected currentFramebuffer: number = -1;
+	protected currentProgramId: number = -1;
+	protected currentVertexStateId: number = -1;
+	protected currentBlendMode = -1;
+	protected currentVaoFallbackAttributes: Array<VertexAttribute> = undefined;
+	protected currentStencilTestEnabled = -1;
+	protected currentMaskTestValue = -1;
+
+	protected resetGLStateAssumptions() {
+		this.currentFramebuffer = undefined;
+		this.currentProgramId = -1;
+		this.currentVertexStateId = -1;
+		this.currentBlendMode = -1;
+		this.currentVaoFallbackAttributes = undefined;
+		this.currentStencilTestEnabled = -1;
+		this.currentMaskTestValue = -1;
+	}
+
+	protected setProgram(internal: RenderableInternal) {
+		const gl = this.gl;
+		const drawContextInternal = this.drawContext as any as DrawContextInternal;
+
+		if (internal.gpuProgram.id !== this.currentProgramId) {
+			gl.useProgram(internal.gpuProgram.native);
+			drawContextInternal.program = internal.gpuProgram;
+			this.currentProgramId = internal.gpuProgram.id;
+		}
+	}
+
+	protected setVertexState(internal: RenderableInternal) {
+		const gl = this.gl;
+		const drawContextInternal = this.drawContext as any as DrawContextInternal;
+
+		if (internal.gpuVertexState.id !== this.currentVertexStateId) {
+			
+			if (internal.gpuVertexState.isVao) {
+				this.extVao.bindVertexArrayOES(internal.gpuVertexState.native);
+			} else {
+				// disable unused attribute arrays
+				// assume the only enabled attributes are the ones from the last fallback descriptor
+				if (this.currentVaoFallbackAttributes != null) {
+					for (let a = 0; a < this.currentVaoFallbackAttributes.length; a++) {
+						gl.disableVertexAttribArray(a);
+					}
+				}
+
+				let descriptor = internal.gpuVertexState.native as VertexStateDescriptor;
+				this.deviceInternal.applyVertexStateDescriptor(descriptor);
+				this.currentVaoFallbackAttributes = descriptor.attributes;
+			}
+
+			drawContextInternal.vertexState = internal.gpuVertexState;
+			this.currentVertexStateId = internal.gpuVertexState.id;
+		}
+	}
+
+	protected setBlendMode(blendMode: BlendMode) {
+		const gl = this.gl;
+		const drawContextInternal = this.drawContext as any as DrawContextInternal;
+
+		if (blendMode !== this.currentBlendMode) {
+
+			if (blendMode === 0) {
+				gl.disable(gl.BLEND);
+			} else {
+				if (this.currentBlendMode <= 0) {
+					gl.enable(gl.BLEND);
+				}
+
+				switch (blendMode) {
+					case BlendMode.PREMULTIPLIED_ALPHA:
+						gl.blendEquation(gl.FUNC_ADD);
+						gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+						break;
+					default:
+						throw `Blend mode "${BlendMode[blendMode]}" not yet implemented`;
+				}
+			}
+
+			this.currentBlendMode = blendMode;
+		}
+	}
+
+	protected setMaskTest(enabled: boolean, maskValue: number) {
+		const gl = this.gl;
+		
+		if (enabled) {
+			if (this.currentStencilTestEnabled !== 1) {
+				gl.enable(gl.STENCIL_TEST);
+				this.currentStencilTestEnabled = 1;
+			}
+
+			if (this.currentMaskTestValue !== maskValue) {
+				gl.stencilFunc(gl.EQUAL, maskValue, 0xFF);
+				this.currentMaskTestValue = maskValue;
+			}
+		} else {
+			if (this.currentStencilTestEnabled !== 0) {
+				gl.disable(gl.STENCIL_TEST);
+				this.currentStencilTestEnabled = 0;
+			}
+		}
+	}
+
+	// In JavaScript we're limited to 32-bit for bitwise operations
 	// 00000000 00000000 00000000 00000000
 	// ssssssss bbbbbbbb bbbbbbbb bbbbmmmm
 	protected readonly stateSOffset = 24;
