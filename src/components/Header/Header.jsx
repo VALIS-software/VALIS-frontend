@@ -28,8 +28,6 @@ const dataSourceConfig = {
 class Header extends Component {
   constructor(props) {
     super(props);
-    this.onNewRequest = this.onNewRequest.bind(this);
-    this.addDatasetBrowser = this.addDatasetBrowser.bind(this);
     this.api = new GenomeAPI();
     this.state = {
       dataSource : [],
@@ -70,7 +68,7 @@ class Header extends Component {
     });
   }
 
-  onNewRequest(chosen, index) {
+  onNewRequest = (chosen, index) => {
     // treat as trait if the text is not from autocomplete
     let text = chosen;
     let value = 0;
@@ -95,7 +93,7 @@ class Header extends Component {
     this.props.viewModel.pushView('Search Results', query, view);
   }
 
-  addDatasetBrowser() {
+  addDatasetBrowser = () => {
     const view = (<DatasetSelector viewModel={this.props.viewModel} appModel={this.props.model} />);
     this.props.viewModel.pushView('Select Dataset', null, view);
   }

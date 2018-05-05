@@ -30,7 +30,8 @@
     "import/no-named-as-default-member": "off",
     "react/prefer-stateless-function": "off",
     "react/jsx-indent": "off",
-    "no-continue": "off"
+    "no-continue": "off",
+    "no-undef": "off"
   },
   "env": {
     "browser": true

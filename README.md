@@ -25,10 +25,9 @@ There are two ways to run the webpack-dev-server, which will be launched at loca
 ```
 npm run dev
 ```
-Note*: A simple backend server can be found in the tools/ folder, to start:
+Note*: A simple backend server can be found in the tools/ folder, to start run (from repo root):
 ```
-cd tools
-python server.py
+make mock-api
 ```
 Visit the SIRIUS-backend repository for getting the fully functional backend server.
 
