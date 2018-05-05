@@ -1,6 +1,8 @@
 import Object2D from "./core/Object2D";
 import Rect from "./core/Rect";
 import Text from "./core/Text";
+import { Renderable } from "../rendering/Renderable";
+import { BlendMode } from "../rendering/Renderer";
 
 const OpenSansRegular = require('./../font/OpenSans-Regular.msdf.bin');
 
@@ -24,6 +26,8 @@ export class XAxis extends Object2D {
     protected labelsNeedUpdate: boolean;
     protected lastComputedWidth: number;
 
+    protected clippingMask: Rect;
+
     constructor(x0: number = 0, x1: number = 1, fontSizePx: number = 16, protected fontPath: string = OpenSansRegular) {
         super();
         this.render = false;
@@ -31,6 +35,12 @@ export class XAxis extends Object2D {
         this.x1 = x1;
         this._fontSizePx = fontSizePx;
         this.labelsNeedUpdate = true;
+
+        this.clippingMask = new Rect(0, 0, [0.9, 0.9, 0.9, 1]);
+        this.clippingMask.layoutW = 1;
+        this.clippingMask.layoutH = 1;
+        this.clippingMask.visible = false;
+        this.add(this.clippingMask);
     }
 
     setRange(x0: number, x1: number) {
@@ -77,55 +87,13 @@ export class XAxis extends Object2D {
         super.applyTreeTransforms(root);
     }
 
-    // valid for stable (fontSize, fontPath)
-    protected _labelCache: {
-        [key: string]: {
-            label: Label,
-            used: boolean,
-        }
-    } = {};
-
-    protected labelCacheClear() {
-        this._labelCache = {};
-    }
-
-    protected labelCacheGet(value: number, str: string) {
-        let key = value.toString() + '_' + str;
-
-        let entry = this._labelCache[key];
-
-        if (entry === void 0) {
-            let label = new Label(this.fontPath, str, this.fontSizePx);
-            label.layoutParentY = 1;
-            this.add(label);
-
-            entry = this._labelCache[key] = {
-                label: label,
-                used: true,
-            }
-        }
-
-        entry.used = true;
-
-        return entry;
-    }
-
-    protected labelCacheMarkAllUnused() {
-        // reset 'used' flag in cache
-        for (let key in this._labelCache) {
-            this._labelCache[key].used = false;
-        }
-    }
-
-    protected labelCacheDeleteUnused() {
-        for (let key in this._labelCache) {
-            let entry = this._labelCache[key];
-            if (!entry.used) {
-                entry.label.releaseGPUResources();
-                this.remove(entry.label);
-                delete this._labelCache[key];
-            }
-        }
+    protected createLabel(str: string) {
+        let label = new Label(this.fontPath, str, this.fontSizePx);
+        label.layoutParentY = 1;
+        label.z = 0.1;
+        label.setMask(this.clippingMask);
+        this.add(label);
+        return label;
     }
 
     protected updateLabels() {
@@ -171,23 +139,68 @@ export class XAxis extends Object2D {
             let xMajor = xMajorSpacing * i;
 
             let minorParentX = (xMinor - this.x0) / range;
-            if (minorParentX >= 0 && minorParentX <= 1) { // @! temporary simple bounds clipping
-                let textMinor = this.labelCacheGet(xMinor, this.formatValue(xMinor, this.maxTextLength));
-                textMinor.label.layoutParentX = minorParentX;
-                textMinor.label.setColor(0, 0, 0, minorAlpha);
-            }
+            let textMinor = this.labelCacheGet(xMinor, this.formatValue(xMinor, this.maxTextLength));
+            textMinor.label.layoutParentX = minorParentX;
+            textMinor.label.setColor(0, 0, 0, minorAlpha);
 
             let majorParentX = (xMajor - this.x0) / range;
-            if (majorParentX >= 0 && majorParentX <= 1) {
-                let textMajor = this.labelCacheGet(xMajor, this.formatValue(xMajor, this.maxTextLength));
-                textMajor.label.layoutParentX = majorParentX;
-                textMajor.label.setColor(0, 0, 0, 1);
-            }
+            let textMajor = this.labelCacheGet(xMajor, this.formatValue(xMajor, this.maxTextLength));
+            textMajor.label.layoutParentX = majorParentX;
+            textMajor.label.setColor(0, 0, 0, 1);
         }
 
         this.labelCacheDeleteUnused();
         this.labelsNeedUpdate = false;
         this.lastComputedWidth = this.getComputedWidth();
+    }
+
+    // valid for stable (fontSize, fontPath)
+    protected _labelCache: {
+        [key: string]: {
+            label: Label,
+            used: boolean,
+        }
+    } = {};
+
+    protected labelCacheClear() {
+        this._labelCache = {};
+    }
+
+    protected labelCacheGet(value: number, str: string) {
+        let key = value.toString() + '_' + str;
+
+        let entry = this._labelCache[key];
+
+        if (entry === void 0) {
+            let label = this.createLabel(str);
+
+            entry = this._labelCache[key] = {
+                label: label,
+                used: true,
+            }
+        }
+
+        entry.used = true;
+
+        return entry;
+    }
+
+    protected labelCacheMarkAllUnused() {
+        // reset 'used' flag in cache
+        for (let key in this._labelCache) {
+            this._labelCache[key].used = false;
+        }
+    }
+
+    protected labelCacheDeleteUnused() {
+        for (let key in this._labelCache) {
+            let entry = this._labelCache[key];
+            if (!entry.used) {
+                entry.label.releaseGPUResources();
+                this.remove(entry.label);
+                delete this._labelCache[key];
+            }
+        }
     }
 
     protected log2(x: number) {
@@ -242,6 +255,7 @@ class Label extends Object2D {
         this.tick = new Rect(tickWidthPx, tickHeightPx);
         this.tick.layoutX = -0.5;
         this.tick.layoutY = -1;
+        this.tick.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
         this.add(this.tick);
 
         this.render = false;
@@ -251,6 +265,11 @@ class Label extends Object2D {
     setColor(r: number, g: number, b: number, a: number) {
         this.text.color.set([r, g, b, a]);
         this.tick.color.set([r, g, b, a * 0.5]);
+    }
+
+    setMask(mask: Renderable<any>) {
+        this.text.mask = mask;
+        this.tick.mask = mask;
     }
 
     releaseGPUResources() {
