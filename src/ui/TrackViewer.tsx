@@ -209,11 +209,13 @@ class TrackViewer extends Object2D {
             console.warn('cleanupPanel() called before closing the panel');
             this.closePanel(panel, false);
         }
+
         // remove from panel list
-        if (this.panels.has(panel)) {
+        if (!this.panels.has(panel)) {
             console.error('Cleanup executed twice on a panel');
             return;
         }
+
         this.panels.delete(panel);
 
         // stop any active animations on the panel
