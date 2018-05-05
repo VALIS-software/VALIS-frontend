@@ -1,4 +1,3 @@
-
 - Tile grid lines
 - Tile cursor line
 
@@ -12,6 +11,7 @@
 
     - Clear event listeners when tile is removed
 
+- Transparency pass
 - add removeTrack and cleanupTrack
 
 - Panels should display a single chromosome
