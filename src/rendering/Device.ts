@@ -29,6 +29,14 @@ export class Device {
 	get vertexStateCount() { return this._vertexStateCount; }
 	get bufferCount() { return this._bufferCount; }
 
+	capabilities: {
+		vertexArrayObjects: boolean,
+		instancing: boolean,
+	} = {
+		vertexArrayObjects: false,
+		instancing: false,
+	}
+
 	readonly name: string;
 
 	protected gl: WebGLRenderingContext;
@@ -59,6 +67,9 @@ export class Device {
 		this.name = gl.getParameter(extDebugInfo == null ? gl.RENDERER : extDebugInfo.UNMASKED_RENDERER_WEBGL);
 
 		this.textureUnitState = new Array(gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS));
+
+		this.capabilities.vertexArrayObjects = this.extVao != null;
+		this.capabilities.instancing = this.extInstanced != null;
 	}
 
 	createBuffer(bufferDescriptor: BufferDescriptor) {
