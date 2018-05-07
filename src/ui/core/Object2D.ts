@@ -146,12 +146,30 @@ export class Object2D extends Renderable<Object2D> implements Layout {
         }
     }
 
-    addEventListener<K extends keyof InteractionEventMap>(event: K, listener: (e: InteractionEventMap[K]) => void) {
+    addEventListener(event: string, listener: (... args: any[]) => void) {
+        let isInteractionEvent = Object.keys(this.interactionEventListenerCount).indexOf(event);
+        if (isInteractionEvent) {
+            this.addInteractionListener(event as any, listener);
+        } else {
+            this.eventEmitter.addListener(event, listener);
+        }
+    }
+
+    removeEventListener(event: string, listener: (...args: any[]) => void) {
+        let isInteractionEvent = Object.keys(this.interactionEventListenerCount).indexOf(event);
+        if (isInteractionEvent) {
+            this.addInteractionListener(event as any, listener);
+        } else  {
+            this.eventEmitter.removeListener(event, listener);
+        }
+    }
+
+    addInteractionListener<K extends keyof InteractionEventMap>(event: K, listener: (e: InteractionEventMap[K]) => void) {
         this.eventEmitter.on(event, listener);
         this.interactionEventListenerCount[event]++;
     }
 
-    removeEventListener<K extends keyof InteractionEventMap>(event: K, listener: (e: InteractionEventMap[K]) => void) {
+    removeInteractionListener<K extends keyof InteractionEventMap>(event: K, listener: (e: InteractionEventMap[K]) => void) {
         if (this.eventEmitter.rawListeners(event).indexOf(listener) !== -1) {
             this.eventEmitter.removeListener(event, listener);
             this.interactionEventListenerCount[event]--;
@@ -294,6 +312,8 @@ export class Object2D extends Renderable<Object2D> implements Layout {
             pointermove: 0,
             pointerdown: 0,
             pointerup: 0,
+            pointerenter: 0,
+            pointerleave: 0,
             click: 0,
             dblclick: 0,
             wheel: 0,

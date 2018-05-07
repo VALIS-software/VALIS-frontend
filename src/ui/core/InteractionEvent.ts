@@ -10,6 +10,9 @@ export interface InteractionEventMap {
     'pointerdown': InteractionEvent;
     'pointerup': InteractionEvent;
 
+    'pointerenter': InteractionEvent;
+    'pointerleave': InteractionEvent;
+
     'click': InteractionEvent;
     'dblclick': InteractionEvent;
     'wheel': WheelInteractionEvent;

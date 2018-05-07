@@ -7,7 +7,7 @@ import Animator from "../animation/Animator";
 
 import { DEFAULT_SPRING } from "./UIConstants";
 
-import IconButton from 'material-ui/IconButton';
+import IconButton from "material-ui/IconButton";
 import SvgClose from "material-ui/svg-icons/navigation/close";
 import SvgAdd from "material-ui/svg-icons/content/add";
 import Track from "./Track";
@@ -25,8 +25,8 @@ class TrackViewer extends Object2D {
     readonly panelHeaderHeight: number = 50;
     readonly defaultTrackHeight: number = 200;
     readonly spacing = {
-        x: 10,
-        y: 10
+        x: 15,
+        y: 15
     };
     readonly xAxisHeight = 40; // height excluding spacing
     readonly minPanelWidth = 35;
@@ -115,8 +115,8 @@ class TrackViewer extends Object2D {
         this.grid.add(track.resizeHandle);
 
         track.resizeHandle.layoutW = 1;
-        track.resizeHandle.addEventListener('dragstart', (e) => { e.preventDefault(); this.startResizingTrack(track) });
-        track.resizeHandle.addEventListener('dragend', (e) => { e.preventDefault(); this.endResizingTrack(track) });
+        track.resizeHandle.addInteractionListener('dragstart', (e) => { e.preventDefault(); this.startResizingTrack(track) });
+        track.resizeHandle.addInteractionListener('dragend', (e) => { e.preventDefault(); this.endResizingTrack(track) });
 
         track.setResizable(true);
 
@@ -146,8 +146,8 @@ class TrackViewer extends Object2D {
 
         this.panels.add(panel);
 
-        panel.resizeHandle.addEventListener('dragstart', (e) => { e.preventDefault(); this.startResizingPanel(panel); });
-        panel.resizeHandle.addEventListener('dragend', (e) => { e.preventDefault(); this.endResizingPanel(panel); });
+        panel.resizeHandle.addInteractionListener('dragstart', (e) => { e.preventDefault(); this.startResizingPanel(panel); });
+        panel.resizeHandle.addInteractionListener('dragend', (e) => { e.preventDefault(); this.endResizingPanel(panel); });
 
         // set initial position
         this.positionPanel(panel, false);
@@ -378,8 +378,8 @@ class TrackViewer extends Object2D {
     }
 
     // local state for grid-resizing
-    private _resizingPanels = new Array<Panel>();
-    private _resizingTracks = new Array<Track>();
+    private _resizingPanels = new Set<Panel>();
+    private _resizingTracks = new Set<Track>();
 
     /**
      * Setup event listeners to enable resizing of panels and tracks
@@ -403,8 +403,12 @@ class TrackViewer extends Object2D {
             }
         } = {};
 
-        this.grid.addEventListener('dragstart', (e) => {
-            e.preventDefault();
+        this.grid.addInteractionListener('dragstart', (e) => {
+            let resizing = (this._resizingPanels.size + this._resizingTracks.size) > 0;
+            if (resizing) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
 
             for (let panel of this._resizingPanels) {
                 let i = panel.column + 1;
@@ -427,8 +431,12 @@ class TrackViewer extends Object2D {
             }
         });
 
-        this.grid.addEventListener('dragmove', (e) => {
-            e.preventDefault();
+        this.grid.addInteractionListener('dragmove', (e) => {
+            let resizing = (this._resizingPanels.size + this._resizingTracks.size) > 0;
+            if (resizing) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
 
             for (let k in draggedVEdges) {
                 let s = draggedVEdges[k];
@@ -461,16 +469,17 @@ class TrackViewer extends Object2D {
             }
         });
 
-        this.grid.addEventListener('dragend', (e) => {
+        this.grid.addInteractionListener('dragend', (e) => {
+            // cleanup dragged edges state
             for (let k in draggedVEdges) {
                 let s = draggedVEdges[k];
-                if (this._resizingPanels.indexOf(s.obj) === -1) {
+                if (!this._resizingPanels.has(s.obj)) {
                     delete draggedVEdges[k];
                 }
             }
             for (let k in draggedHEdges) {
                 let s = draggedHEdges[k];
-                if (this._resizingTracks.indexOf(s.obj) === -1) {
+                if (!this._resizingTracks.has(s.obj)) {
                     delete draggedHEdges[k];
                 }
             }
@@ -478,25 +487,19 @@ class TrackViewer extends Object2D {
     }
 
     protected startResizingPanel(panel: Panel) {
-        this._resizingPanels.push(panel);
+        this._resizingPanels.add(panel);
     }
 
     protected endResizingPanel(panel: Panel) {
-        let idx = this._resizingPanels.indexOf(panel);
-        if (idx !== -1) {
-            this._resizingPanels.splice(idx, 1);
-        }
+        this._resizingPanels.delete(panel);
     }
 
     protected startResizingTrack(track: Track) {
-        this._resizingTracks.push(track);
+        this._resizingTracks.add(track);
     }
 
     protected endResizingTrack(track: Track) {
-        let idx = this._resizingTracks.indexOf(track);
-        if (idx !== -1) {
-            this._resizingTracks.splice(idx, 1);
-        }
+        this._resizingTracks.delete(track);
     }
 
 }
