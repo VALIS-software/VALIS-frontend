@@ -186,7 +186,7 @@ export class Renderer {
 
 		gl.clear(clearFlags);
 
-		// draw masks to stencil buffer
+		// draw mask nodes to stencil buffer
 		if (masks.length > 0) {
 			// enable stencil operations (required to write to the stencil buffer)
 			gl.enable(gl.STENCIL_TEST);
