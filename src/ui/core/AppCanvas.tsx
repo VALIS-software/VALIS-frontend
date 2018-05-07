@@ -148,6 +148,10 @@ export class AppCanvas extends React.Component<Props, State> {
         this.updateReactObjects();
     }
 
+    handleUserInteraction() {
+        this.handlePointerChanges();
+    }
+
     protected updateSceneContent() {
         this.scene = new Object2D();
         if (this.props.content != null) {
@@ -269,10 +273,14 @@ export class AppCanvas extends React.Component<Props, State> {
             this.canvas.addEventListener('pointerdown', this.onPointerDown);
             window.addEventListener('pointerup', this.onPointerUp);
             window.addEventListener('pointermove', this.onPointerMove);
+            window.addEventListener('pointerenter', this.onPointerEnter);
+            window.addEventListener('pointerleave', this.onPointerLeave);
         } else {
             this.canvas.addEventListener('mousedown', this.onPointerDown);
             window.addEventListener('mouseup', this.onPointerUp);
             window.addEventListener('mousemove', this.onPointerMove);
+            window.addEventListener('mouseenter', this.onPointerEnter);
+            window.addEventListener('mouseleave', this.onPointerLeave);
         }
         this.canvas.addEventListener('click', this.onClick);
         this.canvas.addEventListener('dblclick', this.onDoubleClick);
@@ -284,10 +292,14 @@ export class AppCanvas extends React.Component<Props, State> {
             this.canvas.removeEventListener('pointerdown', this.onPointerDown);
             window.removeEventListener('pointerup', this.onPointerUp);
             window.removeEventListener('pointermove', this.onPointerMove);
+            window.removeEventListener('pointerenter', this.onPointerEnter);
+            window.removeEventListener('pointerleave', this.onPointerLeave);
         } else {
             this.canvas.removeEventListener('mousedown', this.onPointerDown);
             window.removeEventListener('mouseup', this.onPointerUp);
             window.removeEventListener('mousemove', this.onPointerMove);
+            window.removeEventListener('mouseenter', this.onPointerEnter);
+            window.removeEventListener('mouseleave', this.onPointerLeave);
         }
         this.canvas.removeEventListener('click', this.onClick);
         this.canvas.removeEventListener('dblclick', this.onDoubleClick);
@@ -303,7 +315,15 @@ export class AppCanvas extends React.Component<Props, State> {
     } = {};
 
     // we use the root node of the document to set the cursor style because it lets us maintain the cursor when dragging beyond the canvas
-    readonly cursorTarget = window.document.documentElement;
+    protected readonly cursorTarget = window.document.documentElement;
+    protected activePointers: {
+        [ pointerId: number ]: {
+            interactionData: InteractionEventInit,
+            sourceEvent: MouseEvent | PointerEvent,
+            lastHitNodes: Set<Object2D>
+        }
+    } = {};
+
     private _cursorStyle: string = '';
 
     protected resetCursor() {
@@ -317,11 +337,86 @@ export class AppCanvas extends React.Component<Props, State> {
         }
     }
 
+    protected handlePointerChanges() {
+        // for all registered pointers:
+        for (let pointerId in this.activePointers) {
+            let {interactionData, lastHitNodes, sourceEvent}  = this.activePointers[pointerId];
+
+            let hitNodes = this.hitTestNodesForInteraction(
+                [
+                    'pointerenter',
+                    'pointerleave'
+                ],
+                interactionData.worldX,
+                interactionData.worldY
+            );
+
+            // early exit
+            if (hitNodes.length === 0 && lastHitNodes.size === 0) {
+                continue;
+            }
+
+            // @! find delta since last
+            let addedNodes = new Set();
+            let removedNodes = new Set();
+
+            for (let node of hitNodes) {
+                if (!lastHitNodes.has(node)) {
+                    addedNodes.add(node);
+                    lastHitNodes.add(node);
+                }
+            }
+
+            for (let node of lastHitNodes) {
+                if (hitNodes.indexOf(node) === -1) {
+                    removedNodes.add(node);
+                    lastHitNodes.delete(node);
+                }
+            }
+
+            let totalNodeChange = addedNodes.size + removedNodes.size;
+
+            // early exit
+            if (totalNodeChange === 0) continue;
+
+            this.executePointerInteraction(addedNodes, 'pointerenter', interactionData, (init) => new InteractionEvent(init, sourceEvent));
+            this.executePointerInteraction(removedNodes, 'pointerleave', interactionData, (init) => new InteractionEvent(init, sourceEvent));
+        }
+    }
+
+    protected onPointerEnter = (e: MouseEvent | PointerEvent) => {
+        // enter and leave are special cases in that they don't directly translate into our InteractionEvents
+        // we need a special system to handle these
+        let interactionData = this.interactionDataFromEvent(e);
+        this.activePointers[interactionData.pointerId] = {
+            interactionData: interactionData,
+            sourceEvent: e,
+            lastHitNodes: new Set()
+        }
+    }
+
+    protected onPointerLeave = (e: MouseEvent | PointerEvent) => {
+        let interactionData = this.interactionDataFromEvent(e);
+        delete this.activePointers[interactionData.pointerId];
+    }
+
     protected onPointerMove = (e: MouseEvent | PointerEvent) => {
         this.resetCursor();
 
         let interactionData = this.interactionDataFromEvent(e);
         interactionData.buttonChange = -1; // normalize between MouseEvent and PointerEvent
+
+        // update pointer data in activePointers
+        if (this.activePointers[interactionData.pointerId] === void 0) {
+            this.activePointers[interactionData.pointerId] = {
+                interactionData: interactionData,
+                sourceEvent: e,
+                lastHitNodes: new Set()
+            }
+        } else {
+            this.activePointers[interactionData.pointerId].interactionData = interactionData;
+        }
+
 
         let dragData = this.dragData[interactionData.pointerId];
 
@@ -341,13 +436,14 @@ export class AppCanvas extends React.Component<Props, State> {
         if (!defaultPrevented) {
             let eventName: keyof InteractionEventMap = 'pointermove';
             let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
-            this.executePointerInteraction( hitNodes, eventName, interactionData, (init) => {
+            this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => {
                 return new InteractionEvent(init, e);
             });
         }
 
         this.applyCursor();
     }
+
     protected onPointerDown = (e: MouseEvent | PointerEvent) => {
         this.resetCursor();
 
@@ -377,6 +473,7 @@ export class AppCanvas extends React.Component<Props, State> {
 
         this.applyCursor();
     }
+
     protected onPointerUp = (e: MouseEvent | PointerEvent) => {
         this.resetCursor();
 
@@ -399,18 +496,21 @@ export class AppCanvas extends React.Component<Props, State> {
 
         this.applyCursor();
     }
+
     protected onClick = (e: MouseEvent) => {
         let eventName: keyof InteractionEventMap = 'click';
         let interactionData = this.interactionDataFromEvent(e);
         let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
         this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
     }
+
     protected onDoubleClick = (e: MouseEvent) => {
         let eventName: keyof InteractionEventMap = 'dblclick';
         let interactionData = this.interactionDataFromEvent(e);
         let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
         this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
     }
+
     protected onWheel = (e: WheelEvent) => {
         let eventName: keyof InteractionEventMap = 'wheel';
         let interactionData = this.interactionDataFromEvent(e);
@@ -476,7 +576,7 @@ export class AppCanvas extends React.Component<Props, State> {
     }
 
     protected executePointerInteraction<K extends keyof InteractionEventMap>(
-        nodes: Array<Object2D>,
+        nodes: Iterable<Object2D>,
         interactionEventName: K,
         interactionData: InteractionEventInit,
         constructEvent: (init: InteractionEventInit) => InteractionEventMap[K],
@@ -484,8 +584,7 @@ export class AppCanvas extends React.Component<Props, State> {
     ) {
         let defaultPrevented = false;
 
-        for (let i = 0; i < nodes.length; i++) {
-            let node = nodes[i];
+        for (let node of nodes) {
             let nodeInternal = node as any as Object2DInternal;
 
             let worldSpaceBounds = node.getWorldBounds();
@@ -535,7 +634,7 @@ export class AppCanvas extends React.Component<Props, State> {
             worldY: worldSpacePosition.y,
 
             // PointerEvent data, defaults to mouse events
-            pointerId: 1,
+            pointerId: -1, // -1 is chosen for mouse events to avoid any possible conflict with other pointers
             pointerType: 'mouse',
             isPrimary: true,
             width: 1,

@@ -77,6 +77,10 @@ export class App extends React.Component<Props, State> {
 		let dt_ms = t_ms - this._lastFrameT_ms;
 		this._lastFrameT_ms = t_ms;
 
+		// appCanvas should react to user input before animation are stepped
+		// this enabled any animations spawned by the events to be progressed before rendering
+		this.appCanvas.handleUserInteraction();
+
 		Animator.step();
 
 		this.appCanvas.renderCanvas();
