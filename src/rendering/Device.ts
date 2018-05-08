@@ -174,7 +174,9 @@ export class Device {
 	}
 
 	deleteVertexState(handle: GPUVertexState) {
-		this.extVao.deleteVertexArrayOES(handle.native);
+		if (this.extVao != null) {
+			this.extVao.deleteVertexArrayOES(handle.native);
+		}
 		this.vertexStateIds.release(handle.id);
 		this._vertexStateCount--;
 	}
