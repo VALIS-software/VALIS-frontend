@@ -356,7 +356,7 @@ export class AppCanvas extends React.Component<Props, State> {
                 continue;
             }
 
-            // @! find delta since last
+            // find delta since last call
             let addedNodes = new Set();
             let removedNodes = new Set();
 
