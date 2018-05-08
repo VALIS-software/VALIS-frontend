@@ -393,11 +393,13 @@ export class AppCanvas extends React.Component<Props, State> {
             sourceEvent: e,
             lastHitNodes: new Set()
         }
+        this.handlePointerChanges();
     }
 
     protected onPointerLeave = (e: MouseEvent | PointerEvent) => {
         let interactionData = this.interactionDataFromEvent(e);
         delete this.activePointers[interactionData.pointerId];
+        this.handlePointerChanges();
     }
 
     protected onPointerMove = (e: MouseEvent | PointerEvent) => {
@@ -442,6 +444,8 @@ export class AppCanvas extends React.Component<Props, State> {
         }
 
         this.applyCursor();
+
+        this.handlePointerChanges();
     }
 
     protected onPointerDown = (e: MouseEvent | PointerEvent) => {
