@@ -164,6 +164,10 @@ export class Object2D extends Renderable<Object2D> implements Layout {
         }
     }
 
+    emit(event: string, args: any) {
+        this.eventEmitter.emit(event, args);
+    }
+
     addInteractionListener<K extends keyof InteractionEventMap>(event: K, listener: (e: InteractionEventMap[K]) => void) {
         this.eventEmitter.on(event, listener);
         this.interactionEventListenerCount[event]++;

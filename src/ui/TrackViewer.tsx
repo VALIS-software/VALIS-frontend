@@ -149,6 +149,13 @@ class TrackViewer extends Object2D {
         panel.resizeHandle.addInteractionListener('dragstart', (e) => { e.preventDefault(); this.startResizingPanel(panel); });
         panel.resizeHandle.addInteractionListener('dragend', (e) => { e.preventDefault(); this.endResizingPanel(panel); });
 
+        panel.addEventListener('axisPointerUpdate', (axisPointers) => {
+            for (let p of this.panels) {
+                if (p === panel) continue;
+                p.setSecondaryAxisPointers(axisPointers);
+            }
+        });
+
         // set initial position
         this.positionPanel(panel, false);
 
@@ -237,6 +244,9 @@ class TrackViewer extends Object2D {
         }
 
         panel.releaseGPUResources();
+
+        // strictly we don't need to do this but listener bugs may prevent the GC from clearing the panel
+        panel.removeAllListeners(true);
     }
 
     protected updatePanels(animate: boolean) {

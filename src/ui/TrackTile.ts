@@ -1,6 +1,7 @@
 import Rect from "./core/Rect";
 import Panel from "./Panel";
 import Track from "./Track";
+import { InteractionEvent } from "./core/InteractionEvent";
 
 export class TrackTile extends Rect {
 
@@ -8,25 +9,96 @@ export class TrackTile extends Rect {
 
     protected x0: number;
     protected x1: number;
+    
+    protected defaultCursor = 'crosshair';
+
+    protected axisPointers: { [id: string]: AxisPointer } = {};
 
     constructor(readonly track: Track, color: ArrayLike<number>) {
         super(0, 0, color);
-        this.cursorStyle = 'crosshair';
-        this.addEventListener('pointerdown', () => {
-            this.cursorStyle = 'pointer';
-        });
-        this.addEventListener('pointerup', () => {
-            this.cursorStyle = 'crosshair';
-        });
-        this.addEventListener('dragend', () => {
-            this.cursorStyle = 'crosshair';
-        });
 
+        this.cursorStyle = this.defaultCursor;
+    
+        this.addInteractionListener('pointerdown', () => this.cursorStyle = 'pointer');
+        this.addInteractionListener('pointerup', () => this.cursorStyle = this.defaultCursor);
+        this.addInteractionListener('dragend', () => this.cursorStyle = this.defaultCursor);
     }
 
     setRange(x0: number, x1: number) {
         this.x0 = x0;
         this.x1 = x1;
+    }
+
+    setAxisPointer(id: string, fractionX: number, style: AxisPointerStyle) {
+        let withinBounds = fractionX >= 0 && fractionX <= 1;
+
+        let axisPointer = this.axisPointers[id];
+
+        if (axisPointer === void 0) {
+            // !withinBounds means do not draw, so we don't need to create the object
+            if (!withinBounds) return;
+            // create axis pointer
+            axisPointer = new AxisPointer(style);
+            this.add(axisPointer);
+            this.axisPointers[id] = axisPointer;
+        }
+
+        axisPointer.render = withinBounds;
+
+        if (withinBounds) {
+            axisPointer.layoutParentX = fractionX;
+        }
+
+        if (axisPointer.style !== style) {
+            axisPointer.setStyle(style);
+        }
+    }
+
+    removeAxisPointer(id: string) {
+        let axisPointer = this.axisPointers[id];
+
+        if (axisPointer === void 0) {
+            return;
+        }
+
+        this.remove(axisPointer);
+        delete this.axisPointers[id];
+    }
+
+}
+
+export enum AxisPointerStyle {
+    Active = 0,
+    Secondary = 1,
+}
+
+class AxisPointer extends Rect {
+
+    readonly style: AxisPointerStyle;
+
+    constructor(style: AxisPointerStyle) {
+        super(0, 0);
+        this.z = 1;
+        this.layoutX = -0.5;
+        this.layoutH = 1;
+        this.w = 1;
+        this.setStyle(style);
+    }
+    
+    setStyle(style: AxisPointerStyle) {
+        let color = null;
+
+        switch (style) {
+            case AxisPointerStyle.Active:
+                color = [0, 140 / 255, 186 / 255, 1];
+                break;
+            case AxisPointerStyle.Secondary:
+                color = [0.3, 0.3, 0.3, 1];
+                break;
+        }
+
+        this.color.set(color);
+        (this.style as any) = style;
     }
 
 }

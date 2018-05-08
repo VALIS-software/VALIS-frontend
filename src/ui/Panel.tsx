@@ -5,9 +5,9 @@ import Rect from "./core/Rect";
 
 import PanelDataModel from "../model/PanelDataModel";
 
-import IconButton from 'material-ui/IconButton';
+import IconButton from "material-ui/IconButton";
 import SvgClose from "material-ui/svg-icons/navigation/close";
-import TrackTile from "./TrackTile";
+import TrackTile, { AxisPointerStyle } from "./TrackTile";
 import { InteractionEvent, WheelInteractionEvent } from "./core/InteractionEvent";
 import { runInThisContext } from "vm";
 import XAxis from "./XAxis";
@@ -43,6 +43,9 @@ export class Panel extends Object2D {
     readonly x1: number = 1e6;
 
     protected tiles = new Set<TrackTile>();
+
+    protected activeAxisPointers: { [ pointerId: string ]: number } = {};
+    protected secondaryAxisPointers: { [pointerId: string]: number } = {};
 
     constructor(
         readonly model: PanelDataModel,
@@ -101,9 +104,12 @@ export class Panel extends Object2D {
 
         tile.panel = this;
 
-        tile.addEventListener('dragstart', this.onTileDragStart);
-        tile.addEventListener('dragmove', this.onTileDragMove);
-        tile.addEventListener('wheel', this.onTileWheel);
+        tile.addInteractionListener('dragstart', this.onTileDragStart);
+        tile.addInteractionListener('dragmove', this.onTileDragMove);
+        tile.addInteractionListener('dragend', this.onTileDragEnd);
+        tile.addInteractionListener('wheel', this.onTileWheel);
+        tile.addInteractionListener('pointermove', this.onTilePointerMove);
+        tile.addInteractionListener('pointerleave', this.onTileLeave);
 
         this.fillX(tile);
         this.add(tile);
@@ -112,9 +118,12 @@ export class Panel extends Object2D {
     }
 
     removeTrackTile(tile: TrackTile) {
-        tile.removeEventListener('dragstart', this.onTileDragStart);
-        tile.removeEventListener('dragmove', this.onTileDragMove);
-        tile.removeEventListener('wheel', this.onTileWheel);
+        tile.removeInteractionListener('dragstart', this.onTileDragStart);
+        tile.removeInteractionListener('dragmove', this.onTileDragMove);
+        tile.removeInteractionListener('dragend', this.onTileDragEnd);
+        tile.removeInteractionListener('wheel', this.onTileWheel);
+        tile.removeInteractionListener('pointermove', this.onTilePointerMove);
+        tile.removeInteractionListener('pointerleave', this.onTileLeave);    
 
         tile.panel = null;
         this.remove(tile);
@@ -132,10 +141,56 @@ export class Panel extends Object2D {
 
         this.xAxis.setRange(x0, x1);
 
-        // @! for each tile, setRange
-        // for (let tile )
+        for (let tile of this.tiles) {
+            tile.setRange(x0, x1);
+        }
     }
 
+    setSecondaryAxisPointers(secondaryAxisPointers: { [ pointerId: string ]: number }) {
+        // remove any old and unused axis pointers
+        for (let pointerId in this.secondaryAxisPointers) {
+            if (secondaryAxisPointers[pointerId] === void 0 && this.activeAxisPointers[pointerId] === void 0) {
+                for (let tile of this.tiles) {
+                    tile.removeAxisPointer(pointerId);
+                }
+            }
+        }
+
+        // add or update secondary axis pointers
+        for (let pointerId in secondaryAxisPointers) {
+            // if this panel has this pointer as an active axis pointer, skip it
+            if (this.activeAxisPointers[pointerId] !== void 0) {
+                continue;
+            }
+
+            let absX = secondaryAxisPointers[pointerId];
+
+            let range = this.x1 - this.x0;
+            let fractionX = (absX - this.x0) / range;
+
+            this.secondaryAxisPointers[pointerId] = absX;
+
+            for (let tile of this.tiles) {
+                tile.setAxisPointer(pointerId, fractionX, AxisPointerStyle.Secondary);
+            }
+        }
+    }
+
+    protected onTileLeave = (e: InteractionEvent) => {
+        // remove axis pointer
+        delete this.activeAxisPointers[e.pointerId];
+
+        for (let tile of this.tiles) {
+            tile.removeAxisPointer(e.pointerId.toString());
+        }
+
+        this.eventEmitter.emit('axisPointerUpdate', this.activeAxisPointers);
+    }
+
+    protected onTilePointerMove = (e: InteractionEvent) => {
+        this.setAxisPointer(e);
+    }
+ 
     protected onTileWheel = (e: WheelInteractionEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -181,7 +236,7 @@ export class Panel extends Object2D {
         this._dragX00 = this.x0;
     }
 
-    protected onTileDragMove = (e: InteractionEvent) =>{
+    protected onTileDragMove = (e: InteractionEvent) => {
         e.preventDefault();
         e.stopPropagation();
 
@@ -192,6 +247,29 @@ export class Panel extends Object2D {
         let x1 = x0 + range;
 
         this.setRange(x0, x1);
+
+        this.setAxisPointer(e);
+    }
+
+    protected onTileDragEnd = (e: InteractionEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    protected setAxisPointer(e: InteractionEvent) {
+        let fractionX = e.fractionX;
+        let range = this.x1 - this.x0;
+        let axisPointerX = range * fractionX + this.x0;
+
+        this.activeAxisPointers[e.pointerId] = axisPointerX;
+
+        for (let tile of this.tiles) {
+            tile.setAxisPointer(e.pointerId.toString(), fractionX, AxisPointerStyle.Active);
+        }
+
+
+        // broadcast active axis pointer change
+        this.eventEmitter.emit('axisPointerUpdate', this.activeAxisPointers);
     }
 
     protected fillX(obj: Object2D) {
