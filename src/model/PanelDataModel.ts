@@ -1,5 +1,5 @@
 /**
- * @! temporary dummy model
+ * @! Temporary dummy model
  */
 export type PanelDataModel = {
     name: string
