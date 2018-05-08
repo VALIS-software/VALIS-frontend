@@ -156,6 +156,18 @@ export class Renderer {
 			this.currentFramebuffer = pass.target;
 		}
 
+		// by default, when starting a rendering pass the viewport is set to the render target dimensions
+		if (pass.target == null) {
+			gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+			drawContextInternal.viewport.x = 0;
+			drawContextInternal.viewport.y = 0;
+			drawContextInternal.viewport.w = gl.drawingBufferWidth;
+			drawContextInternal.viewport.h = gl.drawingBufferHeight;
+		} else {
+			// @! todo
+			throw 'Todo, custom framebuffers: use framebuffers size for viewport';
+		}
+
 		let clearFlags = 0;
 		if (pass.clearOptions.clearColor != null) {
 			clearFlags |= gl.COLOR_BUFFER_BIT;
@@ -172,18 +184,6 @@ export class Renderer {
 			gl.clearStencil(pass.clearOptions.clearStencil);
 		}
 
-		// by default, when starting a rendering pass the viewport is set to the render target dimensions
-		if (pass.target == null) {
-			gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-			drawContextInternal.viewport.x = 0;
-			drawContextInternal.viewport.y = 0;
-			drawContextInternal.viewport.w = gl.drawingBufferWidth;
-			drawContextInternal.viewport.h = gl.drawingBufferHeight;
-		} else {
-			// @! todo
-			throw 'Todo: use target size for viewport';
-		}
-
 		gl.clear(clearFlags);
 
 		// draw mask nodes to stencil buffer
@@ -195,11 +195,12 @@ export class Renderer {
 			gl.colorMask(false, false, false, false);
 			// disable writing to the depth buffer
 			gl.depthMask(true);
-			// @! do we actually need to disable blending if we're false across the colorMask?
+			// @! do we actually benefit from disabling blending if we're false across the colorMask?
 			gl.disable(gl.BLEND);
+			this.currentBlendMode = BlendMode.NONE;
 			// (depth-testing is assumed to be enabled)
 
-			// stencil write
+			// enable stencil writing
 			gl.stencilFunc(gl.ALWAYS, 0xFF, 0xFF);
 			this.currentMaskTestValue = -1;
 			gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
@@ -507,7 +508,7 @@ export class DrawContext {
 				}
 			}
 
-			throw 'TODO: system for replacing the last-used texture unit';
+			throw 'Todo: system for replacing the last-used texture unit';
 
 		} else {
 			// texture is resident in a texture unit but the uniform is not yet pointing at it
