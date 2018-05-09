@@ -13,7 +13,7 @@ import SvgAdd from "material-ui/svg-icons/content/add";
 import Track from "./Track";
 import Panel from "./Panel";
 
-import TrackDataModel from "../model/TrackDataModel";
+import TrackDataModel, { TrackType } from "../model/TrackDataModel";
 import PanelDataModel from "../model/PanelDataModel";
 
 const OpenSansRegular = require("../font/OpenSans-Regular.msdf.bin");
@@ -59,7 +59,7 @@ class TrackViewer extends Object2D {
 
         this.addPanelButton = new ReactObject(
             <AddPanelButton onClick={() => {
-                this.addPanel({ name: 'new' }, true);
+                this.addPanel({ name: 'Chromosome 1' }, true);
             }} />,
             this.panelHeaderHeight,
             this.panelHeaderHeight
@@ -69,24 +69,6 @@ class TrackViewer extends Object2D {
         this.addPanelButton.layoutY = -1;
         this.addPanelButton.y = -this.xAxisHeight - this.spacing.x * 0.5;
         this.grid.add(this.addPanelButton);
-
-        // initialize with some dummy data
-        let i = 0;
-        for (let track of [
-            {name: 'Sequence'},
-            {name: 'GRCh38'},
-            {name: 'GM12878-DNase'},
-        ]) {
-            this.addTrack(track, i++ === 0 ? 50 : undefined);
-        }
-
-        for (let panel of [
-            { name: 'PCSK9' },
-            // { name: 'HER2' },
-            // { name: 'MAOA' },
-        ]) {
-            this.addPanel(panel, false);
-        }
 
         this.layoutGridContainer();
     }

@@ -4,6 +4,7 @@ import Object2D from "./ui/core/Object2D";
 import TrackViewer from "./ui/TrackViewer";
 import Animator from "./animation/Animator";
 import Header from "./ui/components/header/Header";
+import { TrackType } from "./model/TrackDataModel";
 
 interface Props {}
 
@@ -25,6 +26,22 @@ export class App extends React.Component<Props, State> {
 		super(props);
 
 		let trackViewer = new TrackViewer();
+
+		// initialize with some dummy data
+		let i = 0;
+		for (let track of [
+			{ name: 'Sequence', type: TrackType.Sequence },
+			{ name: 'GRCh38', type: TrackType.Empty },
+			{ name: 'GM12878-DNase', type: TrackType.Empty },
+		]) {
+			trackViewer.addTrack(track, i++ === 0 ? 50 : undefined);
+		}
+
+		for (let panel of [
+			{ name: 'Chromosome 1' },
+		]) {
+			trackViewer.addPanel(panel, false);
+		}
 		
 		this.state = {
 			headerHeight: this.headerHeight,
