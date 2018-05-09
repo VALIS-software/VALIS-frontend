@@ -4,7 +4,8 @@ import TrackTile from "./TrackTile";
 import ReactObject from "./core/ReactObject";
 import Rect from "./core/Rect";
 
-import TrackDataModel from "../model/TrackDataModel";
+import TrackDataModel, { TrackType } from "../model/TrackDataModel";
+import SequenceTile from "./tracks/SequenceTile";
 
 export class Track {
 
@@ -44,7 +45,17 @@ export class Track {
     }
 
     createTrackTile() {
-        let tile = new TrackTile(this, [0, 0, 0, 1]);
+        let tile: TrackTile;
+
+        switch (this.model.type) {
+            case TrackType.Sequence:
+                tile = new SequenceTile(this);
+                break;
+            default:
+                tile = new TrackTile(this);
+                break;
+        }
+
         this.tiles.add(tile);
         return tile;
     }

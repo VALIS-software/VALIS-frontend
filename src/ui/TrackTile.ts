@@ -13,9 +13,11 @@ export class TrackTile extends Rect {
     protected defaultCursor = 'crosshair';
 
     protected axisPointers: { [id: string]: AxisPointer } = {};
+    protected activeAxisPointerColor = [0, 140 / 255, 186 / 255, 1];
+    protected secondaryAxisPointerColor = [0.2, 0.2, 0.2, 1];
 
-    constructor(readonly track: Track, color: ArrayLike<number>) {
-        super(0, 0, color);
+    constructor(readonly track: Track) {
+        super(0, 0, [0, 0, 0, 1]);
 
         this.cursorStyle = this.defaultCursor;
     
@@ -38,7 +40,7 @@ export class TrackTile extends Rect {
             // !withinBounds means do not draw, so we don't need to create the object
             if (!withinBounds) return;
             // create axis pointer
-            axisPointer = new AxisPointer(style);
+            axisPointer = new AxisPointer(style, this.activeAxisPointerColor, this.secondaryAxisPointerColor);
             this.add(axisPointer);
             this.axisPointers[id] = axisPointer;
         }
@@ -76,7 +78,7 @@ class AxisPointer extends Rect {
 
     readonly style: AxisPointerStyle;
 
-    constructor(style: AxisPointerStyle) {
+    constructor(style: AxisPointerStyle, readonly activeColor: ArrayLike<number>, readonly secondaryColor: ArrayLike<number>) {
         super(0, 0);
         this.z = 1;
         this.layoutX = -0.5;
@@ -86,18 +88,15 @@ class AxisPointer extends Rect {
     }
     
     setStyle(style: AxisPointerStyle) {
-        let color = null;
-
         switch (style) {
             case AxisPointerStyle.Active:
-                color = [0, 140 / 255, 186 / 255, 1];
+                this.color.set(this.activeColor);
                 break;
             case AxisPointerStyle.Secondary:
-                color = [0.3, 0.3, 0.3, 1];
+                this.color.set(this.secondaryColor);
                 break;
         }
 
-        this.color.set(color);
         (this.style as any) = style;
     }
 
