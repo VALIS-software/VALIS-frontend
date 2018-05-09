@@ -73,6 +73,8 @@ export class Panel extends Object2D {
 
         // 1/2 spacing around the x-axis
         this.xAxis = new XAxis(this.x0, this.x1, 11);
+        this.xAxis.minDisplay = 0;
+        this.xAxis.maxDisplay = Infinity;
         this.xAxis.h = this.xAxisHeight;
         this.xAxis.layoutY = -1;
         this.fillX(this.xAxis);
@@ -230,6 +232,8 @@ export class Panel extends Object2D {
     protected _dragXF0: number;
     protected _dragX00: number;
     protected onTileDragStart = (e: InteractionEvent) => {
+        if (e.buttonState !== 1) return;
+
         e.preventDefault();
         e.stopPropagation();
         this._dragXF0 = e.fractionX;
@@ -239,6 +243,8 @@ export class Panel extends Object2D {
     }
 
     protected onTileDragMove = (e: InteractionEvent) => {
+        if (e.buttonState !== 1) return;
+
         e.preventDefault();
         e.stopPropagation();
 
@@ -256,6 +262,8 @@ export class Panel extends Object2D {
     }
 
     protected onTileDragEnd = (e: InteractionEvent) => {
+        if (e.buttonState !== 1) return;
+
         e.preventDefault();
         e.stopPropagation();
 
@@ -334,7 +342,8 @@ function PanelHeader(props: {
             textAlign: 'center',
             top: '50%',
             transform: 'translate(0, -50%)',
-        }}>
+            whiteSpace: 'nowrap',
+    }}>
             {props.panel.model.name}
         </div>
         {props.enableClose ?
