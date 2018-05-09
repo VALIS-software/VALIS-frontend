@@ -20,6 +20,9 @@ export class XAxis extends Object2D {
         return this._fontSizePx;
     }
 
+    minDisplay: number = -Infinity;
+    maxDisplay: number = Infinity;
+
     protected x0: number = 0;
     protected x1: number = 1;
     protected _fontSizePx: number;
@@ -138,15 +141,19 @@ export class XAxis extends Object2D {
             let xMinor = xMinorSpacing * (i + 0.5);
             let xMajor = xMajorSpacing * i;
 
-            let minorParentX = (xMinor - this.x0) / range;
-            let textMinor = this.labelCacheGet(xMinor, this.formatValue(xMinor, this.maxTextLength));
-            textMinor.label.layoutParentX = minorParentX;
-            textMinor.label.setColor(0, 0, 0, minorAlpha);
+            if (xMinor >= this.minDisplay && xMinor <= this.maxDisplay) {
+                let minorParentX = (xMinor - this.x0) / range;
+                let textMinor = this.labelCacheGet(xMinor, this.formatValue(xMinor, this.maxTextLength));
+                textMinor.label.layoutParentX = minorParentX;
+                textMinor.label.setColor(0, 0, 0, minorAlpha);
+            }
 
-            let majorParentX = (xMajor - this.x0) / range;
-            let textMajor = this.labelCacheGet(xMajor, this.formatValue(xMajor, this.maxTextLength));
-            textMajor.label.layoutParentX = majorParentX;
-            textMajor.label.setColor(0, 0, 0, 1);
+            if (xMajor >= this.minDisplay && xMajor <= this.maxDisplay) {
+                let majorParentX = (xMajor - this.x0) / range;
+                let textMajor = this.labelCacheGet(xMajor, this.formatValue(xMajor, this.maxTextLength));
+                textMajor.label.layoutParentX = majorParentX;
+                textMajor.label.setColor(0, 0, 0, 1);
+            }
         }
 
         this.labelCacheDeleteUnused();
