@@ -43,9 +43,8 @@ class GenomeAPI {
 				resolve(ANNOTATION_CACHE[cacheKey]);
 			});
 		} else {
-			return axios.get(`${this.baseUrl}/annotations/${annotationId}`).then(data => {
-				const trackData = data.data;
-				const track = new AnnotationTrack(this, trackData.annotationId, query);
+			return new Promise(() => {
+				const track = new AnnotationTrack(this, annotationId, query);
 				ANNOTATION_CACHE[cacheKey] = track;
 				return track;
 			});
