@@ -100,8 +100,11 @@ class DataTrack extends Track {
   }
 
   loadData(start, end, samplingRate, trackHeightPx) {
+    // Translate to chromosome centric coordinate:
+    const range = Util.chromosomeRelativeRange(start, end);
+
     this.notifyListeners(TRACK_EVENT_LOADING, true);
-    const promise = this.api.getData(this.trackId, start, end, samplingRate, trackHeightPx, this.aggregations);
+    const promise = this.api.getData(this.trackId, range.chromosomeIndex, range.start, range.end, samplingRate, trackHeightPx, this.aggregations);
     return promise.then(data => {
       const result = data.data;
       const rawData = result.values;
