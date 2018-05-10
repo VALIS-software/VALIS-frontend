@@ -91,18 +91,19 @@ class GenomeAPI {
 			});
 		} else {
 			return axios.get(`${this.baseUrl}/tracks/${trackId}`).then(data => {
+				// the trackData is not used here but might be useful later
 				const trackData = data.data;
-				const track = new DataTrack(this, trackId, trackData.type);
+				const track = new DataTrack(this, trackId);
 				TRACK_CACHE[trackId] = track;
 				return track;
 			});
 		}
 	}
 
-	getData(trackId, chromosome, startBp, endBp, samplingRate=1, trackHeightPx=0, aggregations=[]) {
+	getData(trackId, contig, startBp, endBp, samplingRate=1, trackHeightPx=0, aggregations=[]) {
 		const aggregationStr = aggregations.join(',');
 		const query = `?sampling_rate=${samplingRate}&track_height_px=${trackHeightPx}&aggregations=${aggregationStr}`;
-		const requestUrl = `${this.baseUrl}/tracks/${trackId}/${chromosome}/${startBp}/${endBp}${query}`;
+		const requestUrl = `${this.baseUrl}/tracks/${trackId}/${contig}/${startBp}/${endBp}${query}`;
 		return axios.get(requestUrl);
 	}
 

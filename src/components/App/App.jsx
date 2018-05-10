@@ -41,7 +41,7 @@ class App extends React.Component {
 
     this.viewModel = new ViewModel();
     this.appModel = new AppModel();
-    this.appModel.addAnnotationTrack('GRCh38');
+    // this.appModel.addAnnotationTrack('GRCh38');
 
     this.appModel.addListener(this.updateLoadingState, APP_EVENT_LOADING_STATE_CHANGED);
     this.viewModel.addListener(this.clickTrackElement, VIEW_EVENT_TRACK_ELEMENT_CLICKED);
