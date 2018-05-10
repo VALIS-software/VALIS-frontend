@@ -72,9 +72,9 @@ class GenomeAPI {
 		return axios.get(requestUrl);
 	}
 
-	getAnnotationData(annotationId, startBp, endBp, samplingRate=1, trackHeightPx=0, query={}) {
+	getAnnotationData(annotationId, contig, startBp, endBp, samplingRate=1, trackHeightPx=0, query={}) {
 		const samplingRateQuery = `?sampling_rate=${samplingRate}&track_height_px=${trackHeightPx}`;
-		const requestUrl = `${this.baseUrl}/annotations/${annotationId}/${startBp}/${endBp}${samplingRateQuery}`;
+		const requestUrl = `${this.baseUrl}/annotations/${annotationId}/${contig}/${startBp}/${endBp}${samplingRateQuery}`;
 		return axios.post(requestUrl, query);
 	}
 

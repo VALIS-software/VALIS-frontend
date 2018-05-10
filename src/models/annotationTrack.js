@@ -43,14 +43,26 @@ class AnnotationTrack extends Track {
   }
 
   loadData(start, end, samplingRate, trackHeightPx) {
+    // Translate to chromosome centric coordinate:
+    const range = Util.chromosomeRelativeRange(start, end);
+    const contig = 'chr' + Util.chromosomeIndexToName(range.chromosomeIndex);
+
     this.notifyListeners(TRACK_EVENT_LOADING, true);
-    const promise = this.api.getAnnotationData(this.annotationId, start, end, samplingRate, trackHeightPx, this.query);
+    const promise = this.api.getAnnotationData(this.annotationId, contig, range.start, range.end, samplingRate, trackHeightPx, this.query);
     return promise.then(data => {
       const result = data.data;
       const rawData = data.data.values;
       const totalCount = data.data.countInRange;
       this.notifyListeners(TRACK_EVENT_LOADING, false);
-      return new Tile([start, end], [result.startBp, result.endBp], result.samplingRate, result.trackHeightPx, rawData, totalCount);
+      // convert contig coordinate back to global coordinate
+      // This is commented out because it's not working well
+      // rawData.forEach(r => {
+      //   r.startBp = Util.chromosomeRelativeToUniversalBasePair(range.chromosomeIndex, r.startBp);
+      //   r.endBp = Util.chromosomeRelativeToUniversalBasePair(range.chromosomeIndex, r.endBp);
+      // });
+      const startBp = Util.chromosomeRelativeToUniversalBasePair(range.chromosomeIndex, result.startBp);
+      const endBp = Util.chromosomeRelativeToUniversalBasePair(range.chromosomeIndex, result.endBp);
+      return new Tile([start, end], [startBp, endBp], result.samplingRate, result.trackHeightPx, rawData, totalCount);
     }, failure => {
       this.notifyListeners(TRACK_EVENT_LOADING, false);
     });
