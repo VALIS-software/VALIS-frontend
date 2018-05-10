@@ -60,10 +60,10 @@ class DataTrack extends Track {
             curr.push('T');
             colors = [BASE_PAIR_COLORS[1]];
           } else if (currValue <=0.5) {
-            curr.push('C');
+            curr.push('G');
             colors = [BASE_PAIR_COLORS[2]];
           } else if (currValue <=0.75) {
-            curr.push('G');
+            curr.push('C');
             colors = [BASE_PAIR_COLORS[3]];
           }
           currNormalized.push(0.5);
@@ -102,7 +102,7 @@ class DataTrack extends Track {
   loadData(start, end, samplingRate, trackHeightPx) {
     // Translate to chromosome centric coordinate:
     const range = Util.chromosomeRelativeRange(start, end);
-    const contig = Util.chromosomeIndexToName(range.chromosomeIndex);
+    const contig = 'chr' + Util.chromosomeIndexToName(range.chromosomeIndex);
 
     this.notifyListeners(TRACK_EVENT_LOADING, true);
     const promise = this.api.getData(this.trackId, contig, range.start, range.end, samplingRate, trackHeightPx, this.aggregations);
