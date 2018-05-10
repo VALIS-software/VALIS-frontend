@@ -40,10 +40,15 @@ class SearchResultsView extends Component {
   render() {
     if (this.state.needsRefresh) {
       this.api.getQueryResults(this.state.query).then(results => {
-        this.setState({
-          results: results,
-          needsRefresh: false,
-        });
+        if (results.length === 1) {
+          this.viewModel.popView();
+          this.resultSelected(results[0]);
+        } else {
+          this.setState({
+            results: results,
+            needsRefresh: false,
+          });  
+        }
       });
       return (<div className="navigation-controller-loading"><CircularProgress size={80} thickness={5} /> </div>);
     }

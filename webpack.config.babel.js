@@ -90,16 +90,16 @@ export default (env = defaultEnv) => ({
         // All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
         test: /\.tsx?$/, loader: "awesome-typescript-loader"
       },
-      {
-        test: /.jsx?$/,
-        exclude: /node_modules|lib/,
-        enforce: 'pre',
-        use: [
-          {
-            loader: 'eslint-loader',
-          }
-        ]
-      },
+      // {
+      //   test: /.jsx?$/,
+      //   exclude: /node_modules|lib/,
+      //   enforce: 'pre',
+      //   use: [
+      //     {
+      //       loader: 'eslint-loader',
+      //     }
+      //   ]
+      // },
       {
         test: /.jsx?$/,
         exclude: /node_modules/,

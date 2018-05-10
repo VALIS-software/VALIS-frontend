@@ -51,48 +51,6 @@ class ENCODESelector extends Component {
     };
   }
 
-  componentDidMount() {
-    this.availableChromoNames = ['Any'].concat(CHROMOSOME_NAMES);
-    this.chromoNameItems = [];
-    for (let i = 0; i < this.availableChromoNames.length; i++) {
-      this.chromoNameItems.push(<MenuItem value={i} key={i} primaryText={this.availableChromoNames[i]} />);
-    }
-    // use api to pull all available biosamples
-    this.updateAvailableBiosamples();
-    this.updateAvailableTypes();
-    this.updateAvailableTargets();
-  }
-
-  updateAvailableBiosamples = () => {
-    if (this.selectedBiosample) return;
-    const builder = new QueryBuilder();
-    builder.newInfoQuery();
-    builder.filterSource(DATA_SOURCE_ENCODE);
-    builder.filterType('ENCODE_accession');
-    if (this.selectedType) {
-      builder.filterInfotypes(this.selectedType);
-    }
-    if (this.selectedTargets) {
-      builder.filterTargets(this.selectedTargets);
-    }
-    const infoQuery = builder.build();
-    this.api.getDistinctValues('info.biosample', infoQuery).then(data => {
-      // Keep the current selection of biosample
-      let newBiosampleValue = null;
-      if (this.state.biosampleValue !== null) {
-        const currentBiosample = this.state.availableBiosamples[this.state.biosampleValue];
-        newBiosampleValue = data.indexOf(currentBiosample);
-        if (newBiosampleValue < 0) {
-          newBiosampleValue = null;
-        }
-      }
-      this.setState({
-        availableBiosamples: data,
-        biosampleValue: newBiosampleValue,
-      });
-    });
-  }
-
   updateAvailableTypes = () => {
     if (this.selectedType) return;
     const builder = new QueryBuilder();
@@ -255,6 +213,49 @@ class ENCODESelector extends Component {
   addQueryTrack = () => {
     const query = this.buildQuery();
     this.appModel.addAnnotationTrack(this.state.title, query);
+  }
+
+
+  componentDidMount() {
+    this.availableChromoNames = ['Any'].concat(CHROMOSOME_NAMES);
+    this.chromoNameItems = [];
+    for (let i = 0; i < this.availableChromoNames.length; i++) {
+      this.chromoNameItems.push(<MenuItem value={i} key={i} primaryText={this.availableChromoNames[i]} />);
+    }
+    // use api to pull all available biosamples
+    this.updateAvailableBiosamples();
+    this.updateAvailableTypes();
+    this.updateAvailableTargets();
+  }
+
+  updateAvailableBiosamples = () => {
+    if (this.selectedBiosample) return;
+    const builder = new QueryBuilder();
+    builder.newInfoQuery();
+    builder.filterSource(DATA_SOURCE_ENCODE);
+    builder.filterType('ENCODE_accession');
+    if (this.selectedType) {
+      builder.filterInfotypes(this.selectedType);
+    }
+    if (this.selectedTargets) {
+      builder.filterTargets(this.selectedTargets);
+    }
+    const infoQuery = builder.build();
+    this.api.getDistinctValues('info.biosample', infoQuery).then(data => {
+      // Keep the current selection of biosample
+      let newBiosampleValue = null;
+      if (this.state.biosampleValue !== null) {
+        const currentBiosample = this.state.availableBiosamples[this.state.biosampleValue];
+        newBiosampleValue = data.indexOf(currentBiosample);
+        if (newBiosampleValue < 0) {
+          newBiosampleValue = null;
+        }
+      }
+      this.setState({
+        availableBiosamples: data,
+        biosampleValue: newBiosampleValue,
+      });
+    });
   }
 
   render() {

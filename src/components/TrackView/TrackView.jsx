@@ -19,7 +19,7 @@ import Util from '../../helpers/util.js';
 const GPUTextWebGL = require('../../../lib/gputext/gputext-webgl.js');
 
 class TrackView {
-  constructor(guid, appModel, viewModel, color=0.6, height=0.1, basePairOffset=0) {
+  constructor(guid: string, appModel: AppModel, viewModel: ViewModel, color=0.6, height=0.1, basePairOffset=0) {
     this.guid = guid;
     this.appModel = appModel;
     this.viewModel = viewModel;

@@ -10,6 +10,7 @@ import EntityDetails from '../EntityDetails/EntityDetails.jsx';
 import TrackViewSettings from '../TrackViewSettings/TrackViewSettings.jsx';
 import MultiTrackViewer from '../MultiTrackViewer/MultiTrackViewer.jsx';
 import NavigationController from '../NavigationController/NavigationController.jsx';
+import SNPDetails from '../SNPDetails/SNPDetails.jsx';
 
 import AppModel, {
   APP_EVENT_LOADING_STATE_CHANGED,
@@ -31,26 +32,6 @@ import './App.scss';
 const _ = require('underscore');
 
 class App extends React.Component {
-
-  componentDidMount() {
-    this.setState({
-      tracks: [],
-      views: [],
-      loading: false,
-    });
-
-    this.viewModel = new ViewModel();
-    this.appModel = new AppModel();
-    this.appModel.addAnnotationTrack('GRCh38');
-
-    this.appModel.addListener(this.updateLoadingState, APP_EVENT_LOADING_STATE_CHANGED);
-    this.viewModel.addListener(this.clickTrackElement, VIEW_EVENT_TRACK_ELEMENT_CLICKED);
-    this.viewModel.addListener(this.showTrackSettings, VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS);
-    this.viewModel.addListener(this.dataSetSelected, VIEW_EVENT_DATA_SET_SELECTED);
-    this.viewModel.addListener(this.popView, VIEW_EVENT_POP_VIEW);
-    this.viewModel.addListener(this.pushView, VIEW_EVENT_PUSH_VIEW);
-    this.viewModel.addListener(this.closeView, VIEW_EVENT_CLOSE_VIEW);
-  }
 
   clickTrackElement = (event) => {
     if (event.data !== null) {
@@ -115,6 +96,27 @@ class App extends React.Component {
     this.setState({
       loading: event.data,
     });
+  }
+
+  componentDidMount() {
+    this.setState({
+      tracks: [],
+      views: [],
+      loading: false,
+    });
+
+    this.viewModel = new ViewModel();
+    this.appModel = new AppModel();
+    // this.appModel.addDataTrack('sequence');
+    // this.appModel.addAnnotationTrack('GRCh38');
+
+    this.appModel.addListener(this.updateLoadingState, APP_EVENT_LOADING_STATE_CHANGED);
+    this.viewModel.addListener(this.clickTrackElement, VIEW_EVENT_TRACK_ELEMENT_CLICKED);
+    this.viewModel.addListener(this.showTrackSettings, VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS);
+    this.viewModel.addListener(this.dataSetSelected, VIEW_EVENT_DATA_SET_SELECTED);
+    this.viewModel.addListener(this.popView, VIEW_EVENT_POP_VIEW);
+    this.viewModel.addListener(this.pushView, VIEW_EVENT_PUSH_VIEW);
+    this.viewModel.addListener(this.closeView, VIEW_EVENT_CLOSE_VIEW);
   }
 
   render() {

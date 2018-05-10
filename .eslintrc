@@ -31,7 +31,7 @@
     "react/prefer-stateless-function": "off",
     "react/jsx-indent": "off",
     "no-continue": "off",
-    "no-undef": "off"
+    "no-undef": "off",
   },
   "env": {
     "browser": true

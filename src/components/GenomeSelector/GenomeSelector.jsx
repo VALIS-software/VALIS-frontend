@@ -25,7 +25,6 @@ function reverse(value) {
   return (1 / power) * Math.log(((Math.exp(power) - 1) * value / logmax) + 1) * logmax;
 }
 
-
 class GenomeSelector extends Component {
   constructor(props) {
     super(props);
@@ -40,37 +39,6 @@ class GenomeSelector extends Component {
       minLength : 10,
       maxnumber: 10000,
     };
-  }
-
-  componentDidMount() {
-    // some pre-defined types
-    this.availableTypes = ['gene', 'exon', 'mRNA', 'promoter', 'enhancer', 'SNP'];
-    this.genomeTypeItems = [];
-    for (let i = 0; i < this.availableTypes.length; i++) {
-      this.genomeTypeItems.push(<MenuItem value={i} key={i} primaryText={this.availableTypes[i]} />);
-    }
-    this.availableChromoNames = ['Any'].concat(CHROMOSOME_NAMES);
-    this.chromoNameItems = [];
-    for (let i = 0; i < this.availableChromoNames.length; i++) {
-      this.chromoNameItems.push(<MenuItem value={i} key={i} primaryText={this.availableChromoNames[i]} />);
-    }
-    this.setState({
-      genomeTypeValue: 0,
-    });
-    // use api to pull all available types
-    const builder = new QueryBuilder();
-    builder.newGenomeQuery();
-    const genomeQuery = builder.build();
-    this.api.getDistinctValues('type', genomeQuery).then(data => {
-      this.availableTypes = data;
-      this.genomeTypeItems = [];
-      for (let i = 0; i < this.availableTypes.length; i++) {
-        this.genomeTypeItems.push(<MenuItem value={i} key={i} primaryText={this.availableTypes[i]} />);
-      }
-      this.setState({
-        genomeTypeValue: 0,
-      });
-    });
   }
 
   handleUpdateTitle = (event) => {
@@ -127,6 +95,37 @@ class GenomeSelector extends Component {
   addQueryTrack() {
     const query = this.buildGenomeQuery();
     this.appModel.addAnnotationTrack(this.state.title, query);
+  }
+
+  componentDidMount() {
+    // some pre-defined types
+    this.availableTypes = ['gene', 'exon', 'mRNA', 'promoter', 'enhancer', 'SNP'];
+    this.genomeTypeItems = [];
+    for (let i = 0; i < this.availableTypes.length; i++) {
+      this.genomeTypeItems.push(<MenuItem value={i} key={i} primaryText={this.availableTypes[i]} />);
+    }
+    this.availableChromoNames = ['Any'].concat(CHROMOSOME_NAMES);
+    this.chromoNameItems = [];
+    for (let i = 0; i < this.availableChromoNames.length; i++) {
+      this.chromoNameItems.push(<MenuItem value={i} key={i} primaryText={this.availableChromoNames[i]} />);
+    }
+    this.setState({
+      genomeTypeValue: 0,
+    });
+    // use api to pull all available types
+    const builder = new QueryBuilder();
+    builder.newGenomeQuery();
+    const genomeQuery = builder.build();
+    this.api.getDistinctValues('type', genomeQuery).then(data => {
+      this.availableTypes = data;
+      this.genomeTypeItems = [];
+      for (let i = 0; i < this.availableTypes.length; i++) {
+        this.genomeTypeItems.push(<MenuItem value={i} key={i} primaryText={this.availableTypes[i]} />);
+      }
+      this.setState({
+        genomeTypeValue: 0,
+      });
+    });
   }
 
   render() {
