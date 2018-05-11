@@ -1,18 +1,17 @@
 // Dependencies
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import Paper from 'material-ui/Paper';
 import { ASSOCIATION_TYPE } from '../../helpers/constants.js';
-import { Card, CardHeader, CardText } from 'material-ui/Card';
-import CircularProgress from 'material-ui/CircularProgress';
 import ZoomToButton from '../ZoomToButton/ZoomToButton.jsx';
 import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
 import EntityDetails from '../EntityDetails/EntityDetails.jsx';
+import GWASDetails from '../GWASDetails/GWASDetails.jsx';
 import QueryBuilder, { QUERY_TYPE_INFO } from '../../models/query.js';
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
 import Util from '../../helpers/util.js';
 // Styles
 import './SNPDetails.scss';
+import '../Shared/Shared.scss';
 
 const _ = require('underscore');
 
@@ -229,8 +228,8 @@ class SNPDetails extends Component {
     if (this.state.gwas && this.state.gwas.length > 0) {
       const studies = this.state.gwas.map(d => {
         const openGwas = () => {
-          const view = (<EntityDetails dataID={d.id} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
-          this.props.viewModel.pushView(d.disease, d.id, view);  
+          const view = (<GWASDetails assocId={d.id} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
+          this.props.viewModel.pushView('Study Details', d.id, view);  
         };
         return (<div onClick={openGwas} className="row">{d.disease}</div>); 
       });

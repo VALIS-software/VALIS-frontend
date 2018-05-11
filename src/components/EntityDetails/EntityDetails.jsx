@@ -67,7 +67,7 @@ class EntityDetails extends Component {
       elem = (<SNPDetails viewModel={this.viewModel} appModel={this.appModel} snpId={dataID} />);
     } else {
       elem = (<EntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={dataID} />);
-    }
+    } 
     this.viewModel.pushView(relation.title, dataID, elem);
   }
 

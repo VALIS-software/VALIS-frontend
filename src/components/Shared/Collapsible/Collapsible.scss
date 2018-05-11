@@ -32,4 +32,21 @@
 			}
 		}
 	}
+
+	.section {
+    	padding-top: 4px;
+    	padding-bottom: 4px;
+
+    	p {
+    		font-weight: 100;
+    		font-size: 12px;
+    		padding: 4px 0px 4px 0px;
+    		margin: 0px;
+    	}
+	}
+	.section-header {
+    	font-size: 10px;
+    	font-weight: 100;
+    	color: darkgrey;
+  	}
 }
