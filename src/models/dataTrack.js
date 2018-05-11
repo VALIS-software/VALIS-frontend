@@ -1,11 +1,11 @@
 
 import Util from '../helpers/util.js';
 import { Tile, TileCache } from '../helpers/cache.js';
-import { 
+import {
   BASE_PAIR_COLORS,
-  GENOME_LENGTH, 
+  GENOME_LENGTH,
   SIGNAL_COLORS,
-  TRACK_DATA_TYPE_BASE_PAIRS, 
+  TRACK_DATA_TYPE_BASE_PAIRS,
   TRACK_DATA_TYPE_GBANDS,
 } from '../helpers/constants.js';
 import Track, { TRACK_EVENT_LOADING } from './track.js';
@@ -21,7 +21,7 @@ class DataTrack extends Track {
     this.cache = new TileCache(0, GENOME_LENGTH, this.loadData);
     this._min = null;
     this._max = null;
-    this.aggregations = trackId === 'sequence' ? ['none'] : ['max', 'mean', 'median', 'min'];
+    this.aggregations = trackId === 'sequence' ? ['none'] : ['avg', 'min', 'max'];
   }
 
   get title() {
@@ -36,7 +36,7 @@ class DataTrack extends Track {
     if (basePair < startBp || basePair > endBp) return null;
 
     const tiles = this.getTiles(startBp, endBp, samplingRate, trackHeightPx);
-    
+
     // find the basePair in the tiles:
     let ret = {
       value: null,
@@ -60,10 +60,10 @@ class DataTrack extends Track {
             curr.push('T');
             colors = [BASE_PAIR_COLORS[1]];
           } else if (currValue <=0.5) {
-            curr.push('C');
+            curr.push('G');
             colors = [BASE_PAIR_COLORS[2]];
           } else if (currValue <=0.75) {
-            curr.push('G');
+            curr.push('C');
             colors = [BASE_PAIR_COLORS[3]];
           }
           currNormalized.push(0.5);
@@ -102,9 +102,10 @@ class DataTrack extends Track {
   loadData(start, end, samplingRate, trackHeightPx) {
     // Translate to chromosome centric coordinate:
     const range = Util.chromosomeRelativeRange(start, end);
+    const contig = 'chr' + Util.chromosomeIndexToName(range.chromosomeIndex);
 
     this.notifyListeners(TRACK_EVENT_LOADING, true);
-    const promise = this.api.getData(this.trackId, range.chromosomeIndex, range.start, range.end, samplingRate, trackHeightPx, this.aggregations);
+    const promise = this.api.getData(this.trackId, contig, range.start, range.end, samplingRate, trackHeightPx, this.aggregations);
     return promise.then(data => {
       const result = data.data;
       const rawData = result.values;

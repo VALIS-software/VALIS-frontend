@@ -7,7 +7,7 @@ import Slider from 'material-ui/Slider';
 import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
-import QueryBuilder, { QUERY_TYPE_GENOME } from '../../models/query.js';
+import QueryBuilder from '../../models/query.js';
 import { CHROMOSOME_NAMES } from '../../helpers/constants.js';
 
 // Styles
@@ -80,9 +80,9 @@ class GenomeSelector extends Component {
   buildGenomeQuery() {
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
-    // The chromoNameValue starts from 1, which is the same as the chromid in the backend
     if (this.state.chromoNameValue > 0) {
-      builder.filterChromid(this.state.chromoNameValue);
+      const contig = this.availableChromoNames[this.state.chromoNameValue];
+      builder.filterContig(contig);
     }
     const genomeType = this.availableTypes[this.state.genomeTypeValue];
     builder.filterType(genomeType);

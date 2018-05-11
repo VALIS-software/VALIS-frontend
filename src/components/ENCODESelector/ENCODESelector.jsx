@@ -188,10 +188,9 @@ class ENCODESelector extends Component {
   buildQuery = () => {
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
-    builder.filterAssembly('GRCh37');
-    // The chromoNameValue starts from 1, which is the same as the chromid in the backend
     if (this.state.chromoNameValue > 0) {
-      builder.filterChromid(this.state.chromoNameValue);
+      const contig = this.availableChromoNames[this.state.chromoNameValue];
+      builder.filterContig(contig);
     }
     const genomeType = this.state.availableTypes[this.state.genomeTypeValue];
     builder.filterType(genomeType);
