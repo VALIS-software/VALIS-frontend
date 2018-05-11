@@ -15,7 +15,6 @@ import AppModel, {
   APP_EVENT_LOADING_STATE_CHANGED,
 } from '../../models/appModel.js';
 
-
 import ViewModel, {
   VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS,
   VIEW_EVENT_TRACK_ELEMENT_CLICKED,
@@ -25,6 +24,9 @@ import ViewModel, {
   VIEW_EVENT_CLOSE_VIEW,
 
 } from '../../models/viewModel.js';
+
+import QueryBuilder from '../../models/query.js';
+
 // Styles
 import './App.scss';
 
@@ -41,7 +43,14 @@ class App extends React.Component {
 
     this.viewModel = new ViewModel();
     this.appModel = new AppModel();
-    // this.appModel.addAnnotationTrack('GRCh38');
+    // Default sequence track
+    this.appModel.addDataTrack('sequence');
+    // Default GRCh38 gene track
+    const builder = new QueryBuilder();
+    builder.newGenomeQuery();
+    builder.filterType('gene');
+    const query = builder.build();
+    this.appModel.addAnnotationTrack('GRCh38 Genes', query);
 
     this.appModel.addListener(this.updateLoadingState, APP_EVENT_LOADING_STATE_CHANGED);
     this.viewModel.addListener(this.clickTrackElement, VIEW_EVENT_TRACK_ELEMENT_CLICKED);
