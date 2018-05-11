@@ -25,7 +25,7 @@ const DATA_SOURCE_DBSNP = 'dbSNP';
 const DATA_SOURCE_ENCODE = 'ENCODE';
 
 const TRACK_TYPE_SEQUENCE = 'track_type_sequence';
-const TRACK_TYPE_FUNCTIONAL = 'track_type_funcional'; // TODO: fix typo on backend
+const TRACK_TYPE_FUNCTIONAL = 'track_type_functional';
 const TRACK_TYPE_GENOME = 'track_type_genome';
 const TRACK_TYPE_GWAS = 'track_type_gwas';
 const TRACK_TYPE_EQTL = 'track_type_eqtl';

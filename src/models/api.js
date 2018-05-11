@@ -43,9 +43,9 @@ class GenomeAPI {
 				resolve(ANNOTATION_CACHE[cacheKey]);
 			});
 		} else {
+			const track = new AnnotationTrack(this, annotationId, query);
+			ANNOTATION_CACHE[cacheKey] = track;
 			return new Promise((resolve, reject) => {
-				const track = new AnnotationTrack(this, annotationId, query);
-				ANNOTATION_CACHE[cacheKey] = track;
 				resolve(ANNOTATION_CACHE[cacheKey]);
 			});
 		}
