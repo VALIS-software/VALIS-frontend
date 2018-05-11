@@ -8,6 +8,7 @@
     "no-unused-vars": "off",
     "no-mixed-operators": "off",
     "no-else-return": "off",
+    "dot-notation": "off",
     "max-len": "off",
     "react/no-did-mount-set-state": "off",
     "indent": "off",
@@ -31,7 +32,7 @@
     "react/prefer-stateless-function": "off",
     "react/jsx-indent": "off",
     "no-continue": "off",
-    "no-undef": "off"
+    "no-undef": "off",
   },
   "env": {
     "browser": true

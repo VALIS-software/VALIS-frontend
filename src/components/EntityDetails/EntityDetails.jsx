@@ -1,7 +1,7 @@
 // Dependencies
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { CHROMOSOME_NAMES } from '../../helpers/constants.js';
+import { CHROMOSOME_NAMES, ENTITY_TYPE } from '../../helpers/constants.js';
 import {
   Table,
   TableBody,
@@ -14,6 +14,7 @@ import Paper from 'material-ui/Paper';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import CircularProgress from 'material-ui/CircularProgress';
 import DataListItem from '../DataListItem/DataListItem.jsx';
+import SNPDetails from '../SNPDetails/SNPDetails.jsx';
 import ZoomToButton from '../ZoomToButton/ZoomToButton.jsx';
 import Util from '../../helpers/util.js';
 
@@ -61,7 +62,12 @@ class EntityDetails extends Component {
 
   handleClickRelation(relation) {
     const dataID = relation.id;
-    const elem = (<EntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={dataID} />);
+    let elem = null;
+    if (Util.isType(relation, ENTITY_TYPE.SNP)) {
+      elem = (<SNPDetails viewModel={this.viewModel} appModel={this.appModel} snpId={dataID} />);
+    } else {
+      elem = (<EntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={dataID} />);
+    }
     this.viewModel.pushView(relation.title, dataID, elem);
   }
 

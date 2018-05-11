@@ -33,6 +33,12 @@ const TRACK_TYPE_ENCODE = 'track_type_encode';
 const TRACK_TYPE_3D = 'track_type_3d';
 const TRACK_TYPE_NETWORK = 'track_type_network';
 
+const ENTITY_TYPE = {
+  SNP: 'Gsnp',
+  GENE: 'Ggene',
+  TRAIT: 'Itrait',
+};
+
 const CHROMOSOME_SIZES = [
   248956422,
   242193529,
@@ -103,6 +109,7 @@ export {
   DATA_SOURCE_CLINVAR,
   DATA_SOURCE_DBSNP,
   DATA_SOURCE_ENCODE,
+  ENTITY_TYPE,
   TRACK_TYPE_SEQUENCE,
   TRACK_TYPE_FUNCTIONAL,
   TRACK_TYPE_GENOME,
