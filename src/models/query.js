@@ -36,10 +36,6 @@ class QueryBuilder {
     this.query.filters._id = id;
   }
 
-  filterAssembly(assembly) {
-    this.query.filters.assembly = assembly;
-  }
-
   filterType(type) {
     this.query.filters.type = type;
   }
@@ -48,11 +44,11 @@ class QueryBuilder {
     this.query.filters.source = source;
   }
 
-  filterChromid(chromid) {
+  filterContig(contig) {
     if (this.query.type !== QUERY_TYPE_GENOME) {
-      throw new Error('chromid only available for GenomeNodes');
+      throw new Error('filter contig only available for GenomeNodes');
     }
-    this.query.filters.chromid = chromid;
+    this.query.filters.contig = contig;
   }
 
   filterLength(length) {
