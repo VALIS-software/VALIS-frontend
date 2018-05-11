@@ -64,7 +64,7 @@ class EntityDetails extends Component {
     const dataID = relation.id;
     let elem = null;
     if (Util.isType(relation, ENTITY_TYPE.SNP)) {
-      elem = (<SNPDetails viewModel={this.viewModel} appModel={this.appModel} snpId={'Gsnp_rs9409565'} />);
+      elem = (<SNPDetails viewModel={this.viewModel} appModel={this.appModel} snpId={dataID} />);
     } else {
       elem = (<EntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={dataID} />);
     }
