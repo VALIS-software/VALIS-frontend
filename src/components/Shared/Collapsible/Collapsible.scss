@@ -1,0 +1,35 @@
+.collapsible {
+	border-radius: 8px;
+	border: 1px solid #D5D6D9;
+	margin-left: 14px;
+	margin-right: 14px;
+	margin-top: 4px;
+	margin-bottom: 4px;
+
+	.collapsible-header {
+		padding: 8px;
+		border-radius: 8px;
+		cursor: pointer;
+		font-size: 10px;
+		color: darken(#D5D6D9, 25%);
+		.collapsible-toggle {
+			float: right;
+			font-size: 18px;
+			font-weight: 100;
+			margin-top: -7px;
+		}
+	}
+	.collapsible-content {
+		border-top: 1px solid #D5D6D9;
+		margin-bottom: 8px;
+		.row {
+			cursor: pointer;
+			font-size: 10px;
+			padding: 8px;
+			border-bottom: 1px solid #D5D6D9;
+			&:hover {
+				background-color: lighten(#D5D6D9, 10%);
+			}
+		}
+	}
+}

@@ -43,18 +43,6 @@ class GWASSelector extends Component {
     };
   }
 
-  componentDidMount() {
-    this.availableSourceNames = ['Any', 'GWAS', 'ClinVar'];
-    this.searchSourceItems = [];
-    for (let i = 0; i < this.availableSourceNames.length; i++) {
-      this.searchSourceItems.push(<MenuItem value={i} key={i} primaryText={this.availableSourceNames[i]} />);
-    }
-    this.setState({
-      searchSourceValue: 0,
-    });
-    this.updateTraits(0);
-  }
-
   updateTraits = (value) => {
     const builder = new QueryBuilder();
     builder.newInfoQuery();
@@ -144,6 +132,19 @@ class GWASSelector extends Component {
   addQueryTrack() {
     const query = this.buildGWASQuery();
     this.appModel.addAnnotationTrack(this.state.title, query);
+  }
+
+
+  componentDidMount() {
+    this.availableSourceNames = ['Any', 'GWAS', 'ClinVar'];
+    this.searchSourceItems = [];
+    for (let i = 0; i < this.availableSourceNames.length; i++) {
+      this.searchSourceItems.push(<MenuItem value={i} key={i} primaryText={this.availableSourceNames[i]} />);
+    }
+    this.setState({
+      searchSourceValue: 0,
+    });
+    this.updateTraits(0);
   }
 
   render() {

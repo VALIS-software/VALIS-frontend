@@ -120,6 +120,11 @@ class Util {
     return u * windowSize[0];
   }
 
+
+  static isType(entity, typeName) {
+    return (entity.id.indexOf(typeName) === 0);
+  }
+
   static multiplyColor(color, d) {
     return color.map(val => Math.min(255, val * d));
   }
