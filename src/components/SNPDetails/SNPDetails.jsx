@@ -107,7 +107,7 @@ class SNPDetails extends Component {
           ret.id = d.details['_id'];
           ret.type = ASSOCIATION_TYPE.GWAS;
           ret.description = details['description'];
-          ret.disease = details['DISEASE/TRAIT'];
+          ret.disease = details['DISEASE/TRAIT'] || 'Unspecified Trait';
           ret.author = details['FIRST AUTHOR'];
           ret.journal = details['JOURNAL'];
           ret.date = details['DATE'];
@@ -157,17 +157,21 @@ class SNPDetails extends Component {
 
     const chrName = details.contig;
     const start = details.start;
-    const end = details.end;
-    const locText = `${chrName}:${start}:${end}`;
+    const locText = `${chrName}:${start}`;
     const location = (<div className="snp-location"><CopyableText text={locText} /></div>);
 
     let variantType = (<div className="snp-type snp-type-non-coding">Non-coding Variant</div>);
 
     if (details.info.mapped_gene) {
       let geneId = null;
-      const geneName = details.info.mapped_gene;
+      let geneName = details.info.mapped_gene;
+      
       if (details.info.GENEINFO) {
         geneId = details.info.GENEINFO.split(':')[1];  
+      } else if (geneName.indexOf('LOC') > 0) {
+        geneName = geneName.slice(geneName.indexOf('LOC'));
+      } else if (geneName.indexOf(' - ') > 0) {
+        geneName = geneName.slice(geneName.indexOf(' - ') + 3);
       }
       const geneLink = (<GeneLink geneName={geneName} geneId={geneId} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
       const type = (<span className="snp-type">{details.info.VC || 'Variant'}</span>);
@@ -184,14 +188,15 @@ class SNPDetails extends Component {
       const ref = details.info.variant_ref;
       const alt = details.info.variant_alt;
 
-      if (details.info.TOPMED) {
-        const percentages = details.info.TOPMED.split(',').map(d => parseFloat(d));
+      const freq = details.info.TOPMED || details.info.CAF;
+      if (freq) {
+        const percentages = freq.split(',').map(d => parseFloat(d));
         const data = [
           { key : ref, value: percentages[0] },
         ];
         let i = 1;
         alt.split(',').forEach(letter => {
-          const v = Math.isNaN(percentages[i]) ? 0.0 : percentages[i];
+          const v = isNaN(percentages[i]) ? 0.0 : percentages[i];
           data.push({ key : letter, value: v });
           i++;
         });
