@@ -121,8 +121,16 @@ class Util {
   }
 
 
-  static isType(entity, typeName) {
-    return (entity.id.indexOf(typeName) === 0);
+  static isType(entity, typeId) {
+    return Util.isIdType(entity.id, typeId);
+  }
+
+  static isIdType(entityId, typeId) {
+    return (entityId.indexOf(typeId) === 0);
+  }
+
+  static isAssociation(assocDef, fromTypeId, toTypeId) {
+    return Util.isIdType(fromTypeId, assocDef[0]) && Util.isIdType(toTypeId, assocDef[1]);
   }
 
   static multiplyColor(color, d) {

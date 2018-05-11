@@ -2,6 +2,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Paper from 'material-ui/Paper';
+import { ASSOCIATION_TYPE } from '../../helpers/constants.js';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import CircularProgress from 'material-ui/CircularProgress';
 import ZoomToButton from '../ZoomToButton/ZoomToButton.jsx';
@@ -95,23 +96,32 @@ class SNPDetails extends Component {
   loadRelationDetails() {
     const all = this.state.relations.map(r => {
       return this.api.getDetails(r.id).then(d => {
-        const ret = {};
         const details = d.details.info;
-        ret.id = d.details['_id'];
-        ret.description = details['description'];
-        ret.disease = details['DISEASE/TRAIT'];
-        ret.author = details['FIRST AUTHOR'];
-        ret.journal = details['JOURNAL'];
-        ret.date = details['DATE'];
-        ret.pvalue = details['p-value'];
-        ret.link = details['LINK'];
+        const ret = {};
+        if (Util.isAssociation(ASSOCIATION_TYPE.EQTL, d.details.from_id, d.details.to_id)) {
+          ret.id = d.details['_id'];
+          ret.cellType = details.CellType;
+          ret.type = ASSOCIATION_TYPE.EQTL;
+          ret.description = `Expression in ${details.CellType}`;
+        } else if (Util.isAssociation(ASSOCIATION_TYPE.GWAS, d.details.from_id, d.details.to_id)) {
+          ret.id = d.details['_id'];
+          ret.type = ASSOCIATION_TYPE.GWAS;
+          ret.description = details['description'];
+          ret.disease = details['DISEASE/TRAIT'];
+          ret.author = details['FIRST AUTHOR'];
+          ret.journal = details['JOURNAL'];
+          ret.date = details['DATE'];
+          ret.pvalue = details['p-value'];
+          ret.link = details['LINK'];          
+        }
         return ret;
       });
     });
 
     Promise.all(all).then(d => {
       this.setState({
-        gwas: d,
+        gwas: d.filter(x => x.type === ASSOCIATION_TYPE.GWAS),
+        eqtl: d.filter(x => x.type === ASSOCIATION_TYPE.EQTL),
       });
     });
   }
@@ -174,12 +184,17 @@ class SNPDetails extends Component {
       const ref = details.info.variant_ref;
       const alt = details.info.variant_alt;
 
-      if (details.info.CAF) {
-        const percentages = details.info.CAF.split(',').map(d => parseFloat(d));
+      if (details.info.TOPMED) {
+        const percentages = details.info.TOPMED.split(',').map(d => parseFloat(d));
         const data = [
           { key : ref, value: percentages[0] },
-          { key : alt, value: percentages[1] },
         ];
+        let i = 1;
+        alt.split(',').forEach(letter => {
+          const v = Math.isNaN(percentages[i]) ? 0.0 : percentages[i];
+          data.push({ key : letter, value: v });
+          i++;
+        });
         variantFreqChart = (<FrequencyBarChart data={data} />);
       } else {
         variantFreqChart = (<div> Data not available </div>);
@@ -218,6 +233,22 @@ class SNPDetails extends Component {
       gwas = (<Collapsible title={title} open={false}>{studies}</Collapsible>);
     }
 
+
+    let eqtl = (<Collapsible disabled={true} title="No Quantitative Trait Loci" />);
+
+    if (this.state.eqtl && this.state.eqtl.length > 0) {
+      const eqtls = this.state.eqtl.map(d => {
+        const openEqtl = () => {
+          const view = (<EntityDetails dataID={d.id} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
+          this.props.viewModel.pushView('Loci Details', d.id, view);  
+        };
+        return (<div onClick={openEqtl} className="row">{d.description}</div>); 
+      });
+      const title = `Quantitative Trait Loci (${eqtls.length})`;
+      eqtl = (<Collapsible title={title} open={false}>{eqtls}</Collapsible>);
+    }
+
+
     return (<div className="snp-details">
       <div className="entity-header">
         <div className="entity-name">{name}{zoomBtn}</div>
@@ -239,6 +270,7 @@ class SNPDetails extends Component {
         </div>
       </Collapsible>
       {gwas}
+      {eqtl}
       <Collapsible title="External References" open={false}>
         {links}
       </Collapsible>
