@@ -113,9 +113,9 @@ function DetailsHeader(props) {
   
   let zoomBtn = (<div />);
 
-  if (details.chromid) {
-    const absoluteStart = Util.chromosomeRelativeToUniversalBasePair(details.chromid, details.start);
-    const absoluteEnd = Util.chromosomeRelativeToUniversalBasePair(details.chromid, details.end);
+  if (details.contig) {
+    const absoluteStart = Util.chromosomeRelativeToUniversalBasePair(details.contig, details.start);
+    const absoluteEnd = Util.chromosomeRelativeToUniversalBasePair(details.contig, details.end);
     zoomBtn = (<ZoomToButton viewModel={props.viewModel} start={absoluteStart} end={absoluteEnd} padding={0.2} />);    
   }
 
@@ -136,12 +136,8 @@ function DetailsTable(props) {
   if (!props.details) return (<div />);
   const details = props.details;
   const detailItems = [];
-  // convert chromid to location
-  if (details.chromid) {
-    details.location = CHROMOSOME_NAMES[details.chromid-1];
-  }
   // show available data
-  const viewKeys = ['type', 'assembly', 'location', 'start', 'end', 'length', 'source'];
+  const viewKeys = ['type', 'contig', 'start', 'end', 'length', 'source'];
   for (const k of viewKeys) {
     if (details[k]) {
       const valueStr = details[k].toString();
