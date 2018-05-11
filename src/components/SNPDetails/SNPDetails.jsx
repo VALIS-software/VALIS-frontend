@@ -19,33 +19,41 @@ function CopyableText(props) {
   const style = {
     border: 'none',
   };
-  return (<input style={style} className='copyable' type="text" value={props.text}></input>);
+  return (<input style={style} className="copyable" type="text" value={props.text} />);
 }
+
+CopyableText.propTypes = {
+  text: PropTypes.string,
+};
 
 function FrequencyBarChart(props) {
   const sorted = _.sortBy(props.data, d => -d.value);
-  let rows = sorted.map(row => {
+  const rows = sorted.map(row => {
     const p = Math.max(1.0, (100.0 * row.value));
     const widthStyle = {
-      width: `${p}%`
+      width: `${p}%`,
     };
     const label = (100.0 * row.value).toFixed(1) + '%';
     return (<tr>
-      <td className='base-pair-label'> { row.key }</td>
-      <td className='bar'>
-        <div style={widthStyle} className={'bar-elem ' + row.key}/>
+      <td className="base-pair-label"> { row.key }</td>
+      <td className="bar">
+        <div style={widthStyle} className={'bar-elem ' + row.key} />
       </td>
-      <td className='label'> { label }</td>
-    </tr>);
+      <td className="label">{ label }</td>
+    </tr>); 
   });
-  return (<table className='frequency-chart'>{rows}</table>);
+  return (<table className="frequency-chart">{rows}</table>);
 }
+
+FrequencyBarChart.propTypes = {
+  data: PropTypes.array,
+};
 
 function GeneLink(props) {
   const openLink = () => {
     if (props.geneId) {
       const geneId = `Ggeneid_${props.geneId}`;
-      const view = (<EntityDetails dataID={geneId} viewModel={props.viewModel} appModel={props.appModel}/>);
+      const view = (<EntityDetails dataID={geneId} viewModel={props.viewModel} appModel={props.appModel} />);
       props.viewModel.pushView(props.geneName, props.geneId, view);  
     } else {
       const builder = new QueryBuilder();
@@ -57,9 +65,16 @@ function GeneLink(props) {
       const view = (<SearchResultsView text={props.geneName} query={query} viewModel={props.viewModel}  appModel={props.appModel} />);
       props.viewModel.pushView('Search Results', query, view);
     }
-  }
-  return (<a className='gene-link' onClick={openLink}>{props.geneName}</a>);
+  };
+  return (<a className="gene-link" onClick={openLink}>{props.geneName}</a>);
 }
+
+GeneLink.propTypes = {
+  geneName: PropTypes.string,
+  geneId: PropTypes.string,
+  viewModel: PropTypes.object,
+  appModel: PropTypes.object,
+};
 
 class SNPDetails extends Component {
   constructor(props) {
@@ -80,16 +95,16 @@ class SNPDetails extends Component {
   loadRelationDetails() {
     const all = this.state.relations.map(r => {
       return this.api.getDetails(r.id).then(d => {
-        let ret = {};
+        const ret = {};
         const details = d.details.info;
-        ret.id = d.details["_id"];
-        ret.description = details["description"];
-        ret.disease = details["DISEASE/TRAIT"];
-        ret.author = details["FIRST AUTHOR"];
-        ret.journal = details["JOURNAL"];
-        ret.date = details["DATE"];
-        ret.pvalue = details["p-value"];
-        ret.link = details["LINK"];
+        ret.id = d.details['_id'];
+        ret.description = details['description'];
+        ret.disease = details['DISEASE/TRAIT'];
+        ret.author = details['FIRST AUTHOR'];
+        ret.journal = details['JOURNAL'];
+        ret.date = details['DATE'];
+        ret.pvalue = details['p-value'];
+        ret.link = details['LINK'];
         return ret;
       });
     });
@@ -118,7 +133,7 @@ class SNPDetails extends Component {
   render() {
     if (this.state.currentSnpId !== this.state.loadedSnpId) {
       this.loadSnpDetails();
-      return (<div/>);
+      return (<div />);
     }
     const details = this.state.details;
     const name = this.state.details.name;
@@ -145,16 +160,14 @@ class SNPDetails extends Component {
         geneId = details.info.GENEINFO.split(':')[1];  
       }
       const geneLink = (<GeneLink geneName={geneName} geneId={geneId} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
-      const type = (<span className='snp-type'>{details.info.VC || 'Variant'}</span>);
-      variantType = (<div className='snp-type-wrapper'>{type} of {geneLink}</div>);
+      const type = (<span className="snp-type">{details.info.VC || 'Variant'}</span>);
+      variantType = (<div className="snp-type-wrapper">{type} of {geneLink}</div>);
     } else {
       const type = details.info.VC;
-      variantType = (<div className='snp-type-wrapper'>Non-coding {type}</div>);
+      variantType = (<div className="snp-type-wrapper">Non-coding {type}</div>);
     }
 
-
-    let variantAlleleInfo = (<div/>);
-    let variantFreqChart = (<div/>);
+    let variantFreqChart = (<div />);
 
     if (details.info.variant_ref && details.info.variant_alt) {
       // snv : draw an arrow from ref --> alt
@@ -162,7 +175,7 @@ class SNPDetails extends Component {
       const alt = details.info.variant_alt;
 
       if (details.info.CAF) {
-        const percentages = details.info.CAF.split(",").map(d => parseFloat(d));
+        const percentages = details.info.CAF.split(',').map(d => parseFloat(d));
         const data = [
           { key : ref, value: percentages[0] },
           { key : alt, value: percentages[1] },
@@ -177,7 +190,7 @@ class SNPDetails extends Component {
     }
 
     const snpRS = details.name.toLowerCase();
-    let linksData = [];
+    const linksData = [];
     linksData.push(['dbSNP', `https://www.ncbi.nlm.nih.gov/snp?term=${snpRS}`]);
     linksData.push(['gnomad', `http://gnomad-beta.broadinstitute.org/awesome?query=${snpRS}`]);
     linksData.push(['SNPedia', `https://www.snpedia.com/index.php?search=${snpRS}`]);
@@ -191,18 +204,18 @@ class SNPDetails extends Component {
     });
 
 
-    let gwas = (<Collapsible disabled={true} title="No GWAS Relations"/>);
+    let gwas = (<Collapsible disabled={true} title="No GWAS Relations" />);
 
     if (this.state.gwas && this.state.gwas.length > 0) {
       const studies = this.state.gwas.map(d => {
         const openGwas = () => {
-          const view = (<EntityDetails dataID={d.id} viewModel={this.props.viewModel} appModel={this.props.appModel}/>);
+          const view = (<EntityDetails dataID={d.id} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
           this.props.viewModel.pushView(d.disease, d.id, view);  
-        }
+        };
         return (<div onClick={openGwas} className="row">{d.disease}</div>); 
       });
       const title = `GWAS Associations (${studies.length})`;
-      gwas = (<Collapsible title={title} open={false}>{studies}</Collapsible>)
+      gwas = (<Collapsible title={title} open={false}>{studies}</Collapsible>);
     }
 
     return (<div className="snp-details">

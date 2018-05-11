@@ -19,10 +19,10 @@ class Collapsible extends Component {
   render() {
     const toggle = () => {
       if (this.props.disabled) return;
-      this.setState ({
+      this.setState({
         open: !this.state.open,
       });
-    }
+    };
     const title = this.props.title;
     const iconStyle = {
       largeIcon: {
@@ -30,10 +30,11 @@ class Collapsible extends Component {
         height: 20,
       },
     };
-    const toggleIcon = this.props.disabled ? "" : (this.state.open ? "-" : "+");
+    let toggleIcon = this.state.open ? '-' : '+';
+    toggleIcon = this.props.disabled ? '' : toggleIcon;
     const content = this.state.open ? (<div className="collapsible-content">{this.props.children}</div>) : (<div />);
     return (<div className="collapsible">
-      <div onClick={toggle} class="collapsible-header">
+      <div onClick={toggle} className="collapsible-header">
         {title}
         <div className="collapsible-toggle">{toggleIcon}</div>
       </div>
@@ -45,7 +46,9 @@ class Collapsible extends Component {
 
 Collapsible.propTypes = {
   open: PropTypes.bool,
+  title: PropTypes.string,
   disabled: PropTypes.bool,
+  children: PropTypes.array,
 };
 
 export default Collapsible;
