@@ -1,0 +1,22 @@
+{
+  "rules": {
+    "ordered-imports": false,
+    "no-submodule-imports": false,
+    "member-access": false,
+    "object-literal-sort-keys": false,
+    "no-var-requires": false,
+    "prefer-conditional-expression": false,
+    "interface-name": false
+  },
+
+  "jsRules": {
+    "ordered-imports": false,
+    "no-submodule-imports": false,
+    "member-access": false,
+    "object-literal-sort-keys": false,
+    "no-var-requires": false,
+    "variable-name": false
+  },
+
+  "extends": ["tslint:latest", "tslint-config-prettier"]
+}

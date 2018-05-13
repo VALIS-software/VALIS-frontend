@@ -1,32 +1,38 @@
 // Dependencies
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import TextField from 'material-ui/TextField';
-import AutoComplete from 'material-ui/AutoComplete';
-import Slider from 'material-ui/Slider';
-import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
-import SelectField from 'material-ui/SelectField';
-import MenuItem from 'material-ui/MenuItem';
-import QueryBuilder, { QUERY_TYPE_INFO } from '../../models/query.js';
-import { DATA_SOURCE_GWAS, DATA_SOURCE_CLINVAR } from '../../helpers/constants.js';
+import * as React from "react";
+import * as PropTypes from "prop-types";
+import TextField from "material-ui/TextField";
+import AutoComplete from "material-ui/AutoComplete";
+import Slider from "material-ui/Slider";
+import RaisedButton from "material-ui/RaisedButton/RaisedButton";
+import SelectField from "material-ui/SelectField";
+import MenuItem from "material-ui/MenuItem";
+import QueryBuilder, { QUERY_TYPE_INFO } from "../../models/query.js";
+import {
+  DATA_SOURCE_GWAS,
+  DATA_SOURCE_CLINVAR
+} from "../../helpers/constants.js";
 
 // Styles
-import './GWASSelector.scss';
-
+import "./GWASSelector.scss";
 
 const logmin = 0;
 const logmax = Math.pow(10, 6);
 const power = 12;
 
 function transform(value) {
-  return Math.round((Math.exp(12 * value / logmax) - 1) / (Math.exp(power) - 1) * logmax);
+  return Math.round(
+    (Math.exp(12 * value / logmax) - 1) / (Math.exp(power) - 1) * logmax
+  );
 }
 
 function reverse(value) {
-  return (1 / power) * Math.log(((Math.exp(power) - 1) * value / logmax) + 1) * logmax;
+  return (
+    1 / power * Math.log((Math.exp(power) - 1) * value / logmax + 1) * logmax
+  );
 }
 
-class GWASSelector extends Component {
+class GWASSelector extends React.Component {
   constructor(props) {
     super(props);
     this.handleUpdateTitle = this.handleUpdateTitle.bind(this);
@@ -38,25 +44,31 @@ class GWASSelector extends Component {
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
     this.api = this.appModel.api;
-    
+
     this.state = {
-      title: '',
-      searchTrait: '',
+      title: "",
+      searchTrait: "",
       searchSourceValue: 0,
-      traits: ['cancer', 'Alzheimer', 'sleep', 'pain', 'hair color', 'asthma'],
+      traits: ["cancer", "Alzheimer", "sleep", "pain", "hair color", "asthma"],
       pvalue: 0.05,
-      maxnumber: 10000,
+      maxnumber: 10000
     };
   }
 
   componentDidMount() {
-    this.availableSourceNames = ['Any', 'GWAS', 'ClinVar'];
+    this.availableSourceNames = ["Any", "GWAS", "ClinVar"];
     this.searchSourceItems = [];
     for (let i = 0; i < this.availableSourceNames.length; i++) {
-      this.searchSourceItems.push(<MenuItem value={i} key={i} primaryText={this.availableSourceNames[i]} />);
+      this.searchSourceItems.push(
+        <MenuItem
+          value={i}
+          key={i}
+          primaryText={this.availableSourceNames[i]}
+        />
+      );
     }
     this.setState({
-      searchSourceValue: 0,
+      searchSourceValue: 0
     });
     this.updateTraits(0);
   }
@@ -69,11 +81,11 @@ class GWASSelector extends Component {
     } else if (value === 2) {
       builder.filterSource(DATA_SOURCE_CLINVAR);
     }
-    builder.filterType('trait');
+    builder.filterType("trait");
     const infoQuery = builder.build();
-    this.api.getDistinctValues('info.description', infoQuery).then(data => {
+    this.api.getDistinctValues("info.description", infoQuery).then(data => {
       this.setState({
-        traits: data,
+        traits: data
       });
     });
   }
@@ -81,37 +93,37 @@ class GWASSelector extends Component {
   handleUpdateTitle(event) {
     this.setState({
       title: event.target.value,
-      fixTitle: true,
+      fixTitle: true
     });
   }
 
   handleUpdateTraitInput(searchText) {
     this.setState({
-      searchTrait: searchText,
+      searchTrait: searchText
     });
     if (!this.state.fixTitle) {
       this.setState({
-        title: searchText,
+        title: searchText
       });
     }
   }
 
   handleUpdateSearchSource(event, index, value) {
     this.setState({
-      searchSourceValue: value,
+      searchSourceValue: value
     });
     this.updateTraits(value);
   }
 
   handleUpdatePValue(event, value) {
     this.setState({
-      pvalue: value,
+      pvalue: value
     });
   }
 
   handleUpdateMaxNumber(event, value) {
     this.setState({
-      maxnumber: transform(value),
+      maxnumber: transform(value)
     });
   }
 
@@ -123,7 +135,7 @@ class GWASSelector extends Component {
     } else if (this.state.searchSourceValue === 2) {
       builder.filterSource(DATA_SOURCE_CLINVAR);
     }
-    builder.filterType('trait');
+    builder.filterType("trait");
     builder.searchText(this.state.searchTrait);
     const infoQuery = builder.build();
     builder.newEdgeQuery();
@@ -159,8 +171,9 @@ class GWASSelector extends Component {
           value={this.state.title}
           floatingLabelText="Track Title"
           onChange={this.handleUpdateTitle}
-          errorText={!this.state.title ? 'This field is required' : ''}
-        /><br /> <br />
+          errorText={!this.state.title ? "This field is required" : ""}
+        />
+        <br /> <br />
         <AutoComplete
           floatingLabelText="Trait"
           searchText={this.state.searchTrait}
@@ -169,16 +182,21 @@ class GWASSelector extends Component {
           hintText="Type anything"
           dataSource={this.state.traits}
           onUpdateInput={this.handleUpdateTraitInput}
-          errorText={!this.state.searchTrait ? 'This field is required' : ''}
-        /><br /> <br />
+          errorText={!this.state.searchTrait ? "This field is required" : ""}
+        />
+        <br /> <br />
         <SelectField
           value={this.state.searchSourceValue}
           floatingLabelText="Data Source"
           onChange={this.handleUpdateSearchSource}
         >
           {this.searchSourceItems}
-        </SelectField><br /> <br />
-        <div> {'P-Value < '} {this.state.pvalue} </div>
+        </SelectField>
+        <br /> <br />
+        <div>
+          {" "}
+          {"P-Value < "} {this.state.pvalue}{" "}
+        </div>
         <Slider
           min={0}
           max={0.1}
@@ -187,11 +205,14 @@ class GWASSelector extends Component {
           onChange={this.handleUpdatePValue}
           disabled={this.state.searchSourceValue === 2}
         />
-        <div> {'Max Number of Results: '} {this.state.maxnumber} </div>
+        <div>
+          {" "}
+          {"Max Number of Results: "} {this.state.maxnumber}{" "}
+        </div>
         <Slider
           min={logmin}
           max={logmax}
-          step={(logmax-logmin) / 100}
+          step={(logmax - logmin) / 100}
           value={reverse(this.state.maxnumber)}
           onChange={this.handleUpdateMaxNumber}
         />
@@ -200,7 +221,7 @@ class GWASSelector extends Component {
           primary={true}
           onClick={() => this.addQueryTrack()}
           disabled={!(this.state.searchTrait && this.state.title)}
-          style={{ position: 'absolute', bottom: '10px', width: '90%' }}
+          style={{ position: "absolute", bottom: "10px", width: "90%" }}
         />
       </div>
     );
@@ -209,7 +230,7 @@ class GWASSelector extends Component {
 
 GWASSelector.propTypes = {
   appModel: PropTypes.object,
-  viewModel: PropTypes.object,
+  viewModel: PropTypes.object
 };
 
 export default GWASSelector;

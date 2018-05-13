@@ -1,27 +1,26 @@
 // Dependencies
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { CHROMOSOME_NAMES } from '../../helpers/constants.js';
+import * as React from "react";
+import * as PropTypes from "prop-types";
+import { CHROMOSOME_NAMES } from "../../helpers/constants.js";
 import {
   Table,
   TableBody,
   TableHeader,
   TableHeaderColumn,
   TableRow,
-  TableRowColumn,
-} from 'material-ui/Table';
-import Paper from 'material-ui/Paper';
-import { Card, CardHeader, CardText } from 'material-ui/Card';
-import CircularProgress from 'material-ui/CircularProgress';
-import DataListItem from '../DataListItem/DataListItem.jsx';
-import ZoomToButton from '../ZoomToButton/ZoomToButton.jsx';
-import Util from '../../helpers/util.js';
+  TableRowColumn
+} from "material-ui/Table";
+import Paper from "material-ui/Paper";
+import { Card, CardHeader, CardText } from "material-ui/Card";
+import CircularProgress from "material-ui/CircularProgress";
+import DataListItem from "../DataListItem/DataListItem.jsx";
+import ZoomToButton from "../ZoomToButton/ZoomToButton.jsx";
+import Util from "../../helpers/util.js";
 
 // Styles
-import './EntityDetails.scss';
+import "./EntityDetails.scss";
 
-
-class EntityDetails extends Component {
+class EntityDetails extends React.Component {
   constructor(props) {
     super(props);
     if (props.appModel) {
@@ -30,7 +29,7 @@ class EntityDetails extends Component {
       this.api = this.appModel.api;
     }
     this.state = {
-      dataID : props.dataID,
+      dataID: props.dataID
     };
     this.loadDetailsData();
   }
@@ -38,7 +37,7 @@ class EntityDetails extends Component {
   static getDerivedStateFromProps(nextProps, prevState) {
     if (nextProps.dataID !== prevState.dataID) {
       return {
-        dataID : nextProps.dataID,
+        dataID: nextProps.dataID
       };
     }
     return null;
@@ -54,43 +53,66 @@ class EntityDetails extends Component {
     this.api.getDetails(this.state.dataID).then(detailsData => {
       this.setState({
         details: detailsData.details,
-        relations: detailsData.relations,
+        relations: detailsData.relations
       });
     });
   }
 
   handleClickRelation(relation) {
     const dataID = relation.id;
-    const elem = (<EntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={dataID} />);
+    const elem = (
+      <EntityDetails
+        viewModel={this.viewModel}
+        appModel={this.appModel}
+        dataID={dataID}
+      />
+    );
     this.viewModel.pushView(relation.title, dataID, elem);
   }
 
   render() {
-    if (!this.state.details) return (<div className="navigation-controller-loading"><CircularProgress size={80} thickness={5} /> </div>);
+    if (!this.state.details) {
+      return (
+        <div className="navigation-controller-loading">
+          <CircularProgress size={80} thickness={5} />{" "}
+        </div>
+      );
+    }
     const details = this.state.details;
     const viewModel = this.viewModel;
     // we ignore the relations with 'data not found' for now
-    const relations = this.state.relations.filter((r) => { return (r.description !== 'data not found'); });
+    const relations = this.state.relations.filter(r => {
+      return r.description !== "data not found";
+    });
     return (
       <div className="entity-details">
         <DetailsHeader details={details} viewModel={viewModel} />
         <br />
-        <Paper style={{ borderRadius: '10px', overflow: 'hidden' }}>
+        <Paper style={{ borderRadius: "10px", overflow: "hidden" }}>
           <DetailsTable details={details} />
         </Paper>
         <br />
-        <Card style={{ borderRadius: '10px', overflow: 'hidden', backgroundColor:'#EEEEEE' }} >
+        <Card
+          style={{
+            borderRadius: "10px",
+            overflow: "hidden",
+            backgroundColor: "#EEEEEE"
+          }}
+        >
           <CardHeader
             title="More Information"
             actAsExpander={true}
             showExpandableButton={true}
           />
-          <CardText expandable={true} style={{ padding: '0px' }} >
+          <CardText expandable={true} style={{ padding: "0px" }}>
             <AdditionInfoTable info={details.info} />
           </CardText>
         </Card>
         <br />
-        <RelationsSelector relations={relations} onClick={(relation) => this.handleClickRelation(relation)} />
+        <RelationsSelector
+          relations={relations}
+          onClick={relation => this.handleClickRelation(relation)}
+        />
       </div>
     );
   }
@@ -99,29 +121,47 @@ class EntityDetails extends Component {
 EntityDetails.propTypes = {
   dataID: PropTypes.string,
   appModel: PropTypes.object,
-  viewModel: PropTypes.object,
+  viewModel: PropTypes.object
 };
 
 function DetailsHeader(props) {
-  if (!props.details) return (<div />);
+  if (!props.details) {
+    return <div />;
+  }
   const details = props.details;
   const name = details.name;
-  let description = '';
+  let description = "";
   if (details.info.description) {
     description = unescape(details.info.description);
   }
-  
-  let zoomBtn = (<div />);
+
+  let zoomBtn = <div />;
 
   if (details.chromid) {
-    const absoluteStart = Util.chromosomeRelativeToUniversalBasePair(details.chromid, details.start);
-    const absoluteEnd = Util.chromosomeRelativeToUniversalBasePair(details.chromid, details.end);
-    zoomBtn = (<ZoomToButton viewModel={props.viewModel} start={absoluteStart} end={absoluteEnd} padding={0.2} />);    
+    const absoluteStart = Util.chromosomeRelativeToUniversalBasePair(
+      details.chromid,
+      details.start
+    );
+    const absoluteEnd = Util.chromosomeRelativeToUniversalBasePair(
+      details.chromid,
+      details.end
+    );
+    zoomBtn = (
+      <ZoomToButton
+        viewModel={props.viewModel}
+        start={absoluteStart}
+        end={absoluteEnd}
+        padding={0.2}
+      />
+    );
   }
 
   return (
     <div className="entity-header">
-      <div className="entity-name">{name}{zoomBtn}</div>
+      <div className="entity-name">
+        {name}
+        {zoomBtn}
+      </div>
       <div className="entity-desc">{description}</div>
     </div>
   );
@@ -129,24 +169,34 @@ function DetailsHeader(props) {
 
 DetailsHeader.propTypes = {
   details: PropTypes.object,
-  viewModel: PropTypes.object,
+  viewModel: PropTypes.object
 };
 
 function DetailsTable(props) {
-  if (!props.details) return (<div />);
+  if (!props.details) {
+    return <div />;
+  }
   const details = props.details;
   const detailItems = [];
   // convert chromid to location
   if (details.chromid) {
-    details.location = CHROMOSOME_NAMES[details.chromid-1];
+    details.location = CHROMOSOME_NAMES[details.chromid - 1];
   }
   // show available data
-  const viewKeys = ['type', 'assembly', 'location', 'start', 'end', 'length', 'source'];
+  const viewKeys = [
+    "type",
+    "assembly",
+    "location",
+    "start",
+    "end",
+    "length",
+    "source"
+  ];
   for (const k of viewKeys) {
     if (details[k]) {
       const valueStr = details[k].toString();
       detailItems.push(
-        <TableRow style={{ backgroundColor: '#FAFAFA' }} key={k}>
+        <TableRow style={{ backgroundColor: "#FAFAFA" }} key={k}>
           <TableRowColumn> {k} </TableRowColumn>
           <TableRowColumn> {valueStr} </TableRowColumn>
         </TableRow>
@@ -163,20 +213,22 @@ function DetailsTable(props) {
 }
 
 DetailsTable.propTypes = {
-  details: PropTypes.object,
+  details: PropTypes.object
 };
 
 function AdditionInfoTable(props) {
-  if (!props.info) return (<div />);
+  if (!props.info) {
+    return <div />;
+  }
   const info = props.info;
   const infoItems = [];
   for (const k of Object.keys(info)) {
     const valueStr = info[k].toString();
     infoItems.push(
-        <TableRow style={{ backgroundColor: '#EEEEEE' }} key={k}>
-          <TableRowColumn> {k} </TableRowColumn>
-          <TableRowColumn> {valueStr} </TableRowColumn>
-        </TableRow>
+      <TableRow style={{ backgroundColor: "#EEEEEE" }} key={k}>
+        <TableRowColumn> {k} </TableRowColumn>
+        <TableRowColumn> {valueStr} </TableRowColumn>
+      </TableRow>
     );
   }
   return (
@@ -189,26 +241,30 @@ function AdditionInfoTable(props) {
 }
 
 AdditionInfoTable.propTypes = {
-  info: PropTypes.object,
+  info: PropTypes.object
 };
 
 function RelationsSelector(props) {
-  if (!props.relations) return (<div />);
+  if (!props.relations) {
+    return <div />;
+  }
   const relationButtons = [];
   for (const relation of props.relations) {
-    relationButtons.push(<DataListItem
-      title={relation.title}
-      description={relation.description}
-      onClick={() => props.onClick(relation)}
-      key={relation.id}
-    />);
+    relationButtons.push(
+      <DataListItem
+        title={relation.title}
+        description={relation.description}
+        onClick={() => props.onClick(relation)}
+        key={relation.id}
+      />
+    );
   }
-  return (<div className="relation-selector">{ relationButtons }</div>);
+  return <div className="relation-selector">{relationButtons}</div>;
 }
 
 RelationsSelector.propTypes = {
   relations: PropTypes.array,
-  onClick: PropTypes.func,
+  onClick: PropTypes.func
 };
 
 export default EntityDetails;

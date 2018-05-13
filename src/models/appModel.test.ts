@@ -1,4 +1,4 @@
-import { default as AppModel, APP_EVENT_LOADING_STATE_CHANGED } from './appModel';
+import { default as AppModel, AppEvent } from './appModel';
 import * as sinon from 'sinon';
 
 describe('AppModel', () => {
@@ -11,8 +11,8 @@ describe('AppModel', () => {
 
         test('loading state changed', () => {
             const cb = sinon.spy();
-            model.addListener(cb, APP_EVENT_LOADING_STATE_CHANGED);
-            model.notifyListeners(APP_EVENT_LOADING_STATE_CHANGED, true);
+            model.addListener(cb, AppEvent.LoadingStateChanged);
+            model.notifyListeners(AppEvent.LoadingStateChanged, true);
             expect(cb.callCount).toBe(1);
         });
     });

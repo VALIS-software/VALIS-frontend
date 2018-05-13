@@ -1,6 +1,6 @@
 // Dependencies
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import * as React from 'react';
+import * as PropTypes from 'prop-types';
 import TextField from 'material-ui/TextField';
 import AutoComplete from 'material-ui/AutoComplete';
 import Slider from 'material-ui/Slider';
@@ -26,7 +26,7 @@ function reverse(value) {
 }
 
 
-class GenomeSelector extends Component {
+class GenomeSelector extends React.Component {
   constructor(props) {
     super(props);
     this.handleUpdateTitle = this.handleUpdateTitle.bind(this);
@@ -42,7 +42,7 @@ class GenomeSelector extends Component {
       title: '',
       genomeTypeValue: 0,
       chromoNameValue: 0,
-      minLength : 10,
+      minLength: 10,
       maxnumber: 10000,
     };
   }
@@ -123,7 +123,7 @@ class GenomeSelector extends Component {
     }
     const genomeType = this.availableTypes[this.state.genomeTypeValue];
     builder.filterType(genomeType);
-    builder.filterLength({ '>' :this.state.minLength });
+    builder.filterLength({ '>': this.state.minLength });
     builder.setLimit(this.state.maxnumber);
     const genomeQuery = builder.build();
     return genomeQuery;
@@ -171,7 +171,7 @@ class GenomeSelector extends Component {
         <Slider
           min={logmin}
           max={logmax}
-          step={(logmax-logmin) / 100}
+          step={(logmax - logmin) / 100}
           value={reverse(this.state.maxnumber)}
           onChange={this.handleUpdateMaxNumber}
         />
