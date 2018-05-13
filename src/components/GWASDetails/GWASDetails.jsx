@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import { ASSOCIATION_TYPE } from '../../helpers/constants.js';
 import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
+import SNPDetails from '../SNPDetails/SNPDetails.jsx';
 import Util from '../../helpers/util.js';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import faExternalLinkSquareAlt from '@fortawesome/fontawesome-free-solid/faExternalLinkSquareAlt';
@@ -68,6 +69,9 @@ class GWASDetails extends Component {
     const openIcon = (<FontAwesomeIcon icon={faExternalLinkSquareAlt} />);
     const readElem = (<span> Read Study {openIcon} </span>);
 
+    const snpId = this.state.details.from_id;
+    const snpView = (<SNPDetails viewModel={this.props.viewModel} appModel={this.props.appModel} snpId={snpId} />);
+
     return (<div className="gwas-details">
       
       <div className="entity-header">
@@ -92,6 +96,9 @@ class GWASDetails extends Component {
             </p>
           </div>
         </div>
+      </Collapsible>
+      <Collapsible title="SNP Info" open={false}>
+        {snpView}
       </Collapsible>
     </div>);
   }

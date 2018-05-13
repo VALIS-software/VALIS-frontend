@@ -15,6 +15,7 @@ import { Card, CardHeader, CardText } from 'material-ui/Card';
 import CircularProgress from 'material-ui/CircularProgress';
 import DataListItem from '../DataListItem/DataListItem.jsx';
 import SNPDetails from '../SNPDetails/SNPDetails.jsx';
+import GWASDetails from '../GWASDetails/GWASDetails.jsx';
 import ZoomToButton from '../ZoomToButton/ZoomToButton.jsx';
 import Util from '../../helpers/util.js';
 
@@ -65,6 +66,8 @@ class EntityDetails extends Component {
     let elem = null;
     if (Util.isType(relation, ENTITY_TYPE.SNP)) {
       elem = (<SNPDetails viewModel={this.viewModel} appModel={this.appModel} snpId={dataID} />);
+    } else if (relation.title === 'GWAS Association') { // TODO: we need to provide better data to determine relation types
+      elem = (<GWASDetails viewModel={this.viewModel} appModel={this.appModel} assocId={dataID} />);
     } else {
       elem = (<EntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={dataID} />);
     } 

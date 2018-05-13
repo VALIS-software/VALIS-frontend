@@ -252,11 +252,12 @@ class SNPDetails extends Component {
       eqtl = (<Collapsible title={title} open={false}>{eqtls}</Collapsible>);
     }
 
+    const header = (<div className="entity-header">
+      <div className="entity-name">{name}{zoomBtn}</div>
+    </div>);
 
     return (<div className="snp-details">
-      <div className="entity-header">
-        <div className="entity-name">{name}{zoomBtn}</div>
-      </div>
+      {header}
       <Collapsible title="Basic Info" open={true}>
         <div className="snp-info-wrapper">
           <div className="section">
