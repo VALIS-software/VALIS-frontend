@@ -29,17 +29,7 @@ class GWASDetails extends Component {
     prevState.currentAssocId = nextProps.assocId;
     return prevState;
   }
-
-  loadRelationDetails() {
-    const all = this.state.relations.map(r => {
-      return this.api.getDetails(r.id);
-    });
-
-    Promise.all(all).then(d => {
-      console.log(d);
-    });
-  }
-
+  
   loadGwasDetails() {
     const assocId = this.state.currentAssocId;
     this.api.getDetails(this.state.currentAssocId).then(detailsData => {
@@ -48,7 +38,6 @@ class GWASDetails extends Component {
         details: detailsData.details,
         relations: detailsData.relations,
       });
-      this.loadRelationDetails();
     }, err => {
       console.log(err);
     });
