@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import * as PropTypes from 'prop-types';
 import './Collapsible.scss';
 
 class Collapsible extends Component {
@@ -11,14 +11,18 @@ class Collapsible extends Component {
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
-    if (!prevState) prevState = {};
+    if (!prevState) {
+      prevState = {};
+    }
     prevState.open = nextProps.open;
     return prevState;
   }
 
   render() {
     const toggle = () => {
-      if (this.props.disabled) return;
+      if (this.props.disabled) {
+        return;
+      }
       this.setState({
         open: !this.state.open,
       });
@@ -42,7 +46,6 @@ class Collapsible extends Component {
     </div>);
   }
 }
-
 
 Collapsible.propTypes = {
   open: PropTypes.bool,

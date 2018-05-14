@@ -1,11 +1,11 @@
-import React from 'react';
+import React from "react";
 
 // import renderers
-import GraphTrackRenderer from '../../renderers/GraphTrackRenderer.jsx';
-import vertexShader from './project.vert';
-import fragShader from './render.frag';
+import GraphTrackRenderer from "../../renderers/GraphTrackRenderer.jsx";
+import * as vertexShader from "./project.vert";
+import * as fragShader from "./render.frag";
 
-import Util from '../../helpers/util.js';
+import Util from "../../helpers/util.js";
 
 class OverlayView {
   constructor(guid) {
@@ -18,7 +18,7 @@ class OverlayView {
 
   static initializeShaders(context) {
     return {
-      graphShader: context.program(vertexShader, fragShader),
+      graphShader: context.program(vertexShader, fragShader)
     };
   }
 
@@ -43,7 +43,13 @@ class OverlayView {
   }
 
   addRegion(track, trackHeightPx, yOffset, windowState, renderResult) {
-    this.currentRegions.push({ track, trackHeightPx, yOffset, windowState, renderResult });
+    this.currentRegions.push({
+      track,
+      trackHeightPx,
+      yOffset,
+      windowState,
+      renderResult
+    });
   }
 
   get hoverEnabled() {
@@ -64,12 +70,20 @@ class OverlayView {
           annotation1Matches.push([region.renderResult, region.windowState]);
         }
         if (region.track.hasAnnotation(this.graphTrack.annotationId2)) {
-          annotation2Matches.push([region.renderResult, region.windowState]); 
+          annotation2Matches.push([region.renderResult, region.windowState]);
         }
       });
       annotation1Matches.forEach(match1 => {
         annotation2Matches.forEach(match2 => {
-          this.graphRenderer.render(this.graphTrack, match1[0], match2[0], context, shaders, match1[1], match2[1]);
+          this.graphRenderer.render(
+            this.graphTrack,
+            match1[0],
+            match2[0],
+            context,
+            shaders,
+            match1[1],
+            match2[1]
+          );
         });
       });
     }

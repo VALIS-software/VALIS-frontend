@@ -1,41 +1,37 @@
 // Dependencies
-import React from 'react';
-import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import LinearProgress from 'material-ui/LinearProgress';
+import * as React from "react";
+import MuiThemeProvider from "material-ui/styles/MuiThemeProvider";
+import LinearProgress from "material-ui/LinearProgress";
 
 // Components
-import Header from '../Header/Header.jsx';
-import EntityDetails from '../EntityDetails/EntityDetails.jsx';
-import TrackViewSettings from '../TrackViewSettings/TrackViewSettings.jsx';
-import MultiTrackViewer from '../MultiTrackViewer/MultiTrackViewer.jsx';
-import NavigationController from '../NavigationController/NavigationController.jsx';
-import SNPDetails from '../SNPDetails/SNPDetails.jsx';
+import Header from "../Header/Header.jsx";
+import EntityDetails from "../EntityDetails/EntityDetails";
+import TrackViewSettings from "../TrackViewSettings/TrackViewSettings.jsx";
+import MultiTrackViewer from "../MultiTrackViewer/MultiTrackViewer";
+import NavigationController from "../NavigationController/NavigationController.jsx";
 
-import AppModel, {
-  APP_EVENT_LOADING_STATE_CHANGED,
-} from '../../models/appModel.js';
+import AppModel, { AppEvent } from "../../models/appModel";
 
 import ViewModel, {
   VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS,
   VIEW_EVENT_TRACK_ELEMENT_CLICKED,
-  VIEW_EVENT_DATA_SET_SELECTED,
+  // VIEW_EVENT_DATA_SET_SELECTED,
   VIEW_EVENT_PUSH_VIEW,
   VIEW_EVENT_POP_VIEW,
   VIEW_EVENT_CLOSE_VIEW,
+} from "../../models/viewModel.js";
 
-} from '../../models/viewModel.js';
-
-import QueryBuilder from '../../models/query.js';
+import QueryBuilder from "../../models/query.js";
 
 // Styles
-import './App.scss';
+import "./App.scss";
 
-const _ = require('underscore');
+class App extends React.PureComponent<any, any> {
 
-class App extends React.Component {
+  private viewModel: any;
+  private appModel: AppModel;
 
-  clickTrackElement = (event) => {
+  clickTrackElement = (event: any) => {
     if (event.data !== null) {
       if (event.data.aggregation === true) {
         // if the annotation is an aggregation then zoom
@@ -64,7 +60,7 @@ class App extends React.Component {
     });
   }
 
-  pushView = (view) => {
+  pushView = (view: any) => {
     const viewsCopy = this.state ? this.state.views.slice() : [];
     viewsCopy.push(view.data);
     this.setState({
@@ -79,14 +75,16 @@ class App extends React.Component {
   }
 
   currentView() {
-    if (!this.state || this.state.views.length === 0) return null;
+    if (!this.state || this.state.views.length === 0) {
+      return null;
+    }
     return this.state.views[this.state.views.length - 1];
   }
 
-  showTrackSettings(event) {
+  showTrackSettings(event: any) {
     if (event.data !== null) {
       if (this.currentView() && event.data === this.currentView().info) {
-        this.appModel.popView();
+        this.viewModel.popView();
       } else {
         const elem = (<TrackViewSettings guid={event.data} viewModel={this.viewModel} model={this.appModel} />);
         this.viewModel.pushView('Track Settings', event.data, elem);
@@ -94,7 +92,7 @@ class App extends React.Component {
     }
   }
 
-  updateLoadingState = (event) => {
+  updateLoadingState = (event: any) => {
     this.setState({
       loading: event.data,
     });
@@ -118,25 +116,27 @@ class App extends React.Component {
     const query = builder.build();
     this.appModel.addAnnotationTrack('GRCh38 Genes', query);
 
-    this.appModel.addListener(this.updateLoadingState, APP_EVENT_LOADING_STATE_CHANGED);
+    this.appModel.addListener(this.updateLoadingState, AppEvent.LoadingStateChanged);
     this.viewModel.addListener(this.clickTrackElement, VIEW_EVENT_TRACK_ELEMENT_CLICKED);
     this.viewModel.addListener(this.showTrackSettings, VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS);
-    this.viewModel.addListener(this.dataSetSelected, VIEW_EVENT_DATA_SET_SELECTED);
+    // this.viewModel.addListener(this.dataSetSelected, VIEW_EVENT_DATA_SET_SELECTED); //! method doesn't exist
     this.viewModel.addListener(this.popView, VIEW_EVENT_POP_VIEW);
     this.viewModel.addListener(this.pushView, VIEW_EVENT_PUSH_VIEW);
     this.viewModel.addListener(this.closeView, VIEW_EVENT_CLOSE_VIEW);
   }
 
   render() {
-    if (!this.state) return (<div />);
+    if (!this.state) {
+      return (<div />);
+    }
     const color = this.state.loading ? '' : 'transparent';
-    const progress =  (<LinearProgress color={color} />);
+    const progress = (<LinearProgress color={color} />);
     const views = this.state.views;
 
     return (
       <MuiThemeProvider>
         <div className="site-wrapper">
-          <Header viewModel={this.viewModel} model={this.appModel} viewModel={this.viewModel} />
+          <Header viewModel={this.viewModel} model={this.appModel} />
           {progress}
           <MultiTrackViewer model={this.appModel} viewModel={this.viewModel} />
           <NavigationController viewModel={this.viewModel} views={views} />

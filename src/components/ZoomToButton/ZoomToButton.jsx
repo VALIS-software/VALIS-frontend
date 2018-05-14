@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import * as React from 'react';
+import * as PropTypes from 'prop-types';
 import ZoomIn from 'material-ui/svg-icons/action/zoom-in';
 import IconButton from 'material-ui/IconButton';
 import RaisedButton from 'material-ui/RaisedButton';
@@ -7,7 +7,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 // Styles
 import './ZoomToButton.scss';
 
-class ZoomToButton extends Component {
+class ZoomToButton extends React.Component {
 
   zoom = () => {
     const { start, end, padding } = this.props;
@@ -27,7 +27,7 @@ ZoomToButton.propTypes = {
   start: PropTypes.number,
   end: PropTypes.number,
   padding: PropTypes.number,
-  
+
 };
 
 export default ZoomToButton;

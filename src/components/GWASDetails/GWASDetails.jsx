@@ -1,7 +1,7 @@
 // Dependencies
 import ReactDOM from 'react-dom';
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import * as React from 'react';
+import * as PropTypes from 'prop-types';
 import { ASSOCIATION_TYPE } from '../../helpers/constants.js';
 import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
@@ -9,13 +9,13 @@ import SNPDetails from '../SNPDetails/SNPDetails.jsx';
 import Util from '../../helpers/util.js';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import faExternalLinkSquareAlt from '@fortawesome/fontawesome-free-solid/faExternalLinkSquareAlt';
- 
+
 
 // Styles
 import './GWASDetails.scss';
 import '../Shared/Shared.scss';
 
-class GWASDetails extends Component {
+class GWASDetails extends React.Component {
   constructor(props) {
     super(props);
     this.appModel = props.appModel;
@@ -29,7 +29,7 @@ class GWASDetails extends Component {
     prevState.currentAssocId = nextProps.assocId;
     return prevState;
   }
-  
+
   loadGwasDetails() {
     const assocId = this.state.currentAssocId;
     this.api.getDetails(this.state.currentAssocId).then(detailsData => {
@@ -62,7 +62,7 @@ class GWASDetails extends Component {
     const snpView = (<SNPDetails viewModel={this.props.viewModel} appModel={this.props.appModel} snpId={snpId} />);
 
     return (<div className="gwas-details">
-      
+
       <div className="entity-header">
         <div className="entity-name">{info['DISEASE/TRAIT']}</div>
       </div>

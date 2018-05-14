@@ -1,10 +1,10 @@
 // Dependencies
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import * as React from 'react';
+import * as PropTypes from 'prop-types';
 import { ASSOCIATION_TYPE } from '../../helpers/constants.js';
 import ZoomToButton from '../ZoomToButton/ZoomToButton.jsx';
 import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
-import EntityDetails from '../EntityDetails/EntityDetails.jsx';
+import EntityDetails from '../EntityDetails/EntityDetails';
 import GWASDetails from '../GWASDetails/GWASDetails.jsx';
 import QueryBuilder, { QUERY_TYPE_INFO } from '../../models/query.js';
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
@@ -35,12 +35,12 @@ function FrequencyBarChart(props) {
     };
     const label = (100.0 * row.value).toFixed(1) + '%';
     return (<tr>
-      <td className="base-pair-label"> { row.key }</td>
+      <td className="base-pair-label"> {row.key}</td>
       <td className="bar">
         <div style={widthStyle} className={'bar-elem ' + row.key} />
       </td>
-      <td className="label">{ label }</td>
-    </tr>); 
+      <td className="label">{label}</td>
+    </tr>);
   });
   return (<table className="frequency-chart">{rows}</table>);
 }
@@ -54,7 +54,7 @@ function GeneLink(props) {
     if (props.geneId) {
       const geneId = `Ggeneid_${props.geneId}`;
       const view = (<EntityDetails dataID={geneId} viewModel={props.viewModel} appModel={props.appModel} />);
-      props.viewModel.pushView(props.geneName, props.geneId, view);  
+      props.viewModel.pushView(props.geneName, props.geneId, view);
     } else {
       const builder = new QueryBuilder();
       builder.newGenomeQuery();
@@ -62,7 +62,7 @@ function GeneLink(props) {
       builder.filterName(props.geneName);
       builder.setLimit(1);
       const query = builder.build();
-      const view = (<SearchResultsView text={props.geneName} query={query} viewModel={props.viewModel}  appModel={props.appModel} />);
+      const view = (<SearchResultsView text={props.geneName} query={query} viewModel={props.viewModel} appModel={props.appModel} />);
       props.viewModel.pushView('Search Results', query, view);
     }
   };
@@ -76,7 +76,7 @@ GeneLink.propTypes = {
   appModel: PropTypes.object,
 };
 
-class SNPDetails extends Component {
+class SNPDetails extends React.Component {
   constructor(props) {
     super(props);
     this.appModel = props.appModel;
@@ -111,7 +111,7 @@ class SNPDetails extends Component {
           ret.journal = details['JOURNAL'];
           ret.date = details['DATE'];
           ret.pvalue = details['p-value'];
-          ret.link = details['LINK'];          
+          ret.link = details['LINK'];
         }
         return ret;
       });
@@ -151,7 +151,7 @@ class SNPDetails extends Component {
     if (details.contig) {
       const absoluteStart = details.start;
       const absoluteEnd = details.end;
-      zoomBtn = (<ZoomToButton viewModel={this.props.viewModel} start={absoluteStart} end={absoluteEnd} padding={0.2} />);    
+      zoomBtn = (<ZoomToButton viewModel={this.props.viewModel} start={absoluteStart} end={absoluteEnd} padding={0.2} />);
     }
 
     const chrName = details.contig;
@@ -164,9 +164,9 @@ class SNPDetails extends Component {
     if (details.info.mapped_gene) {
       let geneId = null;
       let geneName = details.info.mapped_gene;
-      
+
       if (details.info.GENEINFO) {
-        geneId = details.info.GENEINFO.split(':')[1];  
+        geneId = details.info.GENEINFO.split(':')[1];
       } else if (geneName.indexOf('LOC') > 0) {
         geneName = geneName.slice(geneName.indexOf('LOC'));
       } else if (geneName.indexOf(' - ') > 0) {
@@ -191,12 +191,12 @@ class SNPDetails extends Component {
       if (freq) {
         const percentages = freq.split(',').map(d => parseFloat(d));
         const data = [
-          { key : ref, value: percentages[0] },
+          { key: ref, value: percentages[0] },
         ];
         let i = 1;
         alt.split(',').forEach(letter => {
           const v = isNaN(percentages[i]) ? 0.0 : percentages[i];
-          data.push({ key : letter, value: v });
+          data.push({ key: letter, value: v });
           i++;
         });
         variantFreqChart = (<FrequencyBarChart data={data} />);
@@ -219,7 +219,7 @@ class SNPDetails extends Component {
       const openLink = () => {
         window.open(link[1], '_blank');
       };
-      return (<div onClick={openLink}className="row">{link[0]}</div>);
+      return (<div onClick={openLink} className="row">{link[0]}</div>);
     });
 
 
@@ -229,9 +229,9 @@ class SNPDetails extends Component {
       const studies = this.state.gwas.map(d => {
         const openGwas = () => {
           const view = (<GWASDetails assocId={d.id} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
-          this.props.viewModel.pushView('Study Details', d.id, view);  
+          this.props.viewModel.pushView('Study Details', d.id, view);
         };
-        return (<div onClick={openGwas} className="row">{d.disease}</div>); 
+        return (<div onClick={openGwas} className="row">{d.disease}</div>);
       });
       const title = `GWAS Associations (${studies.length})`;
       gwas = (<Collapsible title={title} open={false}>{studies}</Collapsible>);
@@ -244,9 +244,9 @@ class SNPDetails extends Component {
       const eqtls = this.state.eqtl.map(d => {
         const openEqtl = () => {
           const view = (<EntityDetails dataID={d.id} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
-          this.props.viewModel.pushView('Loci Details', d.id, view);  
+          this.props.viewModel.pushView('Loci Details', d.id, view);
         };
-        return (<div onClick={openEqtl} className="row">{d.description}</div>); 
+        return (<div onClick={openEqtl} className="row">{d.description}</div>);
       });
       const title = `Quantitative Trait Loci (${eqtls.length})`;
       eqtl = (<Collapsible title={title} open={false}>{eqtls}</Collapsible>);

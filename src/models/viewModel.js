@@ -1,23 +1,21 @@
+import EventCreator from "./eventCreator.js";
+import Util from "../helpers/util.js";
+import { GENOME_LENGTH, MAX_BASE_PAIR_WIDTH } from "../helpers/constants.js";
 
-import EventCreator from './eventCreator.js';
-import Util from '../helpers/util.js';
-import { GENOME_LENGTH, MAX_BASE_PAIR_WIDTH } from '../helpers/constants.js';
+const _ = require("underscore");
 
-const _ = require('underscore');
+const VIEW_EVENT_STATE_CHANGED = "view_event_state_changed";
+const VIEW_EVENT_CLICK = "view_event_click";
+const VIEW_EVENT_SELECTION = "view_event_selection";
+const VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS = "EDIT_TRACK_VIEW";
+const VIEW_EVENT_TRACK_ELEMENT_CLICKED = "TRACK_ELEMENT_CLICKED";
+const VIEW_EVENT_ADD_DATASET_BROWSER = "ADD_DATASET_BROWSER";
+const VIEW_EVENT_DATA_SET_SELECTED = "DATA_SET_SELECTED";
+const VIEW_EVENT_PUSH_VIEW = "PUSH_VIEW";
+const VIEW_EVENT_POP_VIEW = "POP_VIEW";
+const VIEW_EVENT_CLOSE_VIEW = "CLOSE_VIEW";
 
-const VIEW_EVENT_STATE_CHANGED = 'view_event_state_changed';
-const VIEW_EVENT_CLICK = 'view_event_click';
-const VIEW_EVENT_SELECTION = 'view_event_selection';
-const VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS = 'EDIT_TRACK_VIEW';
-const VIEW_EVENT_TRACK_ELEMENT_CLICKED = 'TRACK_ELEMENT_CLICKED';
-const VIEW_EVENT_ADD_DATASET_BROWSER = 'ADD_DATASET_BROWSER';
-const VIEW_EVENT_DATA_SET_SELECTED = 'DATA_SET_SELECTED';
-const VIEW_EVENT_PUSH_VIEW = 'PUSH_VIEW';
-const VIEW_EVENT_POP_VIEW = 'POP_VIEW';
-const VIEW_EVENT_CLOSE_VIEW = 'CLOSE_VIEW';
-
-
-export { 
+export {
   VIEW_EVENT_STATE_CHANGED,
   VIEW_EVENT_CLICK,
   VIEW_EVENT_SELECTION,
@@ -26,14 +24,14 @@ export {
   VIEW_EVENT_DATA_SET_SELECTED,
   VIEW_EVENT_PUSH_VIEW,
   VIEW_EVENT_POP_VIEW,
-  VIEW_EVENT_CLOSE_VIEW,
+  VIEW_EVENT_CLOSE_VIEW
 };
 
 class ViewModel extends EventCreator {
   constructor() {
     super();
     this.basePairsPerPixel = 1;
-    this.windowSize = [0, 0]; 
+    this.windowSize = [0, 0];
     this.startBasePair = 0;
     this.trackOffset = 0.0;
     this.lastDragCoord = null;
@@ -44,7 +42,7 @@ class ViewModel extends EventCreator {
     this.viewStateHistory = [];
     this.historyOffset = 0;
     this.domElem = null;
-    
+
     this.handleKeydown = this.handleKeydown.bind(this);
     this.handleKeyup = this.handleKeyup.bind(this);
     this.handleMouseMove = this.handleMouseMove.bind(this);
@@ -62,32 +60,32 @@ class ViewModel extends EventCreator {
 
   bindListeners(domElem) {
     this.domElem = domElem;
-    document.addEventListener('keydown', this.handleKeydown);
-    document.addEventListener('keyup', this.handleKeyup);
-    domElem.addEventListener('wheel', this.handleMouse);
+    document.addEventListener("keydown", this.handleKeydown);
+    document.addEventListener("keyup", this.handleKeyup);
+    domElem.addEventListener("wheel", this.handleMouse);
     // continue to capture mouse movement when the mouse leaves the browser window
-    window.addEventListener('mousemove', this.handleMouseMove);
-    domElem.addEventListener('mousedown', this.handleMouseDown);
+    window.addEventListener("mousemove", this.handleMouseMove);
+    domElem.addEventListener("mousedown", this.handleMouseDown);
     // capture mouse-up events on the window so that drag operations are ended no matter where the mouse is at the time (even outside the window)
-    window.addEventListener('mouseup', this.handleMouseUp);
-    domElem.addEventListener('dblclick', this.handleDoubleClick);
+    window.addEventListener("mouseup", this.handleMouseUp);
+    domElem.addEventListener("dblclick", this.handleDoubleClick);
   }
 
   removeListeners(domElem) {
     this.domElem = null;
-    document.removeEventListener('keydown', this.handleKeydown);
-    document.removeEventListener('keyup', this.handleKeyup);
-    domElem.removeEventListener('wheel', this.handleMouse);
-    window.removeEventListener('mousemove', this.handleMouseMove);
-    domElem.removeEventListener('mousedown', this.handleMouseDown);
-    window.removeEventListener('mouseup', this.handleMouseUp);
-    domElem.removeEventListener('dblclick', this.handleDoubleClick);
+    document.removeEventListener("keydown", this.handleKeydown);
+    document.removeEventListener("keyup", this.handleKeyup);
+    domElem.removeEventListener("wheel", this.handleMouse);
+    window.removeEventListener("mousemove", this.handleMouseMove);
+    domElem.removeEventListener("mousedown", this.handleMouseDown);
+    window.removeEventListener("mouseup", this.handleMouseUp);
+    domElem.removeEventListener("dblclick", this.handleDoubleClick);
   }
 
-  notifyViewStateChange(saveHistory=false) {
+  notifyViewStateChange(saveHistory = false) {
     const currentViewState = this.getViewState();
     const eventData = {
-      currentViewState: currentViewState,
+      currentViewState: currentViewState
     };
     this.notifyListeners(VIEW_EVENT_STATE_CHANGED, eventData);
     if (saveHistory) {
@@ -115,7 +113,11 @@ class ViewModel extends EventCreator {
   }
 
   pushView(title, info, elem) {
-    this.notifyListeners(VIEW_EVENT_PUSH_VIEW, { title: title, info: info, view: elem });
+    this.notifyListeners(VIEW_EVENT_PUSH_VIEW, {
+      title: title,
+      info: info,
+      view: elem
+    });
   }
 
   popView() {
@@ -139,7 +141,10 @@ class ViewModel extends EventCreator {
   }
 
   back() {
-    this.historyOffset = Math.max(-this.viewStateHistory.length, this.historyOffset - 1);
+    this.historyOffset = Math.max(
+      -this.viewStateHistory.length,
+      this.historyOffset - 1
+    );
     this.loadViewHistory();
   }
 
@@ -149,16 +154,23 @@ class ViewModel extends EventCreator {
   }
 
   getViewState() {
-    if (!this.windowSize) return {};
+    if (!this.windowSize) {
+      return {};
+    }
 
     let x = null;
     let y = null;
     const windowHeight = this.windowSize[1];
     if (this.lastDragCoord) {
-      x = Util.basePairForScreenX(this.lastDragCoord[0], this.startBasePair, this.basePairsPerPixel, this.windowSize);  
+      x = Util.basePairForScreenX(
+        this.lastDragCoord[0],
+        this.startBasePair,
+        this.basePairsPerPixel,
+        this.windowSize
+      );
       y = this.lastDragCoord[1] / windowHeight;
     }
-    
+
     const viewState = {
       windowSize: this.windowSize,
       basePairsPerPixel: this.basePairsPerPixel,
@@ -172,14 +184,14 @@ class ViewModel extends EventCreator {
       selectEnabled: this.selectEnabled,
       zoomEnabled: this.zoomEnabled,
       lastDragCoord: this.lastDragCoord,
-      startDragCoord: this.startDragCoord,
+      startDragCoord: this.startDragCoord
     };
 
     if (this.selectEnabled) {
       if (this.startDragCoord && this.lastDragCoord) {
         viewState.selection = {
           min: this.startDragCoord,
-          max: this.lastDragCoord,
+          max: this.lastDragCoord
         };
       }
     }
@@ -193,12 +205,14 @@ class ViewModel extends EventCreator {
   }
 
   setViewRegionUsingRange(startBasePair, endBasePair) {
-    const basePairsPerPixel = (endBasePair - startBasePair) / this.windowSize[0];
+    const basePairsPerPixel =
+      (endBasePair - startBasePair) / this.windowSize[0];
     this.setViewRegion(startBasePair, basePairsPerPixel);
   }
 
   centerOnBasePair(basePair) {
-    this.startBasePair = basePair - this.basePairsPerPixel * this.windowSize[0] / 2.0;
+    this.startBasePair =
+      basePair - this.basePairsPerPixel * this.windowSize[0] / 2.0;
     this.notifyViewStateChange();
   }
 
@@ -212,7 +226,10 @@ class ViewModel extends EventCreator {
       e.preventDefault();
       if (this.dragEnabled) {
         if (Math.abs(e.movementY) > 0 && !this.selectEnabled) {
-          const delta = Math.min(0.0, this.trackOffset + e.movementY / this.windowSize[1]);
+          const delta = Math.min(
+            0.0,
+            this.trackOffset + e.movementY / this.windowSize[1]
+          );
           this.trackOffset = delta;
         }
 
@@ -237,22 +254,28 @@ class ViewModel extends EventCreator {
     e.preventDefault();
     if (this.dragEnabled) {
       return;
-    } else if (this.basePairsPerPixel <= GENOME_LENGTH / (this.windowSize[0])) {
+    } else if (this.basePairsPerPixel <= GENOME_LENGTH / this.windowSize[0]) {
       // x pan sets the base pair!
       if (Math.abs(e.deltaX) > 0) {
-        const delta = (e.deltaX * this.basePairsPerPixel);
+        const delta = e.deltaX * this.basePairsPerPixel;
         this.startBasePair += delta;
         this.panning = true;
       } else {
         this.panning = false;
         if (Math.abs(e.deltaY) > 0) {
-          const lastBp = Util.basePairForScreenX(e.offsetX, 
-                                                  this.startBasePair, 
-                                                  this.basePairsPerPixel, 
-                                                  this.windowSize);
-          
-          let newBpPerPixel = this.basePairsPerPixel / (1.0 - (e.deltaY / 1000.0));  
-          newBpPerPixel = Math.min(GENOME_LENGTH / (this.windowSize[0]), newBpPerPixel);
+          const lastBp = Util.basePairForScreenX(
+            e.offsetX,
+            this.startBasePair,
+            this.basePairsPerPixel,
+            this.windowSize
+          );
+
+          let newBpPerPixel =
+            this.basePairsPerPixel / (1.0 - e.deltaY / 1000.0);
+          newBpPerPixel = Math.min(
+            GENOME_LENGTH / this.windowSize[0],
+            newBpPerPixel
+          );
           newBpPerPixel = Math.max(1.0 / MAX_BASE_PAIR_WIDTH, newBpPerPixel);
           // compute the new startBasePair so that the cursor remains
           // centered on the same base pair after scaling:
@@ -287,9 +310,21 @@ class ViewModel extends EventCreator {
         const windowSize = this.windowSize;
         const start = Math.min(this.startDragCoord[0], this.lastDragCoord[0]);
         const end = Math.max(this.startDragCoord[0], this.lastDragCoord[0]);
-        const startBp = Util.basePairForScreenX(start, this.startBasePair, this.basePairsPerPixel, windowSize);
-        const endBp = Util.basePairForScreenX(end, this.startBasePair, this.basePairsPerPixel, windowSize);
-        if (startBp !== endBp) this.notifyListeners(VIEW_EVENT_SELECTION, { startBp, endBp });
+        const startBp = Util.basePairForScreenX(
+          start,
+          this.startBasePair,
+          this.basePairsPerPixel,
+          windowSize
+        );
+        const endBp = Util.basePairForScreenX(
+          end,
+          this.startBasePair,
+          this.basePairsPerPixel,
+          windowSize
+        );
+        if (startBp !== endBp) {
+          this.notifyListeners(VIEW_EVENT_SELECTION, { startBp, endBp });
+        }
       } else {
         this.notifyListeners(VIEW_EVENT_CLICK, this.lastDragCoord);
       }
@@ -303,29 +338,39 @@ class ViewModel extends EventCreator {
   handleDoubleClick(evt) {
     const coord = [evt.offsetX, evt.offsetY];
     const windowSize = this.windowSize;
-    const hoveredBasePair = Util.basePairForScreenX(coord[0], this.startBasePair, this.basePairsPerPixel, windowSize);
+    const hoveredBasePair = Util.basePairForScreenX(
+      coord[0],
+      this.startBasePair,
+      this.basePairsPerPixel,
+      windowSize
+    );
     const pixel = coord[0];
-    Util.animate(this.basePairsPerPixel, this.basePairsPerPixel/4.0, (alpha, start, end) => {
-      this.basePairsPerPixel = alpha * start + (1.0 - alpha) * end;
-      this.centerBasePairOnPixel(hoveredBasePair, pixel);
-    }, 1.0);
+    Util.animate(
+      this.basePairsPerPixel,
+      this.basePairsPerPixel / 4.0,
+      (alpha, start, end) => {
+        this.basePairsPerPixel = alpha * start + (1.0 - alpha) * end;
+        this.centerBasePairOnPixel(hoveredBasePair, pixel);
+      },
+      1.0
+    );
   }
 
   handleKeydown(e) {
-    if (e.key === 'Shift') {
+    if (e.key === "Shift") {
       this.selectEnabled = true;
       this.notifyViewStateChange(true);
-    } else if (e.key === 'Control') {
+    } else if (e.key === "Control") {
       this.zoomEnabled = true;
       this.notifyViewStateChange(true);
-    } 
+    }
   }
 
   handleKeyup(e) {
-    if (e.key === 'Shift') {
+    if (e.key === "Shift") {
       this.selectEnabled = false;
       this.notifyViewStateChange();
-    } else if (e.key === 'Control') {
+    } else if (e.key === "Control") {
       this.zoomEnabled = false;
       this.notifyViewStateChange();
     }

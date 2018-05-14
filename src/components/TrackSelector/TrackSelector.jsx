@@ -1,6 +1,6 @@
 // Dependencies
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import * as React from 'react';
+import * as PropTypes from 'prop-types';
 import DataListItem from '../DataListItem/DataListItem.jsx';
 
 import {
@@ -16,14 +16,14 @@ import {
 // Styles
 import './TrackSelector.scss';
 
-class TrackSelector extends Component {
+class TrackSelector extends React.Component {
   constructor(props) {
     super(props);
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
     this.api = this.appModel.api;
     this.state = {
-      tracks : [],
+      tracks: [],
     };
   }
 
@@ -50,7 +50,7 @@ class TrackSelector extends Component {
       this.appModel.addAnnotationTrack('cross-track-test-1');
       this.appModel.addAnnotationTrack('cross-track-test-2');
       this.appModel.addGraphOverlay(track, 'cross-track-test-1', 'cross-track-test-2');
-    } 
+    }
   }
 
   render() {
@@ -58,11 +58,11 @@ class TrackSelector extends Component {
       return (<DataListItem
         title={track.name}
         description={''}
-        onClick={() =>  this.trackSelected(track.id)}
+        onClick={() => this.trackSelected(track.id)}
         key={track.id}
       />);
     });
-    return (<div className="track-selector">{ trackItems }</div>);
+    return (<div className="track-selector">{trackItems}</div>);
   }
 }
 

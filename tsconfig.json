@@ -1,21 +1,16 @@
 {
-    "compilerOptions": {
-        "outDir": "./dist/",
-        "sourceMap": true,
-        "module": "commonjs",
-        "target": "es5",
-        "jsx": "react",
-        "downlevelIteration": true,
-        "lib": [
-            "es2015",
-            "dom",
-            "scripthost"
-        ],
-        "noImplicitAny": true,
-        "strictNullChecks": false,
-        "allowJs": true,
-    },
-    "include": [
-        "./src/**/*"
-    ]
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "sourceMap": true,
+    "module": "commonjs",
+    "target": "es5",
+    "jsx": "react",
+    "downlevelIteration": true,
+    "lib": ["es2015", "dom", "scripthost"],
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "strictNullChecks": false,
+    "allowJs": true
+  },
+  "include": ["./src/**/*"]
 }

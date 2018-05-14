@@ -1,16 +1,15 @@
-
-import Util from '../helpers/util.js';
-import { Tile, TileCache } from '../helpers/cache.js';
+import Util from "../helpers/util.js";
+import { Tile, TileCache } from "../helpers/cache.js";
 import {
   BASE_PAIR_COLORS,
   GENOME_LENGTH,
   SIGNAL_COLORS,
   TRACK_DATA_TYPE_BASE_PAIRS,
-  TRACK_DATA_TYPE_GBANDS,
-} from '../helpers/constants.js';
-import Track, { TRACK_EVENT_LOADING } from './track.js';
+  TRACK_DATA_TYPE_GBANDS
+} from "../helpers/constants.js";
+import Track, { TRACK_EVENT_LOADING } from "./track.js";
 
-const _ = require('underscore');
+const _ = require("underscore");
 
 class DataTrack extends Track {
   constructor(api, trackId) {
@@ -21,7 +20,8 @@ class DataTrack extends Track {
     this.cache = new TileCache(0, GENOME_LENGTH, this.loadData);
     this._min = null;
     this._max = null;
-    this.aggregations = trackId === 'sequence' ? ['none'] : ['avg', 'min', 'max'];
+    this.aggregations =
+      trackId === "sequence" ? ["none"] : ["max", "mean", "median", "min"];
   }
 
   get title() {
@@ -29,23 +29,35 @@ class DataTrack extends Track {
   }
 
   get showAxis() {
-    return this.trackId !== 'sequence';
+    return this.trackId !== "sequence";
   }
 
-  getTooltipData(basePair, yOffset, startBp, endBp, samplingRate, trackHeightPx) {
-    if (basePair < startBp || basePair > endBp) return null;
+  getTooltipData(
+    basePair,
+    yOffset,
+    startBp,
+    endBp,
+    samplingRate,
+    trackHeightPx
+  ) {
+    if (basePair < startBp || basePair > endBp) {
+      return null;
+    }
 
     const tiles = this.getTiles(startBp, endBp, samplingRate, trackHeightPx);
 
     // find the basePair in the tiles:
     let ret = {
       value: null,
-      valueNormalized: null,
+      valueNormalized: null
     };
     tiles.forEach(tile => {
       if (basePair >= tile.range[0] && basePair <= tile.range[1]) {
-        const totalRange = (tile.tile.tileRange[1] - tile.tile.tileRange[0]);
-        const idx = Math.round(this.cache.tileSize * ((basePair - tile.tile.tileRange[0]) / totalRange));
+        const totalRange = tile.tile.tileRange[1] - tile.tile.tileRange[0];
+        const idx = Math.round(
+          this.cache.tileSize *
+          ((basePair - tile.tile.tileRange[0]) / totalRange)
+        );
         const values = tile.tile.data.values;
         const dimensions = tile.tile.data.dimensions;
         const curr = [];
@@ -54,16 +66,16 @@ class DataTrack extends Track {
         if (tile.tile.data.dataType === TRACK_DATA_TYPE_BASE_PAIRS) {
           const currValue = values[4 * idx];
           if (currValue <= 0.0) {
-            curr.push('A');
+            curr.push("A");
             colors = [BASE_PAIR_COLORS[0]];
-          } else if (currValue <=0.25) {
-            curr.push('T');
+          } else if (currValue <= 0.25) {
+            curr.push("T");
             colors = [BASE_PAIR_COLORS[1]];
-          } else if (currValue <=0.5) {
-            curr.push('G');
+          } else if (currValue <= 0.5) {
+            curr.push("C");
             colors = [BASE_PAIR_COLORS[2]];
-          } else if (currValue <=0.75) {
-            curr.push('C');
+          } else if (currValue <= 0.75) {
+            curr.push("G");
             colors = [BASE_PAIR_COLORS[3]];
           }
           currNormalized.push(0.5);
@@ -76,7 +88,7 @@ class DataTrack extends Track {
           for (let i = 0; i < dimensions.length; i++) {
             const d = values[dimensions.length * idx + i];
             curr.push(d);
-            currNormalized.push((d-this.min) / (this.max - this.min));
+            currNormalized.push((d - this.min) / (this.max - this.min));
           }
         }
         ret = {
@@ -84,7 +96,7 @@ class DataTrack extends Track {
           dimensions: dimensions,
           valuesNormalized: currNormalized,
           positionNormalized: _.max(currNormalized),
-          colors: colors,
+          colors: colors
         };
       }
     });
@@ -105,7 +117,16 @@ class DataTrack extends Track {
     const contig = 'chr' + Util.chromosomeIndexToName(range.chromosomeIndex);
 
     this.notifyListeners(TRACK_EVENT_LOADING, true);
-    const promise = this.api.getData(this.trackId, contig, range.start, range.end, samplingRate, trackHeightPx, this.aggregations);
+
+    const promise = this.api.getData(
+      this.trackId,
+      contig,
+      range.start,
+      range.end,
+      samplingRate,
+      trackHeightPx,
+      this.aggregations
+    );
     return promise.then(data => {
       const result = data.data;
       const rawData = result.values;
@@ -129,12 +150,20 @@ class DataTrack extends Track {
       const tileData = {
         dataType: result.dataType,
         values: values,
-        dimensions: result.dimensions,
+        dimensions: result.dimensions
       };
-      return new Tile([start, end], [start, end], result.samplingRate, result.trackHeightPx, tileData);
-    }, failure => {
-      this.notifyListeners(TRACK_EVENT_LOADING, false);
-    });
+      return new Tile(
+        [start, end],
+        [start, end],
+        result.samplingRate,
+        result.trackHeightPx,
+        tileData
+      );
+    },
+      failure => {
+        this.notifyListeners(TRACK_EVENT_LOADING, false);
+      }
+    );
   }
 }
 export default DataTrack;

@@ -1,25 +1,32 @@
-import React from 'react';
+import * as React from "react";
 
 // import shaders
-import vertexShader from './project.vert';
-import signalShader from './render_signal.frag';
-import sequenceShader from './render_sequence.frag';
-import gbandShader from './render_gband.frag';
-import annotationShader from './render_annotation.frag';
+import * as vertexShader from "./project.vert";
+import * as signalShader from "./render_signal.frag";
+import * as sequenceShader from "./render_sequence.frag";
+import * as gbandShader from "./render_gband.frag";
+import * as annotationShader from "./render_annotation.frag";
 
 // import renderers
-import AnnotationTrackRenderer from '../../renderers/AnnotationTrackRenderer.jsx';
-import DataTrackRenderer from '../../renderers/DataTrackRenderer.jsx';
+import AnnotationTrackRenderer from "../../renderers/AnnotationTrackRenderer";
+import DataTrackRenderer from "../../renderers/DataTrackRenderer";
 
-import TrackHeader from '../TrackHeader/TrackHeader.jsx';
-import TrackBackground from '../TrackBackground/TrackBackground.jsx';
+import TrackHeader from "../TrackHeader/TrackHeader";
+import TrackBackground from "../TrackBackground/TrackBackground";
 
-import Util from '../../helpers/util.js';
+import Util from "../../helpers/util";
 
-const GPUTextWebGL = require('../../../lib/gputext/gputext-webgl.js');
+import { GPUTextWebGL } from "../../../lib/gputext/gputext-webgl";
 
 class TrackView {
-  constructor(guid: string, appModel: AppModel, viewModel: ViewModel, color=0.6, height=0.1, basePairOffset=0) {
+  constructor(
+    guid,
+    appModel,
+    viewModel,
+    color = 0.6,
+    height = 0.1,
+    basePairOffset = 0
+  ) {
     this.guid = guid;
     this.appModel = appModel;
     this.viewModel = viewModel;
@@ -35,13 +42,13 @@ class TrackView {
 
   static initializeShaders(context) {
     const msdfCode = GPUTextWebGL.generateMsdfShaderCode();
-    
+
     return {
       annotationShader: context.program(vertexShader, annotationShader),
       signalShader: context.program(vertexShader, signalShader),
       sequenceShader: context.program(vertexShader, sequenceShader),
       gbandShader: context.program(vertexShader, gbandShader),
-      textShader: GPUTextWebGL.createTextProgram(context.gl, {}),
+      textShader: GPUTextWebGL.createTextProgram(context.gl, {})
     };
   }
 
@@ -107,16 +114,41 @@ class TrackView {
     trackWindowState.startBasePair += this.basePairOffset;
     trackWindowState.trackBasePairOffset = this.basePairOffset;
 
-    const roundedHeight = Util.floorToPixel(this.height, windowState.windowSize[1]);
-    
+    const roundedHeight = Util.floorToPixel(
+      this.height,
+      windowState.windowSize[1]
+    );
+
     if (this.annotationTrack !== null) {
-      const renderResult = this.annotationRenderer.render(this.annotationTrack, this.color, roundedHeight, this.yOffset, context, shaders, trackWindowState);
+      const renderResult = this.annotationRenderer.render(
+        this.annotationTrack,
+        this.color,
+        roundedHeight,
+        this.yOffset,
+        context,
+        shaders,
+        trackWindowState
+      );
       overlays.forEach(overlay => {
-        overlay.addRegion(this.annotationTrack, roundedHeight, this.yOffset, trackWindowState, renderResult);
+        overlay.addRegion(
+          this.annotationTrack,
+          roundedHeight,
+          this.yOffset,
+          trackWindowState,
+          renderResult
+        );
       });
     }
     if (this.dataTrack !== null) {
-      this.dataRenderer.render(this.dataTrack, this.color, roundedHeight, this.yOffset, context, shaders, trackWindowState);
+      this.dataRenderer.render(
+        this.dataTrack,
+        this.color,
+        roundedHeight,
+        this.yOffset,
+        context,
+        shaders,
+        trackWindowState
+      );
     }
   }
 
@@ -126,7 +158,7 @@ class TrackView {
     } else if (this.annotationTrack) {
       return this.annotationTrack.title;
     }
-    return 'Empty Track';
+    return "Empty Track";
   }
 
   getHeader(windowState) {
@@ -145,14 +177,28 @@ class TrackView {
     const model = this.appModel;
     const offset = this.getBasePairOffset();
     const viewModel = this.viewModel;
-    return (<TrackHeader key={key} showAxis={showAxis} offset={offset} guid={key} top={top} height={height} min={min} max={max} title={title} appModel={model} viewModel={viewModel} />);
+    return (
+      <TrackHeader
+        key={key}
+        showAxis={showAxis}
+        offset={offset}
+        guid={key}
+        top={top}
+        height={height}
+        min={min}
+        max={max}
+        title={title}
+        appModel={model}
+        viewModel={viewModel}
+      />
+    );
   }
 
   getBackground(windowState) {
     const top = windowState.windowSize[1] * this.yOffset;
     const height = Math.floor(windowState.windowSize[1] * this.height);
     const key = this.guid;
-    return (<TrackBackground key={key} top={top} height={height} />);
+    return <TrackBackground key={key} top={top} height={height} />;
   }
 }
 

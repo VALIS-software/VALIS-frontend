@@ -1,0 +1,27 @@
+{
+  "rules": {
+    "ordered-imports": false,
+    "no-submodule-imports": false,
+    "member-access": false,
+    "object-literal-sort-keys": false,
+    "no-var-requires": false,
+    "prefer-conditional-expression": false,
+    "interface-name": false,
+    "no-string-literal": false,
+    "curly": false
+  },
+  "jsRules": {
+    "ordered-imports": false,
+    "no-submodule-imports": false,
+    "member-access": false,
+    "object-literal-sort-keys": false,
+    "no-var-requires": false,
+    "variable-name": false,
+    "no-string-literal": false,
+    "curly": false
+  },
+  "extends": [
+    "tslint:latest",
+    "tslint-config-prettier"
+  ]
+}

@@ -1,6 +1,6 @@
 // Dependencies
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import * as React from 'react';
+import * as PropTypes from 'prop-types';
 
 import AutoComplete from 'material-ui/AutoComplete';
 import MenuItem from 'material-ui/MenuItem';
@@ -10,11 +10,11 @@ import IconButton from 'material-ui/IconButton';
 import RaisedButton from 'material-ui/RaisedButton';
 import DatasetSelector from '../DatasetSelector/DatasetSelector.jsx';
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
-import EntityDetails from '../EntityDetails/EntityDetails.jsx';
+import EntityDetails from '../EntityDetails/EntityDetails';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import QueryBuilder, { QUERY_TYPE_INFO } from '../../models/query.js';
-import { DATA_SOURCE_GWAS, DATA_SOURCE_CLINVAR  } from '../../helpers/constants.js';
+import { DATA_SOURCE_GWAS, DATA_SOURCE_CLINVAR } from '../../helpers/constants.js';
 
 import './Header.scss';
 
@@ -25,13 +25,13 @@ const dataSourceConfig = {
   value: 'valueKey',
 };
 
-class Header extends Component {
+class Header extends React.Component {
   constructor(props) {
     super(props);
     this.api = new GenomeAPI();
     this.state = {
-      dataSource : [],
-      inputValue : '',
+      dataSource: [],
+      inputValue: '',
       searchFilter: 1,
     };
   }
@@ -57,7 +57,7 @@ class Header extends Component {
       builder.setLimit(150);
     }
     const query = builder.build();
-    const view = (<SearchResultsView text={text} query={query} viewModel={this.props.viewModel}  appModel={this.props.model} />);
+    const view = (<SearchResultsView text={text} query={query} viewModel={this.props.viewModel} appModel={this.props.model} />);
     this.props.viewModel.pushView('Search Results', query, view);
   }
 
@@ -124,8 +124,8 @@ class Header extends Component {
 }
 
 Header.propTypes = {
-   model: PropTypes.object,
-   viewModel: PropTypes.object,
+  model: PropTypes.object,
+  viewModel: PropTypes.object,
 };
 
 export default Header;

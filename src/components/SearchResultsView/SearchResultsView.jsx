@@ -1,15 +1,15 @@
 // Dependencies
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import DataListItem from '../DataListItem/DataListItem.jsx';
-import EntityDetails from '../EntityDetails/EntityDetails.jsx';
-import ZoomToButton from '../ZoomToButton/ZoomToButton.jsx';
-import CircularProgress from 'material-ui/CircularProgress';
+import * as React from "react";
+import * as PropTypes from "prop-types";
+import DataListItem from "../DataListItem/DataListItem.jsx";
+import EntityDetails from "../EntityDetails/EntityDetails";
+import ZoomToButton from "../ZoomToButton/ZoomToButton.jsx";
+import CircularProgress from "material-ui/CircularProgress";
 
 // Styles
-import './SearchResultsView.scss';
+import "./SearchResultsView.scss";
 
-class SearchResultsView extends Component {
+class SearchResultsView extends React.Component {
   constructor(props) {
     super(props);
     this.appModel = props.appModel;
@@ -18,19 +18,27 @@ class SearchResultsView extends Component {
     this.state = {
       query: null,
       needsRefresh: true,
-      results : [],
+      results: []
     };
   }
 
   resultSelected(result) {
-    const title = '';
+    const title = "";
     const dataID = result._id;
-    const elem = (<EntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={result._id} />);
+    const elem = (
+      <EntityDetails
+        viewModel={this.viewModel}
+        appModel={this.appModel}
+        dataID={result._id}
+      />
+    );
     this.viewModel.pushView(title, dataID, elem);
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
-    if (!prevState) prevState = {};
+    if (!prevState) {
+      prevState = {};
+    }
     prevState.needsRefresh = prevState.query !== nextProps.query;
     prevState.query = nextProps.query;
     prevState.appModel = nextProps.appModel;
@@ -47,34 +55,47 @@ class SearchResultsView extends Component {
           this.setState({
             results: results,
             needsRefresh: false,
-          });  
+          });
         }
       });
-      return (<div className="navigation-controller-loading"><CircularProgress size={80} thickness={5} /> </div>);
+      return (
+        <div className="navigation-controller-loading">
+          <CircularProgress size={80} thickness={5} />{" "}
+        </div>
+      );
     }
     const searchResultItems = this.state.results.map(result => {
-      let title = '';
-      let description = '';
-      const sourceStr = result.source.join('/');
-      if (result.type === 'trait') {
+      let title = "";
+      let description = "";
+      const sourceStr = result.source.join("/");
+      if (result.type === "trait") {
         title = result.info.description;
-        description = 'Source: ' + sourceStr;
+        description = "Source: " + sourceStr;
       } else {
-        title = result.type + ' ' + result.name;
-        description = result.info.description ? result.info.description : 'Source: ' + sourceStr;
+        title = result.type + " " + result.name;
+        description = result.info.description
+          ? result.info.description
+          : "Source: " + sourceStr;
       }
 
-      return (<DataListItem
-        title={title}
-        description={description}
-        onClick={() =>  this.resultSelected(result)}
-        key={result._id}
-      />);
+      return (
+        <DataListItem
+          title={title}
+          description={description}
+          onClick={() => this.resultSelected(result)}
+          key={result._id}
+        />
+      );
     });
-    return (<div className="search-results-view">
-      <div className="result-info"> { searchResultItems.length } results for query <i>{ this.props.text } </i></div>
-      { searchResultItems }
-    </div>);
+    return (
+      <div className="search-results-view">
+        <div className="result-info">
+          {" "}
+          {searchResultItems.length} results for query <i>{this.props.text} </i>
+        </div>
+        {searchResultItems}
+      </div>
+    );
   }
 }
 
@@ -82,8 +103,7 @@ SearchResultsView.propTypes = {
   appModel: PropTypes.object,
   viewModel: PropTypes.object,
   query: PropTypes.object,
-  text: PropTypes.string,
+  text: PropTypes.string
 };
-
 
 export default SearchResultsView;

@@ -1,10 +1,10 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import * as React from 'react';
+import * as PropTypes from 'prop-types';
 
 // Styles
 import './DataListItem.scss';
 
-class DataListItem extends Component {
+class DataListItem extends React.Component {
 
   render() {
     const { title, description, onClick } = this.props;
