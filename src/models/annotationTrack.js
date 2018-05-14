@@ -43,26 +43,48 @@ class AnnotationTrack extends Track {
   }
 
   loadData(start, end, samplingRate, trackHeightPx) {
+
     // Translate to chromosome centric coordinate:
-    const range = Util.chromosomeRelativeRange(start, end);
-    const contig = 'chr' + Util.chromosomeIndexToName(range.chromosomeIndex);
-    const contigStart = CHROMOSOME_START_BASE_PAIRS[range.chromosomeIndex];
+    const ranges = Util.splitRangeToChromosomeRanges(start, end);
+    console.log(ranges);
+    this.notifyListeners(TRACK_EVENT_LOADING, true);
+
+    // fetch data for each chromosome individually
+    const fetchRanges = ranges.map(range => {
+      return this.api.getAnnotationData(this.annotationId, 
+        range.contig, 
+        range.start, 
+        range.end, 
+        samplingRate, 
+        trackHeightPx, 
+        this.query
+      ).then(result => { range: range, data: result });
+    });
 
     this.notifyListeners(TRACK_EVENT_LOADING, true);
-    const promise = this.api.getAnnotationData(this.annotationId, contig, range.start, range.end, samplingRate, trackHeightPx, this.query);
-    return promise.then(data => {
-      const result = data.data;
-      const rawData = data.data.values;
-      const totalCount = data.data.countInRange;
-      this.notifyListeners(TRACK_EVENT_LOADING, false);
-      // convert contig coordinate back to global coordinate
-      rawData.forEach(r => {
-        r.startBp += contigStart;
-        r.endBp += contigStart;
+    let totalCount = 0;
+    let rawData = [];
+    let startBp = null;
+    let endBp = null;
+    return Promise.all(fetchRanges).then(results => {
+      results.forEach(contigResult => {
+        const data = contigResult.data;
+        const range = contigResult.range;
+        const contigStart = CHROMOSOME_START_BASE_PAIRS[Util.chromosomeNameToIndex(range.contig)];
+        const result = data.data;
+        // convert contig coordinate back to global coordinate
+        data.data.values.forEach(r => {
+          r.startBp += contigStart;
+          r.endBp += contigStart;
+        });
+        const currStartBp = result.startBp + contigStart;
+        const currEndBp = result.endBp + contigStart;
+        startBp = startBp === null ? currStartBp : Math.min(startBp, currStartBp);
+        endBp = endBp === null ? currEndBp : Math.max(endBp, currEndBp);
+        rawData = rawData.concat(data.data.values);
+        totalCount += data.data.countInRange;
       });
-      const startBp = result.startBp + contigStart;
-      const endBp = result.endBp + contigStart;
-      return new Tile([start, end], [startBp, endBp], result.samplingRate, result.trackHeightPx, rawData, totalCount);
+      return new Tile([start, end], [startBp, endBp], samplingRate, trackHeightPx, rawData, totalCount);
     }, failure => {
       this.notifyListeners(TRACK_EVENT_LOADING, false);
     });
