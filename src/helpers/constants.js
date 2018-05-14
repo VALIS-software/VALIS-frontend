@@ -25,13 +25,24 @@ const DATA_SOURCE_DBSNP = 'dbSNP';
 const DATA_SOURCE_ENCODE = 'ENCODE';
 
 const TRACK_TYPE_SEQUENCE = 'track_type_sequence';
-const TRACK_TYPE_FUNCTIONAL = 'track_type_funcional'; // TODO: fix typo on backend
+const TRACK_TYPE_FUNCTIONAL = 'track_type_functional';
 const TRACK_TYPE_GENOME = 'track_type_genome';
 const TRACK_TYPE_GWAS = 'track_type_gwas';
 const TRACK_TYPE_EQTL = 'track_type_eqtl';
 const TRACK_TYPE_ENCODE = 'track_type_encode';
 const TRACK_TYPE_3D = 'track_type_3d';
 const TRACK_TYPE_NETWORK = 'track_type_network';
+
+const ENTITY_TYPE = {
+  SNP: 'Gsnp',
+  GENE: 'Ggene',
+  TRAIT: 'Itrait',
+};
+
+const ASSOCIATION_TYPE = {
+  EQTL: [ENTITY_TYPE.SNP, ENTITY_TYPE.GENE],
+  GWAS: [ENTITY_TYPE.SNP, ENTITY_TYPE.TRAIT],
+};
 
 const CHROMOSOME_SIZES = [
   248956422,
@@ -103,6 +114,8 @@ export {
   DATA_SOURCE_CLINVAR,
   DATA_SOURCE_DBSNP,
   DATA_SOURCE_ENCODE,
+  ENTITY_TYPE,
+  ASSOCIATION_TYPE,
   TRACK_TYPE_SEQUENCE,
   TRACK_TYPE_FUNCTIONAL,
   TRACK_TYPE_GENOME,

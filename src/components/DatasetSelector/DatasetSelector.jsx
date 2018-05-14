@@ -24,7 +24,6 @@ import "./DatasetSelector.scss";
 class DatasetSelector extends React.Component {
   constructor(props) {
     super(props);
-    this.dataSetSelected = this.dataSetSelected.bind(this);
     this.viewModel = props.viewModel;
     this.appModel = props.appModel;
     this.api = this.appModel.api;
@@ -42,7 +41,7 @@ class DatasetSelector extends React.Component {
     });
   }
 
-  dataSetSelected(trackType) {
+  dataSetSelected = (trackType) => {
     if (trackType === TRACK_TYPE_GENOME) {
       this.viewModel.pushView(
         "Genomic Elements",

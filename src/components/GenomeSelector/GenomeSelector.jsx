@@ -7,7 +7,7 @@ import Slider from 'material-ui/Slider';
 import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
-import QueryBuilder, { QUERY_TYPE_GENOME } from '../../models/query.js';
+import QueryBuilder from '../../models/query.js';
 import { CHROMOSOME_NAMES } from '../../helpers/constants.js';
 
 // Styles
@@ -29,11 +29,6 @@ function reverse(value) {
 class GenomeSelector extends React.Component {
   constructor(props) {
     super(props);
-    this.handleUpdateTitle = this.handleUpdateTitle.bind(this);
-    this.handleUpdateType = this.handleUpdateType.bind(this);
-    this.handleUpdateChromName = this.handleUpdateChromName.bind(this);
-    this.handleUpdateMinLength = this.handleUpdateMinLength.bind(this);
-    this.handleUpdateMaxNumber = this.handleUpdateMaxNumber.bind(this);
     if (props.appModel) {
       this.appModel = props.appModel;
       this.api = this.appModel.api;
@@ -45,6 +40,62 @@ class GenomeSelector extends React.Component {
       minLength: 10,
       maxnumber: 10000,
     };
+  }
+
+  handleUpdateTitle = (event) => {
+    this.setState({
+      title: event.target.value,
+      fixTitle: true,
+    });
+  }
+
+  handleUpdateType = (event, index, value) => {
+    this.setState({
+      genomeTypeValue: value,
+    });
+    if (!this.state.fixTitle) {
+      this.setState({
+        title: this.availableTypes[value],
+      });
+    }
+  }
+
+  handleUpdateChromName = (event, index, value) => {
+    this.setState({
+      chromoNameValue: value,
+    });
+  }
+
+  handleUpdateMinLength = (event, value) => {
+    this.setState({
+      minLength: value,
+    });
+  }
+
+  handleUpdateMaxNumber = (event, value) => {
+    this.setState({
+      maxnumber: transform(value),
+    });
+  }
+
+  buildGenomeQuery() {
+    const builder = new QueryBuilder();
+    builder.newGenomeQuery();
+    if (this.state.chromoNameValue > 0) {
+      const contig = this.availableChromoNames[this.state.chromoNameValue];
+      builder.filterContig(contig);
+    }
+    const genomeType = this.availableTypes[this.state.genomeTypeValue];
+    builder.filterType(genomeType);
+    builder.filterLength({ '>': this.state.minLength });
+    builder.setLimit(this.state.maxnumber);
+    const genomeQuery = builder.build();
+    return genomeQuery;
+  }
+
+  addQueryTrack() {
+    const query = this.buildGenomeQuery();
+    this.appModel.addAnnotationTrack(this.state.title, query);
   }
 
   componentDidMount() {
@@ -76,62 +127,6 @@ class GenomeSelector extends React.Component {
         genomeTypeValue: 0,
       });
     });
-  }
-
-  handleUpdateTitle(event) {
-    this.setState({
-      title: event.target.value,
-      fixTitle: true,
-    });
-  }
-
-  handleUpdateType(event, index, value) {
-    this.setState({
-      genomeTypeValue: value,
-    });
-    if (!this.state.fixTitle) {
-      this.setState({
-        title: this.availableTypes[value],
-      });
-    }
-  }
-
-  handleUpdateChromName(event, index, value) {
-    this.setState({
-      chromoNameValue: value,
-    });
-  }
-
-  handleUpdateMinLength(event, value) {
-    this.setState({
-      minLength: value,
-    });
-  }
-
-  handleUpdateMaxNumber(event, value) {
-    this.setState({
-      maxnumber: transform(value),
-    });
-  }
-
-  buildGenomeQuery() {
-    const builder = new QueryBuilder();
-    builder.newGenomeQuery();
-    // The chromoNameValue starts from 1, which is the same as the chromid in the backend
-    if (this.state.chromoNameValue > 0) {
-      builder.filterChromid(this.state.chromoNameValue);
-    }
-    const genomeType = this.availableTypes[this.state.genomeTypeValue];
-    builder.filterType(genomeType);
-    builder.filterLength({ '>': this.state.minLength });
-    builder.setLimit(this.state.maxnumber);
-    const genomeQuery = builder.build();
-    return genomeQuery;
-  }
-
-  addQueryTrack() {
-    const query = this.buildGenomeQuery();
-    this.appModel.addAnnotationTrack(this.state.title, query);
   }
 
   render() {

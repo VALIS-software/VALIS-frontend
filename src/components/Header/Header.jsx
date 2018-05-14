@@ -10,7 +10,7 @@ import IconButton from 'material-ui/IconButton';
 import RaisedButton from 'material-ui/RaisedButton';
 import DatasetSelector from '../DatasetSelector/DatasetSelector.jsx';
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
-import EntityDetails from '../EntityDetails/EntityDetails.jsx';
+import EntityDetails from '../EntityDetails/EntityDetails';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import QueryBuilder, { QUERY_TYPE_INFO } from '../../models/query.js';
@@ -28,14 +28,42 @@ const dataSourceConfig = {
 class Header extends React.Component {
   constructor(props) {
     super(props);
-    this.onNewRequest = this.onNewRequest.bind(this);
-    this.addDatasetBrowser = this.addDatasetBrowser.bind(this);
     this.api = new GenomeAPI();
     this.state = {
       dataSource: [],
       inputValue: '',
       searchFilter: 1,
     };
+  }
+
+  onNewRequest = (chosen, index) => {
+    // treat as trait if the text is not from autocomplete
+    let text = chosen;
+    let value = 0;
+    if (index >= 0) {
+      text = chosen.textKey;
+      value = chosen.valueKey;
+    }
+    const builder = new QueryBuilder();
+    if (value === 0) {
+      builder.newInfoQuery();
+      builder.filterType('trait');
+      builder.searchText(text);
+      builder.setLimit(150);
+    } else if (value === 1) {
+      builder.newGenomeQuery();
+      builder.filterType('gene');
+      builder.filterName(text);
+      builder.setLimit(150);
+    }
+    const query = builder.build();
+    const view = (<SearchResultsView text={text} query={query} viewModel={this.props.viewModel} appModel={this.props.model} />);
+    this.props.viewModel.pushView('Search Results', query, view);
+  }
+
+  addDatasetBrowser = () => {
+    const view = (<DatasetSelector viewModel={this.props.viewModel} appModel={this.props.model} />);
+    this.props.viewModel.pushView('Select Dataset', null, view);
   }
 
   componentDidMount() {
@@ -68,36 +96,6 @@ class Header extends React.Component {
         dataSource: dataSource,
       });
     });
-  }
-
-  onNewRequest(chosen, index) {
-    // treat as trait if the text is not from autocomplete
-    let text = chosen;
-    let value = 0;
-    if (index >= 0) {
-      text = chosen.textKey;
-      value = chosen.valueKey;
-    }
-    const builder = new QueryBuilder();
-    if (value === 0) {
-      builder.newInfoQuery();
-      builder.filterType('trait');
-      builder.searchText(text);
-      builder.setLimit(150);
-    } else if (value === 1) {
-      builder.newGenomeQuery();
-      builder.filterType('gene');
-      builder.filterName(text);
-      builder.setLimit(150);
-    }
-    const query = builder.build();
-    const view = (<SearchResultsView text={text} query={query} viewModel={this.props.viewModel} appModel={this.props.model} />);
-    this.props.viewModel.pushView('Search Results', query, view);
-  }
-
-  addDatasetBrowser() {
-    const view = (<DatasetSelector viewModel={this.props.viewModel} appModel={this.props.model} />);
-    this.props.viewModel.pushView('Select Dataset', null, view);
   }
 
   render() {

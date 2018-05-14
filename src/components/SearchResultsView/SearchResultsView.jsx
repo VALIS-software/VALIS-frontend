@@ -2,7 +2,7 @@
 import * as React from "react";
 import * as PropTypes from "prop-types";
 import DataListItem from "../DataListItem/DataListItem.jsx";
-import EntityDetails from "../EntityDetails/EntityDetails.jsx";
+import EntityDetails from "../EntityDetails/EntityDetails";
 import ZoomToButton from "../ZoomToButton/ZoomToButton.jsx";
 import CircularProgress from "material-ui/CircularProgress";
 
@@ -48,10 +48,15 @@ class SearchResultsView extends React.Component {
   render() {
     if (this.state.needsRefresh) {
       this.api.getQueryResults(this.state.query).then(results => {
-        this.setState({
-          results: results,
-          needsRefresh: false
-        });
+        if (results.length === 1) {
+          this.viewModel.popView();
+          this.resultSelected(results[0]);
+        } else {
+          this.setState({
+            results: results,
+            needsRefresh: false,
+          });
+        }
       });
       return (
         <div className="navigation-controller-loading">

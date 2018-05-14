@@ -3,7 +3,7 @@ import { Igloo } from "../../lib/igloojs/igloo.js";
 const d3 = require("d3");
 const _ = require("underscore");
 
-import { CHROMOSOME_START_BASE_PAIRS } from "./constants.js";
+import { CHROMOSOME_START_BASE_PAIRS, CHROMOSOME_SIZES } from "./constants.js";
 
 const formatSi = d3.format(".6s");
 
@@ -39,6 +39,24 @@ class Util {
         chromosomeIndex: chromosomeIndex,
         basePair:
           absoluteBasePair - CHROMOSOME_START_BASE_PAIRS[chromosomeIndex]
+      };
+    }
+  }
+
+  static chromosomeRelativeRange(startBp, endBp) {
+    const start = this.chromosomeRelativeBasePair(startBp);
+    const end = this.chromosomeRelativeBasePair(endBp);
+    if (end.chromosomeIndex !== start.chromosomeIndex) {
+      return {
+        chromosomeIndex: start.chromosomeIndex,
+        start: start.basePair,
+        end: CHROMOSOME_SIZES[start.chromosomeIndex] - 1,
+      };
+    } else {
+      return {
+        chromosomeIndex: start.chromosomeIndex,
+        start: start.basePair,
+        end: end.basePair,
       };
     }
   }
@@ -123,6 +141,19 @@ class Util {
     return u * windowSize[0];
   }
 
+
+  static isType(entity, typeId) {
+    return Util.isIdType(entity.id, typeId);
+  }
+
+  static isIdType(entityId, typeId) {
+    return (entityId.indexOf(typeId) === 0);
+  }
+
+  static isAssociation(assocDef, fromTypeId, toTypeId) {
+    return Util.isIdType(fromTypeId, assocDef[0]) && Util.isIdType(toTypeId, assocDef[1]);
+  }
+
   static multiplyColor(color, d) {
     return color.map(val => Math.min(255, val * d));
   }
@@ -181,12 +212,12 @@ class Util {
     igloo.lineColorBuffer = igloo.array();
 
     // handle quad rendering:
-    igloo.drawQuad = function(shader) {
+    igloo.drawQuad = function (shader) {
       shader.attrib("points", igloo.quad, 2);
       shader.draw(igloo.gl.TRIANGLE_STRIP, Igloo.QUAD2.length / 2);
     };
 
-    igloo.drawLines = function(shader, lines, colors) {
+    igloo.drawLines = function (shader, lines, colors) {
       if (lines.length === 0) {
         return;
       }
@@ -197,7 +228,7 @@ class Util {
       shader.draw(igloo.gl.LINES, lines.length / 2);
     };
 
-    igloo.bindTexture = function(texDataGuid, texData, width, height) {
+    igloo.bindTexture = function (texDataGuid, texData, width, height) {
       // @! this is a quick fix over the existing solution which was uploading texture data each use
       // we should be handling GPU texture caching elsewhere
 

@@ -4,11 +4,7 @@ import Util from "../../helpers/util.js";
 import { GENOME_LENGTH } from "../../helpers/constants.js";
 import AppModel, { AppEvent } from "../../models/appModel";
 
-import {
-  VIEW_EVENT_STATE_CHANGED,
-  VIEW_EVENT_SELECTION,
-  VIEW_EVENT_CLICK
-} from "../../models/viewModel.js";
+import { VIEW_EVENT_STATE_CHANGED, VIEW_EVENT_SELECTION, VIEW_EVENT_CLICK } from "../../models/viewModel.js";
 
 import TrackView from "../TrackView/TrackView.jsx";
 import OverlayView from "../OverlayView/OverlayView.jsx";
@@ -44,6 +40,11 @@ class MultiTrackViewer extends React.Component<Props, any> {
 
   constructor(props: Props) {
     super(props);
+    this.views = {};
+    this.overlayViews = {};
+    this.tracks = [];
+    this.overlays = [];
+    this.classNames = '';
 
     // listen to track change updates
     props.model.addListener(this.updateViews, [
@@ -53,63 +54,14 @@ class MultiTrackViewer extends React.Component<Props, any> {
       AppEvent.RemoveTrack
     ]);
 
-    props.model.addListener(this.updateOverlays, [
-      AppEvent.AddOverlay,
-      AppEvent.RemoveOverlay
-    ]);
+    props.model.addListener(this.updateOverlays, [AppEvent.AddOverlay, AppEvent.RemoveOverlay]);
     this.viewModel = props.viewModel;
-  }
-
-  componentDidMount() {
-    // that handles destruction of WebGL Context when the page changes
-    window.addEventListener("load", () => {
-      const domElem = document.querySelector(
-        "#webgl-canvas"
-      ) as HTMLCanvasElement;
-      const currentWidth = domElem.clientWidth;
-      const currentHeight = domElem.clientHeight;
-
-      // scale canvas to account for device pixel ratio
-      const devicePixelRatio = window.devicePixelRatio || 1;
-      domElem.width = Math.round(currentWidth * devicePixelRatio);
-      domElem.height = Math.round(currentHeight * devicePixelRatio);
-      domElem.style.width = domElem.width / devicePixelRatio + "px";
-      domElem.style.height = domElem.height / devicePixelRatio + "px";
-
-      const bpp = GENOME_LENGTH / domElem.clientWidth;
-      const windowSize = [domElem.clientWidth, domElem.clientHeight];
-
-      this.viewModel.init(bpp, windowSize);
-      this.viewModel.bindListeners(domElem);
-
-      this.viewModel.addListener(
-        this.updateViewState,
-        VIEW_EVENT_STATE_CHANGED
-      );
-      this.viewModel.addListener(this.updateSelection, VIEW_EVENT_SELECTION);
-      this.viewModel.addListener(this.handleClick, VIEW_EVENT_CLICK);
-
-      this.renderContext = Util.newRenderContext(domElem);
-      this.shaders = TrackView.initializeShaders(this.renderContext);
-      this.overlayShaders = OverlayView.initializeShaders(this.renderContext);
-
-      const renderFrame = () => {
-        this.renderGL();
-        requestAnimationFrame(renderFrame);
-      };
-      renderFrame();
-    });
-
-    window.addEventListener("resize", () => {
-      // Hack WebGL resizing not working as I want it to :/
-      location.reload();
-    });
   }
 
   onDrop = (evt: any) => {
     this.props.model.removeTrack(evt.dataTransfer.getData("guid"));
     this.removeTrackHintVisible = false;
-  };
+  }
 
   onDragOver = (evt: any) => {
     evt.dataTransfer.dropEffect = "move";
@@ -305,24 +257,10 @@ class MultiTrackViewer extends React.Component<Props, any> {
     if (viewState.lastDragCoord && !viewState.selectEnabled) {
       const coord = viewState.lastDragCoord.slice();
       const trackInfo = this.getTrackInfoAtCoordinate(coord);
-      const x =
-        ANNOTATION_OFFSET +
-        Util.pixelForBasePair(
-          trackInfo.basePair,
-          viewState.startBasePair,
-          viewState.basePairsPerPixel,
-          viewState.windowSize
-        );
+      const x = ANNOTATION_OFFSET + Util.pixelForBasePair(trackInfo.basePair, viewState.startBasePair, viewState.basePairsPerPixel, viewState.windowSize);
 
-      if (
-        trackInfo.track !== null &&
-        trackInfo.tooltip !== null &&
-        trackInfo.tooltip.values
-      ) {
-        const y =
-          (-trackInfo.tooltip.positionNormalized + 0.5) *
-            trackInfo.trackHeightPx +
-          trackInfo.trackCenterPx;
+      if (trackInfo.track !== null && trackInfo.tooltip !== null && trackInfo.tooltip.values) {
+        const y = (-trackInfo.tooltip.positionNormalized + 0.5) * trackInfo.trackHeightPx + trackInfo.trackCenterPx;
         const basePair = trackInfo.basePair + trackInfo.basePairOffset;
         const values = trackInfo.tooltip.values;
         tooltip = (
@@ -338,6 +276,48 @@ class MultiTrackViewer extends React.Component<Props, any> {
     }
     return tooltip;
   };
+
+  componentDidMount() {
+    // that handles destruction of WebGL Context when the page changes
+    window.addEventListener('load', () => {
+      const domElem: HTMLCanvasElement = document.querySelector('#webgl-canvas');
+      const currentWidth = domElem.clientWidth;
+      const currentHeight = domElem.clientHeight;
+
+      // scale canvas to account for device pixel ratio
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      domElem.width = Math.round(currentWidth * devicePixelRatio);
+      domElem.height = Math.round(currentHeight * devicePixelRatio);
+      domElem.style.width = domElem.width / devicePixelRatio + 'px';
+      domElem.style.height = domElem.height / devicePixelRatio + 'px';
+
+      const bpp = GENOME_LENGTH / domElem.clientWidth;
+      const windowSize = [domElem.clientWidth, domElem.clientHeight];
+
+      this.viewModel.init(bpp, windowSize);
+      this.viewModel.bindListeners(domElem);
+
+      this.viewModel.addListener(this.updateViewState, VIEW_EVENT_STATE_CHANGED);
+      this.viewModel.addListener(this.updateSelection, VIEW_EVENT_SELECTION);
+      this.viewModel.addListener(this.handleClick, VIEW_EVENT_CLICK);
+
+      this.renderContext = Util.newRenderContext(domElem);
+      this.shaders = TrackView.initializeShaders(this.renderContext);
+      this.overlayShaders = OverlayView.initializeShaders(this.renderContext);
+
+      const renderFrame = () => {
+        this.renderGL();
+        requestAnimationFrame(renderFrame);
+      };
+      renderFrame();
+    });
+
+    window.addEventListener('resize', () => {
+      // Hack WebGL resizing not working as I want it to :/
+      location.reload();
+    });
+  }
+
 
   render() {
     const headers = [];
@@ -358,8 +338,8 @@ class MultiTrackViewer extends React.Component<Props, any> {
     const removeTrackHint = this.removeTrackHintVisible ? (
       <div className="remove-hint">Remove Track</div>
     ) : (
-      undefined
-    );
+        undefined
+      );
     return (
       <div className="content">
         {removeTrackHint}

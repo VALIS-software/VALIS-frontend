@@ -56,7 +56,7 @@ class DataTrack extends Track {
         const totalRange = tile.tile.tileRange[1] - tile.tile.tileRange[0];
         const idx = Math.round(
           this.cache.tileSize *
-            ((basePair - tile.tile.tileRange[0]) / totalRange)
+          ((basePair - tile.tile.tileRange[0]) / totalRange)
         );
         const values = tile.tile.data.values;
         const dimensions = tile.tile.data.dimensions;
@@ -112,49 +112,54 @@ class DataTrack extends Track {
   }
 
   loadData(start, end, samplingRate, trackHeightPx) {
+    // Translate to chromosome centric coordinate:
+    const range = Util.chromosomeRelativeRange(start, end);
+    const contig = 'chr' + Util.chromosomeIndexToName(range.chromosomeIndex);
+
     this.notifyListeners(TRACK_EVENT_LOADING, true);
+
     const promise = this.api.getData(
       this.trackId,
-      start,
-      end,
+      contig,
+      range.start,
+      range.end,
       samplingRate,
       trackHeightPx,
       this.aggregations
     );
-    return promise.then(
-      data => {
-        const result = data.data;
-        const rawData = result.values;
-        const numSamples = result.numSamples;
-        const dimensions = result.dimensions.length;
+    return promise.then(data => {
+      const result = data.data;
+      const rawData = result.values;
+      const numSamples = result.numSamples;
+      const dimensions = result.dimensions.length;
 
-        const values = new Float32Array(this.cache.tileSize * 4);
-        let min = null;
-        let max = null;
-        for (let i = 0; i < numSamples; i++) {
-          for (let j = 0; j < dimensions; j++) {
-            const curr = rawData[dimensions * i + j];
-            values[4 * i + j] = curr;
-            min = Math.min(curr, min);
-            max = max === null ? curr : Math.max(curr, max);
-          }
+      const values = new Float32Array(this.cache.tileSize * 4);
+      let min = null;
+      let max = null;
+      for (let i = 0; i < numSamples; i++) {
+        for (let j = 0; j < dimensions; j++) {
+          const curr = rawData[dimensions * i + j];
+          values[4 * i + j] = curr;
+          min = Math.min(curr, min);
+          max = max === null ? curr : Math.max(curr, max);
         }
-        this._min = Math.min(min, this._min);
-        this._max = this._max === null ? max : Math.max(max, this._max);
-        this.notifyListeners(TRACK_EVENT_LOADING, false);
-        const tileData = {
-          dataType: result.dataType,
-          values: values,
-          dimensions: result.dimensions
-        };
-        return new Tile(
-          [start, end],
-          [start, end],
-          result.samplingRate,
-          result.trackHeightPx,
-          tileData
-        );
-      },
+      }
+      this._min = Math.min(min, this._min);
+      this._max = this._max === null ? max : Math.max(max, this._max);
+      this.notifyListeners(TRACK_EVENT_LOADING, false);
+      const tileData = {
+        dataType: result.dataType,
+        values: values,
+        dimensions: result.dimensions
+      };
+      return new Tile(
+        [start, end],
+        [start, end],
+        result.samplingRate,
+        result.trackHeightPx,
+        tileData
+      );
+    },
       failure => {
         this.notifyListeners(TRACK_EVENT_LOADING, false);
       }

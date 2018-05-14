@@ -39,13 +39,6 @@ function reverse(value) {
 class ENCODESelector extends React.Component {
   constructor(props) {
     super(props);
-    this.handleUpdateTitle = this.handleUpdateTitle.bind(this);
-    this.handleUpdateType = this.handleUpdateType.bind(this);
-    this.handleUpdateChromName = this.handleUpdateChromName.bind(this);
-    this.handelUpdateBiosample = this.handelUpdateBiosample.bind(this);
-    this.handleCheckBox = this.handleCheckBox.bind(this);
-    this.handleUpdateMinLength = this.handleUpdateMinLength.bind(this);
-    this.handleUpdateMaxNumber = this.handleUpdateMaxNumber.bind(this);
     if (props.appModel) {
       this.appModel = props.appModel;
       this.api = this.appModel.api;
@@ -64,62 +57,8 @@ class ENCODESelector extends React.Component {
     };
   }
 
-  componentDidMount() {
-    this.availableChromoNames = ["Any"].concat(CHROMOSOME_NAMES);
-    this.chromoNameItems = [];
-    for (let i = 0; i < this.availableChromoNames.length; i++) {
-      this.chromoNameItems.push(
-        <MenuItem
-          value={i}
-          key={i}
-          primaryText={this.availableChromoNames[i]}
-        />
-      );
-    }
-    // use api to pull all available biosamples
-    this.updateAvailableBiosamples();
-    this.updateAvailableTypes();
-    this.updateAvailableTargets();
-  }
-
-  updateAvailableBiosamples() {
-    if (this.selectedBiosample) {
-      return;
-    }
-    const builder = new QueryBuilder();
-    builder.newInfoQuery();
-    builder.filterSource(DATA_SOURCE_ENCODE);
-    builder.filterType("ENCODE_accession");
-    if (this.selectedType) {
-      builder.filterInfotypes(this.selectedType);
-    }
-    if (this.selectedTargets) {
-      builder.filterTargets(this.selectedTargets);
-    }
-    const infoQuery = builder.build();
-    this.api.getDistinctValues("info.biosample", infoQuery).then(data => {
-      // Keep the current selection of biosample
-      let newBiosampleValue = null;
-      if (this.state.biosampleValue !== null) {
-        const currentBiosample = this.state.availableBiosamples[
-          this.state.biosampleValue
-        ];
-        newBiosampleValue = data.indexOf(currentBiosample);
-        if (newBiosampleValue < 0) {
-          newBiosampleValue = null;
-        }
-      }
-      this.setState({
-        availableBiosamples: data,
-        biosampleValue: newBiosampleValue
-      });
-    });
-  }
-
-  updateAvailableTypes() {
-    if (this.selectedType) {
-      return;
-    }
+  updateAvailableTypes = () => {
+    if (this.selectedType) return;
     const builder = new QueryBuilder();
     builder.newInfoQuery();
     builder.filterSource(DATA_SOURCE_ENCODE);
@@ -150,10 +89,8 @@ class ENCODESelector extends React.Component {
     });
   }
 
-  updateAvailableTargets() {
-    if (this.selectedTargets) {
-      return;
-    }
+  updateAvailableTargets = () => {
+    if (this.selectedTargets) return;
     const builder = new QueryBuilder();
     builder.newInfoQuery();
     builder.filterSource(DATA_SOURCE_ENCODE);
@@ -184,14 +121,14 @@ class ENCODESelector extends React.Component {
     });
   }
 
-  handleUpdateTitle(event) {
+  handleUpdateTitle = (event) => {
     this.setState({
       title: event.target.value,
       fixTitle: true
     });
   }
 
-  handelUpdateBiosample(event, index, value) {
+  handelUpdateBiosample = (event, index, value) => {
     this.setState({
       biosampleValue: value
     });
@@ -210,7 +147,7 @@ class ENCODESelector extends React.Component {
     }
   }
 
-  handleUpdateType(event, index, value) {
+  handleUpdateType = (event, index, value) => {
     this.setState({
       genomeTypeValue: value
     });
@@ -222,7 +159,7 @@ class ENCODESelector extends React.Component {
     }
   }
 
-  handleCheckBox(index) {
+  handleCheckBox = (index) => {
     const newChecked = this.state.checked;
     newChecked[index] = !newChecked[index];
     this.setState({
@@ -239,31 +176,30 @@ class ENCODESelector extends React.Component {
     this.updateAvailableTypes();
   }
 
-  handleUpdateChromName(event, index, value) {
+  handleUpdateChromName = (event, index, value) => {
     this.setState({
       chromoNameValue: value
     });
   }
 
-  handleUpdateMinLength(event, value) {
+  handleUpdateMinLength = (event, value) => {
     this.setState({
       minLength: value
     });
   }
 
-  handleUpdateMaxNumber(event, value) {
+  handleUpdateMaxNumber = (event, value) => {
     this.setState({
       maxnumber: transform(value)
     });
   }
 
-  buildQuery() {
+  buildQuery = () => {
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
-    builder.filterAssembly("GRCh37");
-    // The chromoNameValue starts from 1, which is the same as the chromid in the backend
     if (this.state.chromoNameValue > 0) {
-      builder.filterChromid(this.state.chromoNameValue);
+      const contig = this.availableChromoNames[this.state.chromoNameValue];
+      builder.filterContig(contig);
     }
     const genomeType = this.state.availableTypes[this.state.genomeTypeValue];
     builder.filterType(genomeType);
@@ -282,9 +218,52 @@ class ENCODESelector extends React.Component {
     return genomeQuery;
   }
 
-  addQueryTrack() {
+  addQueryTrack = () => {
     const query = this.buildQuery();
     this.appModel.addAnnotationTrack(this.state.title, query);
+  }
+
+
+  componentDidMount() {
+    this.availableChromoNames = ['Any'].concat(CHROMOSOME_NAMES);
+    this.chromoNameItems = [];
+    for (let i = 0; i < this.availableChromoNames.length; i++) {
+      this.chromoNameItems.push(<MenuItem value={i} key={i} primaryText={this.availableChromoNames[i]} />);
+    }
+    // use api to pull all available biosamples
+    this.updateAvailableBiosamples();
+    this.updateAvailableTypes();
+    this.updateAvailableTargets();
+  }
+
+  updateAvailableBiosamples = () => {
+    if (this.selectedBiosample) return;
+    const builder = new QueryBuilder();
+    builder.newInfoQuery();
+    builder.filterSource(DATA_SOURCE_ENCODE);
+    builder.filterType('ENCODE_accession');
+    if (this.selectedType) {
+      builder.filterInfotypes(this.selectedType);
+    }
+    if (this.selectedTargets) {
+      builder.filterTargets(this.selectedTargets);
+    }
+    const infoQuery = builder.build();
+    this.api.getDistinctValues('info.biosample', infoQuery).then(data => {
+      // Keep the current selection of biosample
+      let newBiosampleValue = null;
+      if (this.state.biosampleValue !== null) {
+        const currentBiosample = this.state.availableBiosamples[this.state.biosampleValue];
+        newBiosampleValue = data.indexOf(currentBiosample);
+        if (newBiosampleValue < 0) {
+          newBiosampleValue = null;
+        }
+      }
+      this.setState({
+        availableBiosamples: data,
+        biosampleValue: newBiosampleValue,
+      });
+    });
   }
 
   render() {

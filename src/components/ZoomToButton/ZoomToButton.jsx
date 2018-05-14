@@ -8,12 +8,8 @@ import RaisedButton from 'material-ui/RaisedButton';
 import './ZoomToButton.scss';
 
 class ZoomToButton extends React.Component {
-  constructor(props) {
-    super(props);
-    this.zoom = this.zoom.bind(this);
-  }
 
-  zoom() {
+  zoom = () => {
     const { start, end, padding } = this.props;
     const totalRange = Math.max(10000, (1.0 + padding) * (end - start));
     const finalStart = (start + end - totalRange) / 2.0;
