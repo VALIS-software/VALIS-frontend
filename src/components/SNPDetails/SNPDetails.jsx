@@ -166,7 +166,9 @@ class SNPDetails extends React.Component {
       let geneName = details.info.mapped_gene;
 
       if (details.info.GENEINFO) {
-        geneId = details.info.GENEINFO.split(':')[1];
+        // TODO: We need to structure this data better on the backend
+        const geneDetails = details.info.GENEINFO.split('|');
+        geneId = geneDetails[0].split(':')[1];
       } else if (geneName.indexOf('LOC') > 0) {
         geneName = geneName.slice(geneName.indexOf('LOC'));
       } else if (geneName.indexOf(' - ') > 0) {

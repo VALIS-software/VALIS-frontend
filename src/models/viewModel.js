@@ -1,21 +1,22 @@
-import EventCreator from "./eventCreator.js";
-import Util from "../helpers/util.js";
-import { GENOME_LENGTH, MAX_BASE_PAIR_WIDTH } from "../helpers/constants.js";
+import EventCreator from './eventCreator.js';
+import Util from '../helpers/util.js';
+import { GENOME_LENGTH, MAX_BASE_PAIR_WIDTH } from '../helpers/constants.js';
 
-const _ = require("underscore");
+const _ = require('underscore');
 
-const VIEW_EVENT_STATE_CHANGED = "view_event_state_changed";
-const VIEW_EVENT_CLICK = "view_event_click";
-const VIEW_EVENT_SELECTION = "view_event_selection";
-const VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS = "EDIT_TRACK_VIEW";
-const VIEW_EVENT_TRACK_ELEMENT_CLICKED = "TRACK_ELEMENT_CLICKED";
-const VIEW_EVENT_ADD_DATASET_BROWSER = "ADD_DATASET_BROWSER";
-const VIEW_EVENT_DATA_SET_SELECTED = "DATA_SET_SELECTED";
-const VIEW_EVENT_PUSH_VIEW = "PUSH_VIEW";
-const VIEW_EVENT_POP_VIEW = "POP_VIEW";
-const VIEW_EVENT_CLOSE_VIEW = "CLOSE_VIEW";
+const VIEW_EVENT_STATE_CHANGED = 'view_event_state_changed';
+const VIEW_EVENT_CLICK = 'view_event_click';
+const VIEW_EVENT_SELECTION = 'view_event_selection';
+const VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS = 'EDIT_TRACK_VIEW';
+const VIEW_EVENT_TRACK_ELEMENT_CLICKED = 'TRACK_ELEMENT_CLICKED';
+const VIEW_EVENT_ADD_DATASET_BROWSER = 'ADD_DATASET_BROWSER';
+const VIEW_EVENT_DATA_SET_SELECTED = 'DATA_SET_SELECTED';
+const VIEW_EVENT_PUSH_VIEW = 'PUSH_VIEW';
+const VIEW_EVENT_POP_VIEW = 'POP_VIEW';
+const VIEW_EVENT_CLOSE_VIEW = 'CLOSE_VIEW';
+const VIEW_EVENT_DISPLAY_ENTITY_DETAILS = 'DISPLAY_ENTITY_DETAILS';
 
-export {
+export { 
   VIEW_EVENT_STATE_CHANGED,
   VIEW_EVENT_CLICK,
   VIEW_EVENT_SELECTION,
@@ -24,7 +25,8 @@ export {
   VIEW_EVENT_DATA_SET_SELECTED,
   VIEW_EVENT_PUSH_VIEW,
   VIEW_EVENT_POP_VIEW,
-  VIEW_EVENT_CLOSE_VIEW
+  VIEW_EVENT_CLOSE_VIEW,
+  VIEW_EVENT_DISPLAY_ENTITY_DETAILS,
 };
 
 class ViewModel extends EventCreator {
@@ -138,6 +140,14 @@ class ViewModel extends EventCreator {
 
   dataSetSelected(trackType) {
     this.notifyListeners(VIEW_EVENT_DATA_SET_SELECTED, trackType);
+  }
+
+  displayEntityDetails(entity) {
+    const entityInfo = {
+      entityId: entity.id || entity._id || entity,
+      entityType: Util.getEntityType(entity),
+    }
+    this.notifyListeners(VIEW_EVENT_DISPLAY_ENTITY_DETAILS, entity);
   }
 
   back() {

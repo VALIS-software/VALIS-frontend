@@ -32,7 +32,7 @@ class SearchResultsView extends React.Component {
         dataID={dataID}
       />
     );
-    this.viewModel.pushView(title, dataID, elem);
+    this.viewModel.displayEntityDetails(dataID);
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
