@@ -46,7 +46,7 @@ class AnnotationTrack extends Track {
 
     // Translate to chromosome centric coordinate:
     const ranges = Util.splitRangeToChromosomeRanges(start, end);
-    console.log(ranges);
+
     this.notifyListeners(TRACK_EVENT_LOADING, true);
 
     // fetch data for each chromosome individually
