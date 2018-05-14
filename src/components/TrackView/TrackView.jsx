@@ -16,7 +16,7 @@ import TrackBackground from "../TrackBackground/TrackBackground";
 
 import Util from "../../helpers/util";
 
-import { GPUTextWebGL } from "../../../lib/gputext/gputext-webgl";
+const GPUTextWebGL = require('../../../lib/gputext/gputext-webgl.js');
 
 class TrackView {
   constructor(
