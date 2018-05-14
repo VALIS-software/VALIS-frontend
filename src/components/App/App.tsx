@@ -59,17 +59,17 @@ class App extends React.PureComponent<any, any> {
     }
   }
 
-  displayEntityDetails = (event) => {
+  displayEntityDetails = (event: any) => {
     if (event.data !== null) {
       const entityInfo = event.data;
-      const dataID = entityInfo.entityId;
-      const entityType = entityInfo.type;
+      const dataID: any = entityInfo.entityId;
+      const entityType: any = entityInfo.type;
       let elem = null;
-      if (type === ENTITY_TYPE.SNP) {
+      if (entityType === ENTITY_TYPE.SNP) {
         elem = (<SNPDetails viewModel={this.viewModel} appModel={this.appModel} snpId={dataID} />);
-      } if (type === ENTITY_TYPE.GENE) {
+      } if (entityType === ENTITY_TYPE.GENE) {
         elem = (<GeneDetails viewModel={this.viewModel} appModel={this.appModel} geneId={dataID} />);
-      } else if (type === ASSOCIATION_TYPE.GWAS) {
+      } else if (entityType === ASSOCIATION_TYPE.GWAS) {
         elem = (<GWASDetails viewModel={this.viewModel} appModel={this.appModel} assocId={dataID} />);
       } else {
         elem = (<EntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={dataID} />);
