@@ -30,6 +30,36 @@ class Util {
     return null;
   }
 
+  static splitRangeToChromosomeRanges(start, end) {
+    let last = start;
+    let curr = start;
+    let ranges = [];
+    for (let i = 0; i < CHROMOSOME_START_BASE_PAIRS.length - 1; i++) {
+      if (curr >= CHROMOSOME_START_BASE_PAIRS[i] && curr < CHROMOSOME_START_BASE_PAIRS[i + 1] ) {
+        ranges.push([i, curr - CHROMOSOME_START_BASE_PAIRS[i]]);
+
+        if (end <= CHROMOSOME_START_BASE_PAIRS[i + 1]) {
+          ranges.push([i, end - CHROMOSOME_START_BASE_PAIRS[i]]);
+          break;
+        } else {
+          curr = CHROMOSOME_START_BASE_PAIRS[i + 1];
+          ranges.push([i , CHROMOSOME_SIZES[i]]);
+        }
+      }
+    }
+    let ret = [];
+    for (let j = 0; j < ranges.length / 2; j++) {
+      const startInterval = ranges[j*2];
+      const endInterval = ranges[j*2 + 1];
+      ret.push({
+        contig: 'chr' + Util.chromosomeIndexToName(startInterval[0]),
+        start: startInterval[1],
+        end: endInterval[1],
+      });
+    }
+    return ret;
+  }
+
   static chromosomeRelativeBasePair(absoluteBasePair) {
     const chromosomeIndex = this.chromosomeIndex(absoluteBasePair);
     if (chromosomeIndex == null) {
