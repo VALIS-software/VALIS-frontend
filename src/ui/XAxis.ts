@@ -3,6 +3,7 @@ import Rect from "./core/Rect";
 import Text from "./core/Text";
 import { Renderable } from "../rendering/Renderable";
 import { BlendMode } from "../rendering/Renderer";
+import { Scalar } from "../math/Scalar";
 
 const OpenSansRegular = require('./../font/OpenSans-Regular.msdf.bin');
 
@@ -57,8 +58,8 @@ export class XAxis extends Object2D {
 
         if (str.length > maxLength) {
             // if default print of string is too long, try to reduce it with a exponent symbol
-            let exp10 = this.log10(Math.abs(x));
-            let expSign = this.sign(exp10);
+            let exp10 = Scalar.log10(Math.abs(x));
+            let expSign = Scalar.sign(exp10);
             let exp1000Int = Math.floor(Math.abs(exp10 / 3)) * expSign;
 
             let symbol = XAxis.siPrefixes[exp1000Int.toFixed(0)];
@@ -119,7 +120,7 @@ export class XAxis extends Object2D {
 
         // let t0x = tickRatio * range; // x-space location of first tick after 0
 
-        let n = this.log2(tickRatio * range / snap);
+        let n = Scalar.log2(tickRatio * range / snap);
 
         let lMajor = Math.ceil(n);
         let lMinor = Math.floor(n);
@@ -208,18 +209,6 @@ export class XAxis extends Object2D {
                 delete this._labelCache[key];
             }
         }
-    }
-
-    protected log2(x: number) {
-        return Math.log(x) / Math.LN2;
-    }
-
-    protected log10(x: number) {
-        return Math.log(x) / Math.LN10;
-    }
-
-    protected sign(x: number) {
-        return (((x > 0) as any) - ((x < 0) as any)) || +x;
     }
 
     static siPrefixes: { [key: string]: string } = {
