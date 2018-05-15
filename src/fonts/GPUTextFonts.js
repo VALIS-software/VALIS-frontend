@@ -5,10 +5,6 @@ const GPUTextWebGL = require('../../lib/gputext/gputext-webgl.js');
 const OpenSansRegularJson = require('./OpenSans-Regular.json');
 const OpenSansRegularAtlas = require('./OpenSans-Regular-0.png');
 
-
-
-console.log(OpenSansRegularJson, OpenSansRegularAtlas);
-
 /**
  * Singleton to load and store GPUTextFonts for use anywhere in the app
  */
