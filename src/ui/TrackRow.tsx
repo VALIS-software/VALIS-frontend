@@ -1,17 +1,17 @@
 import React = require("react");
 import Object2D from "./core/Object2D";
-import TrackTile from "./TrackTile";
+import Track from "./Track";
 import ReactObject from "./core/ReactObject";
 import Rect from "./core/Rect";
 
 import TrackDataModel, { TrackType } from "../model/TrackDataModel";
-import SequenceTile from "./tracks/SequenceTile";
+import SequenceTrack from "./tracks/SequenceTrack";
 
-export class Track {
+export class TrackRow {
 
     row: number;
 
-    readonly tiles = new Set<TrackTile>();
+    readonly tracks = new Set<Track>();
     readonly header: Object2D;
     readonly resizeHandle: Rect;
 
@@ -27,7 +27,7 @@ export class Track {
     constructor(
         readonly model: TrackDataModel,
         row: number,
-        public onLayoutChanged: (t: Track) => void = () => { },
+        public onLayoutChanged: (t: TrackRow) => void = () => { },
         protected readonly spacing: { x: number, y: number }
     ) {
         this.row = row;
@@ -44,31 +44,31 @@ export class Track {
         this.resizeHandle.color.set(v ? [0, 1, 0, 1] : [0.3, 0.3, 0.3, 1]);
     }
 
-    createTrackTile() {
-        let tile: TrackTile;
+    createTrack() {
+        let track: Track;
 
         switch (this.model.type) {
             case TrackType.Sequence:
-                tile = new SequenceTile(this);
+                track = new SequenceTrack(this);
                 break;
             default:
-                tile = new TrackTile(this);
+                track = new Track(this);
                 break;
         }
 
-        this.tiles.add(tile);
-        return tile;
+        this.tracks.add(track);
+        return track;
     }
 
-    deleteTrackTile(tile: TrackTile) {
-        tile.releaseGPUResources();
-        return this.tiles.delete(tile);
+    deleteTrack(track: Track) {
+        track.releaseGPUResources();
+        return this.tracks.delete(track);
     }
 
 }
 
 function TrackHeader(props: {
-    track: Track
+    track: TrackRow
 }) {
     return <div
         style={{
@@ -95,4 +95,4 @@ function TrackHeader(props: {
     </div>
 }
 
-export default Track;
+export default TrackRow;

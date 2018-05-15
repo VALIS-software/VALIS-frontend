@@ -34,11 +34,11 @@ export class App extends React.Component<Props, State> {
 			{ name: 'GRCh38', type: TrackType.Empty },
 			{ name: 'GM12878-DNase', type: TrackType.Empty },
 		]) {
-			trackViewer.addTrack(track, i++ === 0 ? 50 : undefined);
+			trackViewer.addTrackRow(track, i++ === 0 ? 50 : undefined);
 		}
 
 		for (let panel of [
-			{ name: 'Chromosome 1' },
+			{ name: 'Chromosome 1', x0: 0, x1: 249e6 },
 		]) {
 			trackViewer.addPanel(panel, false);
 		}

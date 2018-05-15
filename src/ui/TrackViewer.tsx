@@ -10,7 +10,7 @@ import { DEFAULT_SPRING } from "./UIConstants";
 import IconButton from "material-ui/IconButton";
 import SvgClose from "material-ui/svg-icons/navigation/close";
 import SvgAdd from "material-ui/svg-icons/content/add";
-import Track from "./Track";
+import TrackRow from "./TrackRow";
 import Panel from "./Panel";
 
 import TrackDataModel, { TrackType } from "../model/TrackDataModel";
@@ -37,7 +37,7 @@ class TrackViewer extends Object2D {
         horizontal: new Array<number>(),
     }
 
-    protected tracks = new Set<Track>();
+    protected tracks = new Set<TrackRow>();
     protected panels = new Set<Panel>();
 
     /** used to collectively position panels and track tiles */
@@ -59,7 +59,7 @@ class TrackViewer extends Object2D {
 
         this.addPanelButton = new ReactObject(
             <AddPanelButton onClick={() => {
-                this.addPanel({ name: 'Chromosome 1' }, true);
+                this.addPanel({ name: 'Chromosome 1', x0: 0, x1: 249e6}, true);
             }} />,
             this.panelHeaderHeight,
             this.panelHeaderHeight
@@ -74,7 +74,7 @@ class TrackViewer extends Object2D {
     }
 
     // track-viewer state deltas
-    addTrack(model: TrackDataModel, heightPx: number = this.defaultTrackHeight) {
+    addTrackRow(model: TrackDataModel, heightPx: number = this.defaultTrackHeight) {
         let edges = this.edges.horizontal;
         let newRowIndex = Math.max(edges.length - 1, 0);
 
@@ -83,10 +83,10 @@ class TrackViewer extends Object2D {
         edges.push(lastEdge + heightPx);
 
         // create a tack and add the header element to the grid
-        let track = new Track(model, newRowIndex, this.layoutTrack, this.spacing);
+        let track = new TrackRow(model, newRowIndex, this.layoutTrack, this.spacing);
         // add track tile to all panels
         for (let panel of this.panels) {
-            panel.addTrackTile(track.createTrackTile());
+            panel.addTrack(track.createTrack());
         }
         this.tracks.add(track);
 
@@ -122,7 +122,7 @@ class TrackViewer extends Object2D {
 
         // initialize tracks for this panel
        for (let track of this.tracks) {
-           panel.addTrackTile(track.createTrackTile());
+           panel.addTrack(track.createTrack());
            this.layoutTrack(track);
        }
 
@@ -218,9 +218,9 @@ class TrackViewer extends Object2D {
         // delete track tiles from the track
         // (we can leave them in the scene-graph of the panel and the GC should still cull them all)
         for (let track of this.tracks) {
-            for (let tile of track.tiles) {
+            for (let tile of track.tracks) {
                 if (tile.panel === panel) {
-                    track.deleteTrackTile(tile);
+                    track.deleteTrack(tile);
                 }
             }
         }
@@ -298,7 +298,7 @@ class TrackViewer extends Object2D {
         }
     }
 
-    protected positionTrack(track: Track, animate: boolean) {
+    protected positionTrack(track: TrackRow, animate: boolean) {
         let edges = this.edges.horizontal;
         let y = edges[track.row];
         let h = edges[track.row + 1] - edges[track.row];
@@ -336,13 +336,14 @@ class TrackViewer extends Object2D {
             - this.addPanelButton.w;
         this.grid.layoutW = 1;
         this.grid.y = this.panelHeaderHeight + this.spacing.y * 0.5 + this.xAxisHeight;
-        // grid height is set dynamically when laying out tracks
+
+        // (grid height is set dynamically when laying out tracks)
     }
 
     /**
      * A track isn't an Object2D, like Panel is, so we manually layout track elements with the track's y and height
      */
-    protected layoutTrack = (track: Track) => {
+    protected layoutTrack = (track: TrackRow) => {
         // handle
         let handle = track.resizeHandle;
         handle.layoutY = -0.5;
@@ -353,7 +354,7 @@ class TrackViewer extends Object2D {
         track.header.h = track.h - this.spacing.y;
 
         // tiles
-        for (let tile of track.tiles) {
+        for (let tile of track.tracks) {
             tile.y = track.y + this.spacing.y * 0.5;
             tile.h = track.h - this.spacing.y;
         }
@@ -371,7 +372,7 @@ class TrackViewer extends Object2D {
 
     // local state for grid-resizing
     private _resizingPanels = new Set<Panel>();
-    private _resizingTracks = new Set<Track>();
+    private _resizingTracks = new Set<TrackRow>();
 
     /**
      * Setup event listeners to enable resizing of panels and tracks
@@ -486,11 +487,11 @@ class TrackViewer extends Object2D {
         this._resizingPanels.delete(panel);
     }
 
-    protected startResizingTrack(track: Track) {
+    protected startResizingTrack(track: TrackRow) {
         this._resizingTracks.add(track);
     }
 
-    protected endResizingTrack(track: Track) {
+    protected endResizingTrack(track: TrackRow) {
         this._resizingTracks.delete(track);
     }
 

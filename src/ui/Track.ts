@@ -1,9 +1,9 @@
 import Rect from "./core/Rect";
 import Panel from "./Panel";
-import Track from "./Track";
+import TrackRow from "./TrackRow";
 import { InteractionEvent } from "./core/InteractionEvent";
 
-export class TrackTile extends Rect {
+export class Track extends Rect {
 
     panel: Panel;
 
@@ -16,7 +16,7 @@ export class TrackTile extends Rect {
     protected activeAxisPointerColor = [0, 140 / 255, 186 / 255, 1];
     protected secondaryAxisPointerColor = [0.2, 0.2, 0.2, 1];
 
-    constructor(readonly track: Track) {
+    constructor(readonly track: TrackRow) {
         super(0, 0, [0, 0, 0, 1]);
 
         this.cursorStyle = this.defaultCursor;
@@ -102,4 +102,4 @@ class AxisPointer extends Rect {
 
 }
 
-export default TrackTile;
+export default Track;

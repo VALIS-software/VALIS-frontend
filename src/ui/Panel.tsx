@@ -7,7 +7,7 @@ import PanelDataModel from "../model/PanelDataModel";
 
 import IconButton from "material-ui/IconButton";
 import SvgClose from "material-ui/svg-icons/navigation/close";
-import TrackTile, { AxisPointerStyle } from "./TrackTile";
+import Track, { AxisPointerStyle } from "./Track";
 import { InteractionEvent, WheelInteractionEvent } from "./core/InteractionEvent";
 import { runInThisContext } from "vm";
 import XAxis from "./XAxis";
@@ -42,7 +42,7 @@ export class Panel extends Object2D {
     readonly x0: number = 0; // these should only be changed by setRange()
     readonly x1: number = 1e6;
 
-    protected tiles = new Set<TrackTile>();
+    protected tracks = new Set<Track>();
 
     protected activeAxisPointers: { [ pointerId: string ]: number } = {};
     protected secondaryAxisPointers: { [pointerId: string]: number } = {};
@@ -91,6 +91,8 @@ export class Panel extends Object2D {
         this.resizeHandle.z = 1;
         this.resizeHandle.render = false;
         this.setResizable(false);
+
+        this.setRange(model.x0, model.x1);
     }
 
     setResizable(v: boolean) {
@@ -101,39 +103,41 @@ export class Panel extends Object2D {
         this.resizeHandle.color.set(v ? [0, 1, 0, 1] : [0.3, 0.3, 0.3, 1]);
     }
 
-    addTrackTile(tile: TrackTile) {
-        if (tile.panel != null) {
-            console.error('A track tile has been added to ' + (tile.panel === this ? 'the same panel more than once' : 'multiple panels'));
-            tile.panel.remove(tile);
+    addTrack(track: Track) {
+        if (track.panel != null) {
+            console.error('A track tile has been added to ' + (track.panel === this ? 'the same panel more than once' : 'multiple panels'));
+            track.panel.remove(track);
         }
 
-        tile.panel = this;
+        track.panel = this;
 
-        tile.addInteractionListener('dragstart', this.onTileDragStart);
-        tile.addInteractionListener('dragmove', this.onTileDragMove);
-        tile.addInteractionListener('dragend', this.onTileDragEnd);
-        tile.addInteractionListener('wheel', this.onTileWheel);
-        tile.addInteractionListener('pointermove', this.onTilePointerMove);
-        tile.addInteractionListener('pointerleave', this.onTileLeave);
+        track.addInteractionListener('dragstart', this.onTileDragStart);
+        track.addInteractionListener('dragmove', this.onTileDragMove);
+        track.addInteractionListener('dragend', this.onTileDragEnd);
+        track.addInteractionListener('wheel', this.onTileWheel);
+        track.addInteractionListener('pointermove', this.onTilePointerMove);
+        track.addInteractionListener('pointerleave', this.onTileLeave);
 
-        this.fillX(tile);
-        this.add(tile);
+        track.setRange(this.x0, this.x1);
 
-        this.tiles.add(tile);
+        this.fillX(track);
+        this.add(track);
+
+        this.tracks.add(track);
     }
 
-    removeTrackTile(tile: TrackTile) {
-        tile.removeInteractionListener('dragstart', this.onTileDragStart);
-        tile.removeInteractionListener('dragmove', this.onTileDragMove);
-        tile.removeInteractionListener('dragend', this.onTileDragEnd);
-        tile.removeInteractionListener('wheel', this.onTileWheel);
-        tile.removeInteractionListener('pointermove', this.onTilePointerMove);
-        tile.removeInteractionListener('pointerleave', this.onTileLeave);    
+    removeTrack(track: Track) {
+        track.removeInteractionListener('dragstart', this.onTileDragStart);
+        track.removeInteractionListener('dragmove', this.onTileDragMove);
+        track.removeInteractionListener('dragend', this.onTileDragEnd);
+        track.removeInteractionListener('wheel', this.onTileWheel);
+        track.removeInteractionListener('pointermove', this.onTilePointerMove);
+        track.removeInteractionListener('pointerleave', this.onTileLeave);
 
-        tile.panel = null;
-        this.remove(tile);
+        track.panel = null;
+        this.remove(track);
 
-        this.tiles.delete(tile);
+        this.tracks.delete(track);
     }
 
     setRange(x0: number, x1: number) {
@@ -146,7 +150,7 @@ export class Panel extends Object2D {
 
         this.xAxis.setRange(x0, x1);
 
-        for (let tile of this.tiles) {
+        for (let tile of this.tracks) {
             tile.setRange(x0, x1);
         }
     }
@@ -155,7 +159,7 @@ export class Panel extends Object2D {
         // remove any old and unused axis pointers
         for (let pointerId in this.secondaryAxisPointers) {
             if (secondaryAxisPointers[pointerId] === void 0 && this.activeAxisPointers[pointerId] === void 0) {
-                for (let tile of this.tiles) {
+                for (let tile of this.tracks) {
                     tile.removeAxisPointer(pointerId);
                 }
             }
@@ -175,7 +179,7 @@ export class Panel extends Object2D {
 
             this.secondaryAxisPointers[pointerId] = absX;
 
-            for (let tile of this.tiles) {
+            for (let tile of this.tracks) {
                 tile.setAxisPointer(pointerId, fractionX, AxisPointerStyle.Secondary);
             }
         }
@@ -192,7 +196,7 @@ export class Panel extends Object2D {
         this.tileHovering = true;
         this.setActiveAxisPointer(e);
     }
- 
+
     protected onTileWheel = (e: WheelInteractionEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -201,7 +205,7 @@ export class Panel extends Object2D {
 
         // pinch zoom
         if (e.ctrlKey) {
-            zoomFactor = 1 + e.wheelDeltaY * 0.01; // I'm assuming mac trackpad outputs change in %, @! needs research   
+            zoomFactor = 1 + e.wheelDeltaY * 0.01; // I'm assuming mac trackpad outputs change in %, @! needs research
         } else {
             zoomFactor = 1 + e.wheelDeltaY * 0.01 * 0.15;
         }
@@ -262,8 +266,6 @@ export class Panel extends Object2D {
     }
 
     protected onTileDragEnd = (e: InteractionEvent) => {
-        if (e.buttonState !== 1) return;
-
         e.preventDefault();
         e.stopPropagation();
 
@@ -281,7 +283,7 @@ export class Panel extends Object2D {
 
         this.activeAxisPointers[e.pointerId] = axisPointerX;
 
-        for (let tile of this.tiles) {
+        for (let tile of this.tracks) {
             tile.setAxisPointer(e.pointerId.toString(), fractionX, AxisPointerStyle.Active);
         }
 
@@ -296,7 +298,7 @@ export class Panel extends Object2D {
 
         delete this.activeAxisPointers[e.pointerId];
 
-        for (let tile of this.tiles) {
+        for (let tile of this.tracks) {
             tile.removeAxisPointer(e.pointerId.toString());
         }
 
