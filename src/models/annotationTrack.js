@@ -58,7 +58,9 @@ class AnnotationTrack extends Track {
         samplingRate, 
         trackHeightPx, 
         this.query
-      ).then(result => { range: range, data: result });
+      ).then(result => { 
+        return { range: range, data: result };
+      });
     });
 
     let totalCount = 0;
@@ -83,6 +85,7 @@ class AnnotationTrack extends Track {
         rawData = rawData.concat(data.data.values);
         totalCount += data.data.countInRange;
       });
+      this.notifyListeners(TRACK_EVENT_LOADING, false);
       return new Tile([start, end], [startBp, endBp], samplingRate, trackHeightPx, rawData, totalCount);
     }, failure => {
       this.notifyListeners(TRACK_EVENT_LOADING, false);
