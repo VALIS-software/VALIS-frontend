@@ -12,10 +12,10 @@ import faExternalLinkSquareAlt from '@fortawesome/fontawesome-free-solid/faExter
  
 
 // Styles
-import './GeneDetails.scss';
+import './TraitDetails.scss';
 import '../Shared/Shared.scss';
 
-class GeneDetails extends React.Component {
+class TraitDetails extends React.Component {
   constructor(props) {
     super(props);
     this.appModel = props.appModel;
@@ -26,15 +26,15 @@ class GeneDetails extends React.Component {
 
   static getDerivedStateFromProps(nextProps, prevState) {
     if (!prevState) prevState = {};
-    prevState.currentGeneId = nextProps.geneId;
+    prevState.currentGeneId = nextProps.traitId;
     return prevState;
   }
   
-  loadGeneDetails() {
-    const geneId = this.state.currentGeneId;
+  loadTraitDetails() {
+    const traitId = this.state.currentGeneId;
     this.api.getDetails(this.state.currentGeneId).then(detailsData => {
       this.setState({
-        loadedGeneId: geneId,
+        loadedGeneId: traitId,
         details: detailsData.details,
         relations: detailsData.relations,
       });
@@ -45,19 +45,19 @@ class GeneDetails extends React.Component {
 
   render() {
     if (this.state.currentGeneId !== this.state.loadedGeneId) {
-      this.loadGeneDetails();
+      this.loadTraitDetails();
       return (<div />);
     }
 
     const info = this.state.details;
 
-    return (<div className="gene-details">Hello</div>);
+    return (<div className="trait-details">Hello 2</div>);
   }
 }
-GeneDetails.propTypes = {
-  geneId: PropTypes.string,
+TraitDetails.propTypes = {
+  traitId: PropTypes.string,
   appModel: PropTypes.object,
   viewModel: PropTypes.object,
 };
 
-export default GeneDetails;
+export default TraitDetails;

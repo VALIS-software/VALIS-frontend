@@ -13,6 +13,7 @@ import NavigationController from "../NavigationController/NavigationController.j
 import SNPDetails from '../SNPDetails/SNPDetails.jsx';
 import GWASDetails from '../GWASDetails/GWASDetails.jsx';
 import GeneDetails from '../GeneDetails/GeneDetails.jsx';
+import TraitDetails from '../TraitDetails/TraitDetails.jsx';
 import { ENTITY_TYPE, ASSOCIATION_TYPE } from '../../helpers/constants.js';
 
 import AppModel, { AppEvent } from "../../models/appModel";
@@ -63,12 +64,14 @@ class App extends React.PureComponent<any, any> {
     if (event.data !== null) {
       const entityInfo = event.data;
       const dataID: any = entityInfo.entityId;
-      const entityType: any = entityInfo.type;
+      const entityType: any = entityInfo.entityType;
       let elem = null;
       if (entityType === ENTITY_TYPE.SNP) {
         elem = (<SNPDetails viewModel={this.viewModel} appModel={this.appModel} snpId={dataID} />);
-      } if (entityType === ENTITY_TYPE.GENE) {
+      } else if (entityType === ENTITY_TYPE.GENE) {
         elem = (<GeneDetails viewModel={this.viewModel} appModel={this.appModel} geneId={dataID} />);
+      } else if (entityType === ENTITY_TYPE.TRAIT) {
+        elem = (<TraitDetails viewModel={this.viewModel} appModel={this.appModel} traitId={dataID} />);
       } else if (entityType === ASSOCIATION_TYPE.GWAS) {
         elem = (<GWASDetails viewModel={this.viewModel} appModel={this.appModel} assocId={dataID} />);
       } else {

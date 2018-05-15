@@ -1,7 +1,6 @@
 // Dependencies
 import * as React from "react";
 import * as PropTypes from "prop-types";
-import { ENTITY_TYPE } from "../../helpers/constants.js";
 import {
     Table,
     TableBody,
@@ -12,8 +11,6 @@ import Paper from "material-ui/Paper";
 import { Card, CardHeader, CardText } from "material-ui/Card";
 import CircularProgress from "material-ui/CircularProgress";
 import DataListItem from "../DataListItem/DataListItem.jsx";
-import SNPDetails from "../SNPDetails/SNPDetails.jsx";
-import GWASDetails from "../GWASDetails/GWASDetails.jsx";
 import ZoomToButton from "../ZoomToButton/ZoomToButton.jsx";
 import Util from "../../helpers/util.js";
 
@@ -70,16 +67,7 @@ class EntityDetails extends React.Component<any, any> {
     }
 
     handleClickRelation(relation: any) {
-        const dataID = relation.id;
-        let elem = null;
-        if (Util.isType(relation, ENTITY_TYPE.SNP)) {
-            elem = (<SNPDetails viewModel={this.viewModel} appModel={this.appModel} snpId={dataID} />);
-        } else if (relation.title === 'GWAS Association') { // TODO: we need to provide better data to determine relation types
-            elem = (<GWASDetails viewModel={this.viewModel} appModel={this.appModel} assocId={dataID} />);
-        } else {
-            elem = (<EntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={dataID} />);
-        }
-        this.viewModel.pushView(relation.title, dataID, elem);
+        this.viewModel.displayEntityDetails(relation);
     }
 
     render() {

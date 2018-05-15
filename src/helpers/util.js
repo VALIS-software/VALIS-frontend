@@ -182,6 +182,10 @@ class Util {
       } else {
         return null;
       }
+    } else if (Util.isType(entity, ENTITY_TYPE.SNP)) {
+      return ENTITY_TYPE.SNP;
+    } else if (entity.title === 'GWAS Association') { // TODO: we need a cleaner way of doing this
+      return ASSOCIATION_TYPE.GWAS;
     }
   }
 
