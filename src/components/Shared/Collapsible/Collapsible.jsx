@@ -1,8 +1,8 @@
-import React, { Component } from 'react';
+import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import './Collapsible.scss';
 
-class Collapsible extends Component {
+class Collapsible extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -52,7 +52,10 @@ Collapsible.propTypes = {
   open: PropTypes.bool,
   title: PropTypes.string,
   disabled: PropTypes.bool,
-  children: PropTypes.array,
+  children: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.node),
+    PropTypes.node
+  ]),
 };
 
 export default Collapsible;
