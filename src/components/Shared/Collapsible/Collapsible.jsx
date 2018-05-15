@@ -36,6 +36,7 @@ class Collapsible extends Component {
     };
     let toggleIcon = this.state.open ? '-' : '+';
     toggleIcon = this.props.disabled ? '' : toggleIcon;
+
     const content = this.state.open ? (<div className="collapsible-content">{this.props.children}</div>) : (<div />);
     return (<div className="collapsible">
       <div onClick={toggle} className="collapsible-header">

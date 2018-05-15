@@ -61,7 +61,6 @@ class AnnotationTrack extends Track {
       ).then(result => { range: range, data: result });
     });
 
-    this.notifyListeners(TRACK_EVENT_LOADING, true);
     let totalCount = 0;
     let rawData = [];
     let startBp = null;

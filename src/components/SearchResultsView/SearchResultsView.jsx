@@ -24,12 +24,12 @@ class SearchResultsView extends React.Component {
 
   resultSelected(result) {
     const title = "";
-    const dataID = result._id;
+    const dataID = result.id;
     const elem = (
       <EntityDetails
         viewModel={this.viewModel}
         appModel={this.appModel}
-        dataID={result._id}
+        dataID={dataID}
       />
     );
     this.viewModel.pushView(title, dataID, elem);
@@ -83,7 +83,7 @@ class SearchResultsView extends React.Component {
           title={title}
           description={description}
           onClick={() => this.resultSelected(result)}
-          key={result._id}
+          key={result.id}
         />
       );
     });
