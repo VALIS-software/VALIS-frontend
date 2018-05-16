@@ -96,8 +96,6 @@ class Header extends React.Component {
         dataSource: dataSource,
       });
     });
-
-    this.props.viewModel.displayEntityDetails('Itrait_6b60f0f003d83a812cacf234ceb4454622649543326258844f58a9cf67390351');
   }
 
   render() {
