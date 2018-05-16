@@ -188,7 +188,7 @@ class Util {
       return ENTITY_TYPE.GENE;
     } else if (Util.isType(entity, ENTITY_TYPE.TRAIT)) {
       return ENTITY_TYPE.TRAIT;
-    } else if (entity.title === 'GWAS Association') { // TODO: we need a cleaner way of doing this
+    } else if (entity.title === 'GWAS Association' || Util.isAssociation(entity, ASSOCIATION_TYPE.GWAS)) { // TODO: we need a cleaner way of doing this
       return ASSOCIATION_TYPE.GWAS;
     }
   }
@@ -201,7 +201,9 @@ class Util {
     return (entityId.indexOf(typeId) === 0);
   }
 
-  static isAssociation(assocDef, fromTypeId, toTypeId) {
+  static isAssociation(entity, assocDef) {
+    const fromTypeId = entity.details.from_id;
+    const toTypeId = entity.details.to_id;
     return Util.isIdType(fromTypeId, assocDef[0]) && Util.isIdType(toTypeId, assocDef[1]);
   }
 

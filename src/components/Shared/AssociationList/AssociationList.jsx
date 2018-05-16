@@ -26,12 +26,12 @@ class AssociationList extends React.Component {
       return this.props.appModel.api.getDetails(r.id).then(d => {
         const details = d.details.info;
         const ret = {};
-        if (Util.isAssociation(ASSOCIATION_TYPE.EQTL, d.details.from_id, d.details.to_id)) {
+        if (Util.isAssociation(d, ASSOCIATION_TYPE.EQTL)) {
           ret.id = d.details['_id'];
           ret.cellType = details.CellType;
           ret.type = ASSOCIATION_TYPE.EQTL;
           ret.description = `Expression in ${details.CellType}`;
-        } else if (Util.isAssociation(ASSOCIATION_TYPE.GWAS, d.details.from_id, d.details.to_id)) {
+        } else if (Util.isAssociation(d, ASSOCIATION_TYPE.GWAS)) {
           ret.id = d.details['_id'];
           ret.type = ASSOCIATION_TYPE.GWAS;
           ret.description = details['description'];

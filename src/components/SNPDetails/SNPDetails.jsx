@@ -24,7 +24,7 @@ function FrequencyBarChart(props) {
       width: `${p}%`,
     };
     const label = (100.0 * row.value).toFixed(1) + '%';
-    return (<tr>
+    return (<tr key={row.key}>
       <td className="base-pair-label"> {row.key}</td>
       <td className="bar">
         <div style={widthStyle} className={'bar-elem ' + row.key} />
@@ -32,7 +32,11 @@ function FrequencyBarChart(props) {
       <td className="label">{label}</td>
     </tr>);
   });
-  return (<table className="frequency-chart">{rows}</table>);
+  return (<table className="frequency-chart">
+    <tbody>
+      {rows}
+    </tbody>
+  </table>);
 }
 
 FrequencyBarChart.propTypes = {

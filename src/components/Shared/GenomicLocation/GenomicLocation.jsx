@@ -6,7 +6,7 @@ function CopyableText(props) {
   const style = {
     border: 'none',
   };
-  return (<input style={style} className="copyable" type="text" value={props.text} />);
+  return (<input style={style} className="copyable" type="text" readOnly={true} value={props.text} />);
 }
 
 CopyableText.propTypes = {
