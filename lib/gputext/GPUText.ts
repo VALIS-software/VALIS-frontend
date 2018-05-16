@@ -1,5 +1,5 @@
 /**
-	Provides text layout, vertex buffer generation and file parsing
+	Provides text layout, vertex buffer generation and font file parsing
 
 	Dev notes:
 	- Should have progressive layout where text can be appended to an existing layout

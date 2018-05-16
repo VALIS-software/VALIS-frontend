@@ -52,7 +52,7 @@ class TrackViewer extends Object2D {
         this.layoutW = 1;
         this.layoutH = 1;
 
-        this.grid = new Rect(0, 0, [0.9, 0.9, 0.9, 1]); // grid is rect for debug display
+        this.grid = new Rect(0, 0, [0.9, 0.9, 0.9, 1]); // grid is Rect type for debug display
         this.grid.render = false;
         this.add(this.grid);
         this.initializeGridResizing();
@@ -83,7 +83,7 @@ class TrackViewer extends Object2D {
         edges.push(lastEdge + heightPx);
 
         // create a tack and add the header element to the grid
-        let track = new TrackRow(model, newRowIndex, this.layoutTrack, this.spacing);
+        let track = new TrackRow(model, newRowIndex, this.layoutTrackRow, this.spacing);
         // add track tile to all panels
         for (let panel of this.panels) {
             panel.addTrack(track.createTrack());
@@ -123,7 +123,7 @@ class TrackViewer extends Object2D {
         // initialize tracks for this panel
        for (let track of this.tracks) {
            panel.addTrack(track.createTrack());
-           this.layoutTrack(track);
+           this.layoutTrackRow(track);
        }
 
         this.panels.add(panel);
@@ -191,6 +191,7 @@ class TrackViewer extends Object2D {
 
     /**
      * Removes the panel from the scene and cleans up resources
+     *
      * **Should only be called after closePanel**
      */
     protected cleanupPanel = (panel: Panel) => {
@@ -232,9 +233,8 @@ class TrackViewer extends Object2D {
     }
 
     protected updatePanels(animate: boolean) {
-        // update header state
-        let openPanelCount = 0;
         // count open panels
+        let openPanelCount = 0;
         for (let p of this.panels) if (!p.closing) openPanelCount++;
         // panels are only closable if more than 1 are open
         for (let p of this.panels) {
@@ -341,22 +341,22 @@ class TrackViewer extends Object2D {
     }
 
     /**
-     * A track isn't an Object2D, like Panel is, so we manually layout track elements with the track's y and height
+     * A TrackRow isn't an Object2D, like Panel is, so we manually layout track elements with the track row's y and height
      */
-    protected layoutTrack = (track: TrackRow) => {
+    protected layoutTrackRow = (trackRow: TrackRow) => {
         // handle
-        let handle = track.resizeHandle;
+        let handle = trackRow.resizeHandle;
         handle.layoutY = -0.5;
-        handle.y = track.y + track.h;
+        handle.y = trackRow.y + trackRow.h;
 
         // header
-        track.header.y = track.y + this.spacing.y * 0.5;
-        track.header.h = track.h - this.spacing.y;
+        trackRow.header.y = trackRow.y + this.spacing.y * 0.5;
+        trackRow.header.h = trackRow.h - this.spacing.y;
 
         // tiles
-        for (let tile of track.tracks) {
-            tile.y = track.y + this.spacing.y * 0.5;
-            tile.h = track.h - this.spacing.y;
+        for (let tile of trackRow.tracks) {
+            tile.y = trackRow.y + this.spacing.y * 0.5;
+            tile.h = trackRow.h - this.spacing.y;
         }
 
         // set grid height from the height of all the tracks

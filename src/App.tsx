@@ -95,7 +95,7 @@ export class App extends React.Component<Props, State> {
 		this._lastFrameT_ms = t_ms;
 
 		// appCanvas should react to user input before animation are stepped
-		// this enabled any animations spawned by the events to be progressed before rendering
+		// this enables any animations spawned by the interaction events to be progressed before rendering
 		this.appCanvas.handleUserInteraction();
 
 		Animator.step();
