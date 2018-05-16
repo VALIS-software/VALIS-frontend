@@ -4,11 +4,17 @@ import MuiThemeProvider from "material-ui/styles/MuiThemeProvider";
 import LinearProgress from "material-ui/LinearProgress";
 
 // Components
+
 import Header from "../Header/Header.jsx";
 import EntityDetails from "../EntityDetails/EntityDetails";
 import TrackViewSettings from "../TrackViewSettings/TrackViewSettings.jsx";
 import MultiTrackViewer from "../MultiTrackViewer/MultiTrackViewer";
 import NavigationController from "../NavigationController/NavigationController.jsx";
+import SNPDetails from '../SNPDetails/SNPDetails.jsx';
+import GWASDetails from '../GWASDetails/GWASDetails.jsx';
+import GeneDetails from '../GeneDetails/GeneDetails.jsx';
+import TraitDetails from '../TraitDetails/TraitDetails.jsx';
+import { ENTITY_TYPE, ASSOCIATION_TYPE } from '../../helpers/constants.js';
 
 import AppModel, { AppEvent } from "../../models/appModel";
 
@@ -19,9 +25,11 @@ import ViewModel, {
   VIEW_EVENT_PUSH_VIEW,
   VIEW_EVENT_POP_VIEW,
   VIEW_EVENT_CLOSE_VIEW,
+  VIEW_EVENT_DISPLAY_ENTITY_DETAILS,
 } from "../../models/viewModel.js";
 
 import QueryBuilder from "../../models/query.js";
+
 
 // Styles
 import "./App.scss";
@@ -49,6 +57,27 @@ class App extends React.PureComponent<any, any> {
         const elem = (<EntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={dataID} />);
         this.viewModel.pushView(title, dataID, elem);
       }
+    }
+  }
+
+  displayEntityDetails = (event: any) => {
+    if (event.data !== null) {
+      const entityInfo = event.data;
+      const dataID: any = entityInfo.entityId;
+      const entityType: any = entityInfo.entityType;
+      let elem = null;
+      if (entityType === ENTITY_TYPE.SNP) {
+        elem = (<SNPDetails viewModel={this.viewModel} appModel={this.appModel} snpId={dataID} />);
+      } else if (entityType === ENTITY_TYPE.GENE) {
+        elem = (<GeneDetails viewModel={this.viewModel} appModel={this.appModel} geneId={dataID} />);
+      } else if (entityType === ENTITY_TYPE.TRAIT) {
+        elem = (<TraitDetails viewModel={this.viewModel} appModel={this.appModel} traitId={dataID} />);
+      } else if (entityType === ASSOCIATION_TYPE.GWAS) {
+        elem = (<GWASDetails viewModel={this.viewModel} appModel={this.appModel} assocId={dataID} />);
+      } else {
+        elem = (<EntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={dataID} />);
+      }
+      this.viewModel.pushView('', dataID, elem);
     }
   }
 
@@ -123,6 +152,7 @@ class App extends React.PureComponent<any, any> {
     this.viewModel.addListener(this.popView, VIEW_EVENT_POP_VIEW);
     this.viewModel.addListener(this.pushView, VIEW_EVENT_PUSH_VIEW);
     this.viewModel.addListener(this.closeView, VIEW_EVENT_CLOSE_VIEW);
+    this.viewModel.addListener(this.displayEntityDetails, VIEW_EVENT_DISPLAY_ENTITY_DETAILS);
   }
 
   render() {

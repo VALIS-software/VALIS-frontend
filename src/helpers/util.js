@@ -3,7 +3,7 @@ import { Igloo } from "../../lib/igloojs/igloo.js";
 const d3 = require("d3");
 const _ = require("underscore");
 
-import { CHROMOSOME_START_BASE_PAIRS, CHROMOSOME_SIZES } from "./constants.js";
+import { CHROMOSOME_START_BASE_PAIRS, CHROMOSOME_SIZES, ENTITY_TYPE, ASSOCIATION_TYPE } from './constants.js';
 
 const formatSi = d3.format(".6s");
 
@@ -171,6 +171,27 @@ class Util {
     return u * windowSize[0];
   }
 
+  static getEntityType(entity) {
+    if (_.isString(entity)) {
+      if (Util.isIdType(entity, ENTITY_TYPE.SNP)) {
+        return ENTITY_TYPE.SNP;
+      } else if (Util.isIdType(entity, ENTITY_TYPE.GENE)) {
+        return ENTITY_TYPE.GENE;
+      } else if (Util.isIdType(entity, ENTITY_TYPE.TRAIT)) {
+        return ENTITY_TYPE.TRAIT;
+      } else {
+        return null;
+      }
+    } else if (Util.isType(entity, ENTITY_TYPE.SNP)) {
+      return ENTITY_TYPE.SNP;
+    } else if (Util.isType(entity, ENTITY_TYPE.GENE)) {
+      return ENTITY_TYPE.GENE;
+    } else if (Util.isType(entity, ENTITY_TYPE.TRAIT)) {
+      return ENTITY_TYPE.TRAIT;
+    } else if (entity.title === 'GWAS Association') { // TODO: we need a cleaner way of doing this
+      return ASSOCIATION_TYPE.GWAS;
+    }
+  }
 
   static isType(entity, typeId) {
     return Util.isIdType(entity.id, typeId);
