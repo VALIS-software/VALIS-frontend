@@ -202,9 +202,16 @@ class Util {
   }
 
   static isAssociation(entity, assocDef) {
-    const fromTypeId = entity.details.from_id;
-    const toTypeId = entity.details.to_id;
-    return Util.isIdType(fromTypeId, assocDef[0]) && Util.isIdType(toTypeId, assocDef[1]);
+    let fromTypeId = null;
+    let toTypeId = null;
+    if (entity.details) {
+      fromTypeId = entity.details.from_id;
+      toTypeId = entity.details.to_id;
+    } else if (entity.type) {
+      fromTypeId = entity.type[0];
+      toTypeId = entity.type[1];
+    }
+    return Util.isIdType(fromTypeId, assocDef[0]) && Util.isIdType(toTypeId, assocDef[1]);  
   }
 
   static multiplyColor(color, d) {
