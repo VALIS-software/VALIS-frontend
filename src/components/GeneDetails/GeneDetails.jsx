@@ -36,13 +36,7 @@ class GeneDetails extends React.Component {
         details: detailsData.details,
         relations: detailsData.relations,
       });
-    }, err => {
-      console.log(err);
     });
-  }
-
-  componentDidCatch(error, info) {
-    console.log(error, info);
   }
 
   render() {
@@ -88,7 +82,7 @@ class GeneDetails extends React.Component {
       const openLink = () => {
         window.open(link[1], '_blank');
       };
-      return (<div onClick={openLink} className="row">{link[0]}</div>);
+      return (<div key={link[0]} onClick={openLink} className="row">{link[0]}</div>);
     });
 
     return (<div className="gene-details">

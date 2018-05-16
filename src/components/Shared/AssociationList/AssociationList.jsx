@@ -68,7 +68,7 @@ class AssociationList extends React.Component {
         const openGwas = () => {
           this.props.viewModel.displayEntityDetails(d);
         };
-        return (<div onClick={openGwas} className="row">{d.disease}</div>);
+        return (<div key={d.id} onClick={openGwas} className="row">{d.disease}</div>);
       });
       const title = `GWAS Associations (${studies.length})`;
       gwas = (<Collapsible title={title} open={false}>{studies}</Collapsible>);
@@ -81,7 +81,7 @@ class AssociationList extends React.Component {
         const openEqtl = () => {
           this.props.viewModel.displayEntityDetails(d);
         };
-        return (<div onClick={openEqtl} className="row">{d.description}</div>);
+        return (<div key={d.id} onClick={openEqtl} className="row">{d.description}</div>);
       });
       const title = `Quantitative Trait Loci (${eqtls.length})`;
       eqtl = (<Collapsible title={title} open={false}>{eqtls}</Collapsible>);
