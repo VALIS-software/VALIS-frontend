@@ -184,6 +184,10 @@ class Util {
       }
     } else if (Util.isType(entity, ENTITY_TYPE.SNP)) {
       return ENTITY_TYPE.SNP;
+    } else if (Util.isType(entity, ENTITY_TYPE.GENE)) {
+      return ENTITY_TYPE.GENE;
+    } else if (Util.isType(entity, ENTITY_TYPE.TRAIT)) {
+      return ENTITY_TYPE.TRAIT;
     } else if (entity.title === 'GWAS Association') { // TODO: we need a cleaner way of doing this
       return ASSOCIATION_TYPE.GWAS;
     }

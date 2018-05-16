@@ -11,7 +11,7 @@ import Paper from "material-ui/Paper";
 import { Card, CardHeader, CardText } from "material-ui/Card";
 import CircularProgress from "material-ui/CircularProgress";
 import DataListItem from "../DataListItem/DataListItem.jsx";
-import ZoomToButton from "../ZoomToButton/ZoomToButton.jsx";
+import ZoomToButton from "../Shared/ZoomToButton/ZoomToButton.jsx";
 import Util from "../../helpers/util.js";
 
 // Styles

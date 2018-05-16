@@ -1,7 +1,4 @@
 .snp-details {
-  .snp-info-wrapper {
-    padding: 8px;
-  }
   .snp-type-wrapper {
     font-size: 18px;
     margin-top: 8px;
@@ -19,10 +16,6 @@
     &:hover {
       background-color: darken(#D5D6D9, 25%);
     }
-  }
-
-  .copyable {
-    width: 100%;
   }
 
   .frequency-chart {

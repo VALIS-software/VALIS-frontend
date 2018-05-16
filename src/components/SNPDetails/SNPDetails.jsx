@@ -1,9 +1,10 @@
 // Dependencies
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
-import { ASSOCIATION_TYPE } from '../../helpers/constants.js';
-import ZoomToButton from '../ZoomToButton/ZoomToButton.jsx';
+import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton.jsx';
 import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
+import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation.jsx';
+import AssociationList from '../Shared/AssociationList/AssociationList.jsx';
 import EntityDetails from '../EntityDetails/EntityDetails';
 import GWASDetails from '../GWASDetails/GWASDetails.jsx';
 import QueryBuilder, { QUERY_TYPE_INFO } from '../../models/query.js';
@@ -14,17 +15,6 @@ import './SNPDetails.scss';
 import '../Shared/Shared.scss';
 
 const _ = require('underscore');
-
-function CopyableText(props) {
-  const style = {
-    border: 'none',
-  };
-  return (<input style={style} className="copyable" type="text" value={props.text} />);
-}
-
-CopyableText.propTypes = {
-  text: PropTypes.string,
-};
 
 function FrequencyBarChart(props) {
   const sorted = _.sortBy(props.data, d => -d.value);
@@ -53,8 +43,7 @@ function GeneLink(props) {
   const openLink = () => {
     if (props.geneId) {
       const geneId = `Ggeneid_${props.geneId}`;
-      const view = (<EntityDetails dataID={geneId} viewModel={props.viewModel} appModel={props.appModel} />);
-      props.viewModel.pushView(props.geneName, props.geneId, view);
+      props.viewModel.displayEntityDetails(geneId);
     } else {
       const builder = new QueryBuilder();
       builder.newGenomeQuery();
@@ -92,39 +81,6 @@ class SNPDetails extends React.Component {
     return prevState;
   }
 
-  loadRelationDetails() {
-    const all = this.state.relations.map(r => {
-      return this.api.getDetails(r.id).then(d => {
-        const details = d.details.info;
-        const ret = {};
-        if (Util.isAssociation(ASSOCIATION_TYPE.EQTL, d.details.from_id, d.details.to_id)) {
-          ret.id = d.details['_id'];
-          ret.cellType = details.CellType;
-          ret.type = ASSOCIATION_TYPE.EQTL;
-          ret.description = `Expression in ${details.CellType}`;
-        } else if (Util.isAssociation(ASSOCIATION_TYPE.GWAS, d.details.from_id, d.details.to_id)) {
-          ret.id = d.details['_id'];
-          ret.type = ASSOCIATION_TYPE.GWAS;
-          ret.description = details['description'];
-          ret.disease = details['DISEASE/TRAIT'] || 'Unspecified Trait';
-          ret.author = details['FIRST AUTHOR'];
-          ret.journal = details['JOURNAL'];
-          ret.date = details['DATE'];
-          ret.pvalue = details['p-value'];
-          ret.link = details['LINK'];
-        }
-        return ret;
-      });
-    });
-
-    Promise.all(all).then(d => {
-      this.setState({
-        gwas: d.filter(x => x.type === ASSOCIATION_TYPE.GWAS),
-        eqtl: d.filter(x => x.type === ASSOCIATION_TYPE.EQTL),
-      });
-    });
-  }
-
   loadSnpDetails() {
     const snpId = this.state.currentSnpId;
     this.api.getDetails(this.state.currentSnpId).then(detailsData => {
@@ -133,7 +89,6 @@ class SNPDetails extends React.Component {
         details: detailsData.details,
         relations: detailsData.relations,
       });
-      this.loadRelationDetails();
     }, err => {
       console.log(err);
     });
@@ -154,10 +109,7 @@ class SNPDetails extends React.Component {
       zoomBtn = (<ZoomToButton viewModel={this.props.viewModel} start={absoluteStart} end={absoluteEnd} padding={0.2} />);
     }
 
-    const chrName = details.contig;
-    const start = details.start;
-    const locText = `${chrName}:${start}`;
-    const location = (<div className="snp-location"><CopyableText text={locText} /></div>);
+    let location = (<GenomicLocation contig={details.contig} start={details.start} end={details.end} />);
 
     let variantType = (<div className="snp-type snp-type-non-coding">Non-coding Variant</div>);
 
@@ -225,35 +177,6 @@ class SNPDetails extends React.Component {
     });
 
 
-    let gwas = (<Collapsible disabled={true} title="No GWAS Relations" />);
-
-    if (this.state.gwas && this.state.gwas.length > 0) {
-      const studies = this.state.gwas.map(d => {
-        const openGwas = () => {
-          const view = (<GWASDetails assocId={d.id} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
-          this.props.viewModel.pushView('Study Details', d.id, view);
-        };
-        return (<div onClick={openGwas} className="row">{d.disease}</div>);
-      });
-      const title = `GWAS Associations (${studies.length})`;
-      gwas = (<Collapsible title={title} open={false}>{studies}</Collapsible>);
-    }
-
-
-    let eqtl = (<Collapsible disabled={true} title="No Quantitative Trait Loci" />);
-
-    if (this.state.eqtl && this.state.eqtl.length > 0) {
-      const eqtls = this.state.eqtl.map(d => {
-        const openEqtl = () => {
-          const view = (<EntityDetails dataID={d.id} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
-          this.props.viewModel.pushView('Loci Details', d.id, view);
-        };
-        return (<div onClick={openEqtl} className="row">{d.description}</div>);
-      });
-      const title = `Quantitative Trait Loci (${eqtls.length})`;
-      eqtl = (<Collapsible title={title} open={false}>{eqtls}</Collapsible>);
-    }
-
     const header = (<div className="entity-header">
       <div className="entity-name">{name}{zoomBtn}</div>
     </div>);
@@ -261,7 +184,7 @@ class SNPDetails extends React.Component {
     return (<div className="snp-details">
       {header}
       <Collapsible title="Basic Info" open={true}>
-        <div className="snp-info-wrapper">
+        <div className="section-wrapper">
           <div className="section">
             <div className="section-header"> Variant Type </div>
             {variantType}
@@ -276,8 +199,7 @@ class SNPDetails extends React.Component {
           </div>
         </div>
       </Collapsible>
-      {gwas}
-      {eqtl}
+      <AssociationList associations={this.state.relations} appModel={this.props.appModel} viewModel={this.props.viewModel} />
       <Collapsible title="External References" open={false}>
         {links}
       </Collapsible>
