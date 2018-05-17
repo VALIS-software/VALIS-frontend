@@ -15,7 +15,8 @@ import {
   TRACK_TYPE_EQTL,
   TRACK_TYPE_ENCODE,
   TRACK_TYPE_3D,
-  TRACK_TYPE_NETWORK
+  TRACK_TYPE_NETWORK,
+  TRACK_TYPE_BOOLEAN
 } from "../../helpers/constants.js";
 
 // Styles
@@ -83,6 +84,16 @@ class DatasetSelector extends React.Component {
     } else if (trackType === TRACK_TYPE_NETWORK) {
       this.viewModel.pushView(
         "Network Tracks",
+        null,
+        <TrackSelector
+          trackType={trackType}
+          appModel={this.appModel}
+          viewModel={this.viewModel}
+        />
+      );
+    } else if (trackType === TRACK_TYPE_BOOLEAN) {
+      this.viewModel.pushView(
+        "Boolean Tracks",
         null,
         <TrackSelector
           trackType={trackType}

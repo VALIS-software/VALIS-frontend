@@ -1,10 +1,10 @@
 const LOCAL_API_URL = 'http://127.0.0.1:5000';
 
-const COLOR1 =  [37, 206, 209];
+const COLOR1 = [37, 206, 209];
 const COLOR2 = [128, 155, 206];
 const COLOR3 = [255, 138, 91];
 const COLOR4 = [232, 82, 111];
-const COLOR5 =  [250, 192, 94];
+const COLOR5 = [250, 192, 94];
 const COLOR6 = [89, 205, 144];
 const COLOR7 = [25, 147, 251];
 const COLOR8 = [209, 17, 73];
@@ -32,6 +32,7 @@ const TRACK_TYPE_EQTL = 'track_type_eqtl';
 const TRACK_TYPE_ENCODE = 'track_type_encode';
 const TRACK_TYPE_3D = 'track_type_3d';
 const TRACK_TYPE_NETWORK = 'track_type_network';
+const TRACK_TYPE_BOOLEAN = 'track_type_boolean';
 
 const ENTITY_TYPE = {
   SNP: 'Gsnp',
@@ -124,4 +125,5 @@ export {
   TRACK_TYPE_ENCODE,
   TRACK_TYPE_3D,
   TRACK_TYPE_NETWORK,
+  TRACK_TYPE_BOOLEAN,
 };
