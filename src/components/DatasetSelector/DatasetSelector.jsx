@@ -5,6 +5,7 @@ import GWASSelector from "../GWASSelector/GWASSelector.jsx";
 import GenomeSelector from "../GenomeSelector/GenomeSelector.jsx";
 import TrackSelector from "../TrackSelector/TrackSelector.jsx";
 import ENCODESelector from "../ENCODESelector/ENCODESelector.jsx";
+import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector.jsx";
 import DataListItem from "../DataListItem/DataListItem.jsx";
 
 import {
@@ -95,11 +96,7 @@ class DatasetSelector extends React.Component {
       this.viewModel.pushView(
         "Boolean Tracks",
         null,
-        <TrackSelector
-          trackType={trackType}
-          appModel={this.appModel}
-          viewModel={this.viewModel}
-        />
+        <BooleanTrackSelector appModel={this.appModel} />
       );
     }
   }

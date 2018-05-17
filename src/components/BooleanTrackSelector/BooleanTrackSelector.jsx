@@ -2,6 +2,7 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import Slider from 'material-ui/Slider';
+import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
@@ -23,7 +24,7 @@ function reverse(value) {
 }
 
 
-class GenomeSelector extends React.Component {
+class BooleanTrackSelector extends React.Component {
   constructor(props) {
     super(props);
     if (props.appModel) {
@@ -36,91 +37,97 @@ class GenomeSelector extends React.Component {
       trackAValue: 0,
       trackBValue: 0,
       windowSize: 1000,
+      availableOperators: [],
+      availableAnnotationTracks: [],
     };
   }
 
   handleUpdateTitle = (event) => {
     this.setState({
       title: event.target.value,
+      fixTitle: true,
     });
+  }
+
+  handleUpdateOperator = (event, index, value) => {
+    this.setState({
+      operatorValue: value,
+    });
+    if (!this.state.fixTitle) {
+      this.setState({
+        title: this.state.availableOperators[value],
+      });
+    }
   }
 
   handleUpdateTrackA = (event, index, value) => {
     this.setState({
-      genomeTypeValue: value,
+      trackAValue: value,
     });
   }
 
   handleUpdateTrackB = (event, index, value) => {
     this.setState({
-      genomeTypeValue: value,
+      trackBValue: value,
     });
   }
 
-  handleUpdateWindow = (event, value) => {
+  handleUpdateWindowSize = (event, value) => {
     this.setState({
-      windowSize: value,
+      windowSize: transform(value),
     });
   }
 
-  handleUpdateMaxNumber = (event, value) => {
-    this.setState({
-      maxnumber: transform(value),
-    });
-  }
-
-  buildGenomeQuery() {
-    const builder = new QueryBuilder();
-    builder.newGenomeQuery();
-    if (this.state.chromoNameValue > 0) {
-      const contig = this.availableChromoNames[this.state.chromoNameValue];
-      builder.filterContig(contig);
+  buildQuery() {
+    const { availableOperators, operatorValue, availableAnnotationTracks,
+      trackAValue, trackBValue, windowSize } = this.state;
+    // copy the existing queries
+    const queryA = JSON.parse(JSON.stringify(availableAnnotationTracks[trackAValue].query));
+    const queryB = JSON.parse(JSON.stringify(availableAnnotationTracks[trackBValue].query));
+    const op = availableOperators[operatorValue];
+    const builder = new QueryBuilder(queryA);
+    if (op === 'intersect') {
+      builder.addArithmeticIntersect(queryB);
+    } else if (op === 'window') {
+      builder.addArithmeticWindow(queryB, windowSize);
+    } else if (op === 'union') {
+      builder.addArithmeticUnion(queryB);
     }
-    const genomeType = this.availableTypes[this.state.genomeTypeValue];
-    builder.filterType(genomeType);
-    builder.filterLength({ '>': this.state.minLength });
-    builder.setLimit(this.state.maxnumber);
-    const genomeQuery = builder.build();
-    return genomeQuery;
+    const query = builder.build();
+    return query;
   }
 
   addQueryTrack() {
-    const query = this.buildGenomeQuery();
+    const query = this.buildQuery();
     this.appModel.addAnnotationTrack(this.state.title, query);
   }
 
   componentDidMount() {
-    // some pre-defined types
-    this.availableTypes = ['gene', 'exon', 'mRNA', 'promoter', 'enhancer', 'SNP'];
-    this.genomeTypeItems = [];
-    for (let i = 0; i < this.availableTypes.length; i++) {
-      this.genomeTypeItems.push(<MenuItem value={i} key={i} primaryText={this.availableTypes[i]} />);
-    }
-    this.availableChromoNames = ['Any'].concat(CHROMOSOME_NAMES);
-    this.chromoNameItems = [];
-    for (let i = 0; i < this.availableChromoNames.length; i++) {
-      this.chromoNameItems.push(<MenuItem value={i} key={i} primaryText={this.availableChromoNames[i]} />);
+    const availableOperators = ['intersect', 'window', 'union'];
+    const availableAnnotationTracks = [];
+    for (const track of this.appModel.getTracks()) {
+      if (track.annotationTrack !== null) {
+        availableAnnotationTracks.push(track.annotationTrack);
+      }
     }
     this.setState({
-      genomeTypeValue: 0,
-    });
-    // use api to pull all available types
-    const builder = new QueryBuilder();
-    builder.newGenomeQuery();
-    const genomeQuery = builder.build();
-    this.api.getDistinctValues('type', genomeQuery).then(data => {
-      this.availableTypes = data;
-      this.genomeTypeItems = [];
-      for (let i = 0; i < this.availableTypes.length; i++) {
-        this.genomeTypeItems.push(<MenuItem value={i} key={i} primaryText={this.availableTypes[i]} />);
-      }
-      this.setState({
-        genomeTypeValue: 0,
-      });
+      availableOperators: availableOperators,
+      availableAnnotationTracks: availableAnnotationTracks,
     });
   }
 
   render() {
+    const { availableOperators, operatorValue, availableAnnotationTracks } = this.state;
+    const op = availableOperators[operatorValue];
+    const availableOperatorItems = [];
+    for (let i = 0; i < availableOperators.length; i++) {
+      availableOperatorItems.push(<MenuItem value={i} key={i} primaryText={availableOperators[i]} />);
+    }
+    const availableAnnotationTrackItems = [];
+    for (let i = 0; i < availableAnnotationTracks.length; i++) {
+      const annotationId = availableAnnotationTracks[i].annotationId;
+      availableAnnotationTrackItems.push(<MenuItem value={i} key={i} primaryText={annotationId} />);
+    }
     return (
       <div className="track-editor">
         <TextField
@@ -130,36 +137,37 @@ class GenomeSelector extends React.Component {
           errorText={!this.state.title ? 'This field is required' : ''}
         /><br /> <br />
         <SelectField
-          value={this.state.genomeTypeValue}
-          floatingLabelText="Type"
-          onChange={this.handleUpdateType}
+          value={this.state.operatorValue}
+          floatingLabelText="Operator"
+          onChange={this.handleUpdateOperator}
           maxHeight={200}
         >
-          {this.genomeTypeItems}
+          {availableOperatorItems}
         </SelectField><br /> <br />
         <SelectField
-          value={this.state.chromoNameValue}
-          floatingLabelText="Chromosome"
-          onChange={this.handleUpdateChromName}
+          value={this.state.trackAValue}
+          floatingLabelText="Annotation Track A"
+          onChange={this.handleUpdateTrackA}
           maxHeight={200}
         >
-          {this.chromoNameItems}
+          {availableAnnotationTrackItems}
         </SelectField><br /> <br />
-        <div> {'Length > '} {this.state.minLength} </div>
-        <Slider
-          min={0}
-          max={100}
-          step={1}
-          value={this.state.minLength}
-          onChange={this.handleUpdateMinLength}
-        />
-        <div> {'Max Number of Results: '} {this.state.maxnumber} </div>
+        <SelectField
+          value={this.state.trackBValue}
+          floatingLabelText="Annotation Track B"
+          onChange={this.handleUpdateTrackB}
+          maxHeight={200}
+        >
+          {availableAnnotationTrackItems}
+        </SelectField><br /> <br /> <br />
+        <div> {'Window Size  '} {this.state.windowSize} </div>
         <Slider
           min={logmin}
           max={logmax}
           step={(logmax - logmin) / 100}
-          value={reverse(this.state.maxnumber)}
-          onChange={this.handleUpdateMaxNumber}
+          value={reverse(this.state.windowSize)}
+          onChange={this.handleUpdateWindowSize}
+          disabled={op !== 'window'}
         />
         <RaisedButton
           label="Create Track"
@@ -173,8 +181,8 @@ class GenomeSelector extends React.Component {
   }
 }
 
-GenomeSelector.propTypes = {
+BooleanTrackSelector.propTypes = {
   appModel: PropTypes.object,
 };
 
-export default GenomeSelector;
+export default BooleanTrackSelector;
