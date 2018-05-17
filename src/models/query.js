@@ -4,8 +4,8 @@ const QUERY_TYPE_INFO = 'InfoNode';
 const QUERY_TYPE_EDGE = 'EdgeNode';
 
 class QueryBuilder {
-  constructor() {
-    this.query = {};
+  constructor(query = {}) {
+    this.query = query;
   }
 
   newGenomeQuery() {
@@ -13,6 +13,7 @@ class QueryBuilder {
       type: QUERY_TYPE_GENOME,
       filters: {},
       toEdges: [],
+      arithmetics: [],
     };
   }
 
@@ -100,6 +101,40 @@ class QueryBuilder {
       throw new Error('toNode is only available for an Edge Query.');
     }
     this.query.toNode = nodeQuery;
+  }
+
+  addArithmeticIntersect(genomeQuery) {
+    if (this.query.type !== QUERY_TYPE_GENOME) {
+      throw new Error('Arithmetic is only available for an Genome Query.');
+    }
+    const ar = {
+      'operator': 'intersect',
+      'target_queries': [genomeQuery],
+    }
+    this.query.arithmetics.push(ar);
+  }
+
+  addArithmeticWindow(genomeQuery, windowSize = 1000) {
+    if (this.query.type !== QUERY_TYPE_GENOME) {
+      throw new Error('Arithmetic is only available for an Genome Query.');
+    }
+    const ar = {
+      'operator': 'window',
+      'target_queries': [genomeQuery],
+      'windowSize': windowSize,
+    }
+    this.query.arithmetics.push(ar);
+  }
+
+  addArithmeticUnion(genomeQuery) {
+    if (this.query.type !== QUERY_TYPE_GENOME) {
+      throw new Error('Arithmetic is only available for an Genome Query.');
+    }
+    const ar = {
+      'operator': 'union',
+      'target_queries': [genomeQuery],
+    }
+    this.query.arithmetics.push(ar);
   }
 
   build() {
