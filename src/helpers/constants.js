@@ -82,11 +82,11 @@ const GENOME_LENGTH = CHROMOSOME_START_BASE_PAIRS[CHROMOSOME_START_BASE_PAIRS.le
 
 const CHROMOSOME_NAMES = [];
 for (let i = 1; i < 23; i++) {
-  CHROMOSOME_NAMES.push(`Chr${i}`);
+  CHROMOSOME_NAMES.push(`chr${i}`);
 }
 
-CHROMOSOME_NAMES.push('ChrX');
-CHROMOSOME_NAMES.push('ChrY');
+CHROMOSOME_NAMES.push('chrX');
+CHROMOSOME_NAMES.push('chrY');
 
 export {
   GENOME_LENGTH,
