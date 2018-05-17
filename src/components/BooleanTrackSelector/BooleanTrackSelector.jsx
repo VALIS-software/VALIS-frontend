@@ -12,7 +12,7 @@ import QueryBuilder from '../../models/query.js';
 import './BooleanTrackSelector.scss';
 
 const logmin = 0;
-const logmax = Math.pow(10, 6);
+const logmax = 5 * Math.pow(10, 6);
 const power = 12;
 
 function transform(value) {
