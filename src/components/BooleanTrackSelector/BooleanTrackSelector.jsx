@@ -16,7 +16,7 @@ const logmax = 5 * Math.pow(10, 6);
 const power = 12;
 
 function transform(value) {
-  return Math.round((Math.exp(12 * value / logmax) - 1) / (Math.exp(power) - 1) * logmax);
+  return Math.round((Math.exp(power * value / logmax) - 1) / (Math.exp(power) - 1) * logmax);
 }
 
 function reverse(value) {
@@ -126,7 +126,8 @@ class BooleanTrackSelector extends React.Component {
     const availableAnnotationTrackItems = [];
     for (let i = 0; i < availableAnnotationTracks.length; i++) {
       const annotationId = availableAnnotationTracks[i].annotationId;
-      availableAnnotationTrackItems.push(<MenuItem value={i} key={i} primaryText={annotationId} />);
+      const queryId = JSON.stringify(availableAnnotationTracks[i].query);
+      availableAnnotationTrackItems.push(<MenuItem value={i} key={queryId} primaryText={annotationId} />);
     }
     return (
       <div className="track-editor">

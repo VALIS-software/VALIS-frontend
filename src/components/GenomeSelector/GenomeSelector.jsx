@@ -18,7 +18,7 @@ const logmax = Math.pow(10, 6);
 const power = 12;
 
 function transform(value) {
-  return Math.round((Math.exp(12 * value / logmax) - 1) / (Math.exp(power) - 1) * logmax);
+  return Math.round((Math.exp(power * value / logmax) - 1) / (Math.exp(power) - 1) * logmax);
 }
 
 function reverse(value) {
@@ -103,7 +103,7 @@ class GenomeSelector extends React.Component {
     this.availableTypes = ['gene', 'exon', 'mRNA', 'promoter', 'enhancer', 'SNP'];
     this.genomeTypeItems = [];
     for (let i = 0; i < this.availableTypes.length; i++) {
-      this.genomeTypeItems.push(<MenuItem value={i} key={i} primaryText={this.availableTypes[i]} />);
+      this.genomeTypeItems.push(<MenuItem value={i} key={this.availableTypes[i]} primaryText={this.availableTypes[i]} />);
     }
     this.availableChromoNames = ['Any'].concat(CHROMOSOME_NAMES);
     this.chromoNameItems = [];
@@ -121,7 +121,7 @@ class GenomeSelector extends React.Component {
       this.availableTypes = data;
       this.genomeTypeItems = [];
       for (let i = 0; i < this.availableTypes.length; i++) {
-        this.genomeTypeItems.push(<MenuItem value={i} key={i} primaryText={this.availableTypes[i]} />);
+        this.genomeTypeItems.push(<MenuItem value={i} key={this.availableTypes[i]} primaryText={this.availableTypes[i]} />);
       }
       this.setState({
         genomeTypeValue: 0,
