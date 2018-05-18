@@ -148,6 +148,8 @@ export class Renderer {
 			return ai._renderStateKey - bi._renderStateKey;
 		});
 
+		// @! todo: sort transparent by z
+
 		// begin rendering
 		this.resetGLStateAssumptions();
 
@@ -240,8 +242,17 @@ export class Renderer {
 			gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
 		}
 
-		for (let i = 0; i < opaque.length; i++) {
-			let renderable = opaque[i];
+		this.renderArray(opaque);
+
+		// draw transparent objects
+		// transparent objects perform depth-test but don't write to the depth buffer
+		gl.depthMask(false);
+		this.renderArray(transparent);
+	}
+
+	protected renderArray(renderables: Array<Renderable<any>>) {
+		for (let i = 0; i < renderables.length; i++) {
+			let renderable = renderables[i];
 			if (!renderable.visible) continue;
 
 			let internal = renderable as any as RenderableInternal;
