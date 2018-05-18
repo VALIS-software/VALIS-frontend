@@ -104,8 +104,8 @@ export class XAxis extends Object2D {
         this.labelCacheMarkAllUnused();
 
         // guard case where we cannot display anything
-        let range = this.x1 - this.x0;
-        if (range === 0) {
+        let span = this.x1 - this.x0;
+        if (span === 0) {
             this.labelCacheDeleteUnused();
             return;
         }
@@ -120,7 +120,7 @@ export class XAxis extends Object2D {
 
         // let t0x = tickRatio * range; // x-space location of first tick after 0
 
-        let n = Scalar.log2(tickRatio * range / snap);
+        let n = Scalar.log2(tickRatio * span / snap);
 
         let lMajor = Math.ceil(n);
         let lMinor = Math.floor(n);
@@ -143,14 +143,14 @@ export class XAxis extends Object2D {
             let xMajor = xMajorSpacing * i;
 
             if (xMinor >= this.minDisplay && xMinor <= this.maxDisplay) {
-                let minorParentX = (xMinor - this.x0) / range;
+                let minorParentX = (xMinor - this.x0) / span;
                 let textMinor = this.labelCacheGet(xMinor, this.formatValue(xMinor, this.maxTextLength));
                 textMinor.label.layoutParentX = minorParentX;
                 textMinor.label.setColor(0, 0, 0, minorAlpha);
             }
 
             if (xMajor >= this.minDisplay && xMajor <= this.maxDisplay) {
-                let majorParentX = (xMajor - this.x0) / range;
+                let majorParentX = (xMajor - this.x0) / span;
                 let textMajor = this.labelCacheGet(xMajor, this.formatValue(xMajor, this.maxTextLength));
                 textMajor.label.layoutParentX = majorParentX;
                 textMajor.label.setColor(0, 0, 0, 1);

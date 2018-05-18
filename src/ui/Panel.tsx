@@ -174,8 +174,8 @@ export class Panel extends Object2D {
 
             let absX = secondaryAxisPointers[pointerId];
 
-            let range = this.x1 - this.x0;
-            let fractionX = (absX - this.x0) / range;
+            let span = this.x1 - this.x0;
+            let fractionX = (absX - this.x0) / span;
 
             this.secondaryAxisPointers[pointerId] = absX;
 
@@ -212,18 +212,18 @@ export class Panel extends Object2D {
 
         let zoomCenterF = e.fractionX;
 
-        let range = this.x1 - this.x0;
+        let span = this.x1 - this.x0;
 
         // clamp zoomFactor to range limits
-        if (range * zoomFactor > this.maxRange) {
-            zoomFactor = this.maxRange / range;
+        if (span * zoomFactor > this.maxRange) {
+            zoomFactor = this.maxRange / span;
         }
-        if (range * zoomFactor < this.minRange) {
-            zoomFactor = this.minRange / range;
+        if (span * zoomFactor < this.minRange) {
+            zoomFactor = this.minRange / span;
         }
 
-        let d0 = range * zoomCenterF;
-        let d1 = range * (1 - zoomCenterF);
+        let d0 = span * zoomCenterF;
+        let d1 = span * (1 - zoomCenterF);
         let p = d0 + this.x0;
 
         let x0 = p - d0 * zoomFactor;
@@ -254,11 +254,11 @@ export class Panel extends Object2D {
 
         this.tileDragging = true;
 
-        let range = this.x1 - this.x0;
+        let span = this.x1 - this.x0;
 
         let dxf = e.fractionX - this._dragXF0;
-        let x0 = this._dragX00 + range * (-dxf);
-        let x1 = x0 + range;
+        let x0 = this._dragX00 + span * (-dxf);
+        let x1 = x0 + span;
 
         this.setRange(x0, x1);
 
@@ -278,8 +278,8 @@ export class Panel extends Object2D {
 
     protected setActiveAxisPointer(e: InteractionEvent) {
         let fractionX = e.fractionX;
-        let range = this.x1 - this.x0;
-        let axisPointerX = range * fractionX + this.x0;
+        let span = this.x1 - this.x0;
+        let axisPointerX = span * fractionX + this.x0;
 
         this.activeAxisPointers[e.pointerId] = axisPointerX;
 
