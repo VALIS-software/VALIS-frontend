@@ -69,6 +69,7 @@ export class Text extends Object2D {
     constructor(fontPath: string, string?: string, fontSizePx: number = 16) {
         super();
         this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
+        this.transparent = true;
 
         // cannot allocate GPU resource until font asset is available
         this.gpuResourcesNeedAllocate = false;

@@ -42,6 +42,7 @@ export class Track extends Rect {
             if (!withinBounds) return;
             // create axis pointer
             axisPointer = new AxisPointer(style, this.activeAxisPointerColor, this.secondaryAxisPointerColor);
+            axisPointer.z = 1;
             this.add(axisPointer);
             this.axisPointers[id] = axisPointer;
         }
@@ -81,7 +82,6 @@ class AxisPointer extends Rect {
 
     constructor(style: AxisPointerStyle, readonly activeColor: ArrayLike<number>, readonly secondaryColor: ArrayLike<number>) {
         super(0, 0);
-        this.z = 1;
         this.layoutX = -0.5;
         this.layoutH = 1;
         this.w = 1;
