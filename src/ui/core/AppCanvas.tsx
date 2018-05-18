@@ -22,6 +22,7 @@ interface Props {
     width: number;
     height: number;
     content: Object2D;
+    pixelRatio?: number;
 }
 
 interface State {
@@ -116,7 +117,7 @@ export class AppCanvas extends React.Component<Props, State> {
     }
 
     render() {
-        const pixelRatio = window.devicePixelRatio || 1;
+        const pixelRatio = this.props.pixelRatio || window.devicePixelRatio || 1;
 
         return (
             <div className="viewer" style={{ position: 'relative' }}>

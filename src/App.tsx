@@ -5,6 +5,7 @@ import TrackViewer from "./ui/TrackViewer";
 import Animator from "./animation/Animator";
 import Header from "./ui/components/header/Header";
 import { TrackType } from "./model/TrackDataModel";
+import TileEngine from "./ui/tracks/TileEngine";
 
 interface Props {}
 
@@ -18,6 +19,8 @@ interface State {
 
 export class App extends React.Component<Props, State> {
 
+	static readonly canvasPixelRatio = window.devicePixelRatio || 1;
+
 	readonly headerHeight: number = 50;
 	readonly headerMargin: number = 30;
 	protected appCanvas: AppCanvas;
@@ -30,9 +33,9 @@ export class App extends React.Component<Props, State> {
 		// initialize with some dummy data
 		let i = 0;
 		for (let track of [
-			{ name: 'Sequence', type: TrackType.Sequence },
-			{ name: 'GRCh38', type: TrackType.Empty },
-			{ name: 'GM12878-DNase', type: TrackType.Empty },
+			{ sourceId: 'sequence', name: 'Sequence', type: TrackType.Sequence },
+			{ sourceId: 'grch38', name: 'GRCh38', type: TrackType.Empty },
+			{ sourceId: 'gm12878-dnase', name: 'GM12878-DNase', type: TrackType.Empty },
 		]) {
 			trackViewer.addTrackRow(track, i++ === 0 ? 50 : undefined);
 		}
@@ -59,6 +62,8 @@ export class App extends React.Component<Props, State> {
 	componentWillUnmount() {
 		window.removeEventListener('resize', this.onResize);
 		this.stopFrameLoop();
+
+		TileEngine.releaseTextures();
 	}
 
 	componentDidUpdate(prevProps: Props, prevState: State, snapshot: any) {
@@ -72,6 +77,7 @@ export class App extends React.Component<Props, State> {
 				width={this.state.viewerWidth}
 				height={this.state.viewerHeight} 
 				content={this.state.canvasContent}
+				pixelRatio={App.canvasPixelRatio}
 			/>
 		</div>)
 	}

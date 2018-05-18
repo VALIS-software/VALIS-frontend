@@ -11,28 +11,19 @@ export class SiriusApi {
     private static minMaxCache: { [path: string]: {min: number, max: number} } = {};
 
     static loadACGTSubSequence(
-        startBaseIndex: number,
-        nBases: number,
-        lodLevel: number
+        lodLevel: number,
+        lodStartBaseIndex: number,
+        lodNBases: number,
     ): Promise<{
         array: Uint8Array,
         sequenceMinMax: {
             min: number,
             max: number,
-        }
+        },
+        indicesPerBase: number, 
     }> {
         let binPath = `/data/chromosome1/${lodLevel}.bin`;
         let minMaxPath = binPath + '.minmax';
-
-        let lodDensity = 1 << lodLevel;
-        let lodStartBaseIndex = startBaseIndex / lodDensity;
-        let lodNBases = nBases / lodDensity;
-
-        /*
-        lodStartBaseIndex = Math.floor(lodStartBaseIndex);
-        lodNBases = Math.ceil(lodNBases);
-        */
-        throw 'lodStartBaseIndex and lodNBases need to be integers';
 
         // @! data format may change for certain LODs in the future
         let elementSize_bits = 8;
@@ -52,6 +43,7 @@ export class SiriusApi {
                 return {
                     array: a[0],
                     sequenceMinMax: a[1],
+                    indicesPerBase: 4,
                 }
             });
     }

@@ -49,10 +49,10 @@ export class TrackRow {
 
         switch (this.model.type) {
             case TrackType.Sequence:
-                track = new SequenceTrack(this);
+                track = new SequenceTrack(this.model);
                 break;
             default:
-                track = new Track(this);
+                track = new Track(this.model);
                 break;
         }
 

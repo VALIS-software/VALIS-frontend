@@ -7,6 +7,7 @@ export enum TrackType {
 }
 
 export type TrackDataModel = {
+    sourceId: string,
     name: string;
     type: TrackType;
 }
