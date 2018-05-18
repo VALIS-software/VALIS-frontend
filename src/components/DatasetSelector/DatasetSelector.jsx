@@ -5,6 +5,7 @@ import GWASSelector from "../GWASSelector/GWASSelector.jsx";
 import GenomeSelector from "../GenomeSelector/GenomeSelector.jsx";
 import TrackSelector from "../TrackSelector/TrackSelector.jsx";
 import ENCODESelector from "../ENCODESelector/ENCODESelector.jsx";
+import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector.jsx";
 import DataListItem from "../DataListItem/DataListItem.jsx";
 
 import {
@@ -15,7 +16,8 @@ import {
   TRACK_TYPE_EQTL,
   TRACK_TYPE_ENCODE,
   TRACK_TYPE_3D,
-  TRACK_TYPE_NETWORK
+  TRACK_TYPE_NETWORK,
+  TRACK_TYPE_BOOLEAN
 } from "../../helpers/constants.js";
 
 // Styles
@@ -89,6 +91,12 @@ class DatasetSelector extends React.Component {
           appModel={this.appModel}
           viewModel={this.viewModel}
         />
+      );
+    } else if (trackType === TRACK_TYPE_BOOLEAN) {
+      this.viewModel.pushView(
+        "Boolean Tracks",
+        null,
+        <BooleanTrackSelector appModel={this.appModel} />
       );
     }
   }

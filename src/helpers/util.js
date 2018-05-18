@@ -35,7 +35,7 @@ class Util {
     let curr = start;
     let ranges = [];
     for (let i = 0; i < CHROMOSOME_START_BASE_PAIRS.length - 1; i++) {
-      if (curr >= CHROMOSOME_START_BASE_PAIRS[i] && curr < CHROMOSOME_START_BASE_PAIRS[i + 1] ) {
+      if (curr >= CHROMOSOME_START_BASE_PAIRS[i] && curr < CHROMOSOME_START_BASE_PAIRS[i + 1]) {
         ranges.push([i, curr - CHROMOSOME_START_BASE_PAIRS[i]]);
 
         if (end <= CHROMOSOME_START_BASE_PAIRS[i + 1]) {
@@ -43,14 +43,14 @@ class Util {
           break;
         } else {
           curr = CHROMOSOME_START_BASE_PAIRS[i + 1];
-          ranges.push([i , CHROMOSOME_SIZES[i]]);
+          ranges.push([i, CHROMOSOME_SIZES[i]]);
         }
       }
     }
     let ret = [];
     for (let j = 0; j < ranges.length / 2; j++) {
-      const startInterval = ranges[j*2];
-      const endInterval = ranges[j*2 + 1];
+      const startInterval = ranges[j * 2];
+      const endInterval = ranges[j * 2 + 1];
       ret.push({
         contig: 'chr' + Util.chromosomeIndexToName(startInterval[0]),
         start: startInterval[1],
@@ -94,9 +94,9 @@ class Util {
   static chromosomeNameToIndex(name) {
     const suffix = name.slice(3);
     if (suffix === "X") {
-      return CHROMOSOME_START_BASE_PAIRS.length - 2;
+      return 22;
     } else if (suffix === "Y") {
-      return CHROMOSOME_START_BASE_PAIRS.length - 1;
+      return 23;
     } else {
       return parseInt(suffix, 10) - 1;
     }
@@ -211,7 +211,7 @@ class Util {
       fromTypeId = entity.type[0];
       toTypeId = entity.type[1];
     }
-    return Util.isIdType(fromTypeId, assocDef[0]) && Util.isIdType(toTypeId, assocDef[1]);  
+    return Util.isIdType(fromTypeId, assocDef[0]) && Util.isIdType(toTypeId, assocDef[1]);
   }
 
   static multiplyColor(color, d) {
