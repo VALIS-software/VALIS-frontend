@@ -2,7 +2,7 @@
  * @! Temporary dummy model
  */
 export enum TrackType {
-    Empty = void 0,
+    Empty = undefined,
     Sequence = 1,
 }
 

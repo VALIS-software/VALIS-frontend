@@ -158,7 +158,7 @@ export class Panel extends Object2D {
     setSecondaryAxisPointers(secondaryAxisPointers: { [ pointerId: string ]: number }) {
         // remove any old and unused axis pointers
         for (let pointerId in this.secondaryAxisPointers) {
-            if (secondaryAxisPointers[pointerId] === void 0 && this.activeAxisPointers[pointerId] === void 0) {
+            if (secondaryAxisPointers[pointerId] === undefined && this.activeAxisPointers[pointerId] === undefined) {
                 for (let tile of this.tracks) {
                     tile.removeAxisPointer(pointerId);
                 }
@@ -168,7 +168,7 @@ export class Panel extends Object2D {
         // add or update secondary axis pointers
         for (let pointerId in secondaryAxisPointers) {
             // if this panel has this pointer as an active axis pointer, skip it
-            if (this.activeAxisPointers[pointerId] !== void 0) {
+            if (this.activeAxisPointers[pointerId] !== undefined) {
                 continue;
             }
 
@@ -292,7 +292,7 @@ export class Panel extends Object2D {
     }
 
     protected removeActiveAxisPointer(e: InteractionEvent) {
-        if (this.activeAxisPointers[e.pointerId] === void 0) {
+        if (this.activeAxisPointers[e.pointerId] === undefined) {
             return;
         }
 

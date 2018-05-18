@@ -2,6 +2,7 @@ import Rect from "./core/Rect";
 import Panel from "./Panel";
 import TrackRow from "./TrackRow";
 import { InteractionEvent } from "./core/InteractionEvent";
+import { TrackDataModel } from "../model/TrackDataModel";
 
 export class Track extends Rect {
 
@@ -16,7 +17,7 @@ export class Track extends Rect {
     protected activeAxisPointerColor = [0, 140 / 255, 186 / 255, 1];
     protected secondaryAxisPointerColor = [0.2, 0.2, 0.2, 1];
 
-    constructor(readonly track: TrackRow) {
+    constructor(protected model: TrackDataModel) {
         super(0, 0, [0, 0, 0, 1]);
 
         this.cursorStyle = this.defaultCursor;
@@ -36,7 +37,7 @@ export class Track extends Rect {
 
         let axisPointer = this.axisPointers[id];
 
-        if (axisPointer === void 0) {
+        if (axisPointer === undefined) {
             // !withinBounds means do not draw, so we don't need to create the object
             if (!withinBounds) return;
             // create axis pointer
@@ -59,7 +60,7 @@ export class Track extends Rect {
     removeAxisPointer(id: string) {
         let axisPointer = this.axisPointers[id];
 
-        if (axisPointer === void 0) {
+        if (axisPointer === undefined) {
             return;
         }
 

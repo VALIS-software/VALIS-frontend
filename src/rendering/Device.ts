@@ -396,7 +396,7 @@ export class Device {
 		gl.activeTexture(gl.TEXTURE0 + unit);
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		textureInternal.boundUnit = -1;
-		this.textureUnitState[unit] = void 0;
+		this.textureUnitState[unit] = undefined;
 	}
 
 }

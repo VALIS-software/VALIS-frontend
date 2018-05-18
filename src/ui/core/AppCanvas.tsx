@@ -409,7 +409,7 @@ export class AppCanvas extends React.Component<Props, State> {
         interactionData.buttonChange = -1; // normalize between MouseEvent and PointerEvent
 
         // update pointer data in activePointers
-        if (this.activePointers[interactionData.pointerId] === void 0) {
+        if (this.activePointers[interactionData.pointerId] === undefined) {
             this.activePointers[interactionData.pointerId] = {
                 interactionData: interactionData,
                 sourceEvent: e,
@@ -423,7 +423,7 @@ export class AppCanvas extends React.Component<Props, State> {
         let dragData = this.dragData[interactionData.pointerId];
 
         let defaultPrevented = false;
-        if (dragData !== void 0) {
+        if (dragData !== undefined) {
             defaultPrevented = defaultPrevented || this.executePointerInteraction(dragData.inactiveNodes, 'dragstart', interactionData, (init) => {
                 dragData.activeNodes.push(init.target);
                 return new InteractionEvent(init, e);
@@ -485,7 +485,7 @@ export class AppCanvas extends React.Component<Props, State> {
 
         let dragData = this.dragData[interactionData.pointerId];
         let defaultPrevented = false;
-        if (dragData !== void 0 && dragData.button === e.button) {
+        if (dragData !== undefined && dragData.button === e.button) {
             // clear drag data entry
             delete this.dragData[interactionData.pointerId];
             // fire 'dragend' on any nodes where drag was started

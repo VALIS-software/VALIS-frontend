@@ -65,7 +65,7 @@ export class XAxis extends Object2D {
             let symbol = XAxis.siPrefixes[exp1000Int.toFixed(0)];
             let reductionFactor = Math.pow(1000, exp1000Int);
 
-            if (symbol === void 0) {
+            if (symbol === undefined) {
                 let exp10Int = Math.floor(Math.abs(exp10)) * expSign;
                 symbol = exp10Int <= 3 ? '' : 'e' + exp10Int.toFixed(0);
             }
@@ -179,7 +179,7 @@ export class XAxis extends Object2D {
 
         let entry = this._labelCache[key];
 
-        if (entry === void 0) {
+        if (entry === undefined) {
             let label = this.createLabel(str);
 
             entry = this._labelCache[key] = {

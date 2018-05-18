@@ -497,7 +497,7 @@ export class DrawContext {
 
 			for (let i = 0; i < deviceInternal.textureUnitState.length; i++) {
 				let unitContents = deviceInternal.textureUnitState[i];
-				if (unitContents === void 0) {
+				if (unitContents === undefined) {
 					console.log('%cBinding texture to free unit ' + i, 'color: blue');
 
 					deviceInternal.bindTextureToUnit(texture, i);
