@@ -2,7 +2,7 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 
-import AutoComplete from 'material-ui/AutoComplete';
+
 import MenuItem from 'material-ui/MenuItem';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
@@ -11,6 +11,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import DatasetSelector from '../DatasetSelector/DatasetSelector.jsx';
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
 import EntityDetails from '../EntityDetails/EntityDetails';
+import TokenBox  from '../Shared/TokenBox/TokenBox';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import QueryBuilder, { QUERY_TYPE_INFO } from '../../models/query.js';
@@ -102,17 +103,9 @@ class Header extends React.Component {
     const addDatasetBrowser = this.addDatasetBrowser;
     return (<div className="header">
       <Toolbar>
-        <ToolbarGroup firstChild={true} style={{ width: '512px' }}>
+        <ToolbarGroup firstChild={true} style={{ width: '768px' }}>
           <div className="search-box">
-            <AutoComplete
-              hintText="Enter a gene or trait"
-              dataSource={this.state.dataSource}
-              onNewRequest={this.onNewRequest}
-              dataSourceConfig={dataSourceConfig}
-              filter={AutoComplete.caseInsensitiveFilter}
-              maxSearchResults={8}
-              fullWidth={true}
-            />
+            <TokenBox />
           </div>
         </ToolbarGroup>
         <ToolbarGroup>
