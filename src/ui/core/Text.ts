@@ -143,7 +143,7 @@ export class Text extends Object2D {
 
                     float alpha = sigDist;
 
-                    gl_FragColor = color * alpha;
+                    gl_FragColor = color * color.a * alpha;
                 }
                 `,
                 ['position', 'uv']
@@ -161,7 +161,7 @@ export class Text extends Object2D {
             mipmapData: this._fontAsset.images[0],
             dataType: TextureDataType.UNSIGNED_BYTE,
 
-            usageHint: TextureUsageHint.HIGH_USAGE,
+            usageHint: TextureUsageHint.LONG_LIFE,
 
             samplingParameters: {
                 magFilter: TextureMagFilter.LINEAR,
@@ -261,7 +261,7 @@ export class Text extends Object2D {
 
             // @! potential performance improvement:
             // if only the glyphScale changed they we can avoid GPU realloc by just changing this._glyphLayout.glyphScale
-            let glyphScaleChanged = this._glyphLayout !== null ? this._glyphLayout.glyphScale !== glyphScale : true; 
+            let glyphScaleChanged = this._glyphLayout !== null ? this._glyphLayout.glyphScale !== glyphScale : true;
 
             this._glyphLayout = GPUText.layout(
                 this._string,

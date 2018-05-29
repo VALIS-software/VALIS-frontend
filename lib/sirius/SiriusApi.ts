@@ -8,7 +8,9 @@ export class SiriusApi {
 
     static caching: boolean = true;
 
-    private static minMaxCache: { [path: string]: {min: number, max: number} } = {};
+    private static minMaxCache: {
+        [path: string]: Promise<{ min: number, max: number }>
+    } = {};
 
     static loadACGTSubSequence(
         lodLevel: number,
@@ -30,13 +32,15 @@ export class SiriusApi {
 
         let dataPromise = SiriusApi.loadArray(binPath, elementSize_bits, lodStartBaseIndex * 4, lodNBases * 4, ArrayFormat.UInt8);
 
-        let minMaxPromise = SiriusApi.minMaxCache[minMaxPath] ?
-            new Promise<{min: number, max: number}>(resolve => SiriusApi.minMaxCache[minMaxPath]) :
-            axios.get(minMaxPath, {responseType: 'json'}).then((a) => {
-                let minMax: {min: number, max: number} = a.data;
-                SiriusApi.minMaxCache[minMaxPath] = minMax;
+        let minMaxPromise = SiriusApi.minMaxCache[minMaxPath];
+        
+        if (minMaxPromise === undefined) {
+            minMaxPromise = axios.get(minMaxPath, { responseType: 'json' }).then((a) => {
+                let minMax: { min: number, max: number } = a.data;
                 return minMax;
             });
+            SiriusApi.minMaxCache[minMaxPath] = minMaxPromise;            
+        }
         
         return Promise.all([dataPromise, minMaxPromise])
             .then((a) => {
@@ -66,6 +70,8 @@ export class SiriusApi {
             start: byte0,
             end: byte0 + nBytes - 1,
         };
+
+        console.log('\tbyte range', byteRange.start, byteRange.end, byteRange.end - byteRange.start);
 
         return axios({
             method: 'get',

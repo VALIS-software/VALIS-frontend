@@ -37,11 +37,12 @@ export class App extends React.Component<Props, State> {
 			{ sourceId: 'grch38', name: 'GRCh38', type: TrackType.Empty },
 			{ sourceId: 'gm12878-dnase', name: 'GM12878-DNase', type: TrackType.Empty },
 		]) {
-			trackViewer.addTrackRow(track, i++ === 0 ? 50 : undefined);
+			trackViewer.addTrackRow(track, i++ === 0 ? 100 : undefined);
 		}
 
 		for (let panel of [
-			{ name: 'Chromosome 1', x0: 0, x1: 249e6 },
+			// { name: 'Chromosome 1', x0: 10e5, x1: 10e5 + 10 }
+			{ name: 'Chromosome 1', x0: 0, x1: 249e6 }
 		]) {
 			trackViewer.addPanel(panel, false);
 		}
@@ -63,7 +64,7 @@ export class App extends React.Component<Props, State> {
 		window.removeEventListener('resize', this.onResize);
 		this.stopFrameLoop();
 
-		TileEngine.releaseTextures();
+		TileEngine.clearAllTiles();
 	}
 
 	componentDidUpdate(prevProps: Props, prevState: State, snapshot: any) {

@@ -145,10 +145,21 @@ export class Renderer {
 		opaque.sort((a, b) => {
 			let ai = a as any as RenderableInternal;
 			let bi = b as any as RenderableInternal;
-			return ai._renderStateKey - bi._renderStateKey;
+			let delta = ai._renderStateKey - bi._renderStateKey;
+			if (delta === 0) {
+				// front to back z-ordering
+				return bi.renderOrderZ - ai.renderOrderZ;
+			} else {
+				return delta;
+			}
 		});
 
-		// @! todo: sort transparent by z
+		transparent.sort((a, b) => {
+			let ai = a as any as RenderableInternal;
+			let bi = b as any as RenderableInternal;
+			// back to front z-ordering
+			return ai.renderOrderZ - bi.renderOrderZ;
+		});
 
 		// begin rendering
 		this.resetGLStateAssumptions();
@@ -433,13 +444,21 @@ export class DrawContext {
 	}
 
 	uniform1f(name: string, x: GLfloat) {
-		this.gl.uniform1f(this.program.uniformLocation[name], x);
+		const stateCache = (this.program as any as GPUProgramInternal).stateCache;
+		if (stateCache[name] !== x) {
+			this.gl.uniform1f(this.program.uniformLocation[name], x);
+			stateCache[name] = x;
+		}
 	}
 	uniform1fv(name: string, v: Float32Array) {
 		this.gl.uniform1fv(this.program.uniformLocation[name], v);
 	}
 	uniform1i(name: string, x: GLint) {
-		this.gl.uniform1i(this.program.uniformLocation[name], x);
+		const stateCache = (this.program as any as GPUProgramInternal).stateCache;
+		if (stateCache[name] !== x) {
+			this.gl.uniform1i(this.program.uniformLocation[name], x);
+			stateCache[name] = x;
+		}
 	}
 	uniform1iv(name: string, v: Int32Array) {
 		this.gl.uniform1iv(this.program.uniformLocation[name], v);
@@ -494,37 +513,16 @@ export class DrawContext {
 		const gl = this.gl;
 		const deviceInternal = this.device as any as DeviceInternal;
 		const textureInternal = texture as any as GPUTextureInternal;
-		const programInternal = this.program as any as GPUProgramInternal;
 
-		let currentUniformValue = programInternal.stateCache[name];
-
-		// uniform is already pointing to the correct unit
-		if (textureInternal.boundUnit === currentUniformValue) {
-			return;
-		}
-
-		if (textureInternal.boundUnit === -1) {
-			// texture is not resident in a texture unit, find free slot
-
-			for (let i = 0; i < deviceInternal.textureUnitState.length; i++) {
-				let unitContents = deviceInternal.textureUnitState[i];
-				if (unitContents === undefined) {
-					console.log('%cBinding texture to free unit ' + i, 'color: blue');
-
-					deviceInternal.bindTextureToUnit(texture, i);
-
-					gl.uniform1i(this.program.uniformLocation[name], i);
-					programInternal.stateCache[name] = textureInternal.boundUnit;
-					return;
-				}
-			}
-
-			throw 'Todo: system for replacing the last-used texture unit';
-
+		// texture already has an assigned unit
+		if (textureInternal.boundUnit !== -1) {
+			this.uniform1i(name, textureInternal.boundUnit);
+			// since we're not binding the texture we've got to manually mark the usage
+			// (this helps the texture-unit system decide which units are least used)
+			deviceInternal.markTextureUsage(texture);			
 		} else {
-			// texture is resident in a texture unit but the uniform is not yet pointing at it
-			gl.uniform1i(this.program.uniformLocation[name], textureInternal.boundUnit);
-			programInternal.stateCache[name] = textureInternal.boundUnit;
+			deviceInternal.bindTexture(texture);
+			this.uniform1i(name, textureInternal.boundUnit);
 		}
 	}
 

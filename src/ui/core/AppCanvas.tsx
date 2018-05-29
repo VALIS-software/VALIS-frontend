@@ -184,9 +184,10 @@ export class AppCanvas extends React.Component<Props, State> {
         let h_dom = this.props.height;
         this.scene.x = -1;
         this.scene.y = 1;
+        this.scene.z = 0;
         this.scene.sx = 2 / w_dom;
         this.scene.sy = -2 / h_dom;
-        this.scene.sz = -1;
+        this.scene.sz = -1 * 1 / 5000;
         this.scene.w = w_dom;
         this.scene.h = h_dom;
     }

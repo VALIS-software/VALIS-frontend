@@ -5,34 +5,18 @@
  */
 export class Node<T extends Node<any>> {
 
-	get children(): Iterable<T> { return this._childrenIterable; }
-
-	protected _children = new Set<T>();
-
-	protected _childrenIterable = this._children;
-	/*
-	// for :Array children
-	// reverse-order iterate over children to avoid issues if a child is removed while iterating
-	{
-		*[Symbol.iterator]() {
-			for (let i = this._children.length; i >= i; i--) {
-				let c = this._children[i];
-				yield c;
-			}
-		}
-	}
-	*/
+	children: Iterable<T> = new Set<T>();
 
 	add(child: T) {
-		this._children.add(child);
+		(this.children as Set<T>).add(child);
 	}
 
 	remove(child: T) {
-		return this._children.delete(child);
+		return (this.children as Set<T>).delete(child);
 	}
 
 	applyTreeTransforms(root: boolean = true) {
-		for (let child of this._children) {
+		for (let child of this.children) {
 			child.applyTreeTransforms(true);
 		}
 	}
@@ -43,7 +27,7 @@ export class Node<T extends Node<any>> {
 	*[Symbol.iterator]() {
 		yield this;
 
-		for (let child of this._children) {
+		for (let child of this.children) {
 			for (let n of (child as any)) {
 				yield n;
 			}

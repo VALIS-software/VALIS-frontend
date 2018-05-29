@@ -90,7 +90,10 @@ export class Object2D extends Renderable<Object2D> implements Layout {
     // transform parameters
     protected _x: number = 0;
     protected _y: number = 0;
-    protected _z: number = 0;
+
+    // the default local z-offset is 1 so that if z isn't changed then: worldZ = treeDepth
+    protected _z: number = 1;
+
     protected _sx: number = 1;
     protected _sy: number = 1;
     protected _sz: number = 1;
@@ -184,7 +187,7 @@ export class Object2D extends Renderable<Object2D> implements Layout {
         this.eventEmitter.removeAllListeners();
         this.resetEventListenerCount();
         if (recursive) {
-            for (let child of this._children) {
+            for (let child of this.children) {
                 child.removeAllListeners(recursive);
             }
         }
@@ -197,7 +200,7 @@ export class Object2D extends Renderable<Object2D> implements Layout {
         }
 
         // apply world transform to children
-        for (let child of this._children) {
+        for (let child of this.children) {
             if (child.worldTransformNeedsUpdate) {
                 child.computeLayout(this.computedWidth, this.computedHeight);
                 child.applyWorldTransform(this.worldTransformMat4);
@@ -281,7 +284,7 @@ export class Object2D extends Renderable<Object2D> implements Layout {
 
             this.worldTransformNeedsUpdate = false;
 
-            for (let c of this._children) c.worldTransformNeedsUpdate = true;
+            for (let c of this.children) c.worldTransformNeedsUpdate = true;
         } else {
             let p = transformMat4;
 
@@ -306,9 +309,12 @@ export class Object2D extends Renderable<Object2D> implements Layout {
 
             this.worldTransformNeedsUpdate = false;
 
+
             // if the world matrix of the child has changed, then we must inform the children that they're out of sync also
-            for (let cc of this._children) cc.worldTransformNeedsUpdate = true;
+            for (let cc of this.children) cc.worldTransformNeedsUpdate = true;
         }
+
+        this.renderOrderZ = this.worldTransformMat4[14];
     }
 
     protected resetEventListenerCount() {

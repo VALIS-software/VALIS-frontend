@@ -4,6 +4,7 @@ import Text from "./core/Text";
 import { Renderable } from "../rendering/Renderable";
 import { BlendMode } from "../rendering/Renderer";
 import { Scalar } from "../math/Scalar";
+import { UsageCache } from "../ds/UsageCache";
 
 const OpenSansRegular = require('./../font/OpenSans-Regular.msdf.bin');
 
@@ -14,7 +15,7 @@ export class XAxis extends Object2D {
 
     set fontSizePx(v: number) {
         this._fontSizePx = v;
-        this.labelCacheClear();
+        this.labelCache.removeAll(this.deleteLabel);
         this.labelsNeedUpdate = true;
     }
     get fontSizePx() {
@@ -31,6 +32,9 @@ export class XAxis extends Object2D {
     protected lastComputedWidth: number;
 
     protected clippingMask: Rect;
+
+    // valid for stable (fontSize, fontPath)
+    protected labelCache = new UsageCache<Label>();
 
     constructor(x0: number = 0, x1: number = 1, fontSizePx: number = 16, protected fontPath: string = OpenSansRegular) {
         super();
@@ -82,36 +86,28 @@ export class XAxis extends Object2D {
 
     // override applyTreeTransforms to call updateLabels so that it's applied when world-space layouts are known
     applyTreeTransforms(root?: boolean) {
-        this.labelsNeedUpdate = this.labelsNeedUpdate || this.getComputedWidth() !== this.lastComputedWidth;
+        this.labelsNeedUpdate = this.labelsNeedUpdate || this.computedWidth !== this.lastComputedWidth;
 
         if (this.labelsNeedUpdate) {
             this.updateLabels();
+            this.lastComputedWidth = this.computedWidth;
         }
 
         super.applyTreeTransforms(root);
     }
 
-    protected createLabel(str: string) {
-        let label = new Label(this.fontPath, str, this.fontSizePx);
-        label.layoutParentY = 1;
-        label.z = 0.1;
-        label.setMask(this.clippingMask);
-        this.add(label);
-        return label;
-    }
-
     protected updateLabels() {
-        this.labelCacheMarkAllUnused();
+        this.labelCache.markAllUnused();
 
         // guard case where we cannot display anything
         let span = this.x1 - this.x0;
         if (span === 0) {
-            this.labelCacheDeleteUnused();
+            this.labelCache.removeUnused(this.deleteLabel);
             return;
         }
 
         const tickSpacingPx = 80 * 2;
-        const rangeWidthPx = this.getComputedWidth(); // @! synchronization issues
+        const rangeWidthPx = this.computedWidth;
         const tickRatio = tickSpacingPx / rangeWidthPx;
         const snap = 5;
 
@@ -144,71 +140,37 @@ export class XAxis extends Object2D {
 
             if (xMinor >= this.minDisplay && xMinor <= this.maxDisplay) {
                 let minorParentX = (xMinor - this.x0) / span;
-                let textMinor = this.labelCacheGet(xMinor, this.formatValue(xMinor, this.maxTextLength));
-                textMinor.label.layoutParentX = minorParentX;
-                textMinor.label.setColor(0, 0, 0, minorAlpha);
+                let str = this.formatValue(xMinor, this.maxTextLength);
+                let textMinor = this.labelCache.get(xMinor + '_' + str, () => this.createLabel(str));
+                textMinor.layoutParentX = minorParentX;
+                textMinor.setColor(0, 0, 0, minorAlpha);
             }
 
             if (xMajor >= this.minDisplay && xMajor <= this.maxDisplay) {
                 let majorParentX = (xMajor - this.x0) / span;
-                let textMajor = this.labelCacheGet(xMajor, this.formatValue(xMajor, this.maxTextLength));
-                textMajor.label.layoutParentX = majorParentX;
-                textMajor.label.setColor(0, 0, 0, 1);
+                let str = this.formatValue(xMajor, this.maxTextLength);
+                let textMajor = this.labelCache.get(xMajor + '_' + str, () => this.createLabel(str));
+                textMajor.layoutParentX = majorParentX;
+                textMajor.setColor(0, 0, 0, 1);
             }
         }
 
-        this.labelCacheDeleteUnused();
+        this.labelCache.removeUnused(this.deleteLabel);
         this.labelsNeedUpdate = false;
-        this.lastComputedWidth = this.getComputedWidth();
     }
 
-    // valid for stable (fontSize, fontPath)
-    protected _labelCache: {
-        [key: string]: {
-            label: Label,
-            used: boolean,
-        }
-    } = {};
-
-    protected labelCacheClear() {
-        this._labelCache = {};
+    protected createLabel = (str: string) => {
+        let label = new Label(this.fontPath, str, this.fontSizePx);
+        label.layoutParentY = 1;
+        label.z = 0.1;
+        label.setMask(this.clippingMask);
+        this.add(label);
+        return label;
     }
 
-    protected labelCacheGet(value: number, str: string) {
-        let key = value.toString() + '_' + str;
-
-        let entry = this._labelCache[key];
-
-        if (entry === undefined) {
-            let label = this.createLabel(str);
-
-            entry = this._labelCache[key] = {
-                label: label,
-                used: true,
-            }
-        }
-
-        entry.used = true;
-
-        return entry;
-    }
-
-    protected labelCacheMarkAllUnused() {
-        // reset 'used' flag in cache
-        for (let key in this._labelCache) {
-            this._labelCache[key].used = false;
-        }
-    }
-
-    protected labelCacheDeleteUnused() {
-        for (let key in this._labelCache) {
-            let entry = this._labelCache[key];
-            if (!entry.used) {
-                entry.label.releaseGPUResources();
-                this.remove(entry.label);
-                delete this._labelCache[key];
-            }
-        }
+    protected deleteLabel = (label: Label) => {
+        label.releaseGPUResources();
+        this.remove(label);
     }
 
     static siPrefixes: { [key: string]: string } = {

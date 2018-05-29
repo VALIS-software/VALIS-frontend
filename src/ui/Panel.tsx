@@ -16,7 +16,7 @@ export class Panel extends Object2D {
 
     column: number;
     maxRange: number = 1e10;
-    minRange: number = 1;
+    minRange: number = 10;
 
     readonly header: ReactObject;
     readonly xAxis: XAxis;

@@ -6,11 +6,6 @@ Dev Notes:
 - TextureManager
 	"Performance problems have been observed on some implementations when using uniform1i to update sampler uniforms. To change the texture referenced by a sampler uniform, binding a new texture to the texture unit referenced by the uniform should be preferred over using uniform1i to update the uniform itself."
 
-Todo:
-- Textures
-- Device capabilities fields
-- UNSIGNED_INT index buffer extension + basic fallback behavior
-
 **/
 
 export type DeviceInternal = {
@@ -19,8 +14,15 @@ export type DeviceInternal = {
 	extInstanced: ANGLE_instanced_arrays,
 	compileShader: (code: string, type: number) => WebGLShader,
 	applyVertexStateDescriptor: (vertexStateDescriptor: VertexStateDescriptor) => void,
-	textureUnitState: Array<GPUTexture>,
-	bindTextureToUnit: (texture: GPUTexture, unit: number) => void;
+
+	assignTextureUnit(): number,
+	bindTexture(handle: GPUTexture): void,
+	clearTextureUnit(unit: number): void,
+	markTextureUsage(handle: GPUTexture): void,
+	textureUnitState: Array<{
+		texture: GPUTexture,
+		usageMetric: number
+	}>,
 }
 
 export class Device {
@@ -32,9 +34,11 @@ export class Device {
 	capabilities: {
 		vertexArrayObjects: boolean,
 		instancing: boolean,
+		availableTextureUnits: number,
 	} = {
 		vertexArrayObjects: false,
 		instancing: false,
+		availableTextureUnits: 0,
 	}
 
 	readonly name: string;
@@ -49,7 +53,11 @@ export class Device {
 	protected extVao: null | OES_vertex_array_object;
 	protected extInstanced: null | ANGLE_instanced_arrays;
 
-	protected textureUnitState: Array<GPUTexture>;
+	protected textureUnitState: Array<{
+		texture: GPUTexture,
+		usageMetric: number
+	}>;
+	protected textureUnitUsageCounter = 0;
 
 	private _programCount = 0;
 	private _vertexStateCount = 0;
@@ -66,10 +74,12 @@ export class Device {
 		let extDebugInfo = gl.getExtension('WEBGL_debug_renderer_info');
 		this.name = gl.getParameter(extDebugInfo == null ? gl.RENDERER : extDebugInfo.UNMASKED_RENDERER_WEBGL);
 
-		this.textureUnitState = new Array(gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS));
+		let availableTextureUnits = gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS);
+		this.textureUnitState = new Array(availableTextureUnits);
 
 		this.capabilities.vertexArrayObjects = this.extVao != null;
 		this.capabilities.instancing = this.extInstanced != null;
+		this.capabilities.availableTextureUnits = availableTextureUnits;
 	}
 
 	createBuffer(bufferDescriptor: BufferDescriptor) {
@@ -185,6 +195,10 @@ export class Device {
 		const gl = this.gl;
 
 		let t = gl.createTexture();
+
+		let freeUnit = this.assignTextureUnit();
+		
+		gl.activeTexture(gl.TEXTURE0 + freeUnit);
 		gl.bindTexture(gl.TEXTURE_2D, t);
 
 		// sampling parameters
@@ -221,13 +235,14 @@ export class Device {
 		if (textureDescriptor.mipmapData != null) {
 			for (let i = 0; i < textureDescriptor.mipmapData.length; i++) {
 				let data = textureDescriptor.mipmapData[i];
+				let mipScale = 1 / (1 << i);
 				if (ArrayBuffer.isView(data)) {
 					gl.texImage2D(
 						gl.TEXTURE_2D,
 						i,
 						textureDescriptor.format,
-						textureDescriptor.width,
-						textureDescriptor.height,
+						Math.round(textureDescriptor.width / mipScale),
+						Math.round(textureDescriptor.height / mipScale),
 						0,
 						textureDescriptor.format,
 						textureDescriptor.dataType,
@@ -244,16 +259,90 @@ export class Device {
 					);
 				}
 			}
+		} else {
+			// allocate empty texture
+			gl.texImage2D(
+				gl.TEXTURE_2D,
+				0,
+				textureDescriptor.format,
+				textureDescriptor.width,
+				textureDescriptor.height,
+				0,
+				textureDescriptor.format,
+				textureDescriptor.dataType,
+				null
+			);
 		}
 
-		if (textureDescriptor.generateMipmaps && textureDescriptor.mipmapData != null && textureDescriptor.mipmapData.length > 0) {
+		if (textureDescriptor.generateMipmaps) {
 			gl.generateMipmap(gl.TEXTURE_2D);
 		}
 
-		let handle = new GPUTexture(this, t, textureDescriptor.usageHint == null ? TextureUsageHint.UNKNOWN : textureDescriptor.usageHint);
+		// determine allocated size
+		let allocatedWidth: number;
+		let allocatedHeight: number;
+
+		if (textureDescriptor.mipmapData !== null) {
+			let data = textureDescriptor.mipmapData[0];
+			if (ArrayBuffer.isView(data)) {
+				allocatedWidth = textureDescriptor.width;
+				allocatedHeight = textureDescriptor.height;
+			} else {
+				allocatedWidth = data.width;
+				allocatedHeight = data.height;
+			}
+		} else {
+			allocatedWidth = textureDescriptor.width;
+			allocatedHeight = textureDescriptor.height;
+		}
+
+		// let usageHint = textureDescriptor.usageHint == null ? TextureUsageHint.UNKNOWN : textureDescriptor.usageHint;
+		let handle = new GPUTexture(this, t, allocatedWidth, allocatedHeight, textureDescriptor.dataType);
+
+		// update texture unit state
+		let handleInternal = (handle as any as GPUTextureInternal);
+		handleInternal.boundUnit = freeUnit;
+		this.textureUnitState[freeUnit] = {
+			usageMetric: ++this.textureUnitUsageCounter,
+			texture: handle,
+		};
 
 		this._textureCount++;
 		return handle;
+	}
+
+	updateTextureData(
+		handle: GPUTexture,
+		level: number,
+		format: TextureFormat,
+		data: TexImageSource | ArrayBufferView,
+		x: number = 0, y: number = 0,
+		w: number = handle.w, h: number = handle.h,
+	) {
+		const gl = this.gl;
+		const handleInternal: GPUTextureInternal = handle as any as GPUTextureInternal;
+
+		this.bindTexture(handle);
+		
+		if (ArrayBuffer.isView(data)) {
+			gl.texSubImage2D(
+				gl.TEXTURE_2D,
+				level,
+				x, y, w, h,
+				format,
+				handleInternal.type,
+				data,
+			);
+		} else {
+			gl.texSubImage2D(
+				gl.TEXTURE_2D,
+				level,
+				x, y,
+				format,
+				handleInternal.type,
+				data,
+			);
+		}
 	}
 
 	deleteTexture(handle: GPUTexture) {
@@ -261,7 +350,7 @@ export class Device {
 		// if texture is bound to a texture unit, unbind it and free the unit
 		let handleInternal = handle as any as GPUTextureInternal;
 		if (handleInternal.boundUnit !== -1) {
-			this.freeTextureUnit(handleInternal.boundUnit);
+			this.clearTextureUnit(handleInternal.boundUnit);
 		}
 
 		gl.deleteTexture(handle.native);
@@ -379,24 +468,71 @@ export class Device {
 			}
 		}
 	}
+	
+	protected assignTextureUnit(): number {
+		console.log(`%cassignTextureUnit`, 'color: blue');
+		// return the first free texture unit
+		let minUsageMetric = Infinity;
+		let minUsageUnitIndex = undefined;
 
-	protected bindTextureToUnit(texture: GPUTexture, unit: number) {
-		const gl = this.gl;
-		const textureInternal = texture as any as GPUTextureInternal;
-		gl.activeTexture(gl.TEXTURE0 + unit);
-		gl.bindTexture(gl.TEXTURE_2D, texture.native);
-		textureInternal.boundUnit = unit;
-		this.textureUnitState[unit] = texture;
+		for (let i = 0; i < this.textureUnitState.length; i++) {
+			let unit = this.textureUnitState[i];
+			if (unit === undefined) {
+				console.log(`%c\tfound free ${i}`, 'color: blue');
+				return i;
+			}
+
+			if (unit.usageMetric < minUsageMetric) {
+				minUsageUnitIndex = i;
+				minUsageMetric = unit.usageMetric;
+			}
+		}
+
+		// at this point we know no texture units are empty, so instead we pick a unit to empty
+		// the best units to empty are ones in which their textures haven't been used recently
+		// hinting can override this behavior
+		console.log(`%c\tclearing ${minUsageUnitIndex}`, 'color: blue');
+		this.clearTextureUnit(minUsageUnitIndex);
+
+		return minUsageUnitIndex;
 	}
 
-	protected freeTextureUnit(unit: number) {
+	protected bindTexture(handle: GPUTexture) {
 		const gl = this.gl;
-		let texture = this.textureUnitState[unit];
+		let handleInternal = handle as any as GPUTextureInternal;
+
+		if (handleInternal.boundUnit === -1) {
+			let freeUnit = this.assignTextureUnit();
+			gl.activeTexture(gl.TEXTURE0 + freeUnit);
+			gl.bindTexture(gl.TEXTURE_2D, handle.native);
+			handleInternal.boundUnit = freeUnit;
+			this.textureUnitState[freeUnit] = {
+				usageMetric: ++this.textureUnitUsageCounter,
+				texture: handle,
+			}
+		} else {
+			gl.activeTexture(gl.TEXTURE0 + handleInternal.boundUnit);
+			gl.bindTexture(gl.TEXTURE_2D, handle.native);
+			this.textureUnitState[handleInternal.boundUnit].usageMetric = ++this.textureUnitUsageCounter;
+		}
+	}
+
+	protected clearTextureUnit(unit: number) {
+		console.log(`%cclearTextureUnit ${unit}`, 'color: blue');
+		const gl = this.gl;
+		let texture = this.textureUnitState[unit].texture;
 		const textureInternal = texture as any as GPUTextureInternal;
 		gl.activeTexture(gl.TEXTURE0 + unit);
 		gl.bindTexture(gl.TEXTURE_2D, null);
-		textureInternal.boundUnit = -1;
 		this.textureUnitState[unit] = undefined;
+		if (texture !== undefined) {
+			textureInternal.boundUnit = -1;
+		}
+	}
+
+	protected markTextureUsage(handle: GPUTexture) {
+		let handleInternal = handle as any as GPUTextureInternal;
+		this.textureUnitState[handleInternal.boundUnit].usageMetric = ++this.textureUnitUsageCounter;
 	}
 
 }
@@ -475,12 +611,6 @@ export enum TextureFormat {
 	// @! should include compressed texture formats from extensions
 }
 
-// Non-standard, used to help inform which texture slots to free first
-export enum TextureUsageHint {
-	UNKNOWN = 0,
-	HIGH_USAGE = 2,
-}
-
 export enum ColorSpaceConversion {
 	NONE = WebGLRenderingContext.NONE,
 	DEFAULT = WebGLRenderingContext.BROWSER_DEFAULT_WEBGL,
@@ -508,6 +638,11 @@ export enum TextureWrapMode {
 
 export type TexImageSource = ImageBitmap | ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement;
 
+export enum TextureUsageHint {
+	LONG_LIFE = 1,
+	TRANSIENT = 0,
+}
+
 export type TextureDescriptor = {
 
 	format: TextureFormat,
@@ -525,7 +660,7 @@ export type TextureDescriptor = {
 		minFilter?: TextureMinFilter,
 		wrapS?: TextureWrapMode,
 		wrapT?: TextureWrapMode,
-	}
+	},
 
 	pixelStorage?: {
 		packAlignment?: number,
@@ -547,6 +682,10 @@ export class GPUBuffer implements GPUObjectHandle {
 
 	constructor(protected readonly device: Device, readonly native: WebGLBuffer) {}
 
+	updateBufferData(data: BufferDataSource, offsetBytes: number = 0) {
+		this.device.updateBufferData(this, data, offsetBytes);
+	}
+
 	delete() {
 		this.device.deleteBuffer(this);
 	}
@@ -557,10 +696,6 @@ export class GPUIndexBuffer extends GPUBuffer {
 
 	constructor(device: Device, native: WebGLBuffer, readonly dataType: IndexDataType) {
 		super(device, native);
-	}
-
-	delete() {
-		this.device.deleteBuffer(this);
 	}
 
 }
@@ -582,7 +717,9 @@ export class GPUVertexState implements GPUObjectHandle {
 }
 
 export type GPUTextureInternal = {
-	boundUnit: number;
+	boundUnit: number,
+	type: TextureDataType,
+	// usageHint: TextureUsageHint
 }
 
 export class GPUTexture implements GPUObjectHandle {
@@ -592,8 +729,21 @@ export class GPUTexture implements GPUObjectHandle {
 	constructor(
 		protected readonly device: Device,
 		readonly native: WebGLTexture,
-		protected readonly usageHint: TextureUsageHint
+		readonly w: number,
+		readonly h: number,
+		protected readonly type: TextureDataType,
+		// protected readonly usageHint: TextureUsageHint
 	) {}
+
+	updateTextureData(
+		level: number,
+		format: TextureFormat,
+		data: TexImageSource | ArrayBufferView,
+		x?: number, y?: number,
+		w?: number, h?: number
+	) {
+		this.device.updateTextureData(this, level, format, data, x, y, w, h);
+	}
 
 	delete() {
 		this.device.deleteTexture(this);
