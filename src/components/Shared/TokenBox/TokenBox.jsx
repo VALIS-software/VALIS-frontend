@@ -5,6 +5,8 @@ import Menu from 'material-ui/Menu';
 import MenuItem from 'material-ui/MenuItem';
 import Chip from 'material-ui/Chip';
 import AutoComplete from 'material-ui/AutoComplete';
+import IconButton from 'material-ui/IconButton';
+import ActionSearch from 'material-ui/svg-icons/action/search';
 
 import './TokenBox.scss';
 
@@ -23,14 +25,30 @@ class TokenBox extends React.Component {
     this.getSuggestions([], false);
   }
 
+  perfectMatch(dataSource, value) {
+    const lowered = dataSource.map(d => {
+      return d.toLowerCase();
+    });
+    const query = value.toLowerCase().trim();
+    const singleMatch = dataSource.filter(d => {
+      return this.filter(query ,d);
+    }).length <= 1;
+    const idx = lowered.indexOf(query);
+    if (idx >= 0 && singleMatch) {
+      return dataSource[idx];
+    }
+    return null;
+  }
+
   handleUpdateInput = (value, dataSource, params) => {
     if (!value) return;
     // if the value is one of the suggestions, then just call handleSelection
-    if (dataSource.indexOf(value) >= 0) {
+    const match = this.perfectMatch(dataSource, value);
+    if (match) {
       this.refs.autoComplete.setState({searchText:''});
       this.refs.autoComplete.refs.searchTextField.input.focus();
       this.state.tokens.push({
-        value: value,
+        value: match,
         quoted: this.state.quoteInput
       });
       this.setState({
@@ -54,7 +72,6 @@ class TokenBox extends React.Component {
     });
     return pieces.join(' ');
   }
-
 
   getSuggestions(tokens, openOnLoad=true) {
     const searchText = this.buildQueryStringFromTokens(tokens);
@@ -102,6 +119,10 @@ class TokenBox extends React.Component {
     </li>);
   }
 
+  filter = (searchText, key) => {
+    return key.toLowerCase().indexOf(searchText.toLowerCase()) !== -1 || searchText === '';
+  }
+
   render() {
     const elements = [];
     for (let i = 0; i < this.state.tokens.length; i++) {
@@ -109,9 +130,7 @@ class TokenBox extends React.Component {
       elements.push(this.renderToken(token.value));
     }
 
-    const filter = (searchText, key) => {
-      return key.toLowerCase().indexOf(searchText.toLowerCase()) !== -1 || searchText === '';
-    }
+
     // TODO: the AutoComplete component auto-closes when you click a menu item 
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
     const input = (<AutoComplete
@@ -119,13 +138,18 @@ class TokenBox extends React.Component {
           onKeyDown={this.onChange}
           openOnFocus={true}
           open={this.state.open}
-          filter={filter}
+          filter={this.filter}
           hintText=""
           menuCloseDelay={99999999999}
           dataSource={this.state.dataSource}
           onUpdateInput={this.handleUpdateInput}
         />);
-    return (<div className="token-box">{elements}<div>{input}</div></div>);
+    const style={
+      position: 'absolute',
+      right: '0px',
+    };
+    const status = (<IconButton style={style} tooltip="Search"><ActionSearch /></IconButton>);
+    return (<div className="token-box">{elements}<div>{input}</div>{status}</div>);
   }
 }
 
