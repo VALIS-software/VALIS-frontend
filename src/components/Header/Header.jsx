@@ -105,7 +105,7 @@ class Header extends React.Component {
       <Toolbar>
         <ToolbarGroup firstChild={true} style={{ width: '768px' }}>
           <div className="search-box">
-            <TokenBox />
+            <TokenBox appModel={this.props.model}/>
           </div>
         </ToolbarGroup>
         <ToolbarGroup>

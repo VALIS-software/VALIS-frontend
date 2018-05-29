@@ -11,23 +11,65 @@ import './TokenBox.scss';
 class TokenBox extends React.Component {
   constructor(props) {
     super(props);
-
-    const tokenMock = ['token1', 'Token2', 'token3'];
-
+    this.didRedraw = false;
     this.state = {
-      tokens: tokenMock,
-      focus: true,
-      dataSource: ['suggestion1', 'suggestion2', 'suggestion3'],
+      tokens: [],
+      dataSource: [],
+      open: false,
     };
   }
 
-  handleSelection = (value) => {
-    this.addToken(value);
+  componentDidMount() {
+    this.getSuggestions([], false);
   }
 
-  handleUpdateInput = (value) => {
-    // send the query for the latest parse:
+  handleUpdateInput = (value, dataSource, params) => {
+    if (!value) return;
+    // if the value is one of the suggestions, then just call handleSelection
+    if (dataSource.indexOf(value) >= 0) {
+      this.refs.autoComplete.setState({searchText:''});
+      this.refs.autoComplete.refs.searchTextField.input.focus();
+      this.state.tokens.push({
+        value: value,
+        quoted: this.state.quoteInput
+      });
+      this.setState({
+        tokens: this.state.tokens.slice(0),
+      });
+      this.getSuggestions(this.state.tokens); 
+    } else {
+      const newTokens = this.state.tokens.slice(0);
+      newTokens.push({
+        value: value,
+        quoted: this.state.quoteInput
+      });
+      this.getSuggestions(newTokens); 
+    }
   };
+
+
+  buildQueryStringFromTokens(tokens) {
+    let pieces = tokens.map(token => {
+      return token.quoted ? '"' + token.value + '"' : token.value;
+    });
+    return pieces.join(' ');
+  }
+
+
+  getSuggestions(tokens, openOnLoad=true) {
+    const searchText = this.buildQueryStringFromTokens(tokens);
+    this.props.appModel.api.parseSearchQuery(searchText).then(result => {
+      this.setState({
+        dataSource: result.suggestions.slice(0, 5),
+        open: openOnLoad,
+        quoteInput: result.quoted_suggestion,
+      });
+
+      if (result.query) {
+        // Show go button
+      }
+    });
+  }
 
   static getDerivedStateFromProps(nextProps, prevState) {
     if (!prevState) {
@@ -36,23 +78,13 @@ class TokenBox extends React.Component {
     return prevState;
   }
 
-  addToken = (tokenText) => {
-    const newTokens = this.state.tokens.slice(0);
-    newTokens.push(tokenText);
-    this.setState({
-      tokens: newTokens,
-    });
-    this.refs.autoComplete.setState({ searchText : ''});
-    // TODO: this is a hack that looks inside the AutoComplete component
-    this.refs.autoComplete.refs.searchTextField.input.focus();
-  }
-
   popToken = () => {
     if (this.state.tokens.length >= 1) {
       this.state.tokens.pop();
       this.setState({
         tokens: this.state.tokens.slice(0)
       });
+      this.getSuggestions(this.state.tokens);
     }
   }
 
@@ -60,7 +92,7 @@ class TokenBox extends React.Component {
     const formValue = evt.target.value;
     if (formValue.length === 0 && evt.key === 'Backspace') {
       this.popToken();
-    }
+    }    
   }
 
   renderToken(tokenText) {
@@ -74,15 +106,23 @@ class TokenBox extends React.Component {
     const elements = [];
     for (let i = 0; i < this.state.tokens.length; i++) {
       const token = this.state.tokens[i];
-      elements.push(this.renderToken(token));
+      elements.push(this.renderToken(token.value));
     }
 
+    const filter = (searchText, key) => {
+      return key.toLowerCase().indexOf(searchText.toLowerCase()) !== -1 || searchText === '';
+    }
+    // TODO: the AutoComplete component auto-closes when you click a menu item 
+    // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
     const input = (<AutoComplete
           ref='autoComplete'
           onKeyDown={this.onChange}
-          hintText="Type anything"
+          openOnFocus={true}
+          open={this.state.open}
+          filter={filter}
+          hintText=""
+          menuCloseDelay={99999999999}
           dataSource={this.state.dataSource}
-          onNewRequest={this.handleSelection}
           onUpdateInput={this.handleUpdateInput}
         />);
     return (<div className="token-box">{elements}<div>{input}</div></div>);

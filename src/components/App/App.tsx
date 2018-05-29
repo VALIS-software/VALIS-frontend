@@ -137,13 +137,13 @@ class App extends React.PureComponent<any, any> {
     this.viewModel = new ViewModel();
     this.appModel = new AppModel();
     // Default sequence track
-    this.appModel.addDataTrack('sequence');
+    // this.appModel.addDataTrack('sequence');
     // Default GRCh38 gene track
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
     builder.filterType('gene');
-    const query = builder.build();
-    this.appModel.addAnnotationTrack('GRCh38 Genes', query);
+    // const query = builder.build();
+    // this.appModel.addAnnotationTrack('GRCh38 Genes', query);
 
     this.appModel.addListener(this.updateLoadingState, AppEvent.LoadingStateChanged);
     this.viewModel.addListener(this.clickTrackElement, VIEW_EVENT_TRACK_ELEMENT_CLICKED);
