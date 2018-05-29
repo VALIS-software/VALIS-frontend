@@ -1,5 +1,5 @@
-- TileCache
-
+- Text cache vertex data
+- Proper intermediate value handling
 
 - Sequence track tile
     - How should API files be structured?
@@ -42,9 +42,8 @@
 
 - depth-based z
 - Transparency pass
+- Implement missing blend modes
 - add removeTrack and cleanupTrack
-
-- Panels should display a single chromosome
 
 - When texture slots are full we should swap out the last used
 - Text elements
