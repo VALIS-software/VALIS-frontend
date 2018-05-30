@@ -72,7 +72,7 @@ class Header extends React.Component {
     builder.newInfoQuery();
     builder.filterType('trait');
     const infoQuery = builder.build();
-    this.api.getDistinctValues('info.description', infoQuery).then(data => {
+    this.api.getDistinctValues('name', infoQuery).then(data => {
       const traitsSource = [];
       data.forEach(t => {
         traitsSource.push({ textKey: t, valueKey: 0 });

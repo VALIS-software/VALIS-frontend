@@ -8,7 +8,7 @@ import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton.jsx';
 import Util from '../../helpers/util.js';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import faExternalLinkSquareAlt from '@fortawesome/fontawesome-free-solid/faExternalLinkSquareAlt';
- 
+
 // Styles
 import './GeneDetails.scss';
 import '../Shared/Shared.scss';
@@ -27,7 +27,7 @@ class GeneDetails extends React.Component {
     prevState.currentGeneId = nextProps.geneId;
     return prevState;
   }
-  
+
   loadGeneDetails() {
     const geneId = this.state.currentGeneId;
     this.api.getDetails(this.state.currentGeneId).then(detailsData => {
@@ -47,8 +47,8 @@ class GeneDetails extends React.Component {
 
     const details = this.state.details;
     const info = details.info;
-    const name = info.gene;
-    
+    const name = details.name;
+
     let zoomBtn = (<div />);
 
     if (details.contig) {
@@ -61,7 +61,7 @@ class GeneDetails extends React.Component {
 
     const header = (<div className="entity-header">
       <div className="entity-name">{name}{zoomBtn}</div>
-      <div>{info.description}</div>
+      <div>{name}</div>
     </div>);
 
 

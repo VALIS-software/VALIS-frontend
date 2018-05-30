@@ -47,6 +47,7 @@ class GWASDetails extends React.Component {
       return (<div />);
     }
 
+    const name = this.state.details.name;
     const info = this.state.details.info;
 
     const openStudy = () => {
@@ -68,7 +69,7 @@ class GWASDetails extends React.Component {
         <div className="gwas-info-wrapper">
           <div className="section">
             <div className="section-header"> Description </div>
-            <p>{info.description}</p>
+            <p>{name}</p>
             <div className="section-header"> Study </div>
             <p>
               <a onClick={openStudy}><i>{info['FIRST AUTHOR']} et. al, {info.JOURNAL} ({info.DATE.slice(0, 4)}) </i>{openIcon}</a>

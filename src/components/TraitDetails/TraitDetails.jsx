@@ -30,7 +30,7 @@ class TraitDetails extends React.Component {
     prevState.currentTraitId = nextProps.traitId;
     return prevState;
   }
-  
+
   loadTraitDetails() {
     const traitId = this.state.currentTraitId;
     this.api.getDetails(this.state.currentTraitId).then(detailsData => {
@@ -52,7 +52,7 @@ class TraitDetails extends React.Component {
 
     const details = this.state.details;
 
-    const name = details.info.description;
+    const name = details.name;
 
     const header = (<div className="entity-header">
       <div className="entity-name">{name}</div>
