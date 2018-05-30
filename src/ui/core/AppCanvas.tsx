@@ -89,9 +89,10 @@ export class AppCanvas extends React.Component<Props, State> {
     }
 
     componentWillUnmount() {
-        for (let node of this.scene) {
+        // for (let node of this.scene)
+        this.scene.forEachSubNode((node) => {
             if (node instanceof Renderable) node.releaseGPUResources();
-        }
+        });
 
         SharedResources.release();
 
@@ -221,18 +222,20 @@ export class AppCanvas extends React.Component<Props, State> {
         let reactObjectIndex = 0;
         let reactObjectsChanged = false;
 
-        for (let node of this.scene) {
-            if (!(node instanceof ReactObject)) continue;
-            let last = this._reactObjects[reactObjectIndex];
+        // for (let node of this.scene)
+        this.scene.forEachSubNode((node) => {
+            if (node instanceof ReactObject) {
+                let last = this._reactObjects[reactObjectIndex];
 
-            if (!reactObjectsChanged) {
-                reactObjectsChanged = last !== node;
+                if (!reactObjectsChanged) {
+                    reactObjectsChanged = last !== node;
+                }
+
+                this._reactObjects[reactObjectIndex] = node;
+
+                reactObjectIndex++;
             }
-
-            this._reactObjects[reactObjectIndex] = node;
-
-            reactObjectIndex++;
-        }
+        });
 
         reactObjectsChanged = reactObjectsChanged || (reactObjectIndex !== this._reactObjects.length);
 
@@ -541,7 +544,7 @@ export class AppCanvas extends React.Component<Props, State> {
         let hitNodeIndex = 0;
         let hitNodes = this._hitNodes;
 
-        for (let node of this.scene) {
+        this.scene.forEachSubNode((node) => {
             if (node instanceof Object2D) {
                 let nodeInternal = node as any as Object2DInternal;
 
@@ -554,7 +557,7 @@ export class AppCanvas extends React.Component<Props, State> {
                 if (
                     node.cursorStyle == null &&
                     listeners <= 0
-                ) continue;
+                ) return;
 
                 let worldSpaceBounds = node.getWorldBounds();
 
@@ -568,7 +571,7 @@ export class AppCanvas extends React.Component<Props, State> {
                     hitNodes[hitNodeIndex++] = node;
                 }
             }
-        }
+        });
 
         // trim excess elements from last use
         if (hitNodeIndex < hitNodes.length) {

@@ -69,10 +69,9 @@ export class Renderer {
 		let masks = this._masks;
 
 		// iterate nodes, build state-change minimizing list for rendering
-		for (let node of pass.root) {
-			if (node instanceof Renderable) {
-				if (!node.render) continue;
-
+		// for (let node of pass.root)
+		pass.root.forEachSubNode((node) => {
+			if (node instanceof Renderable && node.render === true) {
 				let nodeInternal = node as any as RenderableInternal;
 
 				// render any dependent render passes
@@ -127,7 +126,7 @@ export class Renderer {
 					opaque[opaqueIndex++] = node;
 				}
 			}
-		}
+		});
 
 		// trim any excess elements from the last frame
 		if (opaqueIndex < opaque.length) {
@@ -148,7 +147,7 @@ export class Renderer {
 			let delta = ai._renderStateKey - bi._renderStateKey;
 			if (delta === 0) {
 				// front to back z-ordering
-				return bi.renderOrderZ - ai.renderOrderZ;
+				return ai.renderOrderZ - bi.renderOrderZ;
 			} else {
 				return delta;
 			}
@@ -158,7 +157,7 @@ export class Renderer {
 			let ai = a as any as RenderableInternal;
 			let bi = b as any as RenderableInternal;
 			// back to front z-ordering
-			return ai.renderOrderZ - bi.renderOrderZ;
+			return bi.renderOrderZ - ai.renderOrderZ;
 		});
 
 		// begin rendering

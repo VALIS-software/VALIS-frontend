@@ -21,16 +21,10 @@ export class Node<T extends Node<any>> {
 		}
 	}
 
-	/**
-	 * Enable for(of) iteration, iterates each node in the tree, depth-first, starting at this node
-	 */
-	*[Symbol.iterator]() {
-		yield this;
-
+	forEachSubNode(callback: (n: Node<T>) => void) {
 		for (let child of this.children) {
-			for (let n of (child as any)) {
-				yield n;
-			}
+			callback(child);
+			child.forEachSubNode(callback);
 		}
 	}
 
