@@ -67,15 +67,23 @@ export class SequenceTrack extends Track {
 
                 // if tileNode is not opaque and displaying data then we've got a gap to fill
                 if (!this.tileNodeIsOpaque(tileNode)) {
+                    let gapCenterX = tileData.x + tileData.span * 0.5;
+
                     // fill with larger tiles (higher lod level)
                     for (let p = 1; p < 50; p++) {
-                        let newLodX = Math.floor(tileData.lodX / (1 << p))
-                        let fallbackData = TileEngine.getTileFromLodX(this.model.sourceId, tileData.lodLevel + p, newLodX, false);
+                        let densityMultiplier = 1 << p;
+                        let fallbackData = TileEngine.getTile(this.model.sourceId, gapCenterX, samplingDensity * densityMultiplier, false);
+
+                        // let newLodX = Math.floor(tileData.lodX / (1 << p))
+                        // let fallbackData = TileEngine.getTileFromLodX(this.model.sourceId, tileData.lodLevel + p, newLodX, false);
 
                         // exhausted all available lods
                         if (fallbackData == null) break;
                         
                         if (fallbackData.state !== TileState.Empty) {
+                        // if (fallbackData.state === TileState.Complete) {
+                            // this._tileNodeCache.remove(this.getTileKey(fallbackData), this.deleteTileNode);
+
                             let fallbackNode = this._tileNodeCache.get(this.getTileKey(fallbackData), this.createTileNode);
                             this.updateTileNode(fallbackNode, fallbackData, x0, span, displayLodLevel);
 
@@ -115,7 +123,6 @@ export class SequenceTrack extends Track {
         tileNode.layoutW = tileData.span / span;
         tileNode.layoutH = 1;
         tileNode.displayLodLevel = displayLodLevel;
-        tileNode.displayDebug = false;
         tileNode.setTile(tileData);
     }
 
@@ -124,14 +131,14 @@ export class SequenceTrack extends Track {
     }
 
     protected tileNodeIsOpaque(tileNode: TileNode) {
-        return tileNode.render === true &&
-            tileNode.opacity === 1 &&
-            tileNode.getTile().state === TileState.Complete;
+        return (tileNode.render === true) &&
+            (tileNode.opacity >= 1) &&
+            (tileNode.getTile().state === TileState.Complete);
     }
 
 }
 
-import Object2D from "../core/Object2D";
+import Object2D, { Object2DInternal } from "../core/Object2D";
 import SharedResources from "../core/SharedResources";
 import Device, { GPUTexture } from "../../rendering/Device";
 import { DrawContext, DrawMode, BlendMode } from "../../rendering/Renderer";
@@ -141,6 +148,7 @@ import { DEFAULT_SPRING } from "../UIConstants";
 import { UsageCache } from "../../ds/UsageCache";
 import { Rect } from "../core/Rect";
 import { Text } from "../core/Text";
+import Renderable, { RenderableInternal } from "../../rendering/Renderable";
 
 /**
  * - A TileNode render field should only be set to true if it's TileEntry is in the Complete state
@@ -154,11 +162,11 @@ const OpenSansRegular = require('../../font/OpenSans-Regular.msdf.bin');
 
 class TileNode extends Object2D {
 
-    set opacity(v: number) {
-        this._opacity = v;
+    set opacity(opacity: number) {
+        this._opacity = opacity;
         // switch to opaque rendering as soon as opacity hits 1
-        this.transparent = v < 1;
-        this.blendMode = v < 1 ? BlendMode.PREMULTIPLIED_ALPHA : BlendMode.NONE;
+        this.transparent = opacity < 1;
+        this.blendMode = opacity < 1 ? BlendMode.PREMULTIPLIED_ALPHA : BlendMode.NONE;
     }
 
     get opacity() {
@@ -166,8 +174,6 @@ class TileNode extends Object2D {
     }
 
     displayLodLevel: number;
-    // @! tmp
-    displayDebug: boolean = false;
 
     protected _opacity: number;
     protected tile: TileEntry;
@@ -212,11 +218,17 @@ class TileNode extends Object2D {
     }
 
     private _lastComputedWidth: number;
+    private _lastComputedX: number;
     applyTreeTransforms(root?: boolean) {
-        if (this.computedWidth !== this._lastComputedWidth) {
-            // display width changed
-            this.updateLabels();
+        // updateLabels depends on computedWidth and layoutX, if any of those has changed we need to call it
+        if (
+            this.computedWidth !== this._lastComputedWidth ||
+            this._lastComputedX !== this.computedX
+        ) {
             this._lastComputedWidth = this.computedWidth;
+            this._lastComputedX = this.computedX;
+            // update labels when laying out scene-graph
+            this.updateLabels();
         }
 
         super.applyTreeTransforms(root);
@@ -249,7 +261,6 @@ class TileNode extends Object2D {
         context.uniform1f('opacity', this.opacity);
         context.uniform1f('memoryBlockY', this.memoryBlockY);
         context.uniform3f('offsetScaleLod', this.tile.sequenceMinMax.min, (this.tile.sequenceMinMax.max - this.tile.sequenceMinMax.min), this.displayLodLevel);
-        context.uniform1i('displayDebug', this.displayDebug ? 1 : 0);
         context.uniformTexture2D('memoryBlock', this.gpuTexture);
         context.draw(DrawMode.TRIANGLES, 6, 0);
 
@@ -258,76 +269,84 @@ class TileNode extends Object2D {
         }
     }
 
-    private _labelCache = new UsageCache<{container: Object2D, text: Text}>();
+    private _labelCache = new UsageCache<{container: Object2D, text: TextClone}>();
     protected updateLabels() {
+        let tile = this.tile;
         this._labelCache.markAllUnused();
 
-        let tile = this.tile;
+        if (tile != null) {
+            if (tile.lodLevel === 0 && tile.state === TileState.Complete) {
+                let data = tile.data as Uint8Array;
 
-        if (tile == null) return;
+                let baseWidth = 1 / tile.lodSpan;            
+                let baseDisplayWidth = this.computedWidth * baseWidth;
 
-        if (tile.lodLevel === 0 && tile.state === TileState.Complete) {
-            let data = tile.data as Uint8Array;
+                const maxTextSize = 16;
+                const minTextSize = 5;
+                const padding = 3;
+                const maxOpacity = 0.7;
+                
+                let textSizePx = Math.min(baseDisplayWidth - padding, maxTextSize);
+                let textOpacity = Math.min(Math.max((textSizePx - minTextSize) / (maxTextSize - minTextSize), 0.0), 1.0) * maxOpacity;
+                textOpacity = textOpacity * textOpacity;
 
-            let baseWidthFractional = 1 / tile.lodSpan;
-            let baseDisplayWidth = this.computedWidth * baseWidthFractional;
+                if (textOpacity > 0 && textSizePx > 0) {
 
-            const maxTextSize = 16;
-            const minTextSize = 5;
-            const padding = 2;
-            let textSizePx = Math.min(baseDisplayWidth - padding, maxTextSize);
-            let textOpacity = Math.min(Math.max((textSizePx - minTextSize) / (maxTextSize - minTextSize), 0.0), 1.0);
-            textOpacity = textOpacity * textOpacity;
-
-            if (textOpacity > 0 && textSizePx > 0) {
-                for (let i = 0; i < tile.length; i++) {
-                    let a = data[i * 4 + 0] / 0xFF;
-                    let c = data[i * 4 + 1] / 0xFF;
-                    let g = data[i * 4 + 2] / 0xFF;
-                    let t = data[i * 4 + 3] / 0xFF;
+                    // determine the portion of this tile that's visible, only touch labels for this portion
+                    // we assume:
+                    //     - layoutX and layoutW are used for positioning
+                    //     - x >= 0 and x <= 1 is visible range
+                    let visibleX0 = -this.layoutParentX / this.layoutW;
+                    let visibleX1 = (1 - this.layoutParentX) / this.layoutW;
+                    let firstVisibleBase = Scalar.clamp(Math.floor(visibleX0 / baseWidth), 0, tile.lodSpan - 1);
+                    let lastVisibleBase = Scalar.clamp(Math.floor(visibleX1 / baseWidth), 0, tile.lodSpan - 1);
                     
-                    // @! need proper handling for intermediate values
-                    let nucleobase = Math.round(a * 0 + c * 1 + g * 2 + t * 3);
+                    for (let i = firstVisibleBase; i <= lastVisibleBase; i++) {
+                        let a = data[i * 4 + 0] / 0xFF;
+                        let c = data[i * 4 + 1] / 0xFF;
+                        let g = data[i * 4 + 2] / 0xFF;
+                        let t = data[i * 4 + 3] / 0xFF;
+                        
+                        // @! need proper handling for intermediate values
+                        let baseIndex = Math.round(a * 0 + c * 1 + g * 2 + t * 3);
+                        let baseCharacter = TileNode.baseCharacters[baseIndex];
+                        if (baseCharacter == null) {
+                            console.warn('Bad base index', baseIndex, i, ':', a, c, t, g);
+                        }
 
-                    let label = this._labelCache.get(i + '', () => this.createLabel(nucleobase));
-                    label.container.layoutParentX = (i + 0.5) * baseWidthFractional;
-                    label.container.layoutParentY = 0.5;
+                        let label = this._labelCache.get(i + '', () => this.createLabel(baseCharacter));
+                        label.container.layoutParentX = (i + 0.5) * baseWidth;
+                        label.container.layoutParentY = 0.5;
 
-                    label.container.sx = label.container.sy = textSizePx;
+                        label.container.sx = label.container.sy = textSizePx;
 
-                    label.text.mask = this.mask;
-                    label.text.color[3] = textOpacity;
+                        label.text.mask = this.mask;
+                        label.text.color[3] = textOpacity;
+                    }
                 }
+                
             }
-            
         }
 
         this._labelCache.removeUnused(this.deleteLabel);
     }
 
-    protected createLabel = (nucleobase: number) => {
-        let letter = ['A', 'C', 'G', 'T'][nucleobase];
+    protected createLabel = (baseCharacter: string) => {
+        let textInstance = TileNode.baseTextInstances[baseCharacter];
+        let textClone = new TextClone(TileNode.baseTextInstances[baseCharacter], [1, 1, 1, 1]);
+        textClone.additiveBlendFactor = 1.0;
 
-        let text = new Text(OpenSansRegular, letter, 1);
-
-        switch (letter) {
-            case 'A': text.color.set([144/0xFF, 112/0xFF, 175/0xFF, 1.]); break;
-            case 'C': text.color.set([155/0xFF, 211/0xFF, 219/0xFF, 1.]); break;
-            case 'G': text.color.set([154/0xFF, 234/0xFF, 201/0xFF, 1.]); break;
-            case 'T': text.color.set([144/0xFF, 147/0xFF, 212/0xFF, 1.]); break;
-        }
-
-        text.layoutX = -0.5;
-        text.layoutY = -0.5;
+        textClone.layoutX = -0.5;
+        textClone.layoutY = -0.5;
 
         let container = new Object2D();
-        container.add(text);
+        container.add(textClone);
 
         this.add(container);
-        return {container: container, text: text};
+        return {container: container, text: textClone};
     }
 
-    protected deleteLabel = (label: { container: Object2D, text: Text }) => {
+    protected deleteLabel = (label: { container: Object2D, text: TextClone }) => {
         label.text.releaseGPUResources();
         this.remove(label.container);
     }
@@ -366,8 +385,6 @@ class TileNode extends Object2D {
         uniform float opacity;
         uniform sampler2D memoryBlock;
         uniform vec3 offsetScaleLod;
-
-        uniform bool displayDebug;
 
         varying vec2 texCoord;
         varying vec2 vUv;
@@ -431,14 +448,84 @@ class TileNode extends Object2D {
 
             /**
             // for debug: makes tiling visible
-            // if (displayDebug) {
-                float debugMask = step(0.45, vUv.y) * step(vUv.y, 0.55);
-                vec4 debugColor = vec4(vec3(1.0) * vUv.x, 1.0);
-                gl_FragColor = mix(gl_FragColor, debugColor, debugMask);
-            // }
+            float debugMask = step(0.45, vUv.y) * step(vUv.y, 0.55);
+            vec4 debugColor = vec4(vUv.xxx, 1.0);
+            gl_FragColor = mix(gl_FragColor, debugColor, debugMask);
             /**/
         }
     `;
+
+    // we only need 1 text instance of each letter which we can render multiple times
+    // this saves reallocating new vertex buffers for each letter
+    protected static baseCharacters = ['A', 'C', 'G', 'T'];
+    protected static baseTextInstances : { [key: string]: Text } = {
+        'A': new Text(OpenSansRegular, 'A', 1),
+        'C': new Text(OpenSansRegular, 'C', 1),
+        'G': new Text(OpenSansRegular, 'G', 1),
+        'T': new Text(OpenSansRegular, 'T', 1),
+    }
+}
+
+class TextClone extends Object2D {
+
+    color = new Float32Array(4);
+    additiveBlendFactor: number = 0.0;
+    
+    set _w(v: number) {}
+    set _h(v: number) {}
+
+    get _w() { return this.text.w; }
+    get _h() { return this.text.h; }
+
+    set render(v: boolean) { }
+    get render() { return this.text.render; }
+    
+    constructor(readonly text: Text, color: ArrayLike<number> = [0, 0, 0, 1]) {
+        super();
+        this.color.set(color);
+        this.transparent = true;
+        this.blendMode = text.blendMode;
+    }
+
+    allocateGPUResources(device: Device) {
+        let textInternal = (this.text as any as Object2DInternal);
+
+        if (textInternal.gpuResourcesNeedAllocate) {
+            textInternal.allocateGPUResources(device);
+            textInternal.gpuResourcesNeedAllocate = false;
+        }
+
+        this.gpuProgram = textInternal.gpuProgram;
+        this.gpuVertexState = textInternal.gpuVertexState;
+    }
+
+    releaseGPUResources() {}
+
+    draw(context: DrawContext) {
+        let textInternal = (this.text as any as Object2DInternal);
+
+        // override with local transform and color
+        textInternal.worldTransformMat4 = this.worldTransformMat4;
+        this.text.color = this.color;
+        this.text.additiveBlendFactor = this.additiveBlendFactor;
+
+        this.text.draw(context);
+    }
+
+    private _lastW: number;
+    private _lastH: number;
+    applyTreeTransforms(root?: boolean) {
+        
+        // if the cloned text dimensions change then we need to update our world transform
+        // ! world transform was just calculared
+        if ((this._lastW !== this._w) || (this._lastH !== this._h)) {
+            this.worldTransformNeedsUpdate = true;
+            this._lastW = this._w;
+            this._lastH = this._h;
+        }
+
+        super.applyTreeTransforms(root);
+    }
 
 }
 

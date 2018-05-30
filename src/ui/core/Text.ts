@@ -48,7 +48,10 @@ export class Text extends Object2D {
         return this._fontSizePx;
     }
 
-    color: Float32Array = new Float32Array([0, 0, 0, 1]);
+    color: Float32Array = new Float32Array(4);
+
+    // when additive blend factor is 1, the blend mode is additive, when 0, it's normal premultiplied alpha blended
+    additiveBlendFactor: number = 0;
 
     protected _string: string;
 
@@ -66,7 +69,7 @@ export class Text extends Object2D {
     protected glyphAtlas: GPUTexture;
     protected vertexCount = 0;
 
-    constructor(fontPath: string, string?: string, fontSizePx: number = 16) {
+    constructor(fontPath: string, string?: string, fontSizePx: number = 16, color: ArrayLike<number> = [0, 0, 0, 1]) {
         super();
         this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
         this.transparent = true;
@@ -79,6 +82,8 @@ export class Text extends Object2D {
         this._fontSizePx = fontSizePx;
         this.fontPath = fontPath;
         this.string = string;
+
+        this.color.set(color);
     }
 
     allocateGPUResources(device: Device) {
@@ -122,8 +127,9 @@ export class Text extends Object2D {
                 precision mediump float;
 
                 uniform vec4 color;
-                uniform sampler2D glyphAtlas;
+                uniform float blendFactor;
 
+                uniform sampler2D glyphAtlas;
                 uniform mat4 transform;
 
                 varying vec2 vUv;
@@ -143,7 +149,7 @@ export class Text extends Object2D {
 
                     float alpha = sigDist;
 
-                    gl_FragColor = color * color.a * alpha;
+                    gl_FragColor = vec4(color.rgb, blendFactor) * color.a * alpha;
                 }
                 `,
                 ['position', 'uv']
@@ -237,6 +243,7 @@ export class Text extends Object2D {
         // text instance
         context.uniform1f('glyphScale', this._glyphLayout.glyphScale);
         context.uniform4fv('color', this.color);
+        context.uniform1f('blendFactor', 1.0 - this.additiveBlendFactor);
         context.uniformMatrix4fv('transform', false, this.worldTransformMat4);
 
         context.draw(DrawMode.TRIANGLES, this.vertexCount, 0);
