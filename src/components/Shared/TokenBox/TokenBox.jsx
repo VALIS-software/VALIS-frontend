@@ -146,7 +146,7 @@ class TokenBox extends React.Component {
     const formValue = evt.target.value;
     if (formValue.length === 0 && evt.key === 'Backspace') {
       this.popToken();
-    } else if (evt.key == 'Enter' && this.state.query) {
+    } else if (evt.key === 'Enter' && this.state.query) {
       this.runSearch();
     }
   }
@@ -179,7 +179,7 @@ class TokenBox extends React.Component {
           open={this.state.open}
           filter={this.filter}
           hintText=""
-          menuCloseDelay={99999999999}
+          menuCloseDelay={Infinity}
           dataSource={this.state.dataSource}
           onUpdateInput={this.handleUpdateInput}
         />);
@@ -190,7 +190,7 @@ class TokenBox extends React.Component {
 
     const drawClear =  this.state.searchString.length > 0 || this.state.tokens.length > 0;
     const searchEnabled = this.state.query !== null;
-    const tooltip = searchEnabled ? "Search" : "Enter a valid search";
+    const tooltip = searchEnabled ? 'Search' : 'Enter a valid search';
     const clearButton =  drawClear ? (<IconButton tooltip="Clear" onClick={this.clearSearch}><ContentClear /></IconButton>) : (<div />);
     const searchButton = (<IconButton onClick={this.runSearch} disabled={!searchEnabled} tooltip={tooltip}><ActionSearch/></IconButton>);
     const status = (<div style={style}>
