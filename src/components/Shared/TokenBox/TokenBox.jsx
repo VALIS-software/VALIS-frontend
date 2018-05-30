@@ -114,7 +114,7 @@ class TokenBox extends React.Component {
   }
 
   runSearch = () => {
-    const queryStr = this.buildQueryStringFromTokens(this.state.tokens);
+    const queryStr = this.buildQueryStringFromTokens(this.state.tokens) + ' ' + this.state.searchString;
     const query = this.state.query;
     const view = (<SearchResultsView text={queryStr} query={query} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
     this.props.viewModel.pushView('Search Results', query, view);
@@ -146,7 +146,9 @@ class TokenBox extends React.Component {
     const formValue = evt.target.value;
     if (formValue.length === 0 && evt.key === 'Backspace') {
       this.popToken();
-    }    
+    } else if (evt.key == 'Enter' && this.state.query) {
+      this.runSearch();
+    }
   }
 
   renderToken(tokenText) {
