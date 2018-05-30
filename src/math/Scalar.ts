@@ -12,6 +12,10 @@ export class Scalar {
         return (((x > 0) as any) - ((x < 0) as any)) || +x;
     }
 
+    static clamp(x: number, min: number, max: number) {
+        return Math.min(Math.max(x, min), max);
+    }
+
 }
 
 export default Scalar;
