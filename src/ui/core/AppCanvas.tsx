@@ -112,7 +112,7 @@ export class AppCanvas extends React.Component<Props, State> {
             this.props.height !== prevProps.height
         ) {
             this.updateSceneTransform();
-            this.scene.applyTreeTransforms();
+            this.scene.applyTransformToSubNodes();
             this.renderer.render(this.mainRenderPass);
         }
     }
@@ -169,7 +169,7 @@ export class AppCanvas extends React.Component<Props, State> {
             }
         );
         this.updateSceneTransform();
-        this.scene.applyTreeTransforms();
+        this.scene.applyTransformToSubNodes();
     }
 
     /**

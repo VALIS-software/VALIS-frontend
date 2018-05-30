@@ -15,9 +15,9 @@ export class Node<T extends Node<any>> {
 		return (this.children as Set<T>).delete(child);
 	}
 
-	applyTreeTransforms(root: boolean = true) {
+	applyTransformToSubNodes(root: boolean = true) {
 		for (let child of this.children) {
-			child.applyTreeTransforms(true);
+			child.applyTransformToSubNodes(true);
 		}
 	}
 

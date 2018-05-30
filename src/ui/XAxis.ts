@@ -85,7 +85,7 @@ export class XAxis extends Object2D {
     }
 
     // override applyTreeTransforms to call updateLabels so that it's applied when world-space layouts are known
-    applyTreeTransforms(root?: boolean) {
+    applyTransformToSubNodes(root?: boolean) {
         this.labelsNeedUpdate = this.labelsNeedUpdate || this.computedWidth !== this.lastComputedWidth;
 
         if (this.labelsNeedUpdate) {
@@ -93,7 +93,7 @@ export class XAxis extends Object2D {
             this.lastComputedWidth = this.computedWidth;
         }
 
-        super.applyTreeTransforms(root);
+        super.applyTransformToSubNodes(root);
     }
 
     protected updateLabels() {
