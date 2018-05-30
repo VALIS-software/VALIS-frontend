@@ -33,15 +33,21 @@ class TokenBox extends React.Component {
     const lowered = dataSource.map(d => {
       return d.toLowerCase();
     });
+    
     const query = value.toLowerCase().trim();
+
+    // search for value in case-insensitive fashion:
+    if (lowered.indexOf(query) < 0) return null;
+
+    // make sure value matches only one suggestion in the dropdown:
     const singleMatch = dataSource.filter(d => {
       return this.filter(query ,d);
     }).length <= 1;
-    const idx = lowered.indexOf(query);
-    if (idx >= 0 && singleMatch) {
-      return dataSource[idx];
-    }
-    return null;
+
+    if (!singleMatch) return null;
+
+    return dataSource[idx];
+
   }
 
   handleUpdateInput = (value, dataSource, params) => {
@@ -49,10 +55,12 @@ class TokenBox extends React.Component {
       searchString: value,
     });
     if (!value) return;
-    // if the value is one of the suggestions, then just call handleSelection
     const match = this.perfectMatch(dataSource, value);
     if (match) {
+      // clear the search box:
       this.refs.autoComplete.setState({searchText:''});
+
+      // update the current tokens list:
       this.state.tokens.push({
         value: match,
         quoted: this.state.quoteInput
@@ -60,8 +68,11 @@ class TokenBox extends React.Component {
       this.setState({
         tokens: this.state.tokens.slice(0),
       });
+
+      // fetch new suggestions:
       this.getSuggestions(this.state.tokens); 
     } else {
+      // fetch new suggestions:
       const newTokens = this.state.tokens.slice(0);
       newTokens.push({
         value: value,
