@@ -200,6 +200,8 @@ class TokenBox extends React.Component {
 }
 
 TokenBox.propTypes = {
+  appModel: PropTypes.object,
+  viewModel: PropTypes.object
 };
 
 export default TokenBox;
