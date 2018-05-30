@@ -13,7 +13,7 @@
 		height: 100%;
 		background-color: $dark-color;
 		color: $white-color;
-		font-size: 12px;
+		font-size: 10px;
 		&:hover {
 			background: linear-gradient(to right, darken($dark-color, 25%), $dark-color);
 			color: $white-color;
