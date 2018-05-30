@@ -71,8 +71,6 @@ export class SiriusApi {
             end: byte0 + nBytes - 1,
         };
 
-        console.log('\tbyte range', byteRange.start, byteRange.end, byteRange.end - byteRange.start);
-
         return axios({
             method: 'get',
             url: path,
