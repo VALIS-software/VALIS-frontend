@@ -34,6 +34,10 @@ export class UsageCache<T> {
         return Object.keys(this.cache);
     }
 
+    markUnused(key: string) {
+        this.cache[key].used = false;
+    }
+
     markAllUnused() {
         // reset 'used' flag in cache
         for (let key in this.cache) {
