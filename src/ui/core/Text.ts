@@ -293,6 +293,10 @@ export class Text extends Object2D {
             this.h = 0;
         }
 
+        if (glyphLayoutChanged) {
+            this.eventEmitter.emit('glyphLayoutChanged');
+        }
+
         // we're only able to render if we have a glyphLayout (and implicitly font assets)
         this.render = this._glyphLayout != null;
 
