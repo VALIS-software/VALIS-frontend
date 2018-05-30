@@ -11,8 +11,7 @@ import { Renderable, RenderableInternal } from '../rendering/Renderable';
 export enum BlendMode {
 	NONE                = 0,
 	PREMULTIPLIED_ALPHA = 1,
-	ADD                 = 2,
-	MULTIPLY            = 3,
+	MULTIPLY            = 2,
 }
 
 export enum DrawMode {
