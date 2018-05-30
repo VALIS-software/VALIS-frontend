@@ -15,7 +15,6 @@ import './TokenBox.scss';
 class TokenBox extends React.Component {
   constructor(props) {
     super(props);
-    this.didRedraw = false;
     this.state = {
       tokens: [],
       dataSource: [],
