@@ -457,7 +457,7 @@ export class Device {
 		for (let i = 0; i < vertexStateDescriptor.attributes.length; i++) {
 			let attribute = vertexStateDescriptor.attributes[i];
 			if (attribute instanceof Float32Array) {
-				gl.vertexAttrib4fv(i, attribute); // @! verify that this works with array length < 4
+				gl.vertexAttrib4fv(i, attribute);
 			} else {
 				gl.bindBuffer(gl.ARRAY_BUFFER, attribute.buffer.native);
 				gl.enableVertexAttribArray(i);
@@ -470,7 +470,7 @@ export class Device {
 	}
 	
 	protected assignTextureUnit(): number {
-		console.log(`%cassignTextureUnit`, 'color: blue');
+		// console.debug(`%cassignTextureUnit`, 'color: blue');
 		// return the first free texture unit
 		let minUsageMetric = Infinity;
 		let minUsageUnitIndex = undefined;
@@ -478,7 +478,7 @@ export class Device {
 		for (let i = 0; i < this.textureUnitState.length; i++) {
 			let unit = this.textureUnitState[i];
 			if (unit === undefined) {
-				console.log(`%c\tfound free ${i}`, 'color: blue');
+				// console.debug(`%c\tfound free ${i}`, 'color: blue');
 				return i;
 			}
 
@@ -491,7 +491,7 @@ export class Device {
 		// at this point we know no texture units are empty, so instead we pick a unit to empty
 		// the best units to empty are ones in which their textures haven't been used recently
 		// hinting can override this behavior
-		console.log(`%c\tclearing ${minUsageUnitIndex}`, 'color: blue');
+		// console.debug(`%c\tclearing ${minUsageUnitIndex}`, 'color: blue');
 		this.clearTextureUnit(minUsageUnitIndex);
 
 		return minUsageUnitIndex;
@@ -518,7 +518,7 @@ export class Device {
 	}
 
 	protected clearTextureUnit(unit: number) {
-		console.log(`%cclearTextureUnit ${unit}`, 'color: blue');
+		// console.debug(`%cclearTextureUnit ${unit}`, 'color: blue');
 		const gl = this.gl;
 		let texture = this.textureUnitState[unit].texture;
 		const textureInternal = texture as any as GPUTextureInternal;
