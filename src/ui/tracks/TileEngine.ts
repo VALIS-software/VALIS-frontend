@@ -96,34 +96,9 @@ export class TileEngine {
         return this.getTileFromLodX(setId, lodLevel, x_lodSpace, requestData);
     }
 
-    static getTileFromLodX(
-        setId: string,
-        lodLevel: number,
-        lodX: number,
-        requestData: boolean
-    ): TileEntry {
-        lodLevel = this.filterLodLevel(lodLevel);
-
-        let set = this.getSet(setId);
-        let maxLodLevel = set.lod.length - 1;
-
-        if (lodLevel > maxLodLevel || lodLevel < 0) {
-            return null;
-        }
-
-        let blockIndex = this.blockIndex(lodX);
-        let rowIndex = this.tileRowIndex(lodX);
-
-        let blocks = this.getBlocks(set, lodLevel);
-        let block = this.getBlock(blocks, lodLevel, blockIndex);
-
-        let tile = block.rows[rowIndex];
-
-        if (requestData && tile.state === TileState.Empty) {
-            this.requestTileData(tile);
-        }
-
-        return tile;
+    // only applies to public get* methods
+    protected static filterLodLevel(lodLevel: number) {
+        return Math.floor(lodLevel / LOD_SKIP) * LOD_SKIP;
     }
 
     static getTexture(device: Device, block: Block): GPUTexture {
@@ -181,8 +156,33 @@ export class TileEngine {
         return block.gpuTexture;
     }
 
-    protected static filterLodLevel(lodLevel: number) {
-        return Math.floor(lodLevel / LOD_SKIP) * LOD_SKIP;
+    protected static getTileFromLodX(
+        setId: string,
+        lodLevel: number,
+        lodX: number,
+        requestData: boolean
+    ): TileEntry {
+
+        let set = this.getSet(setId);
+        let maxLodLevel = set.lod.length - 1;
+
+        if (lodLevel > maxLodLevel || lodLevel < 0) {
+            return null;
+        }
+
+        let blockIndex = this.blockIndex(lodX);
+        let rowIndex = this.tileRowIndex(lodX);
+
+        let blocks = this.getBlocks(set, lodLevel);
+        let block = this.getBlock(blocks, lodLevel, blockIndex);
+
+        let tile = block.rows[rowIndex];
+
+        if (requestData && tile.state === TileState.Empty) {
+            this.requestTileData(tile);
+        }
+
+        return tile;
     }
 
     protected static uploadTileData = (tile: TileEntry) => {
@@ -237,49 +237,6 @@ export class TileEngine {
         this.tileSets = {};
     }
 
-    /*
-    protected static requestData(tiles: Array<TileEntry>) {
-        let batchLodLevel = -1;
-        let batchLodX = -1;
-        let batchLodSpan = -1;
-        let currentBatchTiles: Array<TileEntry>;
-
-        for (let tile of tiles) {
-            
-            if (
-                tile.lodLevel === batchLodLevel &&
-                tile.lodX === (batchLodX + batchLodSpan + 1)
-            ) {
-                // add tile to current batch
-                batchLodSpan += tile.lodSpan;
-                currentBatchTiles.push(tile);
-            } else {
-                if (batchLodSpan > 0) {
-                }
-
-                // start new batch
-                batchLodLevel = tile.lodLevel;
-                batchLodX = tile.lodX;
-                batchLodSpan = tile.lodSpan;
-                currentBatchTiles = [];
-            }
-
-
-            /*
-
-            p.then((a) => {
-                let tileInternal = tile as any as TileEntryInternal;
-                tile.data = a.array;
-                tile.sequenceMinMax = a.sequenceMinMax;
-                tile.state = TileState.Complete;
-                tileInternal.emitComplete();
-            });
-
-            tile.state = TileState.Pending;
-        }
-    }
-    */
-
     protected static requestTileData(tile: TileEntry) {
         const tileInternal = tile as any as TileEntryInternal;
 
@@ -298,39 +255,6 @@ export class TileEngine {
             tileInternal.state = TileState.Empty;
         });
     }
-
-    /*
-    protected static requestContiguousTileData(tiles: Array<TileEntry>) {
-        throw `not yet tested`;
-
-        let lodLevel = tiles[0].lodLevel;
-        let lodX = tiles[0].lodX;
-        let lodSpan = tiles[0].lodSpan * tiles.length;
-
-        // begin request
-        let p = SiriusApi.loadACGTSubSequence(lodLevel, lodX, lodSpan);
-
-        // mark tiles as loading
-        for (let t of tiles) {
-            t.state = TileState.Loading;
-        }
-
-        p.then((a) => {
-            for (let i = 0; i < tiles.length; i++) {
-                let tile = tiles[i];
-                let tileInternal = tile as any as TileEntryInternal;
-
-                let sizeOfIndex_bytes = 1;
-                let bufferOffset = sizeOfIndex_bytes * a.indicesPerBase * i * tile.lodSpan;
-                let bufferLength = sizeOfIndex_bytes * a.indicesPerBase * tile.lodSpan;
-                tile.data = new Uint8Array(a.array.buffer, bufferOffset, bufferLength);
-                tile.sequenceMinMax = a.sequenceMinMax;
-                tile.state = TileState.Complete;
-                tileInternal.emitComplete();
-            }
-        });
-    }
-    */
 
     protected static createBlock(lodLevel: number, blockIndex: number): Block {
         let block: Block = {
