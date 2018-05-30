@@ -36,7 +36,8 @@ class TokenBox extends React.Component {
     const query = value.toLowerCase().trim();
 
     // search for value in case-insensitive fashion:
-    if (lowered.indexOf(query) < 0) return null;
+    const idx = lowered.indexOf(query);
+    if (idx < 0) return null;
 
     // make sure value matches only one suggestion in the dropdown:
     const singleMatch = dataSource.filter(d => {
