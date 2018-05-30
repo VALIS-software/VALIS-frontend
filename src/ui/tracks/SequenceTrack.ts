@@ -18,9 +18,9 @@ export class SequenceTrack extends Track {
         this.updateTiles();
     }
 
-    applyTreeTransforms(root?: boolean) {
+    applyTransformToSubNodes(root?: boolean) {
         this.updateTiles();
-        super.applyTreeTransforms(root);
+        super.applyTransformToSubNodes(root);
     }
 
     private _lastComputedWidth: number;
@@ -68,28 +68,51 @@ export class SequenceTrack extends Track {
                 // if tileNode is not opaque and displaying data then we've got a gap to fill
                 if (!this.tileNodeIsOpaque(tileNode)) {
                     let gapCenterX = tileData.x + tileData.span * 0.5;
+                    
+                    // limit the number of loading-fade-in tiles to improve performance
+                    let loadingTilesAllowed = 1;
+                    let fadingTilesAllowed = 1;
 
                     // fill with larger tiles (higher lod level)
                     for (let p = 1; p < 50; p++) {
                         let densityMultiplier = 1 << p;
                         let fallbackData = TileEngine.getTile(this.model.sourceId, gapCenterX, samplingDensity * densityMultiplier, false);
 
-                        // let newLodX = Math.floor(tileData.lodX / (1 << p))
-                        // let fallbackData = TileEngine.getTileFromLodX(this.model.sourceId, tileData.lodLevel + p, newLodX, false);
-
                         // exhausted all available lods
                         if (fallbackData == null) break;
                         
-                        if (fallbackData.state !== TileState.Empty) {
-                        // if (fallbackData.state === TileState.Complete) {
-                            // this._tileNodeCache.remove(this.getTileKey(fallbackData), this.deleteTileNode);
+                        // it's possible we end up with the same lod we already have, if so, skip it
+                        if (fallbackData.lodLevel === tileData.lodLevel) continue;
 
-                            let fallbackNode = this._tileNodeCache.get(this.getTileKey(fallbackData), this.createTileNode);
+                        // can we use this tile as a fallback?
+                        if (
+                            ((loadingTilesAllowed > 0) && (fallbackData.state === TileState.Loading)) ||
+                            (fallbackData.state === TileState.Complete)
+                        ) {
+                            if (fallbackData.state === TileState.Loading){
+                                loadingTilesAllowed--;
+                            }
+
+                            let tileKey = this.getTileKey(fallbackData);
+
+                            let fallbackNode = this._tileNodeCache.get(tileKey, this.createTileNode);
                             this.updateTileNode(fallbackNode, fallbackData, x0, span, displayLodLevel);
 
                             // @! improve this
                             // z-position tile so that better lods are front-most
                             fallbackNode.z = (1.0 - fallbackData.lodLevel / 50) - 0.1;
+
+                            // remove the tile if it's currently fading in and we've run out of fading tile budget
+                            let tileIsFading = (fallbackData.state === TileState.Complete) && (fallbackNode.opacity < 1);
+
+                            if (tileIsFading) {
+                                if (fadingTilesAllowed <= 0) {
+                                    this._tileNodeCache.markUnused(tileKey);
+                                    continue;
+                                } else {
+                                    fadingTilesAllowed--;
+                                }
+                            }
 
                             // if the fallback node is opaque then we've successfully plugged the gap
                             if (this.tileNodeIsOpaque(fallbackNode)) {
@@ -99,6 +122,7 @@ export class SequenceTrack extends Track {
                     }
                 }
             });
+
         }
 
         this._tileNodeCache.removeUnused(this.deleteTileNode);
@@ -219,7 +243,7 @@ class TileNode extends Object2D {
 
     private _lastComputedWidth: number;
     private _lastComputedX: number;
-    applyTreeTransforms(root?: boolean) {
+    applyTransformToSubNodes(root?: boolean) {
         // updateLabels depends on computedWidth and layoutX, if any of those has changed we need to call it
         if (
             this.computedWidth !== this._lastComputedWidth ||
@@ -231,7 +255,7 @@ class TileNode extends Object2D {
             this.updateLabels();
         }
 
-        super.applyTreeTransforms(root);
+        super.applyTransformToSubNodes(root);
     }
 
     allocateGPUResources(device: Device) {
@@ -333,6 +357,7 @@ class TileNode extends Object2D {
 
     protected createLabel = (baseCharacter: string) => {
         let textInstance = TileNode.baseTextInstances[baseCharacter];
+
         let textClone = new TextClone(TileNode.baseTextInstances[baseCharacter], [1, 1, 1, 1]);
         textClone.additiveBlendFactor = 1.0;
 
@@ -347,11 +372,14 @@ class TileNode extends Object2D {
     }
 
     protected deleteLabel = (label: { container: Object2D, text: TextClone }) => {
+        label.container.remove(label.text); // ensure textClone cleanup is fired
         label.text.releaseGPUResources();
         this.remove(label.container);
     }
 
     protected tileComplete = () => {
+        this.tile.removeCompleteListener(this.tileComplete);
+
         Animator.springTo(this, {'opacity': 1}, DEFAULT_SPRING);
         this.render = true;
         this.gpuResourcesNeedAllocate = true;
@@ -487,6 +515,12 @@ class TextClone extends Object2D {
         this.blendMode = text.blendMode;
     }
 
+    onAdded() {
+        if (this.text.w === 0) {
+            this.text.addEventListener('glyphLayoutChanged', this.glyphLayoutChanged);
+        }
+    }
+
     allocateGPUResources(device: Device) {
         let textInternal = (this.text as any as Object2DInternal);
 
@@ -512,19 +546,9 @@ class TextClone extends Object2D {
         this.text.draw(context);
     }
 
-    private _lastW: number;
-    private _lastH: number;
-    applyTreeTransforms(root?: boolean) {
-        
-        // if the cloned text dimensions change then we need to update our world transform
-        // ! world transform was just calculared
-        if ((this._lastW !== this._w) || (this._lastH !== this._h)) {
-            this.worldTransformNeedsUpdate = true;
-            this._lastW = this._w;
-            this._lastH = this._h;
-        }
-
-        super.applyTreeTransforms(root);
+    protected glyphLayoutChanged = () => {
+        this.worldTransformNeedsUpdate = true;
+        this.text.removeEventListener('glyphLayoutChanged', this.glyphLayoutChanged);
     }
 
 }
