@@ -150,7 +150,7 @@ export class Object2D extends Renderable<Object2D> implements Layout {
     }
 
     addEventListener(event: string, listener: (... args: any[]) => void) {
-        let isInteractionEvent = Object.keys(this.interactionEventListenerCount).indexOf(event);
+        let isInteractionEvent = Object.keys(this.interactionEventListenerCount).indexOf(event) !== -1;
         if (isInteractionEvent) {
             this.addInteractionListener(event as any, listener);
         } else {
@@ -159,25 +159,21 @@ export class Object2D extends Renderable<Object2D> implements Layout {
     }
 
     removeEventListener(event: string, listener: (...args: any[]) => void) {
-        let isInteractionEvent = Object.keys(this.interactionEventListenerCount).indexOf(event);
+        let isInteractionEvent = Object.keys(this.interactionEventListenerCount).indexOf(event) !== -1;
         if (isInteractionEvent) {
-            this.addInteractionListener(event as any, listener);
+            this.removeInteractionListener(event as any, listener);
         } else  {
             this.eventEmitter.removeListener(event, listener);
         }
     }
 
-    emit(event: string, args: any) {
-        this.eventEmitter.emit(event, args);
-    }
-
     addInteractionListener<K extends keyof InteractionEventMap>(event: K, listener: (e: InteractionEventMap[K]) => void) {
-        this.eventEmitter.on(event, listener);
+        this.eventEmitter.addListener(event, listener);
         this.interactionEventListenerCount[event]++;
     }
 
     removeInteractionListener<K extends keyof InteractionEventMap>(event: K, listener: (e: InteractionEventMap[K]) => void) {
-        if (this.eventEmitter.rawListeners(event).indexOf(listener) !== -1) {
+        if (this.eventEmitter.listenerCount(event) > 0) {
             this.eventEmitter.removeListener(event, listener);
             this.interactionEventListenerCount[event]--;
         }
@@ -193,7 +189,11 @@ export class Object2D extends Renderable<Object2D> implements Layout {
         }
     }
 
-    applyTreeTransforms(root: boolean = true) {
+    emit(event: string | symbol, args: any) {
+        this.eventEmitter.emit(event, args);
+    }
+
+    applyTransformToSubNodes(root: boolean = true) {
         if (root && this.worldTransformNeedsUpdate) {
             this.computeLayout(0, 0);
             this.applyWorldTransform(null);
@@ -206,7 +206,7 @@ export class Object2D extends Renderable<Object2D> implements Layout {
                 child.applyWorldTransform(this.worldTransformMat4);
             }
 
-            child.applyTreeTransforms(false);
+            child.applyTransformToSubNodes(false);
         }
     }
 
