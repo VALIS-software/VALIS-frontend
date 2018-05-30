@@ -7,6 +7,8 @@ import Chip from 'material-ui/Chip';
 import AutoComplete from 'material-ui/AutoComplete';
 import IconButton from 'material-ui/IconButton';
 import ActionSearch from 'material-ui/svg-icons/action/search';
+import ContentClear from 'material-ui/svg-icons/content/clear';
+import SearchResultsView from '../../SearchResultsView/SearchResultsView.jsx';
 
 import './TokenBox.scss';
 
@@ -18,6 +20,8 @@ class TokenBox extends React.Component {
       tokens: [],
       dataSource: [],
       open: false,
+      searchString: '',
+      query: null,
     };
   }
 
@@ -41,12 +45,14 @@ class TokenBox extends React.Component {
   }
 
   handleUpdateInput = (value, dataSource, params) => {
+    this.setState({
+      searchString: value,
+    });
     if (!value) return;
     // if the value is one of the suggestions, then just call handleSelection
     const match = this.perfectMatch(dataSource, value);
     if (match) {
       this.refs.autoComplete.setState({searchText:''});
-      this.refs.autoComplete.refs.searchTextField.input.focus();
       this.state.tokens.push({
         value: match,
         quoted: this.state.quoteInput
@@ -80,10 +86,11 @@ class TokenBox extends React.Component {
         dataSource: result.suggestions.slice(0, 5),
         open: openOnLoad,
         quoteInput: result.quoted_suggestion,
+        query: result.query
       });
 
-      if (result.query) {
-        // Show go button
+      if (!result.query) {
+        this.refs.autoComplete.refs.searchTextField.input.focus();
       }
     });
   }
@@ -95,11 +102,30 @@ class TokenBox extends React.Component {
     return prevState;
   }
 
+  runSearch = () => {
+    const queryStr = this.buildQueryStringFromTokens(this.state.tokens);
+    const query = this.state.query;
+    const view = (<SearchResultsView text={queryStr} query={query} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
+    this.props.viewModel.pushView('Search Results', query, view);
+  }
+
+  clearSearch = () => {
+    this.setState({
+      tokens: [],
+      searchString: '',
+      open: false,
+      query: null,
+    });
+    this.refs.autoComplete.setState({searchText:''});
+    this.getSuggestions([]);
+  }
+
   popToken = () => {
     if (this.state.tokens.length >= 1) {
       this.state.tokens.pop();
       this.setState({
-        tokens: this.state.tokens.slice(0)
+        tokens: this.state.tokens.slice(0),
+        searchString: '',
       });
       this.getSuggestions(this.state.tokens);
     }
@@ -148,7 +174,16 @@ class TokenBox extends React.Component {
       position: 'absolute',
       right: '0px',
     };
-    const status = (<IconButton style={style} tooltip="Search"><ActionSearch /></IconButton>);
+
+    const drawClear =  this.state.searchString.length > 0 || this.state.tokens.length > 0;
+    const searchEnabled = this.state.query !== null;
+    const tooltip = searchEnabled ? "Search" : "Enter a valid search";
+    const clearButton =  drawClear ? (<IconButton tooltip="Clear" onClick={this.clearSearch}><ContentClear /></IconButton>) : (<div />);
+    const searchButton = (<IconButton onClick={this.runSearch} disabled={!searchEnabled} tooltip={tooltip}><ActionSearch/></IconButton>);
+    const status = (<div style={style}>
+      {clearButton}
+      {searchButton}
+    </div>);
     return (<div className="token-box">{elements}<div>{input}</div>{status}</div>);
   }
 }
