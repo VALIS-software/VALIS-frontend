@@ -8,8 +8,8 @@ VALIS (Visualization & Analytics for Life Science) is a powerful genome visualiz
 ### Install
 
 ```
-git clone git@github.com:saliksyed/VALIS.git
-cd VALIS
+git clone git@github.com:VALIS-software/VALIS-frontend.git
+cd VALIS-frontend
 npm install
 ```
 There is a test server located in the `tools` directory. The server requires the following libraries, which are installable using pip.
