@@ -75,10 +75,12 @@ export class XAxis extends Object2D {
             }
 
             let reducedX = x / reductionFactor;
-            let reducedXIntStr = Math.round(reducedX).toString();
+            let reducedXIntStr = Math.floor(reducedX).toFixed(0);
             let dp = maxLength - reducedXIntStr.length - symbol.length;
-            let mStr = dp > 0 ? reducedX.toFixed(dp) : reducedXIntStr;
-            str = mStr + symbol;
+
+            let numString = Scalar.toFixedTrunc(reducedX, Math.max(dp, 0));
+
+            str = numString + symbol;
         }
 
         return str;
