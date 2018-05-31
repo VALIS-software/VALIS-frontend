@@ -81,7 +81,6 @@ export class Panel extends Object2D {
         this.add(this.xAxis);
 
         this.resizeHandle = new Rect(0, 0, [1, 0, 0, 1]);
-        this.resizeHandle = new Rect(0, 0, [1, 0, 0, 1]);
         this.resizeHandle.layoutX = -0.5;
         this.resizeHandle.layoutX = -0.5;
         this.resizeHandle.layoutParentX = 1;
@@ -110,7 +109,7 @@ export class Panel extends Object2D {
         }
 
         track.panel = this;
-
+        
         track.addInteractionListener('dragstart', this.onTileDragStart);
         track.addInteractionListener('dragmove', this.onTileDragMove);
         track.addInteractionListener('dragend', this.onTileDragEnd);
