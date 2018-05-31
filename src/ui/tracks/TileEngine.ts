@@ -8,12 +8,6 @@ const TILES_PER_BLOCK: number = 8;
 const BLOCK_SIZE = TILE_WIDTH * TILES_PER_BLOCK;
 const LOD_SKIP = 2; // only use lods 0, 2, 4, ...
 
-type Set = {
-    lod: Array<Blocks>
-}
-
-type Blocks = { [blockId: string]: Block }
-
 export class TileEngine {
 
     static readonly textureWidth = TILE_WIDTH;
@@ -113,7 +107,7 @@ export class TileEngine {
             format: TextureFormat.RGBA,
 
             // mipmapping should be turned off to avoid rows blending with one another
-            // if TILES_PER_BLOCK = 0 then mipmapping may be enabled
+            // if TILES_PER_BLOCK = 1 then mipmapping may be enabled
             generateMipmaps: false,
 
             // FireFox emits performance warnings when using texImage2D on uninitialized textures
@@ -144,12 +138,12 @@ export class TileEngine {
             let tile = block.rows[i];
             let tileInternal = tile as any as TileEntryInternal;
             if (tileInternal.state === TileState.Complete) {
-                this.uploadTileData(tile);
+                this.uploadTileTextureData(tile);
             } else {
                 // wait until the tile data is ready before upload
                 // this listener must be removed if the gpuTexture object is deleted
                 // see: releaseTexture(block: Block)
-                tile.addCompleteListener(this.uploadTileData);
+                tile.addCompleteListener(this.uploadTileTextureData);
             }
         }
 
@@ -185,7 +179,7 @@ export class TileEngine {
         return tile;
     }
 
-    protected static uploadTileData = (tile: TileEntry) => {
+    protected static uploadTileTextureData = (tile: TileEntry) => {
         let tileInternal = tile as any as TileEntryInternal;
         tileInternal.block.gpuTexture.updateTextureData(
             0,
@@ -222,7 +216,7 @@ export class TileEngine {
             // remove data upload listeners
             for (let i = 0; i < block.rows.length; i++) {
                 let tile = block.rows[i];
-                tile.removeCompleteListener(this.uploadTileData);
+                tile.removeCompleteListener(this.uploadTileTextureData);
             }
         }
     }
@@ -321,6 +315,19 @@ export class TileEngine {
 
 }
 
+type Set = {
+    lod: Array<Blocks>
+}
+
+type Blocks = { [blockId: string]: Block }
+
+type Block = {
+    lastUsedTimestamp: number,
+    lodLevel: number,
+    rows: Array<TileEntry>,
+    gpuTexture: GPUTexture,
+}
+
 export enum TileState {
     Empty = 0,
     Loading = 1,
@@ -386,13 +393,6 @@ export class TileEntry {
         this.eventEmitter.emit('complete', this);
     }
 
-}
-
-type Block = {
-    lastUsedTimestamp: number,
-    lodLevel: number,
-    rows: Array<TileEntry>,
-    gpuTexture: GPUTexture,
 }
 
 export default TileEngine;
