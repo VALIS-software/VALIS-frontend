@@ -14,7 +14,7 @@ import SNPDetails from '../SNPDetails/SNPDetails.jsx';
 import GWASDetails from '../GWASDetails/GWASDetails.jsx';
 import GeneDetails from '../GeneDetails/GeneDetails.jsx';
 import TraitDetails from '../TraitDetails/TraitDetails.jsx';
-import { ENTITY_TYPE, ASSOCIATION_TYPE } from '../../helpers/constants.js';
+import { ENTITY_TYPE } from '../../helpers/constants.js';
 
 import AppModel, { AppEvent } from "../../models/appModel";
 
@@ -41,30 +41,24 @@ class App extends React.PureComponent<any, any> {
 
   clickTrackElement = (event: any) => {
     if (event.data !== null) {
-      if (event.data.aggregation === true) {
+      if (event.data.type === "aggregation") {
         // if the annotation is an aggregation then zoom
         this.viewModel.setViewRegionUsingRange(event.data.startBp, event.data.endBp);
       } else if (this.currentView() && event.data.id === this.currentView().info) {
         this.viewModel.popView();
       } else {
         // we start a new view history
-        let title = '';
-        if (event.data.title) {
-          title = event.data.title;
-        }
-        const dataID = event.data.id;
         this.viewModel.closeView();
-        const elem = (<EntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={dataID} />);
-        this.viewModel.pushView(title, dataID, elem);
+        this.displayEntityDetails(event);
       }
     }
   }
 
   displayEntityDetails = (event: any) => {
     if (event.data !== null) {
-      const entityInfo = event.data;
-      const dataID: any = entityInfo.entityId;
-      const entityType: any = entityInfo.entityType;
+      const entity = event.data;
+      const dataID: string = entity.id;
+      const entityType: string = entity.type;
       let elem = null;
       if (entityType === ENTITY_TYPE.SNP) {
         elem = (<SNPDetails viewModel={this.viewModel} appModel={this.appModel} snpId={dataID} />);
@@ -72,7 +66,7 @@ class App extends React.PureComponent<any, any> {
         elem = (<GeneDetails viewModel={this.viewModel} appModel={this.appModel} geneId={dataID} />);
       } else if (entityType === ENTITY_TYPE.TRAIT) {
         elem = (<TraitDetails viewModel={this.viewModel} appModel={this.appModel} traitId={dataID} />);
-      } else if (entityType === ASSOCIATION_TYPE.GWAS) {
+      } else if (entityType === ENTITY_TYPE.GWAS) {
         elem = (<GWASDetails viewModel={this.viewModel} appModel={this.appModel} assocId={dataID} />);
       } else {
         elem = (<EntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={dataID} />);

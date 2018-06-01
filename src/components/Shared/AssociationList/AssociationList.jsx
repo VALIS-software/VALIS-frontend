@@ -1,95 +1,55 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import Collapsible from '../Collapsible/Collapsible.jsx';
-import { ASSOCIATION_TYPE } from '../../../helpers/constants.js';
-import Util from '../../../helpers/util.js';
 import './AssociationList.scss';
+import { ENTITY_TYPE } from '../../../helpers/constants';
 
 
 class AssociationList extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      needRefresh: false,
-    };
-  }
-
-  static getDerivedStateFromProps(nextProps, prevState) {
-    if (!prevState) prevState = {};
-    prevState.associations = nextProps.associations;
-    prevState.needRefresh = true;
-    return prevState;
-  }
-
-  loadRelationDetails() {
-    const all = this.state.associations.map(r => {
-      return this.props.appModel.api.getDetails(r.id).then(d => {
-        const details = d.details.info;
-        const ret = {};
-        if (Util.isAssociation(d, ASSOCIATION_TYPE.EQTL)) {
-          ret.id = d.details['_id'];
-          ret.cellType = details.CellType;
-          ret.type = ASSOCIATION_TYPE.EQTL;
-          ret.description = `Expression in ${details.CellType}`;
-        } else if (Util.isAssociation(d, ASSOCIATION_TYPE.GWAS)) {
-          ret.id = d.details['_id'];
-          ret.type = ASSOCIATION_TYPE.GWAS;
-          ret.description = details['description'];
-          ret.disease = details['DISEASE/TRAIT'] || 'Unspecified Trait';
-          ret.author = details['FIRST AUTHOR'];
-          ret.journal = details['JOURNAL'];
-          ret.date = details['DATE'];
-          ret.pvalue = details['p-value'];
-          ret.link = details['LINK'];
-        }
-        return ret;
-      });
-    });
-
-    Promise.all(all).then(d => {
-      this.setState({
-        gwas: d.filter(x => x.type === ASSOCIATION_TYPE.GWAS),
-        eqtl: d.filter(x => x.type === ASSOCIATION_TYPE.EQTL),
-        needRefresh: false,
-      });
-    });
-  }
 
   render() {
-
-    if (this.state.needRefresh) {
-      this.loadRelationDetails();
+    const { associations } = this.props;
+    const gwasAssociations = [];
+    const eqtlAssociations = [];
+    if (associations) {
+      for (const r of associations) {
+        if (r.type === ENTITY_TYPE.GWAS) {
+          gwasAssociations.push(r);
+        } else if (r.type === ENTITY_TYPE.EQTL) {
+          eqtlAssociations.push(r);
+        }
+      }
     }
 
-    let gwas = (<Collapsible disabled={true} title="No GWAS Relations" />);
+    let gwasList = (<Collapsible disabled={true} title="No GWAS Relations" />);
 
-    if (this.state.gwas && this.state.gwas.length > 0) {
-      const studies = this.state.gwas.map(d => {
+    if (gwasAssociations.length > 0) {
+      const studies = gwasAssociations.map(r => {
         const openGwas = () => {
-          this.props.viewModel.displayEntityDetails(d);
+          this.props.viewModel.displayEntityDetails(r);
         };
-        return (<div key={d.id} onClick={openGwas} className="row">{d.disease}</div>);
+        return (<div key={r.id} onClick={openGwas} className="row">{r.title}</div>);
       });
       const title = `GWAS Associations (${studies.length})`;
-      gwas = (<Collapsible title={title} open={false}>{studies}</Collapsible>);
+      gwasList = (<Collapsible title={title} open={false}>{studies}</Collapsible>);
     }
 
-    let eqtl = (<Collapsible disabled={true} title="No Quantitative Trait Loci" />);
+    let eqtlList = (<Collapsible disabled={true} title="No Quantitative Trait Loci" />);
 
-    if (this.state.eqtl && this.state.eqtl.length > 0) {
-      const eqtls = this.state.eqtl.map(d => {
+    if (eqtlAssociations.length > 0) {
+      const eqtls = eqtlAssociations.map(r => {
         const openEqtl = () => {
-          this.props.viewModel.displayEntityDetails(d);
+          this.props.viewModel.displayEntityDetails(r);
         };
-        return (<div key={d.id} onClick={openEqtl} className="row">{d.description}</div>);
+        return (<div key={r.id} onClick={openEqtl} className="row">{r.title}</div>);
       });
       const title = `Quantitative Trait Loci (${eqtls.length})`;
-      eqtl = (<Collapsible title={title} open={false}>{eqtls}</Collapsible>);
+      eqtlList = (<Collapsible title={title} open={false}>{eqtls}</Collapsible>);
     }
 
     return (<div>
-      {gwas}
-      {eqtl}
+      {gwasList}
+      {eqtlList}
     </div>);
   }
 }

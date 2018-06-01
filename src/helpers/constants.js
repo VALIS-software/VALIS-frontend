@@ -35,14 +35,11 @@ const TRACK_TYPE_NETWORK = 'track_type_network';
 const TRACK_TYPE_BOOLEAN = 'track_type_boolean';
 
 const ENTITY_TYPE = {
-  SNP: 'Gsnp',
-  GENE: 'Ggene',
-  TRAIT: 'Itrait',
-};
-
-const ASSOCIATION_TYPE = {
-  EQTL: [ENTITY_TYPE.SNP, ENTITY_TYPE.GENE],
-  GWAS: [ENTITY_TYPE.SNP, ENTITY_TYPE.TRAIT],
+  SNP: 'SNP',
+  GENE: 'gene',
+  TRAIT: 'trait',
+  GWAS: 'association:SNP:trait',
+  EQTL: 'association:SNP:gene',
 };
 
 const CHROMOSOME_SIZES = [
@@ -116,7 +113,6 @@ export {
   DATA_SOURCE_DBSNP,
   DATA_SOURCE_ENCODE,
   ENTITY_TYPE,
-  ASSOCIATION_TYPE,
   TRACK_TYPE_SEQUENCE,
   TRACK_TYPE_FUNCTIONAL,
   TRACK_TYPE_GENOME,

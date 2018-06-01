@@ -57,7 +57,7 @@ export default class AnnotationTrackRenderer {
         windowState.selectedBasePair <= clickableRange[1] &&
         windowState.selectedTrackOffset >= yOffset + annotationYOffset &&
         windowState.selectedTrackOffset <=
-          yOffset + annotationYOffset + annotationHeight
+        yOffset + annotationYOffset + annotationHeight
       ) {
         this._hoverEnabled = true;
         this._hoverElement = annotation;
@@ -147,7 +147,7 @@ export default class AnnotationTrackRenderer {
     let _shaderTileHeight = null;
 
     annotations.forEach(annotation => {
-      const aggregation = annotation.aggregation;
+      const aggregation = (annotation.type === "aggregation");
       let enableHover = 0;
       const annotationYOffset =
         annotation.yOffsetPx / windowState.windowSize[1];
@@ -218,7 +218,7 @@ export default class AnnotationTrackRenderer {
           let brightness =
             0.5 +
             (normalizedCount / totalNormalizedCounts - weightAverage) /
-              Math.sqrt(weightVariance);
+            Math.sqrt(weightVariance);
           const alpha = 0.8;
           brightness = alpha + brightness * (1.0 - alpha);
           color = hsl
