@@ -182,13 +182,13 @@ class Util {
       } else {
         return null;
       }
-    } else if (Util.isType(entity, ENTITY_TYPE.SNP)) {
+    } else if (entity.type === "SNP") {
       return ENTITY_TYPE.SNP;
-    } else if (Util.isType(entity, ENTITY_TYPE.GENE)) {
+    } else if (entity.type === "gene") {
       return ENTITY_TYPE.GENE;
-    } else if (Util.isType(entity, ENTITY_TYPE.TRAIT)) {
+    } else if (entity.type === "trait") {
       return ENTITY_TYPE.TRAIT;
-    } else if (entity.title === 'GWAS Association' || Util.isAssociation(entity, ASSOCIATION_TYPE.GWAS)) { // TODO: we need a cleaner way of doing this
+    } else if (entity.type === "association:SNP:trait") { 
       return ASSOCIATION_TYPE.GWAS;
     }
   }

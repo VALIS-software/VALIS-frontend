@@ -48,8 +48,6 @@ class TraitDetails extends React.Component {
       return (<div />);
     }
 
-
-
     const details = this.state.details;
 
     const name = details.name;

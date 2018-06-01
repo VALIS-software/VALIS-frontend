@@ -143,11 +143,7 @@ class ViewModel extends EventCreator {
   }
 
   displayEntityDetails(entity) {
-    const entityInfo = {
-      entityId: entity.id || entity,
-      entityType: Util.getEntityType(entity),
-    }
-    this.notifyListeners(VIEW_EVENT_DISPLAY_ENTITY_DETAILS, entityInfo);
+    this.notifyListeners(VIEW_EVENT_DISPLAY_ENTITY_DETAILS, entity);
   }
 
   back() {
