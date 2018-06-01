@@ -140,7 +140,7 @@ export class XAxis extends Object2D {
             let xMinor = xMinorSpacing * (i + 0.5);
             let xMajor = xMajorSpacing * i;
 
-            if (xMinor >= this.minDisplay && xMinor <= this.maxDisplay) {
+            if (xMinor >= this.minDisplay && xMinor <= this.maxDisplay && isFinite(xMinor)) {
                 let minorParentX = (xMinor - this.x0) / span;
                 let str = this.formatValue(xMinor, this.maxTextLength);
                 let textMinor = this.labelCache.get(xMinor + '_' + str, () => this.createLabel(str));
@@ -148,7 +148,7 @@ export class XAxis extends Object2D {
                 textMinor.setColor(0, 0, 0, minorAlpha);
             }
 
-            if (xMajor >= this.minDisplay && xMajor <= this.maxDisplay) {
+            if (xMajor >= this.minDisplay && xMajor <= this.maxDisplay && isFinite(xMajor)) {
                 let majorParentX = (xMajor - this.x0) / span;
                 let str = this.formatValue(xMajor, this.maxTextLength);
                 let textMajor = this.labelCache.get(xMajor + '_' + str, () => this.createLabel(str));
