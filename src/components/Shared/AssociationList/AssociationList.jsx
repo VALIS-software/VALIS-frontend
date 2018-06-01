@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import Collapsible from '../Collapsible/Collapsible.jsx';
 import './AssociationList.scss';
+import { ENTITY_TYPE } from '../../../helpers/constants';
 
 
 class AssociationList extends React.Component {
@@ -12,9 +13,9 @@ class AssociationList extends React.Component {
     const eqtlAssociations = [];
     if (associations) {
       for (const r of associations) {
-        if (r.type === 'association:SNP:trait') {
+        if (r.type === ENTITY_TYPE.GWAS) {
           gwasAssociations.push(r);
-        } else if (r.type === 'association:SNP:gene') {
+        } else if (r.type === ENTITY_TYPE.EQTL) {
           eqtlAssociations.push(r);
         }
       }
