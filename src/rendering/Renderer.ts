@@ -10,8 +10,15 @@ import { Renderable, RenderableInternal } from '../rendering/Renderable';
 
 export enum BlendMode {
 	NONE                = 0,
+
+	/**
+	 * Premultiplied alpha provides improved alpha blending with the condition that the alpha is multiplied into the rgb channels
+	 *	`gl_FragColor = vec4(color.rgb * color.a, color.a)`
+	 *
+	 * This blend mode also provides additive blending when the alpha channel is set to 0
+	 * 	`gl_FragColor = vec4(color.rgb, 0);`
+	 */
 	PREMULTIPLIED_ALPHA = 1,
-	MULTIPLY            = 2,
 }
 
 export enum DrawMode {
@@ -204,7 +211,7 @@ export class Renderer {
 			this.currentStencilTestEnabled = 1;
 			// disable writing to the color buffer
 			gl.colorMask(false, false, false, false);
-			// disable writing to the depth buffer
+			// enable writing to the depth buffer
 			gl.depthMask(true);
 			// @! do we actually benefit from disabling blending if we're false across the colorMask?
 			gl.disable(gl.BLEND);
