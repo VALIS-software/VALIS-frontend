@@ -40,7 +40,7 @@ class AssociationList extends React.Component {
         const openEqtl = () => {
           this.props.viewModel.displayEntityDetails(r);
         };
-        return (<div key={d.id} onClick={openEqtl} className="row">{r.title}</div>);
+        return (<div key={r.id} onClick={openEqtl} className="row">{r.title}</div>);
       });
       const title = `Quantitative Trait Loci (${eqtls.length})`;
       eqtlList = (<Collapsible title={title} open={false}>{eqtls}</Collapsible>);

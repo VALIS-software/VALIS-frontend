@@ -171,49 +171,6 @@ class Util {
     return u * windowSize[0];
   }
 
-  static getEntityType(entity) {
-    if (_.isString(entity)) {
-      if (Util.isIdType(entity, ENTITY_TYPE.SNP)) {
-        return ENTITY_TYPE.SNP;
-      } else if (Util.isIdType(entity, ENTITY_TYPE.GENE)) {
-        return ENTITY_TYPE.GENE;
-      } else if (Util.isIdType(entity, ENTITY_TYPE.TRAIT)) {
-        return ENTITY_TYPE.TRAIT;
-      } else {
-        return null;
-      }
-    } else if (entity.type === "SNP") {
-      return ENTITY_TYPE.SNP;
-    } else if (entity.type === "gene") {
-      return ENTITY_TYPE.GENE;
-    } else if (entity.type === "trait") {
-      return ENTITY_TYPE.TRAIT;
-    } else if (entity.type === "association:SNP:trait") { 
-      return ASSOCIATION_TYPE.GWAS;
-    }
-  }
-
-  static isType(entity, typeId) {
-    return Util.isIdType(entity.id, typeId);
-  }
-
-  static isIdType(entityId, typeId) {
-    return (entityId.indexOf(typeId) === 0);
-  }
-
-  static isAssociation(entity, assocDef) {
-    let fromTypeId = null;
-    let toTypeId = null;
-    if (entity.details) {
-      fromTypeId = entity.details.from_id;
-      toTypeId = entity.details.to_id;
-    } else if (entity.type) {
-      fromTypeId = entity.type[0];
-      toTypeId = entity.type[1];
-    }
-    return Util.isIdType(fromTypeId, assocDef[0]) && Util.isIdType(toTypeId, assocDef[1]);
-  }
-
   static multiplyColor(color, d) {
     return color.map(val => Math.min(255, val * d));
   }

@@ -23,16 +23,7 @@ class SearchResultsView extends React.Component {
   }
 
   resultSelected(result) {
-    const title = "";
-    const dataID = result.id;
-    const elem = (
-      <EntityDetails
-        viewModel={this.viewModel}
-        appModel={this.appModel}
-        dataID={dataID}
-      />
-    );
-    this.viewModel.displayEntityDetails(dataID);
+    this.viewModel.displayEntityDetails(result);
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
