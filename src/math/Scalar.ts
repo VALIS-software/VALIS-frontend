@@ -19,7 +19,7 @@ export class Scalar {
     // convert a number to a fixed point representation by truncating instead of rounding
     static toFixedTrunc(x: number, decimalPoints: number): string {
         let str = x.toString();
-        let pattern = /(\d+)(\.(\d*))?(.*)/;
+        let pattern = /([\d+-]+)(\.(\d*))?(.*)/;
         let result = pattern.exec(str);
         let integerPart = result[1];
         let fractionalPart = result[3];
