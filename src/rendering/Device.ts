@@ -66,8 +66,9 @@ export class Device {
 
 	constructor(gl: WebGLRenderingContext) {
 		this.gl = gl;
+
 		// the vertex array object extension makes controlling vertex state simpler and faster
-		// we require it for now because it's widely supported, however it's possible to work around lack of support
+		// however we fallback to normal vertex state handling when not available
 		this.extVao = gl.getExtension('OES_vertex_array_object');
 		this.extInstanced = gl.getExtension('ANGLE_instanced_arrays');
 
