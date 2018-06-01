@@ -69,7 +69,7 @@ class SearchResultsView extends React.Component {
       let description = "";
       const sourceStr = result.source.join("/");
       if (result.type === "trait") {
-        title = result.info.description;
+        title = result.name;
         description = "Source: " + sourceStr;
       } else {
         title = result.type + " " + result.name;

@@ -59,7 +59,7 @@ class GWASSelector extends React.Component {
     }
     builder.filterType("trait");
     const infoQuery = builder.build();
-    this.api.getDistinctValues("info.description", infoQuery).then(data => {
+    this.api.getDistinctValues("name", infoQuery).then(data => {
       this.setState({
         traits: data
       });
