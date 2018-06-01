@@ -1,62 +1,49 @@
-- Text cache vertex data
-- Proper intermediate value handling
+# Annotations
+- Generalize TileEngine to be an instance with a custom request promise
+    - Lod filter behavior needs to be customizable
+- Micro-scale annotation loading using tile engine
+- Micro-scale annotation rendering
+- Annotation density map, with downscaled LODs
+- Macro-scale annotation density rendering
 
-- Sequence track tile
-    - How should API files be structured?
-        - remote/ folder?
-        - sirius/
-        - remote/sirius
-        - lib/sirius?
-    - Fake API
-        - Ideal:
-            get sequence ( range, samplingDensity )
-                =>
-                {json header}
-                \0
-                <gatc proportions> arraybuffer(
-                    [%g, %a, %t, %c]
-                )
-                <modifiations> arraybuffer(
-                    [index, modification-bits]
-                )
-
-        ! maybe the whole thing could be done via video files?
-        ! what about a simple file server with content-range support?
-        ! Could have many LODs of the genome
-    - Review how current API requests are handled
-    - Display custom track tile as red
-    - POC Download genome direct
-    - then all the other stuff
-
+# Tracks
+- Prevent tracks from being dragged off, clamp to edges
 - Track grid lines to match the x-axis
+- Momentum in panel zoom and pan via Animator
+- Add removeTrack and cleanupTrack
 
-- X-Axis
-    - Algorithm for laying out labels
-        - Labels with 1/n split
-        - Custom level labels (chromosomes)
-        - Currently using absolute units, could be more precise without using range until the end
-        - Optimize for large floats
-    - Momentum in panel zoom and pan via Animator
+# PR
+- Merge in latest UI
 
-    - Clear event listeners when tile is removed
+# Tiling
+- Chrome bug, why cache return 0 for 10.bin?
+    - Produce repo example for bug report
+- Fix out of bounds sequence
+    - .minmax file should report sequence length?
+- Remove hard coding in sirius test API
+- Switch to real sirius
+- Tile request ordering
+    - If we have a big list of unset requests we want to cancel and ensure the most recent request is executed first
+    - Should this be API level or TileEngine level?
+- Preload low-resolution version of sequence
+- Cache most important tiles in local storage
+- Pre-emptive loading when zooming out
 
-- depth-based z
-- Transparency pass
-- Implement missing blend modes
-- add removeTrack and cleanupTrack
+# Engine
+- Implement 'depth' as an analog to width to create bounded z-volumes
+    - Improve tile z positioning maaybe
+    - Fix track cursor
 
-- When texture slots are full we should swap out the last used
-- Text elements
-    - Implement transparent
-
-- state management, undo/redo
+- State management, undo/redo
 
 - GPUText.ts should be moved into gputext repo
     - build gputext.js
     - update example
 - Publish GPUText on NPM
 
-- Issues when dragging handles with touch events in the simulator, test and resolve
+- Support touch events (or use pointer events polyfill)
+- Support pinch + drag gestures when multiple pointers are down on a panel
+    - Pointer down on any track should contribute to the gesture (not just two touches within the same track)
 
 ---- consider
 
