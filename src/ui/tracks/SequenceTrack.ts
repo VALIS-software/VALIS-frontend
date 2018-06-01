@@ -322,8 +322,10 @@ class TileNode extends Object2D {
                     //     - x >= 0 and x <= 1 is visible range
                     let visibleX0 = -this.layoutParentX / this.layoutW;
                     let visibleX1 = (1 - this.layoutParentX) / this.layoutW;
-                    let firstVisibleBase = Scalar.clamp(Math.floor(visibleX0 / baseWidth), 0, tile.lodSpan - 1);
-                    let lastVisibleBase = Scalar.clamp(Math.floor(visibleX1 / baseWidth), 0, tile.lodSpan - 1);
+                    let firstVisibleBase = Scalar.clamp(Math.floor(visibleX0 / baseWidth), 0, tile.length - 1);
+                    let lastVisibleBase = Scalar.clamp(Math.floor(visibleX1 / baseWidth), 0, tile.length - 1);
+
+                    const proportionThreshold = 0.5;
                     
                     for (let i = firstVisibleBase; i <= lastVisibleBase; i++) {
                         let a = data[i * 4 + 0] / 0xFF;
@@ -331,14 +333,19 @@ class TileNode extends Object2D {
                         let g = data[i * 4 + 2] / 0xFF;
                         let t = data[i * 4 + 3] / 0xFF;
                         
-                        // @! need proper handling for intermediate values
-                        let baseIndex = Math.round(a * 0 + c * 1 + g * 2 + t * 3);
-                        let baseCharacter = TileNode.baseCharacters[baseIndex];
-                        if (baseCharacter == null) {
-                            console.warn('Bad base index', baseIndex, i, ':', a, c, t, g);
-                        }
+                        // determine a nucleobase character to display
+                        let baseChar: string;
 
-                        let label = this._labelCache.get(i + '', () => this.createLabel(baseCharacter));
+                        if (a > proportionThreshold) baseChar = 'A';
+                        else
+                        if (c > proportionThreshold) baseChar = 'C';
+                        else
+                        if (g > proportionThreshold) baseChar = 'G';
+                        else
+                        if (t > proportionThreshold) baseChar = 'T';
+                        else baseChar = 'N'; // any nucleobase
+
+                        let label = this._labelCache.get(i + '', () => this.createLabel(baseChar));
                         label.container.layoutParentX = (i + 0.5) * baseWidth;
                         label.container.layoutParentY = 0.5;
 
@@ -485,12 +492,12 @@ class TileNode extends Object2D {
 
     // we only need 1 text instance of each letter which we can render multiple times
     // this saves reallocating new vertex buffers for each letter
-    protected static baseCharacters = ['A', 'C', 'G', 'T'];
     protected static baseTextInstances : { [key: string]: Text } = {
         'A': new Text(OpenSansRegular, 'A', 1),
         'C': new Text(OpenSansRegular, 'C', 1),
         'G': new Text(OpenSansRegular, 'G', 1),
         'T': new Text(OpenSansRegular, 'T', 1),
+        'N': new Text(OpenSansRegular, 'N', 1),
     }
 }
 
