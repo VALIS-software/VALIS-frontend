@@ -76,7 +76,7 @@ export class XAxis extends Object2D {
 
             let reducedX = x / reductionFactor;
             let reducedXIntStr = Math.floor(reducedX).toFixed(0);
-            let dp = maxLength - reducedXIntStr.length - symbol.length;
+            let dp = maxLength - reducedXIntStr.length - symbol.length - 1;
 
             let numString = XAxis.toFixedTrunc(reducedX, Math.max(dp, 0));
 
