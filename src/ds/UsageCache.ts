@@ -1,3 +1,7 @@
+/**
+ * Useful for exploiting coherence between frames
+ * - A 'usage cache' makes it easy to determine which objects can be reused and which objects can be released between frames
+ */
 export class UsageCache<T> {
 
     protected cache: {

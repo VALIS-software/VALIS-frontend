@@ -6,7 +6,7 @@
  *      - Can we avoid brute-force searches? (We should store hidden fields on the object, ugly but fast)
  * - Parameterize springs by duration and normalized dampening
  * - Replace energy threshold with some user-controlled parameter
- * - Implement traditional easings via step functions
+ * - Implement traditional easing via step functions
  * - For fixed time springs we can implement a fix/physical blended version of springStep, that lerps to 0 as t -> duration
  */
 export class Animator {
