@@ -1,7 +1,9 @@
-import { Track } from "../Track";
+import { Track } from "./Track";
 import { Scalar } from "../../math/Scalar";
 import TileEngine, { Tile, TileState } from "./TileEngine";
 import { TrackDataModel } from "../../model/TrackDataModel";
+import Device, { GPUTexture, TextureFormat, ColorSpaceConversion, TextureWrapMode, TextureMinFilter, TextureMagFilter, TextureDataType } from "../../rendering/Device";
+import SiriusApi from "../../../lib/sirius/SiriusApi";
 
 type TilePayload = {
     array: Uint8Array,
@@ -46,7 +48,7 @@ export class SequenceTrack extends Track {
 
     protected getTilePayload = (tile: Tile<TilePayload>) => {
         let tileEngine = this.tileEngine;
-        return SiriusApi.loadACGTSubSequence(tile.lodLevel, tile.lodX, tile.lodSpan)
+        return SiriusApi.loadACGTSubSequence(this.model.sourceId, tile.lodLevel, tile.lodX, tile.lodSpan)
             .then((sequenceData) => {
                 return {
                     ...sequenceData,
@@ -62,7 +64,7 @@ export class SequenceTrack extends Track {
                             let nChannels = 4;
                             let dataWidthPixels = payload.array.length / nChannels;
 
-                            console.log(`%cupload row ${tile.lodLevel}`, 'color: green');
+                            // console.log(`%cupload row ${tile.lodLevel}`, 'color: green');
 
                             gpuTexture.updateTextureData(
                                 0,
@@ -89,7 +91,7 @@ export class SequenceTrack extends Track {
 
                 // allocate texture if it doesn't already exist
                 if (payload._gpuTexture === null) {
-                    console.log(`%ccreate texture ${lodLevel}`, 'color: blue');
+                    // console.log(`%ccreate texture ${lodLevel}`, 'color: blue');
 
                     payload._gpuTexture = device.createTexture({
                         format: TextureFormat.RGBA,
@@ -127,7 +129,7 @@ export class SequenceTrack extends Track {
         }
     }
 
-    protected releaseBlockPayload(payload: BlockPayload) {
+    protected releaseBlockPayload = (payload: BlockPayload) => {
         if (payload._gpuTexture != null) {
             payload._gpuTexture.delete();
             payload._gpuTexture = null;
@@ -277,7 +279,6 @@ export class SequenceTrack extends Track {
 
 import Object2D, { Object2DInternal } from "../core/Object2D";
 import SharedResources from "../core/SharedResources";
-import Device, { GPUTexture, TextureFormat, ColorSpaceConversion, TextureWrapMode, TextureMinFilter, TextureMagFilter, TextureDataType } from "../../rendering/Device";
 import { DrawContext, DrawMode, BlendMode } from "../../rendering/Renderer";
 import App from "../../App";
 import { Animator } from "../../animation/Animator";
@@ -286,7 +287,6 @@ import { UsageCache } from "../../ds/UsageCache";
 import { Rect } from "../core/Rect";
 import { Text } from "../core/Text";
 import Renderable, { RenderableInternal } from "../../rendering/Renderable";
-import SiriusApi from "../../../lib/sirius/SiriusApi";
 
 /**
  * - A TileNode render field should only be set to true if it's TileEntry is in the Complete state

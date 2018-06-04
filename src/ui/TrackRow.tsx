@@ -1,11 +1,12 @@
 import React = require("react");
 import Object2D from "./core/Object2D";
-import Track from "./Track";
+import Track from "./tracks/Track";
 import ReactObject from "./core/ReactObject";
 import Rect from "./core/Rect";
 
 import TrackDataModel, { TrackType } from "../model/TrackDataModel";
 import SequenceTrack from "./tracks/SequenceTrack";
+import trackTypeMap from "./tracks/TrackTypeMap";
 
 export class TrackRow {
 
@@ -45,17 +46,7 @@ export class TrackRow {
     }
 
     createTrack() {
-        let track: Track;
-
-        switch (this.model.type) {
-            case TrackType.Sequence:
-                track = new SequenceTrack(this.model);
-                break;
-            default:
-                track = new Track(this.model);
-                break;
-        }
-
+        let track: Track = new trackTypeMap[this.model.type](this.model);
         this.tracks.add(track);
         return track;
     }

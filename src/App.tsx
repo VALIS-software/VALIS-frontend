@@ -33,8 +33,8 @@ export class App extends React.Component<Props, State> {
 		// initialize with some dummy data
 		let i = 0;
 		for (let track of [
-			{ sourceId: 'sequence', name: 'Sequence', type: TrackType.Sequence },
-			{ sourceId: 'grch38', name: 'GRCh38', type: TrackType.Empty },
+			{ sourceId: 'chromosome1', name: 'Sequence', type: TrackType.Sequence },
+			{ sourceId: 'grch38', name: 'GRCh38', type: TrackType.Annotation },
 			{ sourceId: 'gm12878-dnase', name: 'GM12878-DNase', type: TrackType.Empty },
 		]) {
 			trackViewer.addTrackRow(track, i++ === 0 ? 100 : undefined);

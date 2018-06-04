@@ -7,7 +7,7 @@ import PanelDataModel from "../model/PanelDataModel";
 
 import IconButton from "material-ui/IconButton";
 import SvgClose from "material-ui/svg-icons/navigation/close";
-import Track, { AxisPointerStyle } from "./Track";
+import Track, { AxisPointerStyle } from "./tracks/Track";
 import { InteractionEvent, WheelInteractionEvent } from "./core/InteractionEvent";
 import { runInThisContext } from "vm";
 import XAxis from "./XAxis";

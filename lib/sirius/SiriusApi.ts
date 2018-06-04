@@ -13,6 +13,7 @@ export class SiriusApi {
     } = {};
 
     static loadACGTSubSequence(
+        sequencePath: string,
         lodLevel: number,
         lodStartBaseIndex: number,
         lodNBases: number,
@@ -24,7 +25,7 @@ export class SiriusApi {
         },
         indicesPerBase: number, 
     }> {
-        let binPath = `/data/chromosome1/${lodLevel}.bin`;
+        let binPath = `/data/${sequencePath}/${lodLevel}.bin`;
         let minMaxPath = binPath + '.minmax';
 
         // @! data format may change for certain LODs in the future

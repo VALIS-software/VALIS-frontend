@@ -2,8 +2,9 @@
  * @! Temporary dummy model
  */
 export enum TrackType {
-    Empty = undefined,
-    Sequence = 1,
+    Empty = 'empty',
+    Sequence = 'sequence',
+    Annotation = 'annotation',
 }
 
 export type TrackDataModel = {
