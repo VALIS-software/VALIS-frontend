@@ -1,29 +1,29 @@
-import Device, { GPUTexture, TextureFormat, TextureDataType, TextureUsageHint, TextureMagFilter, TextureMinFilter, TextureWrapMode, ColorSpaceConversion } from "../../rendering/Device";
-import Scalar from "../../math/Scalar";
 import { EventEmitter } from "events";
-import SiriusApi from "../../../lib/sirius/SiriusApi";
+import Scalar from "../../math/Scalar";
+import { GPUTexture, TextureMagFilter, TextureMinFilter, Device } from "../../rendering/Device";
 
-const TILE_WIDTH: number = 1024;
-const TILES_PER_BLOCK: number = 8;
-const BLOCK_SIZE = TILE_WIDTH * TILES_PER_BLOCK;
-const LOD_SKIP = 2; // only use lods 0, 2, 4, ...
+export class TileEngine<TilePayload, BlockPayload> {
 
-export class TileEngine {
+    protected lods = new Array<Blocks<TilePayload, BlockPayload>>();
+    protected readonly blockSize: number;
 
-    static readonly textureWidth = TILE_WIDTH;
-    static readonly textureHeight = TILES_PER_BLOCK;
-    
-    protected static tileSets: {
-        [setId: string]: Set
-    } = {};
+    constructor(
+        protected readonly getTilePayload: (tile: Tile<TilePayload>) => Promise<TilePayload> | TilePayload,
+        protected readonly createBlockPayload: (lodLevel: number, lodX: number, lodSpan: number, rows: number) => BlockPayload,
+        protected readonly releaseBlock: (block: BlockPayload) => void,
+        protected readonly mapLodLevel: (selectedLodLevel: number) => number = (l) => l,
+        readonly tileWidth: number = 1024,
+        readonly tilesPerBlock: number = 8,
+    ) {
+        this.blockSize = tileWidth * tilesPerBlock;
+    }
 
-    static getTiles(
-        setId: string,
+    getTiles(
         x0: number,
         x1: number,
         samplingDensity: number,
         requestData: boolean,
-        callback: (tileData: TileEntry) => void
+        callback: (tile: Tile<TilePayload>) => void
     ) {
         // clamp to positive numbers
         x0 = Math.max(x0, 0);
@@ -35,7 +35,7 @@ export class TileEngine {
         let lodLevelFractional = Scalar.log2(Math.max(samplingDensity, 1));
         let lodLevel = Math.floor(lodLevelFractional);
 
-        lodLevel = this.filterLodLevel(lodLevel);
+        lodLevel = this.mapLodLevel(lodLevel);
 
         // convert range (at lod 0) to map to the current lod level (and round up/down greedily)
         let lodDensity = 1 << lodLevel;
@@ -52,20 +52,18 @@ export class TileEngine {
         // iterate over all blocks which intersect the range (creating blocks when they don't exist)
         // request data for each 'tile row' (aka a row of data in a block that corresponds to a single tile)
         // fire callback for each tile instance
-        let blocks = this.getBlocks(this.getSet(setId), lodLevel);        
         for (let blockIndex = block0; blockIndex <= block1; blockIndex++) {
+            let block = this.getBlock(lodLevel, blockIndex);
 
-            let block = this.getBlock(blocks, lodLevel, blockIndex);
-            
             let firstRowIndex = blockIndex === block0 ? tileRow0 : 0;
-            let lastRowIndex = blockIndex === block1 ? tileRow1 : (TILES_PER_BLOCK - 1);
+            let lastRowIndex = blockIndex === block1 ? tileRow1 : (this.tilesPerBlock - 1);
 
             for (let rowIndex = firstRowIndex; rowIndex <= lastRowIndex; rowIndex++) {
                 let tile = block.rows[rowIndex];
 
-                if (requestData && tile.state === TileState.Empty) {
+                if (requestData && (tile.state === TileState.Empty)) {
                     // no data requests have been made yet for this tile
-                    this.requestTileData(tile);
+                    this.loadTilePayload(tile);
                 }
 
                 callback(tile);
@@ -73,259 +71,157 @@ export class TileEngine {
         }
     }
 
-    static getTile(
-        setId: string,
+    getTile(
         x: number,
         samplingDensity: number,
         requestData: boolean
-    ): TileEntry {
+    ): Tile<TilePayload> {
         x = Math.max(0, x);
 
         let lodLevelFractional = Scalar.log2(Math.max(samplingDensity, 1));
         let lodLevel = Math.floor(lodLevelFractional);
-        let lodDensity = 1 << lodLevel;
 
+        lodLevel = this.mapLodLevel(lodLevel);
+
+        let lodDensity = 1 << lodLevel;
         let x_lodSpace = Math.floor(x / lodDensity);
 
-        return this.getTileFromLodX(setId, lodLevel, x_lodSpace, requestData);
+        return this.getTileFromLodX(lodLevel, x_lodSpace, requestData);
     }
 
-    // only applies to public get* methods
-    protected static filterLodLevel(lodLevel: number) {
-        return Math.floor(lodLevel / LOD_SKIP) * LOD_SKIP;
+    isWithinInitializedLodRange(samplingDensity: number) {
+        let lodLevelFractional = Scalar.log2(Math.max(samplingDensity, 1));
+        let lodLevel = Math.floor(lodLevelFractional);
+        lodLevel = this.mapLodLevel(lodLevel);
+        return lodLevel >= 0 && lodLevel < this.lods.length;
     }
 
-    static getTexture(device: Device, block: Block): GPUTexture {
-        if (block.gpuTexture !== undefined) {
-            return block.gpuTexture;
+    getBlockPayload(tile: Tile<TilePayload>) {
+        let blockLodX = this.blockIndex(tile.lodX);
+        let block = this.getBlock(tile.lodLevel, blockLodX);
+        if (block.payload == null) {
+            block.payload = this.createBlockPayload(tile.lodLevel, blockLodX, this.tileWidth, this.tilesPerBlock);
         }
-
-        let nChannels = 4;
-
-        // allocate texture
-        block.gpuTexture = device.createTexture({
-            format: TextureFormat.RGBA,
-
-            // mipmapping should be turned off to avoid rows blending with one another
-            // if TILES_PER_BLOCK = 1 then mipmapping may be enabled
-            generateMipmaps: false,
-
-            // FireFox emits performance warnings when using texImage2D on uninitialized textures
-            // in our case it's faster to let the browser zero the texture rather than allocating another array buffer
-            mipmapData: null, //[new Uint8Array(BLOCK_SIZE * nChannels)],
-            width: TILE_WIDTH,
-            height: TILES_PER_BLOCK,
-            dataType: TextureDataType.UNSIGNED_BYTE,
-
-            samplingParameters: {
-                magFilter: block.lodLevel > 0 ? TextureMagFilter.LINEAR : TextureMagFilter.NEAREST,
-                minFilter: TextureMinFilter.LINEAR,
-                wrapS: TextureWrapMode.CLAMP_TO_EDGE,
-                wrapT: TextureWrapMode.CLAMP_TO_EDGE,
-            },
-
-            pixelStorage: {
-                packAlignment: 1,
-                unpackAlignment: 1,
-                flipY: false,
-                premultiplyAlpha: false,
-                colorSpaceConversion: ColorSpaceConversion.NONE,
-            },
-        });
-
-        // upload all complete tiles within the block
-        for (let i = 0; i < block.rows.length; i++) {
-            let tile = block.rows[i];
-            let tileInternal = tile as any as TileEntryInternal;
-            if (tileInternal.state === TileState.Complete) {
-                this.uploadTileTextureData(tile);
-            } else {
-                // wait until the tile data is ready before upload
-                // this listener must be removed if the gpuTexture object is deleted
-                // see: releaseTexture(block: Block)
-                tile.addCompleteListener(this.uploadTileTextureData);
-            }
-        }
-
-        return block.gpuTexture;
+        return block.payload;
     }
 
-    protected static getTileFromLodX(
-        setId: string,
+    protected getTileFromLodX(
         lodLevel: number,
         lodX: number,
         requestData: boolean
-    ): TileEntry {
-
-        let set = this.getSet(setId);
-        let maxLodLevel = set.lod.length - 1;
-
-        if (lodLevel > maxLodLevel || lodLevel < 0) {
-            return null;
-        }
-
+    ): Tile<TilePayload> {
         let blockIndex = this.blockIndex(lodX);
         let rowIndex = this.tileRowIndex(lodX);
 
-        let blocks = this.getBlocks(set, lodLevel);
-        let block = this.getBlock(blocks, lodLevel, blockIndex);
+        let block = this.getBlock(lodLevel, blockIndex);
 
         let tile = block.rows[rowIndex];
 
-        if (requestData && tile.state === TileState.Empty) {
-            this.requestTileData(tile);
+        if (requestData && (tile.state === TileState.Empty)) {
+            this.loadTilePayload(tile);
         }
 
         return tile;
     }
 
-    protected static uploadTileTextureData = (tile: TileEntry) => {
-        let tileInternal = tile as any as TileEntryInternal;
-        tileInternal.block.gpuTexture.updateTextureData(
-            0,
-            TextureFormat.RGBA,
-            tile.data,
-            0, tile.rowIndex, // x, y
-            Math.min(TILE_WIDTH, tile.length), 1, // w, h
-        );
-    }
+    protected loadTilePayload(tile: Tile<TilePayload>) {
+        const tileInternal = tile as any as TileInternal<TilePayload>;
 
-    static releaseTextures(setId?: string) {
-        if (setId == null) {
-            for (let setId in this.tileSets) {
-                if (setId == null) continue;
-                this.releaseTextures(setId);
+        tileInternal._state = TileState.Loading;
+
+        try {
+            let result = this.getTilePayload(tile);
+
+            if (Promise.resolve(result) === result) {
+                // result is a promise
+                result
+                    .then((payload) => this.tileLoadComplete(tile, payload))
+                    .catch((reason) => this.tileLoadFailed(tile, reason));
+            } else {
+                // assume result is the payload
+                this.tileLoadComplete(tile, result as TilePayload);
             }
-        }
-
-        let tileSet = this.tileSets[setId];
-
-        for (let blocks of tileSet.lod) {
-            if (blocks == null) continue;
-            for (let blockId in blocks) {
-                this.releaseTexture(blocks[blockId]);
-            }
+        } catch(e) {
+            this.tileLoadFailed(tile, e);
         }
     }
 
-    static releaseTexture(block: Block) {
-        if (block.gpuTexture != null) {
-            block.gpuTexture.delete();
-            block.gpuTexture = null;
-
-            // remove data upload listeners
-            for (let i = 0; i < block.rows.length; i++) {
-                let tile = block.rows[i];
-                tile.removeCompleteListener(this.uploadTileTextureData);
-            }
-        }
+    protected tileLoadComplete(tile: Tile<TilePayload>, payload: TilePayload) {
+        const tileInternal = tile as any as TileInternal<TilePayload>;
+        tileInternal._payload = payload;
+        tileInternal._state = TileState.Complete;
+        tileInternal.emitComplete();
     }
 
-    static clearTiles(setId: string) {
-        this.releaseTextures(setId);
-        delete this.tileSets[setId];
+    protected tileLoadFailed(tile: Tile<TilePayload>, reason: any) {
+        const tileInternal = tile as any as TileInternal<TilePayload>;
+        tileInternal._state = TileState.Empty;
+        console.warn(`Tile payload request failed`, tile);
     }
 
-    static clearAllTiles() {
-        this.releaseTextures(null);
-        this.tileSets = {};
-    }
-
-    protected static requestTileData(tile: TileEntry) {
-        const tileInternal = tile as any as TileEntryInternal;
-
-        let p = SiriusApi.loadACGTSubSequence(tile.lodLevel, tile.lodX, tile.lodSpan);
-
-        tileInternal.state = TileState.Loading;
-
-        p.then((a) => {
-            tileInternal.data = a.array;
-            tileInternal.length = a.array.length / a.indicesPerBase;
-            tileInternal.sequenceMinMax = a.sequenceMinMax;
-            tileInternal.state = TileState.Complete;
-            tileInternal.emitComplete();
-        }).catch((reason) => {
-            console.warn(`Tile data request failed`, tile);
-            tileInternal.state = TileState.Empty;
-        });
-    }
-
-    protected static createBlock(lodLevel: number, blockIndex: number): Block {
-        let block: Block = {
-            lastUsedTimestamp: -1, // never used
-            lodLevel: lodLevel,
-            rows: new Array(TILES_PER_BLOCK),
-            gpuTexture: undefined,
-        }
-
-        let blockLodX = blockIndex * BLOCK_SIZE;
-
-        // initialize empty tile data objects for each row
-        for (let rowIndex = 0; rowIndex < TILES_PER_BLOCK; rowIndex++) {
-            // tile (lodLevel, blockIndex, rowIndex)
-            // let tileIndex = blockIndex * TILES_PER_BLOCK + rowIndex;
-            let tileLodX = rowIndex * TILE_WIDTH + blockLodX;
-            block.rows[rowIndex] = new TileEntry(block, rowIndex, lodLevel, tileLodX, TILE_WIDTH);
-        }
-
-        return block;
-    }
-
-    protected static getBlock(blocks: Blocks, lodLevel: number, blockIndex: number) {
+    protected getBlock(lodLevel: number, blockIndex: number) {
+        let blocks = this.getBlocks(lodLevel);
         let blockId = this.blockId(blockIndex);
         let block = blocks[blockId];
 
         if (block === undefined) {
-            block = this.createBlock(lodLevel, blockIndex);
+            // create block
+            block = {
+                lastUsedTimestamp: -1, // never used
+                rows: new Array(this.tilesPerBlock),
+                payload: null,
+            }
+
+            let blockLodX = blockIndex * this.blockSize;
+
+            // initialize empty tile data objects for each row
+            for (let rowIndex = 0; rowIndex < this.tilesPerBlock; rowIndex++) {
+                // tile (lodLevel, blockIndex, rowIndex)
+                let tileLodX = rowIndex * this.tileWidth + blockLodX;
+                block.rows[rowIndex] = new Tile(
+                    block,
+                    lodLevel,
+                    tileLodX,
+                    this.tileWidth,
+                    rowIndex,
+                );
+            }
+
+            // store in blocks
             blocks[blockId] = block;
         }
 
         return block;
     }
 
-    protected static getBlocks(set: Set, lod: number) {
-        let blocks = set.lod[lod];
+    protected getBlocks(lod: number) {
+        let blocks = this.lods[lod];
         if (blocks === undefined) {
-            blocks = set.lod[lod] = {};
+            blocks = this.lods[lod] = {};
         }
         return blocks;
     }
 
-    protected static getSet(setId: string) {
-        let set = this.tileSets[setId];
-        if (set === undefined) {
-            set = this.tileSets[setId] = {
-                lod: []
-            }
-        }
-        return set;
+    protected tileRowIndex(lodX: number): number {
+        return Math.floor((lodX % this.blockSize) / this.tileWidth);
     }
 
-    protected static tileRowIndex(lodX: number): number {
-        return Math.floor((lodX % BLOCK_SIZE) / TILE_WIDTH);
+    protected blockIndex(lodX: number): number {
+        return Math.floor(lodX / this.blockSize);
     }
 
-    protected static blockIndex(lodX: number): number {
-        return Math.floor(lodX / BLOCK_SIZE);
-    }
-
-    protected static blockId(blockIndex: number): string {
-        return blockIndex.toFixed(0);
+    protected blockId(blockIndex: number): string {
+        return blockIndex.toString();
     }
 
 }
 
-type Set = {
-    lod: Array<Blocks>
-}
+type Blocks<TilePayload, BlockPayload> = { [blockId: string]: Block<TilePayload, BlockPayload> }
 
-type Blocks = { [blockId: string]: Block }
-
-type Block = {
+export type Block<TilePayload, BlockPayload> = {
     lastUsedTimestamp: number,
-    lodLevel: number,
-    rows: Array<TileEntry>,
-    gpuTexture: GPUTexture,
+    rows: Array<Tile<TilePayload>>,
+    payload: BlockPayload
 }
 
 export enum TileState {
@@ -334,55 +230,54 @@ export enum TileState {
     Complete = 2,
 }
 
-type TileEntryInternal = {
-    block: Block;
-    state: TileState;
-    data: ArrayBufferView;
-    length: number;
-    sequenceMinMax: {
-        min: number,
-        max: number,
-    };
+export interface TileEventMap<Payload> {
+    'complete': (tile: Tile<Payload>, payload: Payload) => void;
+}
+
+type TileInternal<Payload> = {
+    _state: TileState;
+    _payload: Payload;
     emitComplete(): void;
 }
 
-export class TileEntry {
+export class Tile<Payload> {
 
-    readonly state: TileState = TileState.Empty;
-    readonly data: ArrayBufferView;
-    readonly length: number = 0;
-    readonly sequenceMinMax: {
-        min: number,
-        max: number,
-    };
+    set state(v) {}
+    get state(): TileState {
+        return this._state;
+    }
+
+    // available when tile is in the Complete state
+    set payload(v) {}
+    get payload(): Payload | null {
+        return this._payload;
+    }
 
     readonly x: number;
     readonly span: number;
 
+    protected _state: TileState = TileState.Empty;
+    protected _payload: Payload;
     protected eventEmitter = new EventEmitter();
 
     constructor(
-        protected readonly block: Block,
-        readonly rowIndex: number,
+        readonly block: Block<Payload, any>,
         readonly lodLevel: number,
         readonly lodX: number,
-        readonly lodSpan: number
+        readonly lodSpan: number,
+        readonly blockRowIndex: number
     ) {
         let lodDensity = 1 << lodLevel;
         this.x = lodX * lodDensity;
         this.span = lodSpan * lodDensity;
     }
 
-    getTexture(device: Device) {
-        return TileEngine.getTexture(device, this.block);
+    addEventListener<EventName extends keyof TileEventMap<Payload>>(event: EventName, callback: TileEventMap<Payload>[EventName]) {
+        this.eventEmitter.addListener(event, callback);
     }
 
-    addCompleteListener(callback: (tile: TileEntry) => void) {
-        this.eventEmitter.addListener('complete', callback);
-    }
-
-    removeCompleteListener(callback: (tile: TileEntry) => void) {
-        this.eventEmitter.removeListener('complete', callback);
+    removeEventListener<EventName extends keyof TileEventMap<Payload>>(event: EventName, callback: TileEventMap<Payload>[EventName]) {
+        this.eventEmitter.removeListener(event, callback);
     }
 
     markLastUsed() {
@@ -390,7 +285,7 @@ export class TileEntry {
     }
 
     protected emitComplete() {
-        this.eventEmitter.emit('complete', this);
+        this.eventEmitter.emit('complete', this, this._payload);
     }
 
 }

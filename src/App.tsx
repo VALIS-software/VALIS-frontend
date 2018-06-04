@@ -63,8 +63,6 @@ export class App extends React.Component<Props, State> {
 	componentWillUnmount() {
 		window.removeEventListener('resize', this.onResize);
 		this.stopFrameLoop();
-
-		TileEngine.clearAllTiles();
 	}
 
 	componentDidUpdate(prevProps: Props, prevState: State, snapshot: any) {
