@@ -11,7 +11,7 @@ export class SharedResources {
     private static buffers: { [key: string]: GPUBuffer } = {};
 
     static getProgram(device: Device, vertexCode: string, fragmentCode: string, attributeBindings: Array<string>) {
-        let key = vertexCode + '\x35' + fragmentCode + '\x35' + attributeBindings.join('\x37');
+        let key = vertexCode + '\x1D' + fragmentCode + '\x1D' + attributeBindings.join('\x1F');
         let gpuProgram = SharedResources.programs[key];
 
         if (gpuProgram == null) {
@@ -23,7 +23,7 @@ export class SharedResources {
     }
 
     static deleteProgram(vertexCode: string, fragmentCode: string, attributeBindings: Array<string>) {
-        let key = vertexCode + '\x35' + fragmentCode + '\x35' + attributeBindings.join('\x37');
+        let key = vertexCode + '\x1D' + fragmentCode + '\x1D' + attributeBindings.join('\x1F');
         let gpuProgram = SharedResources.programs[key];
 
         if (gpuProgram != null) {

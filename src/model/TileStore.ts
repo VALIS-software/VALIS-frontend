@@ -1,17 +1,12 @@
 import { EventEmitter } from "events";
-import Scalar from "../../math/Scalar";
-import { GPUTexture, TextureMagFilter, TextureMinFilter, Device } from "../../rendering/Device";
+import Scalar from "../math/Scalar";
 
-export class TileEngine<TilePayload, BlockPayload> {
+export class TileStore<TilePayload, BlockPayload> {
 
     protected lods = new Array<Blocks<TilePayload, BlockPayload>>();
     protected readonly blockSize: number;
 
     constructor(
-        protected readonly getTilePayload: (tile: Tile<TilePayload>) => Promise<TilePayload> | TilePayload,
-        protected readonly createBlockPayload: (lodLevel: number, lodX: number, lodSpan: number, rows: number) => BlockPayload,
-        protected readonly releaseBlock: (block: BlockPayload) => void,
-        protected readonly mapLodLevel: (selectedLodLevel: number) => number = (l) => l,
         readonly tileWidth: number = 1024,
         readonly tilesPerBlock: number = 8,
     ) {
@@ -38,7 +33,7 @@ export class TileEngine<TilePayload, BlockPayload> {
         lodLevel = this.mapLodLevel(lodLevel);
 
         // convert range (at lod 0) to map to the current lod level (and round up/down greedily)
-        let lodDensity = 1 << lodLevel;
+        let lodDensity = Math.pow(2, lodLevel);
         let x0_lodSpace = Math.floor(x0 / lodDensity);
         let x1_lodSpace = Math.ceil(x1 / lodDensity);
 
@@ -83,7 +78,7 @@ export class TileEngine<TilePayload, BlockPayload> {
 
         lodLevel = this.mapLodLevel(lodLevel);
 
-        let lodDensity = 1 << lodLevel;
+        let lodDensity = Math.pow(2, lodLevel);
         let x_lodSpace = Math.floor(x / lodDensity);
 
         return this.getTileFromLodX(lodLevel, x_lodSpace, requestData);
@@ -105,7 +100,24 @@ export class TileEngine<TilePayload, BlockPayload> {
         return block.payload;
     }
 
-    protected getTileFromLodX(
+    // user-overridden methods
+    protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
+        return null;
+    }
+
+    protected createBlockPayload(lodLevel: number, lodX: number, lodSpan: number, rows: number): BlockPayload {
+        return null;
+    }
+
+    protected releaseBlockPayload(block: BlockPayload): void {
+        
+    }
+
+    protected mapLodLevel(selectedLodLevel: number): number {
+        return selectedLodLevel;
+    }
+
+    private getTileFromLodX(
         lodLevel: number,
         lodX: number,
         requestData: boolean
@@ -124,7 +136,7 @@ export class TileEngine<TilePayload, BlockPayload> {
         return tile;
     }
 
-    protected loadTilePayload(tile: Tile<TilePayload>) {
+    private loadTilePayload(tile: Tile<TilePayload>) {
         const tileInternal = tile as any as TileInternal<TilePayload>;
 
         tileInternal._state = TileState.Loading;
@@ -146,20 +158,20 @@ export class TileEngine<TilePayload, BlockPayload> {
         }
     }
 
-    protected tileLoadComplete(tile: Tile<TilePayload>, payload: TilePayload) {
+    private tileLoadComplete(tile: Tile<TilePayload>, payload: TilePayload) {
         const tileInternal = tile as any as TileInternal<TilePayload>;
         tileInternal._payload = payload;
         tileInternal._state = TileState.Complete;
         tileInternal.emitComplete();
     }
 
-    protected tileLoadFailed(tile: Tile<TilePayload>, reason: any) {
+    private tileLoadFailed(tile: Tile<TilePayload>, reason: any) {
         const tileInternal = tile as any as TileInternal<TilePayload>;
         tileInternal._state = TileState.Empty;
         console.warn(`Tile payload request failed`, tile);
     }
 
-    protected getBlock(lodLevel: number, blockIndex: number) {
+    private getBlock(lodLevel: number, blockIndex: number) {
         let blocks = this.getBlocks(lodLevel);
         let blockId = this.blockId(blockIndex);
         let block = blocks[blockId];
@@ -194,7 +206,7 @@ export class TileEngine<TilePayload, BlockPayload> {
         return block;
     }
 
-    protected getBlocks(lod: number) {
+    private getBlocks(lod: number) {
         let blocks = this.lods[lod];
         if (blocks === undefined) {
             blocks = this.lods[lod] = {};
@@ -202,15 +214,15 @@ export class TileEngine<TilePayload, BlockPayload> {
         return blocks;
     }
 
-    protected tileRowIndex(lodX: number): number {
+    private tileRowIndex(lodX: number): number {
         return Math.floor((lodX % this.blockSize) / this.tileWidth);
     }
 
-    protected blockIndex(lodX: number): number {
+    private blockIndex(lodX: number): number {
         return Math.floor(lodX / this.blockSize);
     }
 
-    protected blockId(blockIndex: number): string {
+    private blockId(blockIndex: number): string {
         return blockIndex.toString();
     }
 
@@ -255,6 +267,7 @@ export class Tile<Payload> {
 
     readonly x: number;
     readonly span: number;
+    readonly key: string; // unique within a tile set
 
     protected _state: TileState = TileState.Empty;
     protected _payload: Payload;
@@ -267,9 +280,11 @@ export class Tile<Payload> {
         readonly lodSpan: number,
         readonly blockRowIndex: number
     ) {
-        let lodDensity = 1 << lodLevel;
+        let lodDensity = Math.pow(2, lodLevel);
         this.x = lodX * lodDensity;
         this.span = lodSpan * lodDensity;
+
+        this.key = this.lodLevel + '_' + this.lodX;
     }
 
     addEventListener<EventName extends keyof TileEventMap<Payload>>(event: EventName, callback: TileEventMap<Payload>[EventName]) {
@@ -290,4 +305,4 @@ export class Tile<Payload> {
 
 }
 
-export default TileEngine;
+export default TileStore;

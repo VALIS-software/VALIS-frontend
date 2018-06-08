@@ -1,7 +1,7 @@
 import { TrackType } from "../../model/TrackDataModel";
-import Track from "./Track";
-import SequenceTrack from "./SequenceTrack";
 import AnnotationTrack from "./AnnotationTrack";
+import SequenceTrack from "./SequenceTrack";
+import Track from "./Track";
 
 export const trackTypeMap = {
     [TrackType.Empty]: Track,

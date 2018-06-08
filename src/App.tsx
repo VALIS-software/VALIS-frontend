@@ -1,11 +1,13 @@
 import * as React from "react";
+import Animator from "./animation/Animator";
+import AnnotationStore from "./model/AnnotationStore";
+import SequenceTileStore from "./model/SequenceTileStore";
+import SharedTileStore from "./model/SharedTileStores";
+import { TrackType } from "./model/TrackDataModel";
+import Header from "./ui/components/header/Header";
 import { AppCanvas } from "./ui/core/AppCanvas";
 import Object2D from "./ui/core/Object2D";
 import TrackViewer from "./ui/TrackViewer";
-import Animator from "./animation/Animator";
-import Header from "./ui/components/header/Header";
-import { TrackType } from "./model/TrackDataModel";
-import TileEngine from "./ui/tracks/TileEngine";
 
 interface Props {}
 
@@ -30,19 +32,32 @@ export class App extends React.Component<Props, State> {
 
 		let trackViewer = new TrackViewer();
 
+		// @! temporary create tile stores
+		SharedTileStore[TrackType.Sequence]['chromosome1'] = new SequenceTileStore('chromosome1');
+		SharedTileStore[TrackType.Annotation]['chromosome1'] = new AnnotationStore('chromosome1');
+
+		// @! temporary preload lods
+		SharedTileStore[TrackType.Sequence]['chromosome1'].getTiles(0.9, 1.1e6, 1 << 12, true, () => {});
+		SharedTileStore[TrackType.Sequence]['chromosome1'].getTiles(0.95, 1.05e6, 1 << 8, true, () => {});
+		SharedTileStore[TrackType.Sequence]['chromosome1'].getTiles(0, 230e6, 1 << 23, true, () => {});
+
 		// initialize with some dummy data
 		let i = 0;
 		for (let track of [
-			{ sourceId: 'chromosome1', name: 'Sequence', type: TrackType.Sequence },
-			{ sourceId: 'grch38', name: 'GRCh38', type: TrackType.Annotation },
-			{ sourceId: 'gm12878-dnase', name: 'GM12878-DNase', type: TrackType.Empty },
+			{ sequenceId: 'chromosome1', name: 'Sequence', type: TrackType.Sequence },
+			{ sequenceId: 'chromosome1', name: 'Annotation', type: TrackType.Annotation },
+			// { sequenceId: 'gm12878-dnase', name: 'GM12878-DNase', type: TrackType.Empty },
 		]) {
-			trackViewer.addTrackRow(track, i++ === 0 ? 100 : undefined);
+			let h = undefined;
+			if (i === 0) h = 100;
+			if (i === 1) h = 500;
+			trackViewer.addTrackRow(track, h);
+			i++;
 		}
 
 		for (let panel of [
-			// { name: 'Chromosome 1', x0: 10e5, x1: 10e5 + 10 }
-			{ name: 'Chromosome 1', x0: 0, x1: 249e6 }
+			{ name: 'Chromosome 1', x0: 10e5, x1: 10e5 + 10 }
+			// { name: 'Chromosome 1', x0: 0, x1: 249e6 }
 		]) {
 			trackViewer.addPanel(panel, false);
 		}

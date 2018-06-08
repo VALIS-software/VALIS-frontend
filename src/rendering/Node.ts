@@ -21,7 +21,7 @@ export class Node<T extends Node<any>> {
 		}
 	}
 
-	forEachSubNode(callback: (n: Node<T>) => void) {
+	forEachSubNode(callback: (n: T) => void) {
 		for (let child of this.children) {
 			callback(child);
 			child.forEachSubNode(callback);

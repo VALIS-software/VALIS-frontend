@@ -1,8 +1,6 @@
-import Rect from "../core/Rect";
-import Panel from "../Panel";
-import TrackRow from "../TrackRow";
-import { InteractionEvent } from "../core/InteractionEvent";
 import { TrackDataModel } from "../../model/TrackDataModel";
+import Panel from "../Panel";
+import Rect from "../core/Rect";
 
 export class Track extends Rect {
 

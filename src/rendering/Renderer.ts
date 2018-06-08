@@ -3,10 +3,9 @@
  * - State grouping: Often we want hierarchical state - i.e, set viewport for this node _and_ all of its children
  */
 
-import Node from '../rendering/Node';
-import Device, { GPUProgram, GPUVertexState, DeviceInternal, VertexStateDescriptor, VertexAttribute, GPUTexture, GPUTextureInternal, GPUProgramInternal } from '../rendering/Device';
-import RenderPass from '../rendering/RenderPass';
-import { Renderable, RenderableInternal } from '../rendering/Renderable';
+import Device, { DeviceInternal, GPUProgram, GPUProgramInternal, GPUTexture, GPUTextureInternal, GPUVertexState, VertexAttribute, VertexStateDescriptor } from '../rendering/Device';
+import RenderPass from './RenderPass';
+import { Renderable, RenderableInternal } from './Renderable';
 
 export enum BlendMode {
 	NONE                = 0,
@@ -86,8 +85,7 @@ export class Renderer {
 				}
 
 				if (node.mask != null) {
-					
-					// we can't used indexOf because masks may contain data from previous frame
+					// we can't used indexOf because masks may contain data from previous frame that extends beyond existingMaskIndex
 					let existingMaskIndex = -1;
 					for (let i = 0; i < maskIndex; i++) {
 						if (masks[i] === node.mask) {

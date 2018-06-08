@@ -16,7 +16,7 @@ import Panel from "./Panel";
 import TrackDataModel, { TrackType } from "../model/TrackDataModel";
 import PanelDataModel from "../model/PanelDataModel";
 
-const OpenSansRegular = require("../font/OpenSans-Regular.msdf.bin");
+const OpenSansRegular = require("./font/OpenSans-Regular.msdf.bin");
 
 class TrackViewer extends Object2D {
 
@@ -25,8 +25,8 @@ class TrackViewer extends Object2D {
     readonly panelHeaderHeight: number = 50;
     readonly defaultTrackHeight: number = 200;
     readonly spacing = {
-        x: 15,
-        y: 15
+        x: 5,
+        y: 5
     };
     readonly xAxisHeight = 40; // height excluding spacing
     readonly minPanelWidth = 35;
@@ -83,26 +83,26 @@ class TrackViewer extends Object2D {
         edges.push(lastEdge + heightPx);
 
         // create a tack and add the header element to the grid
-        let track = new TrackRow(model, newRowIndex, this.layoutTrackRow, this.spacing);
+        let trackRow = new TrackRow(model, newRowIndex, this.layoutTrackRow, this.spacing);
         // add track tile to all panels
         for (let panel of this.panels) {
-            panel.addTrack(track.createTrack());
+            panel.addTrack(trackRow.createTrack());
         }
-        this.tracks.add(track);
+        this.tracks.add(trackRow);
 
-        track.header.x = -this.trackHeaderWidth + this.spacing.x * 0.5;
-        track.header.w = this.trackHeaderWidth;
+        trackRow.header.x = -this.trackHeaderWidth + this.spacing.x * 0.5;
+        trackRow.header.w = this.trackHeaderWidth;
 
-        this.grid.add(track.header);
-        this.grid.add(track.resizeHandle);
+        this.grid.add(trackRow.header);
+        this.grid.add(trackRow.resizeHandle);
 
-        track.resizeHandle.layoutW = 1;
-        track.resizeHandle.addInteractionListener('dragstart', (e) => { e.preventDefault(); this.startResizingTrack(track) });
-        track.resizeHandle.addInteractionListener('dragend', (e) => { e.preventDefault(); this.endResizingTrack(track) });
+        trackRow.resizeHandle.layoutW = 1;
+        trackRow.resizeHandle.addInteractionListener('dragstart', (e) => { e.preventDefault(); this.startResizingTrack(trackRow) });
+        trackRow.resizeHandle.addInteractionListener('dragend', (e) => { e.preventDefault(); this.endResizingTrack(trackRow) });
 
-        track.setResizable(true);
+        trackRow.setResizable(true);
 
-        this.positionTrack(track, false);
+        this.positionTrack(trackRow, false);
     }
 
     addPanel(model: PanelDataModel, animate: boolean) {
@@ -121,9 +121,9 @@ class TrackViewer extends Object2D {
         this.grid.add(panel);
 
         // initialize tracks for this panel
-       for (let track of this.tracks) {
-           panel.addTrack(track.createTrack());
-           this.layoutTrackRow(track);
+       for (let trackRow of this.tracks) {
+           panel.addTrack(trackRow.createTrack());
+           this.layoutTrackRow(trackRow);
        }
 
         this.panels.add(panel);

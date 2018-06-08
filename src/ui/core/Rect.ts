@@ -13,8 +13,9 @@ export class Rect extends Object2D {
 
     color = new Float32Array(4);
 
-    constructor(w: number = 10, h: number = 10, color: ArrayLike<number> = [1, 0, 0, 1]) {
+    constructor(w: number = 10, h: number = 10, color: ArrayLike<number> = [1, 0, 0, 1], readonly debugDisplay: boolean = false) {
         super();
+        this.render = true;
         this.w = w;
         this.h = h;
         this.color.set(color);
@@ -47,7 +48,11 @@ export class Rect extends Object2D {
                 uniform vec4 color;
                 
                 void main() {
-                    gl_FragColor = color;
+                    ${
+                        this.debugDisplay ? 
+                            `gl_FragColor = vec4(vUv.xyx * color.rgb * color.a, color.a);` :
+                            `gl_FragColor = vec4(color.rgb * color.a, color.a);`
+                    }
                 }
             `,
             ['position']

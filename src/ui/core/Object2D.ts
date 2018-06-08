@@ -130,9 +130,8 @@ export class Object2D extends Renderable<Object2D> implements Layout {
     constructor() {
         super();
         this.resetEventListenerCount();
-        // set render to false for instances of Object2D and true for subclasses
-        let isSubclass = Object.getPrototypeOf(this) !== Object2D.prototype;
-        this.render = isSubclass;
+        // an Object2D cannot be rendered by itself but subclasses which can should set render to true
+        this.render = false;
     }
 
     add(child: Object2D) {

@@ -6,7 +6,7 @@ import { BlendMode } from "../rendering/Renderer";
 import { Scalar } from "../math/Scalar";
 import { UsageCache } from "../ds/UsageCache";
 
-const OpenSansRegular = require('./../font/OpenSans-Regular.msdf.bin');
+const OpenSansRegular = require('./font/OpenSans-Regular.msdf.bin');
 
 export class XAxis extends Object2D {
 
@@ -143,7 +143,7 @@ export class XAxis extends Object2D {
             if (xMinor >= this.minDisplay && xMinor <= this.maxDisplay && isFinite(xMinor)) {
                 let minorParentX = (xMinor - this.x0) / span;
                 let str = this.formatValue(xMinor, this.maxTextLength);
-                let textMinor = this.labelCache.get(xMinor + '_' + str, () => this.createLabel(str));
+                let textMinor = this.labelCache.use(xMinor + '_' + str, () => this.createLabel(str));
                 textMinor.layoutParentX = minorParentX;
                 textMinor.setColor(0, 0, 0, minorAlpha);
             }
@@ -151,7 +151,7 @@ export class XAxis extends Object2D {
             if (xMajor >= this.minDisplay && xMajor <= this.maxDisplay && isFinite(xMajor)) {
                 let majorParentX = (xMajor - this.x0) / span;
                 let str = this.formatValue(xMajor, this.maxTextLength);
-                let textMajor = this.labelCache.get(xMajor + '_' + str, () => this.createLabel(str));
+                let textMajor = this.labelCache.use(xMajor + '_' + str, () => this.createLabel(str));
                 textMajor.layoutParentX = majorParentX;
                 textMajor.setColor(0, 0, 0, 1);
             }

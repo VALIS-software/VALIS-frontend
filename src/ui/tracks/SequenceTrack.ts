@@ -1,292 +1,31 @@
-import { Track } from "./Track";
+import { UsageCache } from "../../ds/UsageCache";
 import { Scalar } from "../../math/Scalar";
-import TileEngine, { Tile, TileState } from "./TileEngine";
-import { TrackDataModel } from "../../model/TrackDataModel";
-import Device, { GPUTexture, TextureFormat, ColorSpaceConversion, TextureWrapMode, TextureMinFilter, TextureMagFilter, TextureDataType } from "../../rendering/Device";
-import SiriusApi from "../../../lib/sirius/SiriusApi";
-
-type TilePayload = {
-    array: Uint8Array,
-    sequenceMinMax: {
-        min: number,
-        max: number,
-    };
-    dataUploaded: boolean,
-    getTexture(device: Device): GPUTexture;
-}
-
-type BlockPayload = {
-    _gpuTexture: GPUTexture,
-    getTexture(device: Device): GPUTexture;
-}
-
-export class SequenceTrack extends Track {
-
-    protected tileEngine: TileEngine<TilePayload, BlockPayload>;
- 
-    constructor(model: TrackDataModel) {
-        super(model);
-
-        this.color.set([0, 0, 0, 1]);
-
-        this.tileEngine = new TileEngine(
-            this.getTilePayload,
-            this.createBlockPayload,
-            this.releaseBlockPayload
-        );
-    }
-
-    setRange(x0: number, x1: number) {
-        super.setRange(x0, x1);
-        this.updateTiles();
-    }
-
-    applyTransformToSubNodes(root?: boolean) {
-        this.updateTiles();
-        super.applyTransformToSubNodes(root);
-    }
-
-    protected getTilePayload = (tile: Tile<TilePayload>) => {
-        let tileEngine = this.tileEngine;
-        return SiriusApi.loadACGTSubSequence(this.model.sourceId, tile.lodLevel, tile.lodX, tile.lodSpan)
-            .then((sequenceData) => {
-                return {
-                    ...sequenceData,
-                    dataUploaded: false,
-                    getTexture(device: Device): GPUTexture {
-                        let payload: TilePayload = this;
-
-                        let blockPayload = tileEngine.getBlockPayload(tile);
-                        let gpuTexture: GPUTexture = blockPayload.getTexture(device);
-
-                        // upload this tile's row to the block if not already uploaded
-                        if (!payload.dataUploaded) {
-                            let nChannels = 4;
-                            let dataWidthPixels = payload.array.length / nChannels;
-
-                            // console.log(`%cupload row ${tile.lodLevel}`, 'color: green');
-
-                            gpuTexture.updateTextureData(
-                                0,
-                                TextureFormat.RGBA,
-                                payload.array,
-                                0, tile.blockRowIndex, // x, y
-                                Math.min(gpuTexture.w, dataWidthPixels), 1, // w, h
-                            );
-                            
-                            payload.dataUploaded = true;
-                        }
-
-                        return gpuTexture;   
-                    }
-                }
-            });
-    }
-
-    protected createBlockPayload = (lodLevel: number, lodX: number, tileWidth: number, rows: number): BlockPayload => {
-        return {
-            _gpuTexture: null,
-            getTexture(device: Device) {
-                let payload: BlockPayload = this;
-
-                // allocate texture if it doesn't already exist
-                if (payload._gpuTexture === null) {
-                    // console.log(`%ccreate texture ${lodLevel}`, 'color: blue');
-
-                    payload._gpuTexture = device.createTexture({
-                        format: TextureFormat.RGBA,
-
-                        // mipmapping should be turned off to avoid rows blending with one another
-                        // if TILES_PER_BLOCK = 1 then mipmapping may be enabled
-                        generateMipmaps: false,
-
-                        // FireFox emits performance warnings when using texImage2D on uninitialized textures
-                        // in our case it's faster to let the browser zero the texture rather than allocating another array buffer
-                        mipmapData: null, //[new Uint8Array(BLOCK_SIZE * nChannels)],
-                        width: tileWidth,
-                        height: rows,
-                        dataType: TextureDataType.UNSIGNED_BYTE,
-
-                        samplingParameters: {
-                            magFilter: lodLevel > 0 ? TextureMagFilter.LINEAR : TextureMagFilter.NEAREST,
-                            minFilter: TextureMinFilter.LINEAR,
-                            wrapS: TextureWrapMode.CLAMP_TO_EDGE,
-                            wrapT: TextureWrapMode.CLAMP_TO_EDGE,
-                        },
-
-                        pixelStorage: {
-                            packAlignment: 1,
-                            unpackAlignment: 1,
-                            flipY: false,
-                            premultiplyAlpha: false,
-                            colorSpaceConversion: ColorSpaceConversion.NONE,
-                        },
-                    });
-                }
-
-                return payload._gpuTexture;
-            }
-        }
-    }
-
-    protected releaseBlockPayload = (payload: BlockPayload) => {
-        if (payload._gpuTexture != null) {
-            payload._gpuTexture.delete();
-            payload._gpuTexture = null;
-        }
-    }
-
-    private _lastComputedWidth: number;
-    private _lastX0: number;
-    private _lastX1: number;
-
-    protected _tileNodeCache = new UsageCache<TileNode>();
-
-    protected updateTiles() {
-        const widthPx = this.getComputedWidth();
-        const x0 = this.x0;
-        const x1 = this.x1;
-        const span = x1 - x0;
-
-        let widthChanged = this._lastComputedWidth !== widthPx;
-        let rangeChanged = this._lastX0 !== x0 || this._lastX1 !== x1;
-
-        if (!widthChanged && !rangeChanged) {
-            return;
-        }
-
-        this._lastX0 = x0;
-        this._lastX1 = x1;
-        this._lastComputedWidth = widthPx;
-
-        this._tileNodeCache.markAllUnused();
-
-        if (widthPx > 0) {
-            let densityMultiplier = 2.0;
-
-            let basePairsPerDOMPixel = (span / widthPx);
-            let samplingDensity = densityMultiplier * basePairsPerDOMPixel / App.canvasPixelRatio;
-            let displayLodLevel = Scalar.log2(Math.max(samplingDensity, 1));
-            let lodLevel = Math.floor(displayLodLevel);
-
-            this.tileEngine.getTiles(x0, x1, samplingDensity, true, (tileData) => {
-                let tileKey = this.getTileKey(tileData);
-
-                let tileNode = this._tileNodeCache.get(tileKey, this.createTileNode);
-                this.updateTileNode(tileNode, tileData, x0, span, displayLodLevel);
-
-                // main tiles are positioned front-most so they appear above any fallback tiles
-                tileNode.z = 1.0;
-
-                // if tileNode is not opaque and displaying data then we've got a gap to fill
-                if (!this.tileNodeIsOpaque(tileNode)) {
-                    let gapCenterX = tileData.x + tileData.span * 0.5;
-                    
-                    // limit the number of loading-fade-in tiles to improve performance
-                    let loadingTilesAllowed = 1;
-                    let fadingTilesAllowed = 1;
-
-                    // fill with larger tiles (higher lod level)
-                    for (let p = 1; p < 50; p++) {
-                        let densityMultiplier = 1 << p;
-                        let fallbackDensity = samplingDensity * densityMultiplier;
-
-                        // exhausted all available lods
-                        if (!this.tileEngine.isWithinInitializedLodRange(fallbackDensity)) break;
-
-                        let fallbackData = this.tileEngine.getTile(gapCenterX, fallbackDensity, false);
-                        
-                        // it's possible we end up with the same lod we already have, if so, skip it
-                        if (fallbackData.lodLevel === tileData.lodLevel) continue;
-
-                        // can we use this tile as a fallback?
-                        if (
-                            ((loadingTilesAllowed > 0) && (fallbackData.state === TileState.Loading)) ||
-                            (fallbackData.state === TileState.Complete)
-                        ) {
-                            if (fallbackData.state === TileState.Loading){
-                                loadingTilesAllowed--;
-                            }
-
-                            let tileKey = this.getTileKey(fallbackData);
-
-                            let fallbackNode = this._tileNodeCache.get(tileKey, this.createTileNode);
-                            this.updateTileNode(fallbackNode, fallbackData, x0, span, displayLodLevel);
-
-                            // @! improve this
-                            // z-position tile so that better lods are front-most
-                            fallbackNode.z = (1.0 - fallbackData.lodLevel / 50) - 0.1;
-
-                            // remove the tile if it's currently fading in and we've run out of fading tile budget
-                            let tileIsFading = (fallbackData.state === TileState.Complete) && (fallbackNode.opacity < 1);
-
-                            if (tileIsFading) {
-                                if (fadingTilesAllowed <= 0) {
-                                    this._tileNodeCache.markUnused(tileKey);
-                                    continue;
-                                } else {
-                                    fadingTilesAllowed--;
-                                }
-                            }
-
-                            // if the fallback node is opaque then we've successfully plugged the gap
-                            if (this.tileNodeIsOpaque(fallbackNode)) {
-                                break;
-                            }
-                        }
-                    }
-                }
-            });
-
-        }
-
-        this._tileNodeCache.removeUnused(this.deleteTileNode);
-    }
-    
-    protected createTileNode = (): TileNode => {
-        // create empty tile node
-        let tileNode = new TileNode();
-        tileNode.mask = this;
-        this.add(tileNode);
-        return tileNode;
-    }
-
-    protected deleteTileNode = (tileNode: TileNode) => {
-        tileNode.setTile(null); // ensure cleanup is performed
-        tileNode.releaseGPUResources();
-        this.remove(tileNode);
-    }
-
-    protected updateTileNode(tileNode: TileNode, tileData: Tile<TilePayload>, x0: number, span: number, displayLodLevel: number) {
-        tileNode.layoutParentX = (tileData.x - x0) / span;
-        tileNode.layoutW = tileData.span / span;
-        tileNode.layoutH = 1;
-        tileNode.displayLodLevel = displayLodLevel;
-        tileNode.setTile(tileData);
-    }
-
-    protected getTileKey(tileData: Tile<TilePayload>) {
-        return tileData.lodLevel + '_' + tileData.lodX;
-    }
-
-    protected tileNodeIsOpaque(tileNode: TileNode) {
-        return (tileNode.render === true) &&
-            (tileNode.opacity >= 1) &&
-            (tileNode.getTile().state === TileState.Complete);
-    }
-
-}
-
+import { TrackDataModel, TrackType } from "../../model/TrackDataModel";
+import Device, { GPUTexture } from "../../rendering/Device";
+import { DrawContext, DrawMode } from "../../rendering/Renderer";
 import Object2D, { Object2DInternal } from "../core/Object2D";
 import SharedResources from "../core/SharedResources";
-import { DrawContext, DrawMode, BlendMode } from "../../rendering/Renderer";
-import App from "../../App";
-import { Animator } from "../../animation/Animator";
-import { DEFAULT_SPRING } from "../UIConstants";
-import { UsageCache } from "../../ds/UsageCache";
-import { Rect } from "../core/Rect";
 import { Text } from "../core/Text";
-import Renderable, { RenderableInternal } from "../../rendering/Renderable";
+import { BlockPayload, TilePayload } from "../../model/SequenceTileStore";
+import { SharedTileStore } from "../../model/SharedTileStores";
+import { Tile, TileState } from "../../model/TileStore";
+import { TileNode, TileTrack } from "./TileTrack";
+
+
+export class SequenceTrack extends TileTrack<TilePayload, BlockPayload> {
+
+    protected densityMultiplier = 2.0;
+ 
+    constructor(model: TrackDataModel) {
+        super(model, SharedTileStore[TrackType.Sequence][model.sequenceId]);
+        this.color.set([0, 0, 0, 1]);
+    }
+
+    protected constructTileNode() {
+        return new SequenceTile();
+    }
+
+}
 
 /**
  * - A TileNode render field should only be set to true if it's TileEntry is in the Complete state
@@ -296,63 +35,23 @@ const NUCLEOBASE_T_COLOR = new Float32Array([0.200, 0.200, 0.404, 1.0]); // #333
 const NUCLEOBASE_C_COLOR = new Float32Array([0.043, 0.561, 0.608, 1.0]); // #0B8F9B;
 const NUCLEOBASE_G_COLOR = new Float32Array([0.071, 0.725, 0.541, 1.0]); // #12B98A;
 
-const OpenSansRegular = require('../../font/OpenSans-Regular.msdf.bin');
+const OpenSansRegular = require('../font/OpenSans-Regular.msdf.bin');
 
-class TileNode extends Object2D {
+class SequenceTile extends TileNode<TilePayload> {
 
-    set opacity(opacity: number) {
-        this._opacity = opacity;
-        // switch to opaque rendering as soon as opacity hits 1
-        this.transparent = opacity < 1;
-        this.blendMode = opacity < 1 ? BlendMode.PREMULTIPLIED_ALPHA : BlendMode.NONE;
-    }
-
-    get opacity() {
-        return this._opacity;
-    }
-
-    displayLodLevel: number;
-
-    protected _opacity: number;
-    protected tile: Tile<TilePayload>;
     protected gpuTexture: GPUTexture;
-
     protected memoryBlockY: number;
 
     constructor() {
         super();
-        this.opacity = 1;
-        this.render = false;
     }
 
     setTile(tile: Tile<TilePayload>) {
-        // early exit case
-        if (tile === this.tile) return;
+        super.setTile(tile);
 
         if (this.tile != null) {
-            this.tile.removeEventListener('complete', this.tileComplete);
-        }
-
-        this.tile = tile;
-
-        if (tile != null) {
-            if (tile.state === TileState.Complete) {
-                this.opacity = 1;
-                this.tileComplete();
-            } else {
-                tile.addEventListener('complete', this.tileComplete);
-                this.opacity = 0;
-                this.render = false;
-            }
-
             this.memoryBlockY = (tile.blockRowIndex + 0.5) / tile.block.rows.length; // y-center of texel
-        } else {
-            this.render = false;
         }
-    }
-
-    getTile() {
-        return this.tile;
     }
 
     private _lastComputedWidth: number;
@@ -377,8 +76,8 @@ class TileNode extends Object2D {
         this.gpuVertexState = SharedResources.quad1x1VertexState;
         this.gpuProgram = SharedResources.getProgram(
             device,
-            TileNode.vertexShader,
-            TileNode.fragmentShader,
+            SequenceTile.vertexShader,
+            SequenceTile.fragmentShader,
             ['position']
         );
 
@@ -460,7 +159,7 @@ class TileNode extends Object2D {
                             baseChar = 'N'; // any nucleobase
                         }
 
-                        let label = this._labelCache.get(i + '', () => this.createLabel(baseChar));
+                        let label = this._labelCache.use(i + '', () => this.createLabel(baseChar));
                         label.container.layoutParentX = (i + 0.5) * baseWidth;
                         label.container.layoutParentY = 0.5;
 
@@ -478,9 +177,9 @@ class TileNode extends Object2D {
     }
 
     protected createLabel = (baseCharacter: string) => {
-        let textInstance = TileNode.baseTextInstances[baseCharacter];
+        let textInstance = SequenceTile.baseTextInstances[baseCharacter];
 
-        let textClone = new TextClone(TileNode.baseTextInstances[baseCharacter], [1, 1, 1, 1]);
+        let textClone = new TextClone(SequenceTile.baseTextInstances[baseCharacter], [1, 1, 1, 1]);
         textClone.additiveBlendFactor = 1.0;
 
         textClone.layoutX = -0.5;
@@ -499,12 +198,8 @@ class TileNode extends Object2D {
         this.remove(label.container);
     }
 
-    protected tileComplete = () => {
-        this.tile.removeEventListener('complete', this.tileComplete);
-
-        Animator.springTo(this, {'opacity': 1}, DEFAULT_SPRING);
-        this.render = true;
-        this.gpuResourcesNeedAllocate = true;
+    protected onTileComplete() {
+        super.onTileComplete();
         this.updateLabels();
     }
 
@@ -528,8 +223,6 @@ class TileNode extends Object2D {
 
     protected static fragmentShader = `
         #version 100
-
-        #define PI 3.14159
 
         precision mediump float;
         uniform float opacity;
