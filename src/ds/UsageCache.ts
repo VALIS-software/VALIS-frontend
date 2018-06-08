@@ -15,7 +15,7 @@ export class UsageCache<T> {
 
     constructor() {}
 
-    get(key: string, onCacheMiss: (key: string) => T) {
+    use(key: string, onCacheMiss: (key: string) => T) {
         let entry = this.cache[key];
 
         if (entry === undefined) {
