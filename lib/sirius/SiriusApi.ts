@@ -4,19 +4,45 @@
 
 import axios, { AxiosRequestConfig, CancelToken } from 'axios';
 
-export class SiriusApi {
+// @! from Gff3Parser
+export enum Strand {
+    None,
+    Unknown,
+    Positive,
+    Negative,
+}
 
-    static caching: boolean = true;
+export type Feature = {
+    name: string | undefined,
+    type: string,
+    children: Array<Feature>,
+    start: number,
+    end: number,
+    strand: Strand,
+}
+
+export class SiriusApi {
 
     private static minMaxCache: {
         [path: string]: Promise<{ min: number, max: number }>
     } = {};
 
+    static loadAnnotations(
+        sequenceId: string,
+        startBaseIndex: number,
+        span: number,
+    ): Promise<Array<Feature>> {
+        let jsonPath = `/data/${sequenceId}/annotation/${startBaseIndex},${span}.json`;
+        return axios.get(jsonPath).then((a) => {
+            return a.data;
+        });
+    }
+
     static loadACGTSubSequence(
-        sequencePath: string,
+        sequenceId: string,
         lodLevel: number,
         lodStartBaseIndex: number,
-        lodNBases: number,
+        lodSpan: number,
     ): Promise<{
         array: Uint8Array,
         sequenceMinMax: {
@@ -25,13 +51,13 @@ export class SiriusApi {
         },
         indicesPerBase: number, 
     }> {
-        let binPath = `/data/${sequencePath}/${lodLevel}.bin`;
+        let binPath = `/data/${sequenceId}/dna/${lodLevel}.bin`;
         let minMaxPath = binPath + '.minmax';
 
         // @! data format may change for certain LODs in the future
         let elementSize_bits = 8;
 
-        let dataPromise = SiriusApi.loadArray(binPath, elementSize_bits, lodStartBaseIndex * 4, lodNBases * 4, ArrayFormat.UInt8);
+        let dataPromise = SiriusApi.loadArray(binPath, elementSize_bits, lodStartBaseIndex * 4, lodSpan * 4, ArrayFormat.UInt8);
 
         let minMaxPromise = SiriusApi.minMaxCache[minMaxPath];
         
@@ -77,7 +103,8 @@ export class SiriusApi {
             url: path,
             responseType: 'arraybuffer',
             headers: {
-                'Range': `bytes=${byteRange.start.toFixed(0)}-${byteRange.end.toFixed(0)}`
+                'Range': `bytes=${byteRange.start.toFixed(0)}-${byteRange.end.toFixed(0)}`,
+                'Cache-Control': 'no-cache', // @! work around chrome bug
             },
             cancelToken: cancelToken
         }).then((a) => {
