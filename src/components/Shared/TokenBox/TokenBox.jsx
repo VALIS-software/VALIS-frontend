@@ -32,7 +32,7 @@ class TokenBox extends React.Component {
     const lowered = dataSource.map(d => {
       return d.toLowerCase();
     });
-    
+
     const query = value.toLowerCase().trim();
 
     // search for value in case-insensitive fashion:
@@ -41,7 +41,7 @@ class TokenBox extends React.Component {
 
     // make sure value matches only one suggestion in the dropdown:
     const singleMatch = dataSource.filter(d => {
-      return this.filter(query ,d);
+      return this.filter(query, d);
     }).length <= 1;
 
     if (!singleMatch) return null;
@@ -58,7 +58,7 @@ class TokenBox extends React.Component {
     const match = this.perfectMatch(dataSource, value);
     if (match) {
       // clear the search box:
-      this.refs.autoComplete.setState({searchText:''});
+      this.refs.autoComplete.setState({ searchText: '' });
 
       // update the current tokens list:
       this.state.tokens.push({
@@ -70,7 +70,11 @@ class TokenBox extends React.Component {
       });
 
       // fetch new suggestions:
-      this.getSuggestions(this.state.tokens); 
+      let showSuggestions = true;
+      if (this.state.tokens[this.state.tokens.length - 1].quoted && this.state.query) {
+        showSuggestions = false;
+      }
+      this.getSuggestions(this.state.tokens, showSuggestions);
     } else {
       // fetch new suggestions:
       const newTokens = this.state.tokens.slice(0);
@@ -78,7 +82,7 @@ class TokenBox extends React.Component {
         value: value,
         quoted: this.state.quoteInput
       });
-      this.getSuggestions(newTokens); 
+      this.getSuggestions(newTokens);
     }
   };
 
@@ -90,7 +94,7 @@ class TokenBox extends React.Component {
     return pieces.join(' ');
   }
 
-  getSuggestions(tokens, openOnLoad=true) {
+  getSuggestions(tokens, openOnLoad = true) {
     const searchText = this.buildQueryStringFromTokens(tokens);
     this.props.appModel.api.parseSearchQuery(searchText).then(result => {
       this.setState({
@@ -127,7 +131,7 @@ class TokenBox extends React.Component {
       open: false,
       query: null,
     });
-    this.refs.autoComplete.setState({searchText:''});
+    this.refs.autoComplete.setState({ searchText: '' });
     this.getSuggestions([]);
   }
 
@@ -173,26 +177,26 @@ class TokenBox extends React.Component {
     // TODO: the AutoComplete component auto-closes when you click a menu item 
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
     const input = (<AutoComplete
-          ref='autoComplete'
-          onKeyDown={this.onChange}
-          openOnFocus={true}
-          open={this.state.open}
-          filter={this.filter}
-          hintText=""
-          menuCloseDelay={Infinity}
-          dataSource={this.state.dataSource}
-          onUpdateInput={this.handleUpdateInput}
-        />);
-    const style={
+      ref='autoComplete'
+      onKeyDown={this.onChange}
+      openOnFocus={true}
+      open={this.state.open}
+      filter={this.filter}
+      hintText=""
+      menuCloseDelay={Infinity}
+      dataSource={this.state.dataSource}
+      onUpdateInput={this.handleUpdateInput}
+    />);
+    const style = {
       position: 'absolute',
       right: '0px',
     };
 
-    const drawClear =  this.state.searchString.length > 0 || this.state.tokens.length > 0;
+    const drawClear = this.state.searchString.length > 0 || this.state.tokens.length > 0;
     const searchEnabled = this.state.query !== null;
     const tooltip = searchEnabled ? 'Search' : 'Enter a valid search';
-    const clearButton =  drawClear ? (<IconButton tooltip="Clear" onClick={this.clearSearch}><ContentClear /></IconButton>) : (<div />);
-    const searchButton = (<IconButton onClick={this.runSearch} disabled={!searchEnabled} tooltip={tooltip}><ActionSearch/></IconButton>);
+    const clearButton = drawClear ? (<IconButton tooltip="Clear" onClick={this.clearSearch}><ContentClear /></IconButton>) : (<div />);
+    const searchButton = (<IconButton onClick={this.runSearch} disabled={!searchEnabled} tooltip={tooltip}><ActionSearch /></IconButton>);
     const status = (<div style={style}>
       {clearButton}
       {searchButton}
