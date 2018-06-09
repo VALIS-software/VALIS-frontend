@@ -40,6 +40,8 @@ class DatasetSelector extends React.Component {
       this.setState({
         dataInfo: dataInfo
       });
+    }, err => {
+      this.appModel.error(this, err);
     });
   }
 

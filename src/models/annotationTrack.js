@@ -5,7 +5,7 @@ import { GENOME_LENGTH, CHROMOSOME_START_BASE_PAIRS } from '../helpers/constants
 import Track, { TRACK_EVENT_LOADING } from './track.js';
 
 class AnnotationTrack extends Track {
-  constructor(api, annotationId, query=null) {
+  constructor(api, annotationId, query = null) {
     super();
     this.api = api;
     this.annotationId = annotationId;
@@ -51,15 +51,17 @@ class AnnotationTrack extends Track {
 
     // fetch data for each chromosome individually
     const fetchRanges = ranges.map(range => {
-      return this.api.getAnnotationData(this.annotationId, 
-        range.contig, 
-        range.start, 
-        range.end, 
-        samplingRate, 
-        trackHeightPx, 
+      return this.api.getAnnotationData(this.annotationId,
+        range.contig,
+        range.start,
+        range.end,
+        samplingRate,
+        trackHeightPx,
         this.query
-      ).then(result => { 
+      ).then(result => {
         return { range: range, data: result };
+      }, (err) => {
+        // TODO: handle error
       });
     });
 
@@ -68,6 +70,7 @@ class AnnotationTrack extends Track {
     let startBp = null;
     let endBp = null;
     return Promise.all(fetchRanges).then(results => {
+      // TODO: handle error 
       results.forEach(contigResult => {
         const data = contigResult.data;
         const range = contigResult.range;

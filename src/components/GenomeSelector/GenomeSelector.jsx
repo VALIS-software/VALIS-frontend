@@ -126,6 +126,8 @@ class GenomeSelector extends React.Component {
       this.setState({
         genomeTypeValue: 0,
       });
+    }, (err) => {
+      this.appModel.error(this, err);
     });
   }
 

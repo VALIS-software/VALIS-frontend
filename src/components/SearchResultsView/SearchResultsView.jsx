@@ -48,6 +48,8 @@ class SearchResultsView extends React.Component {
             needsRefresh: false,
           });
         }
+      }, (err) => {
+        this.appModel.error(this, err);
       });
       return (
         <div className="navigation-controller-loading">

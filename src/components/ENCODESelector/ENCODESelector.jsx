@@ -86,6 +86,8 @@ class ENCODESelector extends React.Component {
         availableTypes: data,
         genomeTypeValue: newTypeValue
       });
+    }, err => {
+      this.appModel.error(this, err);
     });
   }
 
@@ -118,6 +120,8 @@ class ENCODESelector extends React.Component {
         availableTargets: data,
         checked: newChecked
       });
+    }, err => {
+      this.appModel.error(this, err);
     });
   }
 
@@ -263,6 +267,8 @@ class ENCODESelector extends React.Component {
         availableBiosamples: data,
         biosampleValue: newBiosampleValue,
       });
+    }, err => {
+      this.appModel.error(this, err);
     });
   }
 

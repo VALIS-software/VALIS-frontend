@@ -63,6 +63,8 @@ class EntityDetails extends React.Component<any, any> {
                 details: detailsData.details,
                 relations: detailsData.relations
             });
+        }, (err: object) => {
+            this.appModel.error(this, err);
         });
     }
 

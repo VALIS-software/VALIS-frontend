@@ -128,10 +128,13 @@ class DataTrack extends Track {
         trackHeightPx,
         this.aggregations
       );
+    }, (err) => {
+      // TODO: handle error
     });
 
     // merge results into single cached tile
     return Promise.all(fetchRanges).then(allResponses => {
+      // TODO: validate data and handle errors
       const values = new Float32Array(this.cache.tileSize * 4);
       let min = null;
       let max = null;

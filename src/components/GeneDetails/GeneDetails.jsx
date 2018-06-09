@@ -36,6 +36,8 @@ class GeneDetails extends React.Component {
         details: detailsData.details,
         relations: detailsData.relations,
       });
+    }, (err) => {
+      this.appModel.error(err);
     });
   }
 

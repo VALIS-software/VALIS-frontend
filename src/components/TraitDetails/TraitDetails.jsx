@@ -39,6 +39,8 @@ class TraitDetails extends React.Component {
         details: detailsData.details,
         relations: detailsData.relations,
       });
+    }, (err) => {
+      this.appModel.error(this, err);
     });
   }
 

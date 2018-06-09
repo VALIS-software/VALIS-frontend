@@ -63,6 +63,8 @@ class GWASSelector extends React.Component {
       this.setState({
         traits: data
       });
+    }, (err) => {
+      this.appModel.error(this, err);
     });
   }
 

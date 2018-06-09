@@ -75,6 +75,10 @@ class App extends React.PureComponent<any, any> {
     }
   }
 
+  error = (sender: object, error: object) => {
+    console.log('Application Error', error);
+  }
+
   popView = () => {
     const viewsCopy = this.state ? this.state.views.slice() : [];
     viewsCopy.pop();
