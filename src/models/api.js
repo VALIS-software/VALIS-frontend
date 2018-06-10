@@ -36,7 +36,7 @@ class GenomeAPI {
 		});
 	}
 
-	getAnnotation(annotationId, query=null) {
+	getAnnotation(annotationId, query = null) {
 		const cacheKey = annotationId + JSON.stringify(query);
 		if (ANNOTATION_CACHE[cacheKey]) {
 			return new Promise((resolve, reject) => {
@@ -66,13 +66,13 @@ class GenomeAPI {
 		}
 	}
 
-	getGraphData(graphId, annotationId1, annotationId2, startBp, endBp, samplingRate=1) {
+	getGraphData(graphId, annotationId1, annotationId2, startBp, endBp, samplingRate = 1) {
 		const samplingRateQuery = `?sampling_rate=${samplingRate}`;
 		const requestUrl = `${this.baseUrl}/graphs/${graphId}/${annotationId1}/${annotationId2}/${startBp}/${endBp}${samplingRateQuery}`;
 		return axios.get(requestUrl);
 	}
 
-	getAnnotationData(annotationId, contig, startBp, endBp, samplingRate=1, trackHeightPx=0, query={}) {
+	getAnnotationData(annotationId, contig, startBp, endBp, samplingRate = 1, trackHeightPx = 0, query = {}) {
 		const samplingRateQuery = `?sampling_rate=${samplingRate}&track_height_px=${trackHeightPx}`;
 		const requestUrl = `${this.baseUrl}/annotations/${annotationId}/${contig}/${startBp}/${endBp}${samplingRateQuery}`;
 		return axios.post(requestUrl, query);
@@ -90,17 +90,15 @@ class GenomeAPI {
 				resolve(TRACK_CACHE[trackId]);
 			});
 		} else {
-			return axios.get(`${this.baseUrl}/tracks/${trackId}`).then(data => {
-				// the trackData is not used here but might be useful later
-				const trackData = data.data;
-				const track = new DataTrack(this, trackId);
-				TRACK_CACHE[trackId] = track;
-				return track;
+			const track = new DataTrack(this, trackId);
+			TRACK_CACHE[trackId] = track;
+			return new Promise((resolve, reject) => {
+				resolve(TRACK_CACHE[trackId]);
 			});
 		}
 	}
 
-	getData(trackId, contig, startBp, endBp, samplingRate=1, trackHeightPx=0, aggregations=[]) {
+	getData(trackId, contig, startBp, endBp, samplingRate = 1, trackHeightPx = 0, aggregations = []) {
 		const aggregationStr = aggregations.join(',');
 		const query = `?sampling_rate=${samplingRate}&track_height_px=${trackHeightPx}&aggregations=${aggregationStr}`;
 		const requestUrl = `${this.baseUrl}/tracks/${trackId}/${contig}/${startBp}/${endBp}${query}`;
@@ -126,7 +124,7 @@ class GenomeAPI {
 		});
 	}
 
-	getQueryResults(query, full=false) {
+	getQueryResults(query, full = false) {
 		let requestUrl = `${this.baseUrl}/query/basic`;
 		if (full) {
 			requestUrl = `${this.baseUrl}/query/full`;
@@ -137,7 +135,7 @@ class GenomeAPI {
 	}
 
 	parseSearchQuery(query) {
-		return axios.post(`${this.baseUrl}/search`, {query: query}).then(data => {
+		return axios.post(`${this.baseUrl}/search`, { query: query }).then(data => {
 			return data.data;
 		});
 	}

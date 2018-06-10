@@ -23,6 +23,7 @@ const DATA_SOURCE_EQTL = 'eQTL';
 const DATA_SOURCE_CLINVAR = 'ClinVar';
 const DATA_SOURCE_DBSNP = 'dbSNP';
 const DATA_SOURCE_ENCODE = 'ENCODE';
+const DATA_SOURCE_ENCODEbigwig = 'ENCODEbigwig';
 
 const TRACK_TYPE_SEQUENCE = 'track_type_sequence';
 const TRACK_TYPE_FUNCTIONAL = 'track_type_functional';

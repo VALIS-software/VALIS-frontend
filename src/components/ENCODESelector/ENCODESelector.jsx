@@ -9,9 +9,7 @@ import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
 import Checkbox from "material-ui/Checkbox";
 import Divider from "material-ui/Divider";
-import CheckCircle from "material-ui/svg-icons/action/check-circle";
-import HighlightOff from "material-ui/svg-icons/action/highlight-off";
-import QueryBuilder, { QUERY_TYPE_GENOME } from "../../models/query.js";
+import QueryBuilder from "../../models/query.js";
 import {
   CHROMOSOME_NAMES,
   DATA_SOURCE_ENCODE
@@ -74,9 +72,7 @@ class ENCODESelector extends React.Component {
       // Keep the current selection of type
       let newTypeValue = null;
       if (this.state.genomeTypeValue !== null) {
-        const currentType = this.state.availableTypes[
-          this.state.genomeTypeValue
-        ];
+        const currentType = this.state.availableTypes[this.state.genomeTypeValue];
         newTypeValue = data.indexOf(currentType);
         if (newTypeValue < 0) {
           newTypeValue = null;
