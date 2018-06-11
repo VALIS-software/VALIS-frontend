@@ -1,9 +1,9 @@
 /*
 
-	AppCanvas
+    AppCanvas
     - Manages frame loop
     - Manages root scene node and coordinate system
-	- All coordinates are set in DOM pixel units relative to the canvas (unless marked as otherwise)
+    - All coordinates are set in DOM pixel units relative to the canvas (unless marked as otherwise)
 */
 
 import * as React from "react";
@@ -173,12 +173,12 @@ export class AppCanvas extends React.Component<Props, State> {
     }
 
     /**
-	 * Apply DOM pixel coordinate system to the scene via a transform on the root node
-	 * - Flip z-axis from default OpenGL coordinates so that 1 = in front the screen and -1 is inside the screen
-	 * - z coordinates clip outside of -1 to 1
-	 * - (0, 0) corresponds to the top-left of the canvas
-	 * - (canvas.clientWidth, canvas.clientHeight) corresponds to the bottom left
-	 */
+     * Apply DOM pixel coordinate system to the scene via a transform on the root node
+     * - Flip z-axis from default OpenGL coordinates so that 1 = in front the screen and -1 is inside the screen
+     * - z coordinates clip outside of -1 to 1
+     * - (0, 0) corresponds to the top-left of the canvas
+     * - (canvas.clientWidth, canvas.clientHeight) corresponds to the bottom left
+     */
     protected updateSceneTransform() {
         // width and height should be the _display_ size of the scene in DOM pixel units
         let w_dom = this.props.width;
@@ -193,10 +193,10 @@ export class AppCanvas extends React.Component<Props, State> {
         this.scene.h = h_dom;
     }
 
-	/**
-	 * Given bounds in OpenGL display coordinates (clip-space), return the same bounds in DOM pixel coordinates (relative to the canvas)
-	 * This applies the inverse of the scene transform
-	 */
+    /**
+     * Given bounds in OpenGL display coordinates (clip-space), return the same bounds in DOM pixel coordinates (relative to the canvas)
+     * This applies the inverse of the scene transform
+     */
     protected worldToCanvasSpaceBounds(worldSpaceBounds: { l: number, r: number, t: number, b: number }) {
         return {
             l: (worldSpaceBounds.l - this.scene.x) / this.scene.sx,
