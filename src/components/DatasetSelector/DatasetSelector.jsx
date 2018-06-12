@@ -39,7 +39,6 @@ class DatasetSelector extends React.Component {
     this.api.getTrackInfo().then(dataInfo => {
       this.setState({
         dataInfo: dataInfo,
-        error: false,
       });
     }, err => {
       this.appModel.error(this, err);
