@@ -12,7 +12,8 @@ export enum AppEvent {
   RemoveTrack,
   ReorderTracks,
   LoadingStateChanged,
-  TrackViewSettingsUpdated
+  TrackViewSettingsUpdated,
+  Failure,
 }
 
 export default class AppModel extends EventCreator {
@@ -52,6 +53,8 @@ export default class AppModel extends EventCreator {
       this.tracks = this.tracks.concat([track]);
       this.notifyListeners(AppEvent.AddTrack, track);
       return track;
+    }, (err: object) => {
+      this.error(this, err);
     });
   };
 
@@ -69,6 +72,8 @@ export default class AppModel extends EventCreator {
       this.tracks = this.tracks.concat([track]);
       this.notifyListeners(AppEvent.AddTrack, track);
       return track;
+    }, (err: object) => {
+      this.notifyListeners(AppEvent.Failure, err);
     });
   };
 
@@ -88,8 +93,17 @@ export default class AppModel extends EventCreator {
         this.overlays = this.overlays.concat([overlay]);
         this.notifyListeners(AppEvent.AddOverlay, overlay);
         return overlay;
+      }, (err: object) => {
+        this.error(this, err);
       });
   };
+
+  error = (sender: object, error: object) => {
+    this.notifyListeners(AppEvent.Failure, {
+      sender: sender,
+      error: error,
+    });
+  }
 
   public indexOfTrack = (trackViewGuid: any) => {
     const index = _.findIndex(this.tracks, (item: any) => {

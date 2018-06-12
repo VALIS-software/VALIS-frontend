@@ -6,12 +6,11 @@ import * as PropTypes from 'prop-types';
 import MenuItem from 'material-ui/MenuItem';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
-import IconButton from 'material-ui/IconButton';
 import RaisedButton from 'material-ui/RaisedButton';
 import DatasetSelector from '../DatasetSelector/DatasetSelector.jsx';
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
 import EntityDetails from '../EntityDetails/EntityDetails';
-import TokenBox  from '../Shared/TokenBox/TokenBox';
+import TokenBox from '../Shared/TokenBox/TokenBox';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import QueryBuilder, { QUERY_TYPE_INFO } from '../../models/query.js';
@@ -65,38 +64,6 @@ class Header extends React.Component {
   addDatasetBrowser = () => {
     const view = (<DatasetSelector viewModel={this.props.viewModel} appModel={this.props.model} />);
     this.props.viewModel.pushView('Select Dataset', null, view);
-  }
-
-  componentDidMount() {
-    // fill the autocomplete with all available trait descriptions
-    const builder = new QueryBuilder();
-    builder.newInfoQuery();
-    builder.filterType('trait');
-    const infoQuery = builder.build();
-    this.api.getDistinctValues('name', infoQuery).then(data => {
-      const traitsSource = [];
-      data.forEach(t => {
-        traitsSource.push({ textKey: t, valueKey: 0 });
-      });
-      const dataSource = this.state.dataSource.concat(traitsSource);
-      this.setState({
-        dataSource: dataSource,
-      });
-    });
-    // fill the autocomplete with all gene names
-    builder.newGenomeQuery();
-    builder.filterType('gene');
-    const geneQuery = builder.build();
-    this.api.getQueryResults(geneQuery).then(data => {
-      const geneSource = [];
-      data.forEach(d => {
-        geneSource.push({ textKey: d.name, valueKey: 1 });
-      });
-      const dataSource = this.state.dataSource.concat(geneSource);
-      this.setState({
-        dataSource: dataSource,
-      });
-    });
   }
 
   render() {

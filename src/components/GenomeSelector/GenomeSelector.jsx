@@ -9,6 +9,7 @@ import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import QueryBuilder from '../../models/query.js';
 import { CHROMOSOME_NAMES } from '../../helpers/constants.js';
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 
 // Styles
 import './GenomeSelector.scss';
@@ -126,10 +127,18 @@ class GenomeSelector extends React.Component {
       this.setState({
         genomeTypeValue: 0,
       });
+    }, (err) => {
+      this.appModel.error(this, err);
+      this.setState({
+        error: err,
+      });
     });
   }
 
   render() {
+    if (this.state.error) {
+      return (<ErrorDetails error={this.state.error} />);
+    }
     return (
       <div className="track-editor">
         <TextField

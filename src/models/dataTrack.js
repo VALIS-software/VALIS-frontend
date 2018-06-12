@@ -53,6 +53,7 @@ class DataTrack extends Track {
     };
     tiles.forEach(tile => {
       if (basePair >= tile.range[0] && basePair <= tile.range[1]) {
+        if (!tile.tile) return;
         const totalRange = tile.tile.tileRange[1] - tile.tile.tileRange[0];
         const idx = Math.round(
           this.cache.tileSize *
@@ -128,10 +129,13 @@ class DataTrack extends Track {
         trackHeightPx,
         this.aggregations
       );
+    }, (err) => {
+      // TODO: handle error
     });
 
     // merge results into single cached tile
     return Promise.all(fetchRanges).then(allResponses => {
+      // TODO: validate data and handle errors
       const values = new Float32Array(this.cache.tileSize * 4);
       let min = null;
       let max = null;

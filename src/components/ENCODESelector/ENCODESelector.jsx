@@ -12,6 +12,8 @@ import Divider from "material-ui/Divider";
 import CheckCircle from "material-ui/svg-icons/action/check-circle";
 import HighlightOff from "material-ui/svg-icons/action/highlight-off";
 import QueryBuilder, { QUERY_TYPE_GENOME } from "../../models/query.js";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+
 import {
   CHROMOSOME_NAMES,
   DATA_SOURCE_ENCODE
@@ -86,6 +88,8 @@ class ENCODESelector extends React.Component {
         availableTypes: data,
         genomeTypeValue: newTypeValue
       });
+    }, err => {
+      this.appModel.error(this, err);
     });
   }
 
@@ -118,6 +122,8 @@ class ENCODESelector extends React.Component {
         availableTargets: data,
         checked: newChecked
       });
+    }, err => {
+      this.appModel.error(this, err);
     });
   }
 
@@ -263,10 +269,18 @@ class ENCODESelector extends React.Component {
         availableBiosamples: data,
         biosampleValue: newBiosampleValue,
       });
+    }, err => {
+      this.appModel.error(this, err);
+      this.setState({
+        error: err,
+      });
     });
   }
 
   render() {
+    if (this.state.error) {
+      return (<ErrorDetails error={this.state.error} />);
+    }
     const {
       availableTypes,
       availableBiosamples,

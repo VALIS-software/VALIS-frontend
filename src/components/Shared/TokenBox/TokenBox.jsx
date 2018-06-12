@@ -9,6 +9,7 @@ import IconButton from 'material-ui/IconButton';
 import ActionSearch from 'material-ui/svg-icons/action/search';
 import ContentClear from 'material-ui/svg-icons/content/clear';
 import SearchResultsView from '../../SearchResultsView/SearchResultsView.jsx';
+import ErrorDetails from "../ErrorDetails/ErrorDetails.jsx";
 
 import './TokenBox.scss';
 
@@ -107,6 +108,11 @@ class TokenBox extends React.Component {
       if (!result.query && openOnLoad) {
         this.refs.autoComplete.refs.searchTextField.input.focus();
       }
+    }, (err) => {
+      this.props.appModel.error(this, err);
+      this.setState({
+        error: err,
+      });
     });
   }
 
@@ -167,6 +173,9 @@ class TokenBox extends React.Component {
   }
 
   render() {
+    if (this.state.error) {
+      return (<ErrorDetails error={this.state.error} />);
+    }
     const elements = [];
     for (let i = 0; i < this.state.tokens.length; i++) {
       const token = this.state.tokens[i];

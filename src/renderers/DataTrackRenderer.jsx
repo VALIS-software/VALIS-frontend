@@ -44,6 +44,9 @@ export default class DataTrackRenderer {
 
     // assuming all tiles have the same dataType
     // do we need to mix dataTypes within a single track? If so, we need to group draw calls but shader before rendering
+    if (!tiles[0].tile) {
+      return;
+    }
     const dataType = tiles[0].tile.data.dataType;
 
     let c1 = COLOR1;
