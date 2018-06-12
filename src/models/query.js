@@ -81,6 +81,14 @@ class QueryBuilder {
     this.query.filters['info.types'] = type;
   }
 
+  filterAssay(assay) {
+    this.query.filters['info.assay'] = assay;
+  }
+
+  filterOutType(outType) {
+    this.query.filters['info.outtype'] = outType;
+  }
+
   searchText(text) {
     this.query.filters.$text = text;
   }
