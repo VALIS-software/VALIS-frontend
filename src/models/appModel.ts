@@ -54,7 +54,7 @@ export default class AppModel extends EventCreator {
       this.notifyListeners(AppEvent.AddTrack, track);
       return track;
     }, (err: object) => {
-      this.notifyListeners(AppEvent.Failure, err);
+      this.error(this, err);
     });
   };
 
@@ -94,9 +94,16 @@ export default class AppModel extends EventCreator {
         this.notifyListeners(AppEvent.AddOverlay, overlay);
         return overlay;
       }, (err: object) => {
-        this.notifyListeners(AppEvent.Failure, err);
+        this.error(this, err);
       });
   };
+
+  error = (sender: object, error: object) => {
+    this.notifyListeners(AppEvent.Failure, {
+      sender: sender,
+      error: error,
+    });
+  }
 
   public indexOfTrack = (trackViewGuid: any) => {
     const index = _.findIndex(this.tracks, (item: any) => {

@@ -72,6 +72,10 @@ class AnnotationTrack extends Track {
     return Promise.all(fetchRanges).then(results => {
       // TODO: handle error 
       results.forEach(contigResult => {
+        if (!contigResult) {
+          this.notifyListeners(TRACK_EVENT_LOADING, false);
+          return null;
+        }
         const data = contigResult.data;
         const range = contigResult.range;
         const contigStart = CHROMOSOME_START_BASE_PAIRS[Util.chromosomeNameToIndex(range.contig)];

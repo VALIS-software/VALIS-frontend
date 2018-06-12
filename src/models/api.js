@@ -14,7 +14,7 @@ const chaos = (axios, probabilityOfFailure) => {
 	const oldPost = axios.post;
 	axios.get = (x) => {
 		if (Math.random() < probabilityOfFailure) {
-			return Promise.reject(new Error('failure'));
+			return Promise.reject({ errorMsg: 'mock error' });
 		} else {
 			return oldGet(x);
 		}
@@ -22,7 +22,7 @@ const chaos = (axios, probabilityOfFailure) => {
 
 	axios.post = (x, d) => {
 		if (Math.random() < probabilityOfFailure) {
-			return Promise.reject(new Error('failure'));
+			return Promise.reject({ errorMsg: 'mock error' });
 		} else {
 			return oldPost(x, d);
 		}

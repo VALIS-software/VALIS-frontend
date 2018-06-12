@@ -108,7 +108,7 @@ class TokenBox extends React.Component {
         this.refs.autoComplete.refs.searchTextField.input.focus();
       }
     }, (err) => {
-      this.appModel.error(this, err);
+      this.props.appModel.error(this, err);
     });
   }
 

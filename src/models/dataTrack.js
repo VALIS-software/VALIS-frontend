@@ -53,6 +53,7 @@ class DataTrack extends Track {
     };
     tiles.forEach(tile => {
       if (basePair >= tile.range[0] && basePair <= tile.range[1]) {
+        if (!tile.tile) return;
         const totalRange = tile.tile.tileRange[1] - tile.tile.tileRange[0];
         const idx = Math.round(
           this.cache.tileSize *
