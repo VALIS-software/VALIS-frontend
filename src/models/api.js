@@ -7,7 +7,7 @@ import AnnotationTrack from './annotationTrack.js';
 const TRACK_CACHE = {};
 const GRAPH_CACHE = {};
 const ANNOTATION_CACHE = {};
-
+const CHAOS_ENABLED = false;
 
 const chaos = (axios, probabilityOfFailure) => {
 	const oldGet = axios.get;
@@ -30,8 +30,11 @@ const chaos = (axios, probabilityOfFailure) => {
 	return axios;
 }
 
+let axios = require('axios');
 
-const axios = chaos(require('axios'), 0.5);
+if (CHAOS_ENABLED) {
+	axios = chaos(axios, 0.5);
+}
 
 class GenomeAPI {
 	constructor(baseUrl) {
