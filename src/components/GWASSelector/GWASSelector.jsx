@@ -7,6 +7,7 @@ import Slider from "material-ui/Slider";
 import RaisedButton from "material-ui/RaisedButton/RaisedButton";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 import QueryBuilder, { QUERY_TYPE_INFO } from "../../models/query.js";
 import {
   DATA_SOURCE_GWAS,
@@ -65,6 +66,9 @@ class GWASSelector extends React.Component {
       });
     }, (err) => {
       this.appModel.error(this, err);
+      this.setState({
+        error: err,
+      });
     });
   }
 
@@ -156,6 +160,9 @@ class GWASSelector extends React.Component {
   }
 
   render() {
+    if (this.state.error) {
+      return (<ErrorDetails error={this.state.error} />);
+    }
     return (
       <div className="track-editor">
         <TextField

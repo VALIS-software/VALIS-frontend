@@ -10,7 +10,7 @@ import SNPDetails from '../SNPDetails/SNPDetails.jsx';
 import Util from '../../helpers/util.js';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import faExternalLinkSquareAlt from '@fortawesome/fontawesome-free-solid/faExternalLinkSquareAlt';
-
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 
 // Styles
 import './TraitDetails.scss';
@@ -41,10 +41,16 @@ class TraitDetails extends React.Component {
       });
     }, (err) => {
       this.appModel.error(this, err);
+      this.setState({
+        error: err,
+      });
     });
   }
 
   render() {
+    if (this.state.error) {
+      return (<ErrorDetails error={this.state.error} />);
+    }
     if (this.state.currentTraitId !== this.state.loadedTraitId) {
       this.loadTraitDetails();
       return (<div />);

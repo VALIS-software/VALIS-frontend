@@ -8,6 +8,7 @@ import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton.jsx';
 import Util from '../../helpers/util.js';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import faExternalLinkSquareAlt from '@fortawesome/fontawesome-free-solid/faExternalLinkSquareAlt';
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 
 // Styles
 import './GeneDetails.scss';
@@ -38,10 +39,16 @@ class GeneDetails extends React.Component {
       });
     }, (err) => {
       this.appModel.error(err);
+      this.setState({
+        error: err,
+      });
     });
   }
 
   render() {
+    if (this.state.error) {
+      return (<ErrorDetails error={this.state.error} />);
+    }
     if (this.state.currentGeneId !== this.state.loadedGeneId) {
       this.loadGeneDetails();
       return (<div />);

@@ -7,7 +7,7 @@ import TrackSelector from "../TrackSelector/TrackSelector.jsx";
 import ENCODESelector from "../ENCODESelector/ENCODESelector.jsx";
 import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector.jsx";
 import DataListItem from "../DataListItem/DataListItem.jsx";
-
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 import {
   TRACK_TYPE_SEQUENCE,
   TRACK_TYPE_FUNCTIONAL,
@@ -38,10 +38,14 @@ class DatasetSelector extends React.Component {
   componentDidMount() {
     this.api.getTrackInfo().then(dataInfo => {
       this.setState({
-        dataInfo: dataInfo
+        dataInfo: dataInfo,
+        error: false,
       });
     }, err => {
       this.appModel.error(this, err);
+      this.setState({
+        error: err,
+      });
     });
   }
 
@@ -106,6 +110,9 @@ class DatasetSelector extends React.Component {
   render() {
     if (!this.state.dataInfo) {
       return <div />;
+    }
+    if (this.state.error) {
+      return (<ErrorDetails error={this.state.error} />);
     }
     const dataSetSelected = this.dataSetSelected;
     const dataInfo = this.state.dataInfo;

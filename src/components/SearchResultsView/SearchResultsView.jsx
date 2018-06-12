@@ -5,6 +5,7 @@ import DataListItem from "../DataListItem/DataListItem.jsx";
 import EntityDetails from "../EntityDetails/EntityDetails";
 import ZoomToButton from "../ZoomToButton/ZoomToButton.jsx";
 import CircularProgress from "material-ui/CircularProgress";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 
 // Styles
 import "./SearchResultsView.scss";
@@ -37,6 +38,9 @@ class SearchResultsView extends React.Component {
   }
 
   render() {
+    if (this.state.error) {
+      return (<ErrorDetails error={this.state.error} />);
+    }
     if (this.state.needsRefresh) {
       this.api.getQueryResults(this.state.query).then(results => {
         if (results.length === 1) {
@@ -50,6 +54,9 @@ class SearchResultsView extends React.Component {
         }
       }, (err) => {
         this.appModel.error(this, err);
+        this.setState({
+          error: err,
+        });
       });
       return (
         <div className="navigation-controller-loading">
