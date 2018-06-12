@@ -311,11 +311,6 @@ class MultiTrackViewer extends React.Component<Props, any> {
       };
       renderFrame();
     });
-
-    window.addEventListener('resize', () => {
-      // Hack WebGL resizing not working as I want it to :/
-      location.reload();
-    });
   }
 
 

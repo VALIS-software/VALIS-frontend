@@ -13,6 +13,7 @@ import CircularProgress from "material-ui/CircularProgress";
 import DataListItem from "../DataListItem/DataListItem.jsx";
 import ZoomToButton from "../Shared/ZoomToButton/ZoomToButton.jsx";
 import Util from "../../helpers/util.js";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 
 // Styles
 import "./EntityDetails.scss";
@@ -63,6 +64,11 @@ class EntityDetails extends React.Component<any, any> {
                 details: detailsData.details,
                 relations: detailsData.relations
             });
+        }, (err: object) => {
+            this.appModel.error(this, err);
+            this.setState({
+                error: err,
+            });
         });
     }
 
@@ -71,6 +77,9 @@ class EntityDetails extends React.Component<any, any> {
     }
 
     render() {
+        if (this.state.error) {
+            return (<ErrorDetails error={this.state.error} />);
+        }
         if (!this.state.details) {
             return (
                 <div className="navigation-controller-loading">

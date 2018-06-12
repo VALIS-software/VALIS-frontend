@@ -9,7 +9,7 @@ import SNPDetails from '../SNPDetails/SNPDetails.jsx';
 import Util from '../../helpers/util.js';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import faExternalLinkSquareAlt from '@fortawesome/fontawesome-free-solid/faExternalLinkSquareAlt';
-
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 
 // Styles
 import './GWASDetails.scss';
@@ -38,10 +38,18 @@ class GWASDetails extends React.Component {
         details: detailsData.details,
         relations: detailsData.relations,
       });
+    }, (err) => {
+      this.appModel.error(this, err);
+      this.setState({
+        error: err,
+      });
     });
   }
 
   render() {
+    if (this.state.error) {
+      return (<ErrorDetails error={this.state.error} />);
+    }
     if (this.state.currentAssocId !== this.state.loadedAssocId) {
       this.loadGwasDetails();
       return (<div />);

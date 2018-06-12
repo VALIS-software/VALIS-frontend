@@ -7,8 +7,34 @@ import AnnotationTrack from './annotationTrack.js';
 const TRACK_CACHE = {};
 const GRAPH_CACHE = {};
 const ANNOTATION_CACHE = {};
+const CHAOS_ENABLED = false;
 
-const axios = require('axios');
+const chaos = (axios, probabilityOfFailure) => {
+	const oldGet = axios.get;
+	const oldPost = axios.post;
+	axios.get = (x) => {
+		if (Math.random() < probabilityOfFailure) {
+			return Promise.reject({ errorMsg: 'mock error' });
+		} else {
+			return oldGet(x);
+		}
+	}
+
+	axios.post = (x, d) => {
+		if (Math.random() < probabilityOfFailure) {
+			return Promise.reject({ errorMsg: 'mock error' });
+		} else {
+			return oldPost(x, d);
+		}
+	}
+	return axios;
+}
+
+let axios = require('axios');
+
+if (CHAOS_ENABLED) {
+	axios = chaos(axios, 0.5);
+}
 
 class GenomeAPI {
 	constructor(baseUrl) {

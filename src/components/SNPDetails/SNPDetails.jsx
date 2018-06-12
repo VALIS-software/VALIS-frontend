@@ -9,6 +9,7 @@ import EntityDetails from '../EntityDetails/EntityDetails';
 import GWASDetails from '../GWASDetails/GWASDetails.jsx';
 import QueryBuilder, { QUERY_TYPE_INFO } from '../../models/query.js';
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 import Util from '../../helpers/util.js';
 // Styles
 import './SNPDetails.scss';
@@ -93,10 +94,15 @@ class SNPDetails extends React.Component {
         details: detailsData.details,
         relations: detailsData.relations,
       });
+    }, (err) => {
+      this.appModel.error(this, err);
     });
   }
 
   render() {
+    if (this.state.error) {
+      return (<ErrorDetails error={this.state.error} />);
+    }
     if (this.state.currentSnpId !== this.state.loadedSnpId) {
       this.loadSnpDetails();
       return (<div />);

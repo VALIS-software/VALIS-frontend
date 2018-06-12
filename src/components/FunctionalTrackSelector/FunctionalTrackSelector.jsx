@@ -9,6 +9,7 @@ import MenuItem from "material-ui/MenuItem";
 import Divider from "material-ui/Divider";
 import { RadioButton, RadioButtonGroup } from 'material-ui/RadioButton';
 import QueryBuilder from "../../models/query.js";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 
 // Styles
 import "./FunctionalTrackSelector.scss";
@@ -59,6 +60,8 @@ class FunctionalTrackSelector extends React.Component {
         availableTypes: data,
         outTypeValue: newTypeValue
       });
+    }, err => {
+      this.appModel.error(this, err);
     });
   }
 
@@ -87,6 +90,11 @@ class FunctionalTrackSelector extends React.Component {
       this.setState({
         availableBiosamples: data,
         biosampleValue: newBiosampleValue,
+      });
+    }, err => {
+      this.appModel.error(this, err);
+      this.setState({
+        error: err,
       });
     });
   }
@@ -117,6 +125,8 @@ class FunctionalTrackSelector extends React.Component {
         availableAssays: data,
         assayValue: newAssayValue
       });
+    }, err => {
+      this.appModel.error(this, err);
     });
   }
 
@@ -147,6 +157,8 @@ class FunctionalTrackSelector extends React.Component {
         availableAccessions: availableAccessions,
         accessionValue: 0
       });
+    }, err => {
+      this.appModel.error(this, err);
     });
   }
 
@@ -223,6 +235,9 @@ class FunctionalTrackSelector extends React.Component {
   }
 
   render() {
+    if (this.state.error) {
+      return (<ErrorDetails error={this.state.error} />);
+    }
     const {
       availableTypes,
       availableBiosamples,

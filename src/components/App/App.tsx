@@ -4,7 +4,9 @@ import MuiThemeProvider from "material-ui/styles/MuiThemeProvider";
 import LinearProgress from "material-ui/LinearProgress";
 
 // Components
-
+import IconButton from 'material-ui/IconButton';
+import FlatButton from 'material-ui/FlatButton';
+import ContentReport from 'material-ui/svg-icons/content/report';
 import Header from "../Header/Header.jsx";
 import EntityDetails from "../EntityDetails/EntityDetails";
 import TrackViewSettings from "../TrackViewSettings/TrackViewSettings.jsx";
@@ -14,6 +16,7 @@ import SNPDetails from '../SNPDetails/SNPDetails.jsx';
 import GWASDetails from '../GWASDetails/GWASDetails.jsx';
 import GeneDetails from '../GeneDetails/GeneDetails.jsx';
 import TraitDetails from '../TraitDetails/TraitDetails.jsx';
+import Dialog from 'material-ui/Dialog';
 import { ENTITY_TYPE } from '../../helpers/constants.js';
 
 import AppModel, { AppEvent } from "../../models/appModel";
@@ -121,11 +124,22 @@ class App extends React.PureComponent<any, any> {
     });
   }
 
+  reportFailure = (evt: any) => {
+    const error: object = evt.data.error;
+    let newErrorList = this.state.errors.slice(0);
+    newErrorList.push(error);
+    this.setState({
+      errors: newErrorList,
+    });
+  }
+
   componentDidMount() {
     this.setState({
       tracks: [],
       views: [],
       loading: false,
+      errors: [],
+      displayErrors: false,
     });
 
     this.viewModel = new ViewModel();
@@ -138,15 +152,28 @@ class App extends React.PureComponent<any, any> {
     builder.filterType('gene');
     const query = builder.build();
     this.appModel.addAnnotationTrack('GRCh38 Genes', query);
-
+    this.appModel.addListener(this.reportFailure, AppEvent.Failure);
     this.appModel.addListener(this.updateLoadingState, AppEvent.LoadingStateChanged);
     this.viewModel.addListener(this.clickTrackElement, VIEW_EVENT_TRACK_ELEMENT_CLICKED);
     this.viewModel.addListener(this.showTrackSettings, VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS);
+
     // this.viewModel.addListener(this.dataSetSelected, VIEW_EVENT_DATA_SET_SELECTED); //! method doesn't exist
     this.viewModel.addListener(this.popView, VIEW_EVENT_POP_VIEW);
     this.viewModel.addListener(this.pushView, VIEW_EVENT_PUSH_VIEW);
     this.viewModel.addListener(this.closeView, VIEW_EVENT_CLOSE_VIEW);
     this.viewModel.addListener(this.displayEntityDetails, VIEW_EVENT_DISPLAY_ENTITY_DETAILS);
+  }
+
+  displayErrors = () => {
+    this.setState({
+      displayErrors: true,
+    })
+  }
+
+  hideErrors = () => {
+    this.setState({
+      displayErrors: false,
+    })
   }
 
   render() {
@@ -155,6 +182,35 @@ class App extends React.PureComponent<any, any> {
     }
     const color = this.state.loading ? '' : 'transparent';
     const progress = (<LinearProgress color={color} />);
+
+    const errorButton = this.state.errors.length > 0 ? (<div className="error-button"><IconButton onClick={this.displayErrors} tooltip="Clear"><ContentReport /></IconButton></div>) : (<div />);
+
+    let errorDialog = (<div />);
+    if (this.state.errors.length) {
+      let id = 0;
+      const errorList = this.state.errors.map((error: object) => {
+        return (<div key={'error' + (++id)}>{JSON.stringify(error)}<hr /></div>);
+      });
+
+
+      const actions = [<FlatButton
+        label="Cancel"
+        primary={true}
+        onClick={this.hideErrors}
+      />];
+
+      errorDialog = (<Dialog
+        title="Errors"
+        modal={false}
+        open={this.state.displayErrors}
+        onRequestClose={this.hideErrors}
+        autoScrollBodyContent={true}
+        actions={actions}
+      >
+        {errorList}
+      </Dialog>);
+    }
+
     const views = this.state.views;
 
     return (
@@ -164,6 +220,8 @@ class App extends React.PureComponent<any, any> {
           {progress}
           <MultiTrackViewer model={this.appModel} viewModel={this.viewModel} />
           <NavigationController viewModel={this.viewModel} views={views} />
+          {errorButton}
+          {errorDialog}
         </div>
       </MuiThemeProvider>);
   }

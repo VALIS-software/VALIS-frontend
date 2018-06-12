@@ -10,6 +10,8 @@ import MenuItem from "material-ui/MenuItem";
 import Checkbox from "material-ui/Checkbox";
 import Divider from "material-ui/Divider";
 import QueryBuilder from "../../models/query.js";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+
 import {
   CHROMOSOME_NAMES,
   DATA_SOURCE_ENCODE
@@ -55,6 +57,41 @@ class ENCODESelector extends React.Component {
     };
   }
 
+  updateAvailableBiosamples = () => {
+    if (this.selectedBiosample) return;
+    const builder = new QueryBuilder();
+    builder.newInfoQuery();
+    builder.filterSource(DATA_SOURCE_ENCODE);
+    builder.filterType('ENCODE_accession');
+    if (this.selectedType) {
+      builder.filterInfotypes(this.selectedType);
+    }
+    if (this.selectedTargets) {
+      builder.filterTargets(this.selectedTargets);
+    }
+    const infoQuery = builder.build();
+    this.api.getDistinctValues('info.biosample', infoQuery).then(data => {
+      // Keep the current selection of biosample
+      let newBiosampleValue = null;
+      if (this.state.biosampleValue !== null) {
+        const currentBiosample = this.state.availableBiosamples[this.state.biosampleValue];
+        newBiosampleValue = data.indexOf(currentBiosample);
+        if (newBiosampleValue < 0) {
+          newBiosampleValue = null;
+        }
+      }
+      this.setState({
+        availableBiosamples: data,
+        biosampleValue: newBiosampleValue,
+      });
+    }, err => {
+      this.appModel.error(this, err);
+      this.setState({
+        error: err,
+      });
+    });
+  }
+
   updateAvailableTypes = () => {
     if (this.selectedType) return;
     const builder = new QueryBuilder();
@@ -82,6 +119,8 @@ class ENCODESelector extends React.Component {
         availableTypes: data,
         genomeTypeValue: newTypeValue
       });
+    }, err => {
+      this.appModel.error(this, err);
     });
   }
 
@@ -114,6 +153,8 @@ class ENCODESelector extends React.Component {
         availableTargets: data,
         checked: newChecked
       });
+    }, err => {
+      this.appModel.error(this, err);
     });
   }
 
@@ -219,7 +260,6 @@ class ENCODESelector extends React.Component {
     this.appModel.addAnnotationTrack(this.state.title, query);
   }
 
-
   componentDidMount() {
     this.availableChromoNames = ['Any'].concat(CHROMOSOME_NAMES);
     this.chromoNameItems = [];
@@ -232,37 +272,10 @@ class ENCODESelector extends React.Component {
     this.updateAvailableTargets();
   }
 
-  updateAvailableBiosamples = () => {
-    if (this.selectedBiosample) return;
-    const builder = new QueryBuilder();
-    builder.newInfoQuery();
-    builder.filterSource(DATA_SOURCE_ENCODE);
-    builder.filterType('ENCODE_accession');
-    if (this.selectedType) {
-      builder.filterInfotypes(this.selectedType);
-    }
-    if (this.selectedTargets) {
-      builder.filterTargets(this.selectedTargets);
-    }
-    const infoQuery = builder.build();
-    this.api.getDistinctValues('info.biosample', infoQuery).then(data => {
-      // Keep the current selection of biosample
-      let newBiosampleValue = null;
-      if (this.state.biosampleValue !== null) {
-        const currentBiosample = this.state.availableBiosamples[this.state.biosampleValue];
-        newBiosampleValue = data.indexOf(currentBiosample);
-        if (newBiosampleValue < 0) {
-          newBiosampleValue = null;
-        }
-      }
-      this.setState({
-        availableBiosamples: data,
-        biosampleValue: newBiosampleValue,
-      });
-    });
-  }
-
   render() {
+    if (this.state.error) {
+      return (<ErrorDetails error={this.state.error} />);
+    }
     const {
       availableTypes,
       availableBiosamples,
