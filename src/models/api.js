@@ -3,7 +3,6 @@ import { LOCAL_API_URL } from '../helpers/constants.js';
 import DataTrack from './dataTrack.js';
 import GraphOverlay from './graphOverlay.js';
 import AnnotationTrack from './annotationTrack.js';
-import { start } from 'repl';
 
 const TRACK_CACHE = {};
 const GRAPH_CACHE = {};
