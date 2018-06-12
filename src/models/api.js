@@ -3,6 +3,7 @@ import { LOCAL_API_URL } from '../helpers/constants.js';
 import DataTrack from './dataTrack.js';
 import GraphOverlay from './graphOverlay.js';
 import AnnotationTrack from './annotationTrack.js';
+import { start } from 'repl';
 
 const TRACK_CACHE = {};
 const GRAPH_CACHE = {};
@@ -150,10 +151,20 @@ class GenomeAPI {
 		});
 	}
 
-	getQueryResults(query, full = false) {
+	getQueryResults(query, full = false, startIdx = null, endIdx = null) {
 		let requestUrl = `${this.baseUrl}/query/basic`;
 		if (full) {
 			requestUrl = `${this.baseUrl}/query/full`;
+		}
+		const options = [];
+		if (startIdx !== null) {
+			options.push(`result_start=${startIdx}`);
+		}
+		if (endIdx !== null) {
+			options.push(`result_end=${endIdx}`);
+		}
+		if (options.length > 0) {
+			requestUrl = `${requestUrl}?` + options.join('&');
 		}
 		return axios.post(requestUrl, query).then(data => {
 			return data.data;

@@ -140,10 +140,10 @@ class FunctionalTrackSelector extends React.Component {
     builder.filterAssay(this.selectedAssay);
     builder.setLimit(10);
     const infoQuery = builder.build();
-    this.api.getQueryResults(infoQuery).then(data => {
+    this.api.getQueryResults(infoQuery).then(results => {
       // Keep the current selection of assay
       const availableAccessions = [];
-      for (const d of data) {
+      for (const d of results.data) {
         availableAccessions.push(d.name);
       }
       // check default value

@@ -43,12 +43,12 @@ class SearchResultsView extends React.Component {
     }
     if (this.state.needsRefresh) {
       this.api.getQueryResults(this.state.query).then(results => {
-        if (results.length === 1) {
+        if (results.results_total === 1) {
           this.viewModel.popView();
-          this.resultSelected(results[0]);
+          this.resultSelected(results.data[0]);
         } else {
           this.setState({
-            results: results,
+            results: results.data,
             needsRefresh: false,
           });
         }
