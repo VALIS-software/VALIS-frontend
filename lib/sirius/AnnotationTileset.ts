@@ -15,7 +15,8 @@ export enum GeneType {
 	Pseudo, // non-functional imperfect copy
 }
 
-export type Gene = { 
+export type Gene = {
+	name: string,
 	startIndex: number,
 	endIndex: number,
 	type: GeneType,
@@ -40,6 +41,7 @@ export enum TranscriptType {
  * Mature transcript – transcript after processing
  */
 export type Transcript = {
+	name: string,
 	startIndex: number,
 	endIndex: number,
 	type: TranscriptType,
@@ -55,6 +57,7 @@ export enum TranscriptComponentType {
 }
 
 export type TranscriptComponent = {
+	name: string,
 	startIndex: number,
 	endIndex: number,
 	type: TranscriptComponentType,
@@ -155,6 +158,7 @@ export class AnnotationTileset {
 				.map((c) => this.featureToTranscript(c) as Transcript);
 
 			return {
+				name: feature.name as string,
 				startIndex: feature.start - 1,
 				endIndex: feature.end - 1,
 				type: geneType,
@@ -175,6 +179,7 @@ export class AnnotationTileset {
 				.map((c) => this.featureToTranscriptComponent(c) as TranscriptComponent);
 
 			return {
+				name: feature.name as string,
 				startIndex: feature.start - 1,
 				endIndex: feature.end - 1,
 				type: transcriptType,
@@ -192,6 +197,7 @@ export class AnnotationTileset {
 
 		if (componentType !== undefined) {
 			let component: TranscriptComponent = {
+				name: feature.name as string,
 				startIndex: feature.start - 1,
 				endIndex: feature.end - 1,
 				type: componentType,
