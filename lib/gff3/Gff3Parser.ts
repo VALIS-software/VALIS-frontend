@@ -1,7 +1,7 @@
 import Gff3LineParser, { Attributes, Phase, Strand } from './Gff3LineParser';
 
 export type Gff3 = {
-    version?: string,
+    version: string,
     
     featureOntologyUri?: Array<string>,
     attributeOntologyUri?: Array<string>,
@@ -39,6 +39,7 @@ export type Callbacks = {
     onFeatureComplete: (feature: Feature) => void,
     onComplete: (gff3: Gff3) => void,
     onError: (reason: string) => void,
+    onComment: (comment: string) => void,
 }
 
 export class Gff3Parser {
@@ -48,6 +49,7 @@ export class Gff3Parser {
         onFeatureComplete: () => { },
         onComplete: () => { },
         onError: () => { },
+        onComment: () => { },
     }
 
     constructor(callbacks: Partial<Callbacks>) {
@@ -76,7 +78,7 @@ export class Gff3Parser {
     protected reset() {
         // initialize parser state
         this.gff3 = {
-            version: undefined,
+            version: '3', // default to 3, may be overridden
             sequences: {}
         }
 
@@ -98,6 +100,7 @@ export class Gff3Parser {
                     buildName: buildName,
                 }
             },
+            onComment: this.callbacks.onComment,
 
             // feature handling
             onFeature: this.defineFeature,
