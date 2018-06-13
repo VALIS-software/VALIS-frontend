@@ -4,22 +4,7 @@
 
 import axios, { AxiosRequestConfig, CancelToken } from 'axios';
 
-// @! from Gff3Parser
-export enum Strand {
-    None,
-    Unknown,
-    Positive,
-    Negative,
-}
-
-export type Feature = {
-    name: string | undefined,
-    type: string,
-    children: Array<Feature>,
-    start: number,
-    end: number,
-    strand: Strand,
-}
+import Gene from './AnnotationTileset';
 
 export class SiriusApi {
 
@@ -31,7 +16,7 @@ export class SiriusApi {
         sequenceId: string,
         startBaseIndex: number,
         span: number,
-    ): Promise<Array<Feature>> {
+    ): Promise<Array<Gene>> {
         let jsonPath = `/data/${sequenceId}/annotation/${startBaseIndex},${span}.json`;
         return axios.get(jsonPath).then((a) => {
             return a.data;
