@@ -20,55 +20,70 @@ import AnnotationTileset from '../../../lib/sirius/AnnotationTileset';
 import Gff3Parser, { Feature } from '../../../lib/gff3/Gff3Parser';
 import { Terminal } from './Terminal';
 
-let outputDirectory = '../../data/chromosome1/annotation';
-let inputPath = 'data/Homo_sapiens.GRCh38.92.chromosome.1.gff3';
+// settings
+const outputDirectory = '../../data/chromosome1/annotation';
+const inputPath = 'data/Homo_sapiens.GRCh38.92.chromosome.1.gff3';
+const tileSize = 1 << 20; // ~1 million
+const featureTypeBlacklist = ['pseudogene', 'biological_region', 'chromosome'];
 
+// initialize
 let unknownFeatureTypes: { [key: string]: number }  = {};
+let skippedFeatureTypes: { [key: string]: number }  = {};
 
 let tileset = new AnnotationTileset(
-	1 << 20,
+	tileSize,
 	(f) => {
 		unknownFeatureTypes[f.type] = (unknownFeatureTypes[f.type] || 0) + 1;
 	},
 	Terminal.error,
 );
 
-let stat = fs.statSync(inputPath);
+let inputFileStat = fs.statSync(inputPath);
 
 let stream = fs.createReadStream(inputPath, {
 	encoding: 'utf8',
 	autoClose: true,
 });
 
-const progressDelta_ms = 1000/60;
-let lastProgressTime_ms = -Infinity;
-
+const progressUpdatePeriod_ms = 1000/60;
+let _lastProgressTime_ms = -Infinity;
 let parser = new Gff3Parser({
 
 	onFeatureComplete: (feature) => {
+		if (featureTypeBlacklist.indexOf(feature.type) === -1) {
+			tileset.addTopLevelFeature(feature);
+		} else {
+			skippedFeatureTypes[feature.type] = (skippedFeatureTypes[feature.type] || 0) + 1;
+		}
 		
 		// log progress
 		let hrtime = process.hrtime();
-		let t = hrtime[0] * 1000 + hrtime[1]/1000000;
-		let dt = t - lastProgressTime_ms;
-		if (dt > progressDelta_ms) {
-			Terminal.clearLine();
-			Terminal.log(`Processing <b>${Math.round(100 * stream.bytesRead / stat.size)}%</b>`);
-			Terminal.cursorUp();
-			lastProgressTime_ms = t;
-		}
+		let t_ms = hrtime[0] * 1000 + hrtime[1]/1000000;
 
-		tileset.addTopLevelFeature(feature);
+		if ((t_ms - _lastProgressTime_ms) > progressUpdatePeriod_ms) {
+			Terminal.clearLine();
+			Terminal.log(`Processing <b>${Math.round(100 * stream.bytesRead / inputFileStat.size)}%</b>`);
+			Terminal.cursorUp();
+			_lastProgressTime_ms = t_ms;
+		}
 	},
 
+	// print errors and comments
 	onError: Terminal.error,
 	onComment: (c) => Terminal.log(`<dim><i>${c}<//>`),
 
 	onComplete: (gff3) => {
 		Terminal.clearLine();
+		
+		// post-convert info
+		if (Object.keys(unknownFeatureTypes).length > 0) {
+			Terminal.warn('Unknown features:', unknownFeatureTypes);
+		}
+		if (Object.keys(skippedFeatureTypes).length > 0) {
+			Terminal.log('Skipped features:<b>', skippedFeatureTypes);
+		}
 
-		Terminal.warn('Unknown features:', unknownFeatureTypes);
-
+		// delete output directory
 		if (fs.existsSync(outputDirectory)) {
 			for (let filename of fs.readdirSync(outputDirectory)) {
 				fs.unlinkSync(outputDirectory + '/' + filename);
@@ -76,10 +91,12 @@ let parser = new Gff3Parser({
 			fs.rmdirSync(outputDirectory)
 		}
 
+		// create output directory
 		if (!fs.existsSync(outputDirectory)) {
 			fs.mkdirSync(outputDirectory);
 		}
 
+		// write tile files to output directory
 		let nSavedFiles = 0;
 		for (let tile of tileset.tiles) {
 			let filename = `${tile.startIndex.toFixed(0)},${tile.span.toFixed(0)}`;
@@ -90,6 +107,7 @@ let parser = new Gff3Parser({
 
 		Terminal.success(`Saved <b>${nSavedFiles}</b> files into <b>${outputDirectory}</b>`);
 	}
+
 });
 
 stream.on('data', parser.parseChunk);
