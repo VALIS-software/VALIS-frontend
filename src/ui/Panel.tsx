@@ -11,6 +11,7 @@ import Track, { AxisPointerStyle } from "./tracks/Track";
 import { InteractionEvent, WheelInteractionEvent } from "./core/InteractionEvent";
 import { runInThisContext } from "vm";
 import XAxis from "./XAxis";
+import { OpenSansRegular } from "./font/Fonts";
 
 export class Panel extends Object2D {
 
@@ -72,7 +73,7 @@ export class Panel extends Object2D {
         this.add(this.header);
 
         // 1/2 spacing around the x-axis
-        this.xAxis = new XAxis(this.x0, this.x1, 11);
+        this.xAxis = new XAxis(this.x0, this.x1, 11, OpenSansRegular);
         this.xAxis.minDisplay = 0;
         this.xAxis.maxDisplay = Infinity;
         this.xAxis.h = this.xAxisHeight;

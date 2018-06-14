@@ -16,8 +16,6 @@ import Panel from "./Panel";
 import TrackDataModel, { TrackType } from "../model/TrackDataModel";
 import PanelDataModel from "../model/PanelDataModel";
 
-const OpenSansRegular = require("./font/OpenSans-Regular.msdf.bin");
-
 class TrackViewer extends Object2D {
 
     // layout settings

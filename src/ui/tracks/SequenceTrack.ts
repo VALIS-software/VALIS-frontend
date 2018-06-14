@@ -10,6 +10,7 @@ import { BlockPayload, TilePayload } from "../../model/SequenceTileStore";
 import { SharedTileStore } from "../../model/SharedTileStores";
 import { Tile, TileState } from "../../model/TileStore";
 import { TileNode, TileTrack } from "./TileTrack";
+import { OpenSansRegular } from "../font/Fonts";
 
 
 export class SequenceTrack extends TileTrack<TilePayload, BlockPayload> {
@@ -34,8 +35,6 @@ const NUCLEOBASE_A_COLOR = new Float32Array([0.216, 0.063, 0.318, 1.0]); // #371
 const NUCLEOBASE_T_COLOR = new Float32Array([0.200, 0.200, 0.404, 1.0]); // #333367;
 const NUCLEOBASE_C_COLOR = new Float32Array([0.043, 0.561, 0.608, 1.0]); // #0B8F9B;
 const NUCLEOBASE_G_COLOR = new Float32Array([0.071, 0.725, 0.541, 1.0]); // #12B98A;
-
-const OpenSansRegular = require('../font/OpenSans-Regular.msdf.bin');
 
 class SequenceTile extends TileNode<TilePayload> {
 

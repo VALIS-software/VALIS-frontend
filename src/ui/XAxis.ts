@@ -6,8 +6,6 @@ import { BlendMode } from "../rendering/Renderer";
 import { Scalar } from "../math/Scalar";
 import { UsageCache } from "../ds/UsageCache";
 
-const OpenSansRegular = require('./font/OpenSans-Regular.msdf.bin');
-
 export class XAxis extends Object2D {
 
     maxTextLength: number = 4;
@@ -36,7 +34,7 @@ export class XAxis extends Object2D {
     // valid for stable (fontSize, fontPath)
     protected labelCache = new UsageCache<Label>();
 
-    constructor(x0: number = 0, x1: number = 1, fontSizePx: number = 16, protected fontPath: string = OpenSansRegular) {
+    constructor(x0: number = 0, x1: number = 1, fontSizePx: number = 16, protected fontPath: string) {
         super();
         this.render = false;
         this.x0 = x0;
