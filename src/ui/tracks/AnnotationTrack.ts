@@ -11,11 +11,13 @@ import { Rect } from "../core/Rect";
 import Text from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
 import Track from "./Track";
+import { Strand } from "../../../lib/gff3/Gff3LineParser";
 
 export class AnnotationTrack extends Track {
 
     protected annotationStore: AnnotationStore;
     protected yScrollNode: Object2D;
+    protected annotationsNeedUpdate: boolean;
 
     constructor(model: TrackDataModel) {
         super(model);
@@ -33,31 +35,35 @@ export class AnnotationTrack extends Track {
 
     setRange(x0: number, x1: number) {
         super.setRange(x0, x1);
-        this.updateAnnotations();
+        this.annotationsNeedUpdate = true;
     }
 
     private _lastComputedWidth: number;
     applyTransformToSubNodes(root?: boolean) {
         // update tiles if we need to
-        if (this._lastComputedWidth !== this.getComputedWidth()) {
+        if ((this._lastComputedWidth !== this.getComputedWidth()) || this.annotationsNeedUpdate) {
             this.updateAnnotations();
             this._lastComputedWidth = this.getComputedWidth();
+            this.annotationsNeedUpdate = false;
         }
 
         super.applyTransformToSubNodes(root);
     }
 
     protected initializeYScrolling() {
-        let ey0 = 0;
+        // scroll follows the primary pointer only
+        let pointerY0 = 0;
         let scrollY0 = 0;
         
         this.addInteractionListener('dragstart', (e) => {
-            ey0 = e.localY;
+            if (!e.isPrimary) return;
+            pointerY0 = e.localY;
             scrollY0 = this.yScrollNode.y;
         });
 
         this.addInteractionListener('dragmove', (e) => {
-            let dy = ey0 - e.localY;
+            if (!e.isPrimary) return;
+            let dy = pointerY0 - e.localY;
             this.yScrollNode.y = Math.min(scrollY0 - dy, 0);
         });
     }
@@ -81,7 +87,13 @@ export class AnnotationTrack extends Track {
                 if (tile.state === TileState.Complete) {
                     
                     for (let gene of tile.payload) {
+                        // @! temp performance hack, only use node when visible
                         { if (!(gene.startIndex <= x1 && gene.endIndex >= x0)) continue; }
+
+                        // @! only show mRNAs
+                        // if (gene.class !== GeneClass.ProteinCoding) continue;
+                        // @! only show + strand
+                        // if (gene.strand === Strand.Negative) continue;
 
                         let annotationKey = this.annotationKey(gene);
 
@@ -89,7 +101,6 @@ export class AnnotationTrack extends Track {
                             let object = new GeneAnnotation(gene);
                             object.y = 40;
                             object.layoutH = 0;
-                            object.h = 5;
                             object.z = 1 / 4;
                             this.addAnnotation(object);
                             return object;
@@ -149,12 +160,10 @@ export class AnnotationTrack extends Track {
 
 }
 
-class GeneAnnotation extends Rect {
+class GeneAnnotation extends Object2D {
 
     constructor(protected readonly gene: Gene) {
-        super(0, 0, [1, 0, 0, 0.5], false);
-        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
-        this.transparent = true;
+        super();
 
         let colors = {
             [GeneClass.ProteinCoding]: [1, 0, 0, 0.5],
@@ -163,11 +172,24 @@ class GeneAnnotation extends Rect {
             [GeneClass.Pseudo]: [0, 1, 1, 0.5],
         };
 
-        this.color.set(colors[gene.class]);
+        let spanMarker = new Rect(0, 0, [1, 0, 0, 0.5], false);
+        spanMarker.color.set(colors[gene.class]);
+        spanMarker.layoutW = 1;
+        spanMarker.h = 2.5;
+        spanMarker.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
+        spanMarker.transparent = true;
+        this.add(spanMarker);
 
         let geneSpan = gene.endIndex - gene.startIndex;
+        
+        let strandPrefix = '?';
+        if (gene.strand === Strand.Positive) {
+            strandPrefix = '>';
+        } else if (gene.strand === Strand.Negative) {
+            strandPrefix = '<';
+        }
 
-        let name = new Text(OpenSansRegular, gene.name, 16, [1, 1, 1, 1]);
+        let name = new Text(OpenSansRegular, strandPrefix + ' ' + gene.name, 16, [1, 1, 1, 1]);
         name.layoutY = -1;
         name.y = -5;
         this.add(name);
@@ -178,7 +200,8 @@ class GeneAnnotation extends Rect {
         
         for (let i = 0; i < gene.transcripts.length; i++) {
             let transcript = gene.transcripts[i];
-            let transcriptAnnotation = new TranscriptAnnotation(transcript);
+
+            let transcriptAnnotation = new TranscriptAnnotation(transcript, gene.strand);
             transcriptAnnotation.h = transcriptHeight;
             transcriptAnnotation.y = i * (transcriptHeight + transcriptSpacing) + transcriptOffset;
 
@@ -193,7 +216,7 @@ class GeneAnnotation extends Rect {
 
 class TranscriptAnnotation extends Object2D {
 
-    constructor(protected readonly transcript: Transcript) {
+    constructor(protected readonly transcript: Transcript, strand: Strand) {
         super();
 
         let transcriptSpan = transcript.endIndex - transcript.startIndex;
@@ -211,15 +234,29 @@ class TranscriptAnnotation extends Object2D {
         spanMarker.layoutY = -0.5;
         spanMarker.layoutParentY = 0.5;
         spanMarker.z = 0.0;
+        spanMarker.transparent = true;
+        spanMarker.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
         this.add(spanMarker);
         
-        let name = new Text(OpenSansRegular, transcript.name, 10, [1, 1, 1, 1]);
+        /*
+        let strandSymbol = '?';
+        if (strand === Strand.Positive) {
+            strandSymbol = '>';
+        } else if (strand === Strand.Negative) {
+            strandSymbol = '<';
+        }
+        let name = new Text(OpenSansRegular, strandSymbol, 10, [1, 1, 1, 1]);
+        name.layoutX = -1;
+        name.x = -5;
+        name.layoutY = -0.5;
+        name.layoutParentY = 0.5;
         this.add(name);
+        */
 
         let componentColor = {
-            [TranscriptComponentClass.Exon]: [1, 0, 0, 1],
-            [TranscriptComponentClass.ProteinCodingSequence]: [1, 1, 0, 1],
-            [TranscriptComponentClass.Untranslated]: [0.5, 0.5, 0.5, 1],
+            [TranscriptComponentClass.Exon]: [1, 0, 0, .5],
+            [TranscriptComponentClass.ProteinCodingSequence]: [1, 1, 0, .85],
+            [TranscriptComponentClass.Untranslated]: [0.5, 0.5, 0.5, 1.0],
         }
 
         let componentZ = {
@@ -228,13 +265,28 @@ class TranscriptAnnotation extends Object2D {
             [TranscriptComponentClass.Untranslated]: 0.5,
         }
 
+        let componentH = {
+            [TranscriptComponentClass.Exon]: 1,
+            [TranscriptComponentClass.ProteinCodingSequence]: 0.5,
+            [TranscriptComponentClass.Untranslated]: 0.5,
+        }
+
         for (let component of transcript.components) {
             let componentMarker = new Rect(0, 0, undefined, false);
-            componentMarker.layoutH = 1;
+            componentMarker.layoutH = componentH[component.class];
             componentMarker.layoutParentX = (component.startIndex - transcript.startIndex) / transcriptSpan;
             componentMarker.layoutW = (component.endIndex - component.startIndex) / transcriptSpan;
             componentMarker.color.set(componentColor[component.class]);
             componentMarker.z = componentZ[component.class];
+
+            componentMarker.transparent = true;
+            componentMarker.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
+
+            if (component.phase != null) {
+                let phase = new Text(OpenSansRegular, component.phase + '', 10, [1, 1, 1, 1]);
+                componentMarker.add(phase);
+            }
+            
             this.add(componentMarker);
         }
     }
