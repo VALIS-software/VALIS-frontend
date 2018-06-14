@@ -32,6 +32,7 @@ export type GeneInfo = {
 	name?: string,
 	startIndex: number,
 	endIndex: number,
+	strand: Strand,
 	class: GeneClass,
 	soClass: keyof SoGeneClass,
 }
@@ -56,7 +57,6 @@ export type TranscriptInfo = {
 	name?: string,
 	startIndex: number,
 	endIndex: number,
-	strand: Strand,
 	class: TranscriptClass,
 	soClass: keyof SoTranscriptClass,
 }
@@ -151,7 +151,8 @@ export class AnnotationTileset {
 				startIndex: feature.start - 1,
 				endIndex: feature.end - 1,
 				class: SoGeneClass.instance[feature.type] as any,
-				soClass: feature.type,	
+				soClass: feature.type,
+				strand: feature.strand,
 			});
 		} else if (SoTranscriptClass.instance[feature.type] !== undefined) {
 			// is transcript
@@ -162,18 +163,21 @@ export class AnnotationTileset {
 				endIndex: feature.end - 1,
 				class: SoTranscriptClass.instance[feature.type] as any,
 				soClass: feature.type,
-				strand: feature.strand,
 			});
 		} else if (SoTranscriptComponentClass.instance[feature.type] !== undefined) {
 			// is transcript component
-			tile.content.push({
+			let info: GenomeFeature<GenomeFeatureType.TranscriptComponent> = {
 				type: GenomeFeatureType.TranscriptComponent,
 				name: feature.name,
 				startIndex: feature.start - 1,
 				endIndex: feature.end - 1,
 				class: SoTranscriptComponentClass.instance[feature.type] as any,
 				soClass: feature.type,
-			});
+			};
+			if (feature.phase != null) {
+				info.phase = feature.phase;
+			}
+			tile.content.push(info);
 		} else {
 			this.onUnknownFeature(feature);
 			return;
