@@ -1,3 +1,6 @@
+/data/
+_built/
+
 package-lock.json
 node_modules
 dist
