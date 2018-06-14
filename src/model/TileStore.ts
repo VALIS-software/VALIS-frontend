@@ -168,7 +168,7 @@ export class TileStore<TilePayload, BlockPayload> {
     private tileLoadFailed(tile: Tile<TilePayload>, reason: any) {
         const tileInternal = tile as any as TileInternal<TilePayload>;
         tileInternal._state = TileState.Empty;
-        console.warn(`Tile payload request failed`, tile);
+        console.warn(`Tile payload request failed: ${reason}`, tile);
     }
 
     private getBlock(lodLevel: number, blockIndex: number) {
