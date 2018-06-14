@@ -26,6 +26,7 @@ export type Gff3 = {
 }
 
 export type Feature = {
+    id: string | undefined,
     name: string | undefined,
     type: string,
     children: Array<Feature>,
@@ -137,6 +138,7 @@ export class Gff3Parser {
         }
 
         let feature: Feature = {
+            id: attributes.id,
             name: attributes.name,
             type: type,
             start: start,

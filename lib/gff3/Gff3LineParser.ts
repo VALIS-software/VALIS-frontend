@@ -69,7 +69,7 @@ export enum Strand {
 
 export type Phase = number;
 
-export class GFF3LineParser {
+export class Gff3LineParser {
 
     protected callbacks: LineCallbacks = {
         onVersion: (versionString: string) => {},
@@ -396,4 +396,4 @@ export class GFF3LineParser {
 
 }
 
-export default GFF3LineParser;
+export default Gff3LineParser;
