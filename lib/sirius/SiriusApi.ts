@@ -4,7 +4,7 @@
 
 import axios, { AxiosRequestConfig, CancelToken } from 'axios';
 
-import Gene from './AnnotationTileset';
+import { TileContent } from './AnnotationTileset';
 
 export class SiriusApi {
 
@@ -16,7 +16,7 @@ export class SiriusApi {
         sequenceId: string,
         startBaseIndex: number,
         span: number,
-    ): Promise<Array<Gene>> {
+    ): Promise<TileContent> {
         let jsonPath = `/data/${sequenceId}/annotation/${startBaseIndex},${span}.json`;
         return axios.get(jsonPath).then((a) => {
             return a.data;
