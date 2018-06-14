@@ -8,8 +8,20 @@ import { UsageCache } from "../ds/UsageCache";
 
 export class XAxis extends Object2D {
 
-    maxTextLength: number = 4;
     maxMajorTicks: number = 10000; // failsafe to avoid rendering hangs
+
+    set maxTextLength(v: number) {
+        let change = this._maxTextLength !== v;
+        this._maxTextLength = v;
+        if (change) {
+            this.labelsNeedUpdate = true;
+            this.labelCache.removeAll(this.deleteLabel);
+        }
+    }
+
+    get maxTextLength() {
+        return this._maxTextLength;
+    }
 
     set fontSizePx(v: number) {
         this._fontSizePx = v;
@@ -26,6 +38,8 @@ export class XAxis extends Object2D {
     protected x0: number = 0;
     protected x1: number = 1;
     protected _fontSizePx: number;
+    protected _maxTextLength: number = 4;
+
     protected labelsNeedUpdate: boolean;
     protected lastComputedWidth: number;
 
@@ -34,7 +48,7 @@ export class XAxis extends Object2D {
     // valid for stable (fontSize, fontPath)
     protected labelCache = new UsageCache<Label>();
 
-    constructor(x0: number = 0, x1: number = 1, fontSizePx: number = 16, protected fontPath: string) {
+    constructor(x0: number = 0, x1: number = 1, fontSizePx: number = 16, protected fontPath: string, protected offset: number = 0, protected snap: number = 1) {
         super();
         this.render = false;
         this.x0 = x0;
@@ -109,7 +123,7 @@ export class XAxis extends Object2D {
         const tickSpacingPx = 80 * 2;
         const rangeWidthPx = this.computedWidth;
         const tickRatio = tickSpacingPx / rangeWidthPx;
-        const snap = 5;
+        const snap = this.snap;
 
         // @! problem is we're dealing in absolute space too much
         // we should convert to absolute space only when displaying text
@@ -139,16 +153,16 @@ export class XAxis extends Object2D {
             let xMajor = xMajorSpacing * i;
 
             if (xMinor >= this.minDisplay && xMinor <= this.maxDisplay && isFinite(xMinor)) {
-                let minorParentX = (xMinor - this.x0) / span;
-                let str = this.formatValue(xMinor, this.maxTextLength);
+                let minorParentX = (xMinor - this.x0 + this.offset) / span;
+                let str = this.formatValue(xMinor, this._maxTextLength);
                 let textMinor = this.labelCache.use(xMinor + '_' + str, () => this.createLabel(str));
                 textMinor.layoutParentX = minorParentX;
                 textMinor.setColor(0, 0, 0, minorAlpha);
             }
 
             if (xMajor >= this.minDisplay && xMajor <= this.maxDisplay && isFinite(xMajor)) {
-                let majorParentX = (xMajor - this.x0) / span;
-                let str = this.formatValue(xMajor, this.maxTextLength);
+                let majorParentX = (xMajor - this.x0 + this.offset) / span;
+                let str = this.formatValue(xMajor, this._maxTextLength);
                 let textMajor = this.labelCache.use(xMajor + '_' + str, () => this.createLabel(str));
                 textMajor.layoutParentX = majorParentX;
                 textMajor.setColor(0, 0, 0, 1);

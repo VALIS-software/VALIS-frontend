@@ -73,7 +73,8 @@ export class Panel extends Object2D {
         this.add(this.header);
 
         // 1/2 spacing around the x-axis
-        this.xAxis = new XAxis(this.x0, this.x1, 11, OpenSansRegular);
+        let offset = 0.5; // offset labels by 0.5 to center on basepairs
+        this.xAxis = new XAxis(this.x0, this.x1, 11, OpenSansRegular, offset);
         this.xAxis.minDisplay = 0;
         this.xAxis.maxDisplay = Infinity;
         this.xAxis.h = this.xAxisHeight;
@@ -148,7 +149,19 @@ export class Panel extends Object2D {
         (this.x0 as any) = x0;
         (this.x1 as any) = x1;
 
+
         this.xAxis.setRange(x0, x1);
+        
+        // control axis text length by number of visible base pairs
+        // when viewing a small number of bases the exact span is likely required
+        let span = x1 - x0;
+        if (span < 150) {
+            this.xAxis.maxTextLength = Infinity;
+        } else if (span < 1e5) {
+            this.xAxis.maxTextLength = 6;
+        } else {
+            this.xAxis.maxTextLength = 4;
+        }
 
         for (let tile of this.tracks) {
             tile.setRange(x0, x1);
