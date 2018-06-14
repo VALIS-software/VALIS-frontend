@@ -1,26 +1,34 @@
-import { Feature } from "../../../lib/sirius/SiriusApi";
+import { GeneClass, TranscriptClass, TranscriptComponentClass } from "../../../lib/sirius/AnnotationTileset";
+import App from "../../App";
 import UsageCache from "../../ds/UsageCache";
-import { AnnotationStore } from "../../model/AnnotationStore";
+import { AnnotationStore, Gene, Transcript } from "../../model/AnnotationStore";
 import SharedTileStore from "../../model/SharedTileStores";
 import { Tile, TileState } from "../../model/TileStore";
 import TrackDataModel, { TrackType } from "../../model/TrackDataModel";
+import { BlendMode } from "../../rendering/Renderer";
 import Object2D from "../core/Object2D";
 import { Rect } from "../core/Rect";
-import Track from "./Track";
 import Text from "../core/Text";
-import { BlendMode } from "../../rendering/Renderer";
-
-const OpenSansRegular = require('../font/OpenSans-Regular.msdf.bin');
+import { OpenSansRegular } from "../font/Fonts";
+import Track from "./Track";
 
 export class AnnotationTrack extends Track {
 
     protected annotationStore: AnnotationStore;
+    protected yScrollNode: Object2D;
 
     constructor(model: TrackDataModel) {
         super(model);
         this.annotationStore = SharedTileStore[TrackType.Annotation][model.sequenceId];
+
+        this.yScrollNode = new Object2D();
+        this.yScrollNode.z = 0;
+        this.yScrollNode.layoutW = 1;
+        this.add(this.yScrollNode);
         
         this.color.set([0.1, 0.1, 0.1, 1]);
+
+        this.initializeYScrolling();
     }
 
     setRange(x0: number, x1: number) {
@@ -39,7 +47,22 @@ export class AnnotationTrack extends Track {
         super.applyTransformToSubNodes(root);
     }
 
-    protected _annotationCache = new UsageCache<Annotation>();
+    protected initializeYScrolling() {
+        let ey0 = 0;
+        let scrollY0 = 0;
+        
+        this.addInteractionListener('dragstart', (e) => {
+            ey0 = e.localY;
+            scrollY0 = this.yScrollNode.y;
+        });
+
+        this.addInteractionListener('dragmove', (e) => {
+            let dy = ey0 - e.localY;
+            this.yScrollNode.y = Math.min(scrollY0 - dy, 0);
+        });
+    }
+
+    protected _annotationCache = new UsageCache<Object2D>();
     protected _pendingTiles = new UsageCache<Tile<any>>();
     protected updateAnnotations() {
         this._pendingTiles.markAllUnused();
@@ -51,25 +74,29 @@ export class AnnotationTrack extends Track {
         const widthPx = this.getComputedWidth();
 
         if (widthPx > 0) {
-            this.annotationStore.getTiles(x0, x1, 1, true, (tile) => {
+            let basePairsPerDOMPixel = (span / widthPx);
+            let samplingDensity = basePairsPerDOMPixel / App.canvasPixelRatio;
+
+            this.annotationStore.getTiles(x0, x1, samplingDensity, true, (tile) => {
                 if (tile.state === TileState.Complete) {
+                    
+                    for (let gene of tile.payload) {
+                        { if (!(gene.startIndex <= x1 && gene.endIndex >= x0)) continue; }
 
-                    // display annotations with span
-                    for (let feature of tile.payload) {
-                        // determine if feature is visible
-                        let fx0 = feature.start - 1;
-                        let fx1 = feature.end - 1;
-                        let inRange = fx0 <= x1 && fx1 >= x0;
-                        if (!inRange) continue;
+                        let annotationKey = this.annotationKey(gene);
 
-                        // create / update annotation
-                        let annotationKey = this.annotationKey(feature);
-                        let annotation = this._annotationCache.use(annotationKey, () => this.createAnnotation(feature));
-                        annotation.layoutParentX = (fx0 - x0) / span;
-                        annotation.layoutW = (fx1 - fx0) / span;
-                        annotation.y = 40;
-                        annotation.layoutH = 0;
-                        annotation.h = 40;
+                        let annotation = this._annotationCache.use(annotationKey, () => {
+                            let object = new GeneAnnotation(gene);
+                            object.y = 40;
+                            object.layoutH = 0;
+                            object.h = 5;
+                            object.z = 1 / 4;
+                            this.addAnnotation(object);
+                            return object;
+                        });
+
+                        annotation.layoutParentX = (gene.startIndex - x0) / span;
+                        annotation.layoutW = (gene.endIndex - gene.startIndex) / span;
                     }
 
                 } else {
@@ -82,23 +109,26 @@ export class AnnotationTrack extends Track {
         this._annotationCache.removeUnused(this.deleteAnnotation);
     }
 
-    protected createAnnotation = (feature: Feature): Annotation => {
-        let annotation = new Annotation(feature);
+    protected createGeneAnnotation = (gene: Gene) => {
+        return new GeneAnnotation(gene);
+    }
+
+    protected addAnnotation = (annotation: Object2D) => {
+        // mask to this object
         annotation.mask = this;
         annotation.forEachSubNode((sub) => {
             sub.mask = this;
         });
-        this.add(annotation);
-        return annotation;
+        this.yScrollNode.add(annotation);
     }
 
-    protected deleteAnnotation = (annotation: Annotation) => {
-        this.remove(annotation);
+    protected deleteAnnotation = (annotation: Object2D) => {
+        this.yScrollNode.remove(annotation);
         annotation.releaseGPUResources();
     }
 
-    protected annotationKey = (feature: Feature) => {
-        return feature.type + '\x1F' + feature.name + '\x1F' + feature.start + '\x1F' + feature.end;
+    protected annotationKey = (feature: { soClass: string | number, name?: string, startIndex: number, endIndex: number }) => {
+        return feature.soClass + '\x1F' + feature.name + '\x1F' + feature.startIndex + '\x1F' + feature.endIndex;
     }
 
     // when we're waiting on data from a tile we add a complete listener to update the annotation when the data arrives
@@ -119,207 +149,96 @@ export class AnnotationTrack extends Track {
 
 }
 
-class Annotation extends Object2D {
+class GeneAnnotation extends Rect {
 
-    constructor(protected readonly feature: Feature) {
+    constructor(protected readonly gene: Gene) {
+        super(0, 0, [1, 0, 0, 0.5], false);
+        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
+        this.transparent = true;
+
+        let colors = {
+            [GeneClass.ProteinCoding]: [1, 0, 0, 0.5],
+            [GeneClass.NonProteinCoding]: [0, 0, 1, 0.5],
+            [GeneClass.Unspecified]: [1, 1, 1, 0.5],
+            [GeneClass.Pseudo]: [0, 1, 1, 0.5],
+        };
+
+        this.color.set(colors[gene.class]);
+
+        let geneSpan = gene.endIndex - gene.startIndex;
+
+        let name = new Text(OpenSansRegular, gene.name, 16, [1, 1, 1, 1]);
+        name.layoutY = -1;
+        name.y = -5;
+        this.add(name);
+
+        let transcriptOffset = 10;
+        let transcriptHeight = 20;
+        let transcriptSpacing = 10;
+        
+        for (let i = 0; i < gene.transcripts.length; i++) {
+            let transcript = gene.transcripts[i];
+            let transcriptAnnotation = new TranscriptAnnotation(transcript);
+            transcriptAnnotation.h = transcriptHeight;
+            transcriptAnnotation.y = i * (transcriptHeight + transcriptSpacing) + transcriptOffset;
+
+            transcriptAnnotation.layoutParentX = (transcript.startIndex - gene.startIndex) / geneSpan;
+            transcriptAnnotation.layoutW = (transcript.endIndex - transcript.startIndex) / geneSpan;
+
+            this.add(transcriptAnnotation);
+        }
+    }
+
+}
+
+class TranscriptAnnotation extends Object2D {
+
+    constructor(protected readonly transcript: Transcript) {
         super();
 
-        let fx0 = feature.start - 1;
-        let fx1 = feature.end - 1;
-        let fSpan = fx1 - fx0;
+        let transcriptSpan = transcript.endIndex - transcript.startIndex;
 
-        let displayChildren = true;
-
-        switch (feature.type) {
-            // top-level
-            case 'gene':
-            case 'ncRNA_gene':
-            case 'pseudogene': {
-                let suffix = null;
-                switch (feature.type) {
-                    case 'ncRNA_gene': suffix = '(non-coding)'; break;
-                    case 'pseudogene': suffix = '(pseudo)'; break;
-                }
-
-                let title = feature.name + (suffix !== null ? (' ' + suffix) : '');
-
-                let name = new Text(OpenSansRegular, title, 16, [1, 1, 1, 1]);
-                name.layoutY = -1;
-                name.y = -5;
-                this.add(name);
-
-                let rect = new Rect(0, 0, [1, 0, 0, 0.5]);
-                rect.transparent = true;
-                rect.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
-                rect.layoutW = 1;
-                rect.layoutH = 0.1;
-                this.add(rect);
-                break;
-            }
-
-            case 'mRNA':
-            case 'lnc_RNA':
-            case 'pseudogenic_transcript': 
-            case 'snRNA': case 'miRNA': {
-                this.layoutY = -0.5;
-                this.layoutParentY = 0.5;
-                this.layoutH = 0.8;
-
-                let name = new Text(OpenSansRegular, `${feature.name} (${feature.type})`, 10, [1, 1, 1, 1]);
-                name.layoutY = -0.5;
-                name.layoutX = -1;
-                name.x = -10;
-                name.layoutParentY = 0.5;
-                this.add(name);
-
-                let rect = new Rect(0, 0, [0, 1, 0, 0.2]);
-                rect.transparent = true;
-                rect.blendMode = BlendMode.PREMULTIPLIED_ALPHA; 
-                rect.layoutW = 1;
-                rect.layoutH = 1;    
-                this.add(rect);
-
-                break;
-            }
-
-            case 'exon': {
-                this.layoutY = -0.5;
-                this.layoutParentY = 0.5;
-                this.layoutH = 0.8;
-
-                /*
-                let name = new Text(OpenSansRegular, 'e', 10, [1, 1, 1, 1]);
-                name.layoutX = -0.5;
-                name.layoutParentX = 0.5;
-                name.layoutY = -0.5;
-                name.layoutParentY = 0.5;
-                this.add(name);
-                */
-
-                let rect = new Rect(0, 0, [0, 0, 1, 1], true);
-                rect.layoutW = 1;
-                rect.layoutH = 1;
-                this.add(rect);
-                
-                break;
-            }
-
-            case 'CDS': {
-                this.layoutY = -0.5;
-                this.layoutParentY = 0.5;
-                this.layoutH = 0.8;
-
-                let rect = new Rect(0, 0, [1, 1, 0, 0.5], true);
-                rect.transparent = true;
-                rect.blendMode = BlendMode.PREMULTIPLIED_ALPHA; 
-                rect.layoutW = 1;
-                rect.layoutH = 1;
-                rect.z += 0.1;
-                this.add(rect);   
-            }
-
-            case 'three_prime_UTR':
-            case 'five_prime_UTR': {
-                this.layoutY = -0.5;
-                this.layoutParentY = 0.5;
-                this.layoutH = 0.8;
-
-                let rect = new Rect(0, 0, [0.3, 0.3, 0.3, 1.0]);
-                rect.layoutW = 1;
-                rect.layoutH = 1;
-                this.add(rect);
-                break;
-            }
-
-            default: {
-                console.warn(`Unknown type "${feature.type}" (name: ${feature.name}, children: ${feature.children.length})`);
-                displayChildren = false;
-                break;
-            }
+        let transcriptColor = {
+            [TranscriptClass.Unspecified]: [0.5, 0.5, 0.5, 0.25],
+            [TranscriptClass.Messenger]: [1, 0, 1, 0.25],
+            [TranscriptClass.NonProteinCoding]: [0, 1, 1, 0.25],
         }
 
-        if (displayChildren) {
-            let transcriptIndex = 0;
+        let spanMarker = new Rect(0, 0, undefined, false);
+        spanMarker.color.set(transcriptColor[transcript.class]);
+        spanMarker.h = 10;
+        spanMarker.layoutW = 1;
+        spanMarker.layoutY = -0.5;
+        spanMarker.layoutParentY = 0.5;
+        spanMarker.z = 0.0;
+        this.add(spanMarker);
+        
+        let name = new Text(OpenSansRegular, transcript.name, 10, [1, 1, 1, 1]);
+        this.add(name);
 
-            for (let child of feature.children) {
-                let cx0 = child.start - 1;
-                let cx1 = child.end - 1;
-                let cSpan = cx1 - cx0;
+        let componentColor = {
+            [TranscriptComponentClass.Exon]: [1, 0, 0, 1],
+            [TranscriptComponentClass.ProteinCodingSequence]: [1, 1, 0, 1],
+            [TranscriptComponentClass.Untranslated]: [0.5, 0.5, 0.5, 1],
+        }
 
-                let isTranscript =
-                    child.type === 'mRNA' ||
-                    child.type === 'lnc_RNA' ||
-                    child.type === 'pseudogenic_transcript';
+        let componentZ = {
+            [TranscriptComponentClass.Exon]: 0.25,
+            [TranscriptComponentClass.ProteinCodingSequence]: 1,
+            [TranscriptComponentClass.Untranslated]: 0.5,
+        }
 
-                let subAnnotation = new Annotation(child);
-
-                subAnnotation.layoutParentX = (cx0 - fx0)/fSpan;
-                subAnnotation.layoutW = (cx1 - cx0)/fSpan;
-
-                if (isTranscript) {
-                    subAnnotation.y = transcriptIndex * 40;
-                    transcriptIndex++;
-                }
-                
-                this.add(subAnnotation);
-            }
+        for (let component of transcript.components) {
+            let componentMarker = new Rect(0, 0, undefined, false);
+            componentMarker.layoutH = 1;
+            componentMarker.layoutParentX = (component.startIndex - transcript.startIndex) / transcriptSpan;
+            componentMarker.layoutW = (component.endIndex - component.startIndex) / transcriptSpan;
+            componentMarker.color.set(componentColor[component.class]);
+            componentMarker.z = componentZ[component.class];
+            this.add(componentMarker);
         }
     }
 
 }
-
-/*
-class AnnotationTile extends TileNode<TilePayload> {
-
-    allocateGPUResources(device: Device) {
-        // static initializations
-        this.gpuVertexState = SharedResources.quad1x1VertexState;
-        this.gpuProgram = SharedResources.getProgram(
-            device,
-            AnnotationTile.vertexShader,
-            AnnotationTile.fragmentShader,
-            ['position']
-        );
-    }
-
-    releaseGPUResources() {
-        // since our resources are shared we don't actually want to release anything here
-        this.gpuVertexState = null;
-        this.gpuProgram = null;
-    }
-
-    draw(context: DrawContext) {
-        context.uniform2f('size', this.computedWidth, this.computedHeight);
-        context.uniformMatrix4fv('model', false, this.worldTransformMat4);
-        context.draw(DrawMode.TRIANGLES, 6, 0);
-    }
-
-    protected static vertexShader = `
-        #version 100
-
-        attribute vec2 position;
-        uniform mat4 model;
-        uniform vec2 size;
-
-        varying vec2 vUv;
-
-        void main() {
-            vUv = position;
-            gl_Position = model * vec4(position * size, 0., 1.0);
-        }
-    `;
-
-    protected static fragmentShader = `
-        precision mediump float;
-
-        varying vec2 vUv;
-
-        void main() {
-            gl_FragColor = vec4(vUv, 0., 1.);
-        }
-    `;
-
-}
-*/
 
 export default AnnotationTrack;
