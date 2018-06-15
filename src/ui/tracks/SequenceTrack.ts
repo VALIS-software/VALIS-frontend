@@ -1,14 +1,15 @@
 import { UsageCache } from "../../ds/UsageCache";
 import { Scalar } from "../../math/Scalar";
-import { TrackDataModel, TrackType } from "../../model/TrackDataModel";
+import { TrackModel } from "../../model/TrackModel";
+import { TrackType } from "../../model/TrackType";
 import Device, { GPUTexture } from "../../rendering/Device";
 import { DrawContext, DrawMode } from "../../rendering/Renderer";
 import Object2D, { Object2DInternal } from "../core/Object2D";
 import SharedResources from "../core/SharedResources";
 import { Text } from "../core/Text";
-import { BlockPayload, TilePayload } from "../../model/SequenceTileStore";
-import { SharedTileStore } from "../../model/SharedTileStores";
-import { Tile, TileState } from "../../model/TileStore";
+import { BlockPayload, TilePayload } from "../../model/data-store/SequenceTileStore";
+import { SharedTileStore } from "../../model/data-store/SharedTileStores";
+import { Tile, TileState } from "../../model/data-store/TileStore";
 import { TileNode, TileTrack } from "./TileTrack";
 import { OpenSansRegular } from "../font/Fonts";
 
@@ -17,7 +18,7 @@ export class SequenceTrack extends TileTrack<TilePayload, BlockPayload> {
 
     protected densityMultiplier = 2.0;
  
-    constructor(model: TrackDataModel) {
+    constructor(model: TrackModel) {
         super(model, SharedTileStore[TrackType.Sequence][model.sequenceId]);
         this.color.set([0, 0, 0, 1]);
     }

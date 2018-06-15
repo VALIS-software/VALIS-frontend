@@ -1,12 +1,10 @@
 import React = require("react");
+import TrackModel from "../model/TrackModel";
 import Object2D from "./core/Object2D";
-import Track from "./tracks/Track";
 import ReactObject from "./core/ReactObject";
 import Rect from "./core/Rect";
-
-import TrackDataModel, { TrackType } from "../model/TrackDataModel";
-import SequenceTrack from "./tracks/SequenceTrack";
-import trackTypeMap from "./tracks/TrackTypeMap";
+import Track from "./tracks/Track";
+import { TrackClassMap } from "./tracks/TrackClassMap";
 
 export class TrackRow {
 
@@ -26,7 +24,7 @@ export class TrackRow {
     protected _h: number;
 
     constructor(
-        readonly model: TrackDataModel,
+        readonly model: TrackModel,
         row: number,
         public onLayoutChanged: (t: TrackRow) => void = () => { },
         protected readonly spacing: { x: number, y: number }
@@ -46,7 +44,7 @@ export class TrackRow {
     }
 
     createTrack() {
-        let track: Track = new trackTypeMap[this.model.type](this.model);
+        let track: Track = new TrackClassMap[this.model.type](this.model);
         this.tracks.add(track);
         return track;
     }

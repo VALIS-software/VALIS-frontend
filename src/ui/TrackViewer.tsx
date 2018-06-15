@@ -1,20 +1,15 @@
 import React = require("react");
-import Object2D from "./core/Object2D";
-import Rect from "./core/Rect";
-import Text from "./core/Text";
-import ReactObject from "./core/ReactObject";
-import Animator from "../animation/Animator";
-
-import { DEFAULT_SPRING } from "./UIConstants";
-
 import IconButton from "material-ui/IconButton";
-import SvgClose from "material-ui/svg-icons/navigation/close";
 import SvgAdd from "material-ui/svg-icons/content/add";
-import TrackRow from "./TrackRow";
+import Animator from "../animation/Animator";
+import PanelModel from "../model/PanelModel";
+import TrackModel from "../model/TrackModel";
+import Object2D from "./core/Object2D";
+import ReactObject from "./core/ReactObject";
+import Rect from "./core/Rect";
 import Panel from "./Panel";
-
-import TrackDataModel, { TrackType } from "../model/TrackDataModel";
-import PanelDataModel from "../model/PanelDataModel";
+import TrackRow from "./TrackRow";
+import { DEFAULT_SPRING } from "./UIConstants";
 
 class TrackViewer extends Object2D {
 
@@ -72,7 +67,7 @@ class TrackViewer extends Object2D {
     }
 
     // track-viewer state deltas
-    addTrackRow(model: TrackDataModel, heightPx: number = this.defaultTrackHeight) {
+    addTrackRow(model: TrackModel, heightPx: number = this.defaultTrackHeight) {
         let edges = this.edges.horizontal;
         let newRowIndex = Math.max(edges.length - 1, 0);
 
@@ -103,7 +98,7 @@ class TrackViewer extends Object2D {
         this.positionTrack(trackRow, false);
     }
 
-    addPanel(model: PanelDataModel, animate: boolean) {
+    addPanel(model: PanelModel, animate: boolean) {
         let edges = this.edges.vertical;
         let newColumnIndex = Math.max(edges.length - 1, 0);
 

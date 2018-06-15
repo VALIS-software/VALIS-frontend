@@ -1,10 +1,10 @@
 /**
  * @! Temporary dummy model
  */
-export type PanelDataModel = {
+export type PanelModel = {
     name: string,
     x0: number,
     x1: number,
 }
 
-export default PanelDataModel;
+export default PanelModel;

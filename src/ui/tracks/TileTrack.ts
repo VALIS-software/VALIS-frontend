@@ -2,11 +2,11 @@ import App from "../../App";
 import Animator from "../../animation/Animator";
 import UsageCache from "../../ds/UsageCache";
 import Scalar from "../../math/Scalar";
-import TrackDataModel from "../../model/TrackDataModel";
+import TrackModel from "../../model/TrackModel";
 import { BlendMode } from "../../rendering/Renderer";
 import { DEFAULT_SPRING } from "../UIConstants";
 import Object2D from "../core/Object2D";
-import TileStore, { Tile, TileState } from "../../model/TileStore";
+import TileStore, { Tile, TileState } from "../../model/data-store/TileStore";
 import { Track } from "./Track";
 
 /**
@@ -18,7 +18,7 @@ export class TileTrack<TilePayload, BlockPayload> extends Track {
     protected tilesNeedUpdate = true;
 
     constructor(
-        model: TrackDataModel,
+        model: TrackModel,
         protected tileStore: TileStore<TilePayload, BlockPayload>
     ) {
         super(model);

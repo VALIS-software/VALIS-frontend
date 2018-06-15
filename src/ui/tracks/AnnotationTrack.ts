@@ -1,29 +1,29 @@
-import { GeneClass, TranscriptClass, TranscriptComponentClass, GenomeFeature, GenomeFeatureType, GenomeFeatureTypeMap } from "../../../lib/sirius/AnnotationTileset";
+import { Strand } from "../../../lib/gff3/Strand";
+import { GeneClass, TranscriptClass, TranscriptComponentClass } from "../../../lib/sirius/AnnotationTileset";
+import { Animator } from "../../animation/Animator";
 import App from "../../App";
 import UsageCache from "../../ds/UsageCache";
-import { AnnotationStore, Gene, Transcript } from "../../model/AnnotationStore";
-import SharedTileStore from "../../model/SharedTileStores";
-import { Tile, TileState } from "../../model/TileStore";
-import TrackDataModel, { TrackType } from "../../model/TrackDataModel";
+import { AnnotationTileStore, Gene, Transcript } from "../../model/data-store/AnnotationTileStore";
+import SharedTileStore from "../../model/data-store/SharedTileStores";
+import { Tile, TileState } from "../../model/data-store/TileStore";
+import TrackModel from "../../model/TrackModel";
+import { TrackType } from "../../model/TrackType";
 import { BlendMode } from "../../rendering/Renderer";
 import Object2D from "../core/Object2D";
 import { Rect } from "../core/Rect";
 import Text from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
 import Track from "./Track";
-import { Strand } from "../../../lib/gff3/Gff3LineParser";
-import { Animator } from "../../animation/Animator";
-import { DEFAULT_SPRING } from "../UIConstants";
 
 export class AnnotationTrack extends Track {
 
-    protected annotationStore: AnnotationStore;
+    protected annotationStore: AnnotationTileStore;
     protected yScrollNode: Object2D;
     protected annotationsNeedUpdate: boolean = true;
 
     protected loadingIndicator: LoadingIndicator;
 
-    constructor(model: TrackDataModel) {
+    constructor(model: TrackModel) {
         super(model);
         this.annotationStore = SharedTileStore[TrackType.Annotation][model.sequenceId];
 

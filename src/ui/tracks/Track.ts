@@ -1,4 +1,4 @@
-import { TrackDataModel } from "../../model/TrackDataModel";
+import { TrackModel } from "../../model/TrackModel";
 import Panel from "../Panel";
 import Rect from "../core/Rect";
 
@@ -15,7 +15,7 @@ export class Track extends Rect {
     protected activeAxisPointerColor = [0, 140 / 255, 186 / 255, 1];
     protected secondaryAxisPointerColor = [0.2, 0.2, 0.2, 1];
 
-    constructor(protected model: TrackDataModel) {
+    constructor(protected model: TrackModel) {
         super(0, 0, [0, 0, 0, 1]);
 
         this.cursorStyle = this.defaultCursor;

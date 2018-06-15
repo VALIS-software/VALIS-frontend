@@ -3,7 +3,7 @@ import Object2D from "./core/Object2D";
 import ReactObject from "./core/ReactObject";
 import Rect from "./core/Rect";
 
-import PanelDataModel from "../model/PanelDataModel";
+import PanelModel from "../model/PanelModel";
 
 import IconButton from "material-ui/IconButton";
 import SvgClose from "material-ui/svg-icons/navigation/close";
@@ -52,7 +52,7 @@ export class Panel extends Object2D {
     protected tileHovering = false;
 
     constructor(
-        readonly model: PanelDataModel,
+        readonly model: PanelModel,
         column: number,
         protected onClose: (t: Panel) => void,
         protected readonly spacing: { x: number, y: number },
