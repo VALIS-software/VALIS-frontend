@@ -15,6 +15,7 @@ import { Track } from "./Track";
 export class TileTrack<TilePayload, BlockPayload> extends Track {
 
     protected densityMultiplier = 1.0;
+    protected tilesNeedUpdate = true;
 
     constructor(
         model: TrackDataModel,
@@ -25,13 +26,13 @@ export class TileTrack<TilePayload, BlockPayload> extends Track {
 
     setRange(x0: number, x1: number) {
         super.setRange(x0, x1);
-        this.updateTiles();
+        this.tilesNeedUpdate = true;
     }
 
     private _lastComputedWidth: number;
     applyTransformToSubNodes(root?: boolean) {
         // update tiles if we need to
-        if (this._lastComputedWidth !== this.getComputedWidth()) {
+        if ((this._lastComputedWidth !== this.getComputedWidth()) || this.tilesNeedUpdate) {
             this.updateTiles();
             this._lastComputedWidth = this.getComputedWidth();
         }
@@ -129,6 +130,7 @@ export class TileTrack<TilePayload, BlockPayload> extends Track {
         }
 
         this._tileNodeCache.removeUnused(this.deleteTileNode);
+        this.tilesNeedUpdate = false;
     }
 
     protected createTileNode = (): TileNode<TilePayload> => {
