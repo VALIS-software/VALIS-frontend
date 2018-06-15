@@ -5,6 +5,8 @@
  * - Improve data structures:
  *      - Can we avoid brute-force searches? (We should store hidden fields on the object, ugly but fast)
  *          - Risky if the object might iterate over keys
+ *      - We could have an 'Animatable' type which could codify things like velocity
+ *          - Less flexible more more powerful
  * - Parameterize springs by duration and normalized dampening
  * - Replace energy threshold with some user-controlled parameter?
  * - Implement traditional easing via step functions
@@ -167,8 +169,8 @@ export class Animator {
         }
     }
 
-    public static hasActiveAnimations(): boolean {
-        return Animator.active.size > 0;
+    public static activeAnimationCount(): number {
+        return Animator.active.size;
     }
 
     public static addAnimationCompleteCallback<T>(object: T, field: string, callback: (object: T) => void, once: boolean = true) {
