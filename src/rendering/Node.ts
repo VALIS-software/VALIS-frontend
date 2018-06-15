@@ -11,6 +11,10 @@ export class Node<T extends Node<any>> {
 		(this.children as Set<T>).add(child);
 	}
 
+	has(child: T) {
+		return (this.children as Set<T>).has(child);
+	}
+
 	remove(child: T) {
 		return (this.children as Set<T>).delete(child);
 	}
