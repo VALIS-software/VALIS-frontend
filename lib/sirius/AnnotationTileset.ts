@@ -31,7 +31,7 @@ export enum GeneClass {
 export type GeneInfo = {
 	name?: string,
 	startIndex: number,
-	endIndex: number,
+	length: number,
 	strand: Strand,
 	class: GeneClass,
 	soClass: keyof SoGeneClass,
@@ -56,7 +56,7 @@ export enum TranscriptClass {
 export type TranscriptInfo = {
 	name?: string,
 	startIndex: number,
-	endIndex: number,
+	length: number,
 	class: TranscriptClass,
 	soClass: keyof SoTranscriptClass,
 }
@@ -70,7 +70,7 @@ export enum TranscriptComponentClass {
 export type TranscriptComponentInfo = {
 	name?: string,
 	startIndex: number,
-	endIndex: number,
+	length: number,
 	class: TranscriptComponentClass,
 	soClass: keyof SoTranscriptComponentClass,
 	phase?: number, // see https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md#description-of-the-format
@@ -143,36 +143,34 @@ export class AnnotationTileset {
 	}
 
 	protected addFeature(tile: Tile, feature: Feature) {
+		let featureCommon = {
+			name: feature.name,
+			startIndex: feature.start - 1,
+			length: feature.end - feature.start + 1,
+			soClass: feature.type,
+		}
+
 		if (SoGeneClass.instance[feature.type] !== undefined) {
 			// is gene
 			tile.content.push({
+				...featureCommon,
 				type: GenomeFeatureType.Gene,
-				name: feature.name,
-				startIndex: feature.start - 1,
-				endIndex: feature.end - 1,
 				class: SoGeneClass.instance[feature.type] as any,
-				soClass: feature.type,
 				strand: feature.strand,
 			});
 		} else if (SoTranscriptClass.instance[feature.type] !== undefined) {
 			// is transcript
 			tile.content.push({
+				...featureCommon,
 				type: GenomeFeatureType.Transcript,
-				name: feature.name,
-				startIndex: feature.start - 1,
-				endIndex: feature.end - 1,
 				class: SoTranscriptClass.instance[feature.type] as any,
-				soClass: feature.type,
 			});
 		} else if (SoTranscriptComponentClass.instance[feature.type] !== undefined) {
 			// is transcript component
 			let info: GenomeFeature<GenomeFeatureType.TranscriptComponent> = {
+				...featureCommon,
 				type: GenomeFeatureType.TranscriptComponent,
-				name: feature.name,
-				startIndex: feature.start - 1,
-				endIndex: feature.end - 1,
 				class: SoTranscriptComponentClass.instance[feature.type] as any,
-				soClass: feature.type,
 			};
 			if (feature.phase != null) {
 				info.phase = feature.phase;

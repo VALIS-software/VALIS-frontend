@@ -1,4 +1,4 @@
-import { GeneClass, TranscriptClass, TranscriptComponentClass } from "../../../lib/sirius/AnnotationTileset";
+import { GeneClass, TranscriptClass, TranscriptComponentClass, GenomeFeature, GenomeFeatureType, GenomeFeatureTypeMap } from "../../../lib/sirius/AnnotationTileset";
 import App from "../../App";
 import UsageCache from "../../ds/UsageCache";
 import { AnnotationStore, Gene, Transcript } from "../../model/AnnotationStore";
@@ -17,7 +17,7 @@ export class AnnotationTrack extends Track {
 
     protected annotationStore: AnnotationStore;
     protected yScrollNode: Object2D;
-    protected annotationsNeedUpdate: boolean;
+    protected annotationsNeedUpdate: boolean = true;
 
     constructor(model: TrackDataModel) {
         super(model);
@@ -44,7 +44,6 @@ export class AnnotationTrack extends Track {
         if ((this._lastComputedWidth !== this.getComputedWidth()) || this.annotationsNeedUpdate) {
             this.updateAnnotations();
             this._lastComputedWidth = this.getComputedWidth();
-            this.annotationsNeedUpdate = false;
         }
 
         super.applyTransformToSubNodes(root);
@@ -88,7 +87,7 @@ export class AnnotationTrack extends Track {
                     
                     for (let gene of tile.payload) {
                         // @! temp performance hack, only use node when visible
-                        { if (!(gene.startIndex <= x1 && gene.endIndex >= x0)) continue; }
+                        { if (!(gene.startIndex <= x1 && (gene.startIndex + gene.length) >= x0)) continue; }
 
                         // @! only show mRNAs
                         // if (gene.class !== GeneClass.ProteinCoding) continue;
@@ -107,7 +106,7 @@ export class AnnotationTrack extends Track {
                         });
 
                         annotation.layoutParentX = (gene.startIndex - x0) / span;
-                        annotation.layoutW = (gene.endIndex - gene.startIndex) / span;
+                        annotation.layoutW = (gene.length) / span;
                     }
 
                 } else {
@@ -118,6 +117,7 @@ export class AnnotationTrack extends Track {
 
         this._pendingTiles.removeUnused(this.deleteTileDependency);
         this._annotationCache.removeUnused(this.deleteAnnotation);
+        this.annotationsNeedUpdate = false;
     }
 
     protected createGeneAnnotation = (gene: Gene) => {
@@ -138,8 +138,13 @@ export class AnnotationTrack extends Track {
         annotation.releaseGPUResources();
     }
 
-    protected annotationKey = (feature: { soClass: string | number, name?: string, startIndex: number, endIndex: number }) => {
-        return feature.soClass + '\x1F' + feature.name + '\x1F' + feature.startIndex + '\x1F' + feature.endIndex;
+    protected annotationKey = (feature: {
+        soClass: string | number,
+        name?: string,
+        startIndex: number,
+        length: number,
+    }) => {
+        return feature.soClass + '\x1F' + feature.name + '\x1F' + feature.startIndex + '\x1F' + feature.length;
     }
 
     // when we're waiting on data from a tile we add a complete listener to update the annotation when the data arrives
@@ -179,8 +184,6 @@ class GeneAnnotation extends Object2D {
         spanMarker.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
         spanMarker.transparent = true;
         this.add(spanMarker);
-
-        let geneSpan = gene.endIndex - gene.startIndex;
         
         let strandPrefix = '?';
         if (gene.strand === Strand.Positive) {
@@ -205,8 +208,8 @@ class GeneAnnotation extends Object2D {
             transcriptAnnotation.h = transcriptHeight;
             transcriptAnnotation.y = i * (transcriptHeight + transcriptSpacing) + transcriptOffset;
 
-            transcriptAnnotation.layoutParentX = (transcript.startIndex - gene.startIndex) / geneSpan;
-            transcriptAnnotation.layoutW = (transcript.endIndex - transcript.startIndex) / geneSpan;
+            transcriptAnnotation.layoutParentX = (transcript.startIndex - gene.startIndex) / gene.length;
+            transcriptAnnotation.layoutW = transcript.length / gene.length;
 
             this.add(transcriptAnnotation);
         }
@@ -218,8 +221,6 @@ class TranscriptAnnotation extends Object2D {
 
     constructor(protected readonly transcript: Transcript, strand: Strand) {
         super();
-
-        let transcriptSpan = transcript.endIndex - transcript.startIndex;
 
         let transcriptColor = {
             [TranscriptClass.Unspecified]: [0.5, 0.5, 0.5, 0.25],
@@ -274,18 +275,13 @@ class TranscriptAnnotation extends Object2D {
         for (let component of transcript.components) {
             let componentMarker = new Rect(0, 0, undefined, false);
             componentMarker.layoutH = componentH[component.class];
-            componentMarker.layoutParentX = (component.startIndex - transcript.startIndex) / transcriptSpan;
-            componentMarker.layoutW = (component.endIndex - component.startIndex) / transcriptSpan;
+            componentMarker.layoutParentX = (component.startIndex - transcript.startIndex) / transcript.length;
+            componentMarker.layoutW = component.length / transcript.length;
             componentMarker.color.set(componentColor[component.class]);
             componentMarker.z = componentZ[component.class];
 
             componentMarker.transparent = true;
             componentMarker.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
-
-            if (component.phase != null) {
-                let phase = new Text(OpenSansRegular, component.phase + '', 10, [1, 1, 1, 1]);
-                componentMarker.add(phase);
-            }
             
             this.add(componentMarker);
         }

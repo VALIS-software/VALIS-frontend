@@ -48,7 +48,15 @@ export class XAxis extends Object2D {
     // valid for stable (fontSize, fontPath)
     protected labelCache = new UsageCache<Label>();
 
-    constructor(x0: number = 0, x1: number = 1, fontSizePx: number = 16, protected fontPath: string, protected offset: number = 0, protected snap: number = 1) {
+    constructor(
+        x0: number = 0,
+        x1: number = 1,
+        fontSizePx: number = 16,
+        protected fontPath: string,
+        protected offset: number = 0,
+        protected snap: number = 1,
+        protected startFrom: number = 0,
+    ) {
         super();
         this.render = false;
         this.x0 = x0;
@@ -154,7 +162,7 @@ export class XAxis extends Object2D {
 
             if (xMinor >= this.minDisplay && xMinor <= this.maxDisplay && isFinite(xMinor)) {
                 let minorParentX = (xMinor - this.x0 + this.offset) / span;
-                let str = this.formatValue(xMinor, this._maxTextLength);
+                let str = this.formatValue(xMinor + this.startFrom, this._maxTextLength);
                 let textMinor = this.labelCache.use(xMinor + '_' + str, () => this.createLabel(str));
                 textMinor.layoutParentX = minorParentX;
                 textMinor.setColor(0, 0, 0, minorAlpha);
@@ -162,7 +170,7 @@ export class XAxis extends Object2D {
 
             if (xMajor >= this.minDisplay && xMajor <= this.maxDisplay && isFinite(xMajor)) {
                 let majorParentX = (xMajor - this.x0 + this.offset) / span;
-                let str = this.formatValue(xMajor, this._maxTextLength);
+                let str = this.formatValue(xMajor + this.startFrom, this._maxTextLength);
                 let textMajor = this.labelCache.use(xMajor + '_' + str, () => this.createLabel(str));
                 textMajor.layoutParentX = majorParentX;
                 textMajor.setColor(0, 0, 0, 1);
