@@ -1,8 +1,9 @@
 import { TrackModel } from "../../model/TrackModel";
 import Panel from "../Panel";
 import Rect from "../core/Rect";
+import { TrackTypeMap } from "../../model/TrackTypeMap";
 
-export class Track extends Rect {
+export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> extends Rect {
 
     panel: Panel;
 
@@ -15,7 +16,7 @@ export class Track extends Rect {
     protected activeAxisPointerColor = [0, 140 / 255, 186 / 255, 1];
     protected secondaryAxisPointerColor = [0.2, 0.2, 0.2, 1];
 
-    constructor(protected model: TrackModel) {
+    constructor(protected model: TrackModel<ModelType>) {
         super(0, 0, [0, 0, 0, 1]);
 
         this.cursorStyle = this.defaultCursor;

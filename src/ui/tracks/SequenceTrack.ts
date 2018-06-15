@@ -1,7 +1,6 @@
 import { UsageCache } from "../../ds/UsageCache";
 import { Scalar } from "../../math/Scalar";
 import { TrackModel } from "../../model/TrackModel";
-import { TrackType } from "../../model/TrackType";
 import Device, { GPUTexture } from "../../rendering/Device";
 import { DrawContext, DrawMode } from "../../rendering/Renderer";
 import Object2D, { Object2DInternal } from "../core/Object2D";
@@ -19,7 +18,7 @@ export class SequenceTrack extends TileTrack<TilePayload, BlockPayload> {
     protected densityMultiplier = 2.0;
  
     constructor(model: TrackModel) {
-        super(model, SharedTileStore[TrackType.Sequence][model.sequenceId]);
+        super(model, SharedTileStore['sequence'][model.sequenceId]);
         this.color.set([0, 0, 0, 1]);
     }
 

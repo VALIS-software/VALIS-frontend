@@ -1,18 +1,17 @@
 /**
  * @! temporary design
  */
-import { AnnotationTileStore } from "./AnnotationTileStore";
-import { SequenceTileStore } from "./SequenceTileStore";
-import { TrackType } from "../TrackType";
+import { TrackTypeMap } from "../TrackTypeMap";
+import { TileStore } from "./TileStore";
 
 type StringMap<T> = { [id: string]: T };
 
 export const SharedTileStore: {
-    [TrackType.Sequence]: StringMap<SequenceTileStore>,
-    [TrackType.Annotation]: StringMap<AnnotationTileStore>,
+    [K in keyof TrackTypeMap]: StringMap<TileStore<any, any>>
 } = {
-    [TrackType.Sequence]: {},
-    [TrackType.Annotation]: {},
+    ['empty']: {},
+    ['sequence']: {},
+    ['annotation']: {},
 }
 
 export default SharedTileStore;

@@ -4,7 +4,7 @@ import Object2D from "./core/Object2D";
 import ReactObject from "./core/ReactObject";
 import Rect from "./core/Rect";
 import Track from "./tracks/Track";
-import { TrackClassMap } from "./tracks/TrackClassMap";
+import ConstructTrack from "./tracks/ConstructTrack";
 
 export class TrackRow {
 
@@ -44,7 +44,7 @@ export class TrackRow {
     }
 
     createTrack() {
-        let track: Track = new TrackClassMap[this.model.type](this.model);
+        let track: Track = ConstructTrack(this.model);
         this.tracks.add(track);
         return track;
     }

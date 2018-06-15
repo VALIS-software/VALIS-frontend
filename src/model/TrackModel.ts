@@ -1,3 +1,5 @@
+import { TrackTypeMap } from "./TrackTypeMap";
+
 /**
  * @! Temporary dummy model
  * 
@@ -6,10 +8,11 @@
  * - Applying a TrackModel state should restore state exactly
  */
 
-export type TrackModel = {
-    sequenceId: string,
-    name: string;
-    type: string;
-}
+export type TrackModel<TrackType extends keyof TrackTypeMap = keyof TrackTypeMap> = 
+    {
+        type: TrackType;
+        sequenceId: string,
+        name: string;
+    } & TrackTypeMap[TrackType]
 
 export default TrackModel;

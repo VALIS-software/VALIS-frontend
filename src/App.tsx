@@ -1,14 +1,14 @@
 import * as React from "react";
+import { Strand } from "../lib/gff3/Strand";
 import Animator from "./animation/Animator";
 import AnnotationTileStore from "./model/data-store/AnnotationTileStore";
 import SequenceTileStore from "./model/data-store/SequenceTileStore";
 import SharedTileStore from "./model/data-store/SharedTileStores";
-import { TrackType } from "./model/TrackType";
 import Header from "./ui/components/header/Header";
 import { AppCanvas } from "./ui/core/AppCanvas";
 import Object2D from "./ui/core/Object2D";
 import TrackViewer from "./ui/TrackViewer";
-import { Strand } from "../lib/gff3/Strand";
+import { TrackModel } from "./model/TrackModel";
 
 interface Props {}
 
@@ -34,27 +34,27 @@ export class App extends React.Component<Props, State> {
 		let trackViewer = new TrackViewer();
 
 		// @! temporary create tile stores
-		SharedTileStore[TrackType.Sequence]['chromosome1'] = new SequenceTileStore('chromosome1');
-		SharedTileStore[TrackType.Annotation]['chromosome1'] = new AnnotationTileStore('chromosome1');
+		SharedTileStore['sequence']['chromosome1'] = new SequenceTileStore('chromosome1');
+		SharedTileStore['annotation']['chromosome1'] = new AnnotationTileStore('chromosome1');
 
 		// @! temporary preload lods
-		SharedTileStore[TrackType.Sequence]['chromosome1'].getTiles(0.9, 1.1e6, 1 << 12, true, () => {});
-		SharedTileStore[TrackType.Sequence]['chromosome1'].getTiles(0.95, 1.05e6, 1 << 8, true, () => {});
-		SharedTileStore[TrackType.Sequence]['chromosome1'].getTiles(0, 230e6, 1 << 23, true, () => {});
+		SharedTileStore['sequence']['chromosome1'].getTiles(0.9, 1.1e6, 1 << 12, true, () => {});
+		SharedTileStore['sequence']['chromosome1'].getTiles(0.95, 1.05e6, 1 << 8, true, () => {});
+		SharedTileStore['sequence']['chromosome1'].getTiles(0, 230e6, 1 << 23, true, () => {});
 
 		// initialize with some dummy data
+		let dummyTracks: Array<TrackModel> = [
+			{ sequenceId: 'chromosome1', name: '+ Strand', type: 'sequence' },
+			{ sequenceId: 'chromosome1', name: '+ Stand Genes', type: 'annotation', strand: Strand.Negative },
+			{ sequenceId: 'chromosome1', name: '- Stand Genes', type: 'annotation', strand: Strand.Positive },
+		];
 		let i = 0;
-		for (let track of [
-			{ sequenceId: 'chromosome1', name: '+ Strand', type: TrackType.Sequence },
-			{ sequenceId: 'chromosome1', name: '+ Stand Genes', type: TrackType.Annotation },
-			{ sequenceId: 'chromosome1', name: '- Stand Genes', type: TrackType.Annotation, strand: Strand.Positive },
-			// { sequenceId: 'gm12878-dnase', name: 'GM12878-DNase', type: TrackType.Empty },
-		]) {
+		for (let model of dummyTracks) {
 			let h = undefined;
 			if (i === 0) h = 100;
 			if (i === 1) h = 250;
 			if (i === 2) h = 250;
-			trackViewer.addTrackRow(track, h);
+			trackViewer.addTrackRow(model, h);
 			i++;
 		}
 

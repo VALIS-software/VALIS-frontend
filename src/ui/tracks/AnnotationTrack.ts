@@ -7,7 +7,6 @@ import { AnnotationTileStore, Gene, Transcript } from "../../model/data-store/An
 import SharedTileStore from "../../model/data-store/SharedTileStores";
 import { Tile, TileState } from "../../model/data-store/TileStore";
 import TrackModel from "../../model/TrackModel";
-import { TrackType } from "../../model/TrackType";
 import { BlendMode } from "../../rendering/Renderer";
 import Object2D from "../core/Object2D";
 import { Rect } from "../core/Rect";
@@ -15,7 +14,7 @@ import Text from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
 import Track from "./Track";
 
-export class AnnotationTrack extends Track {
+export class AnnotationTrack extends Track<'annotation'> {
 
     protected annotationStore: AnnotationTileStore;
     protected yScrollNode: Object2D;
@@ -23,9 +22,10 @@ export class AnnotationTrack extends Track {
 
     protected loadingIndicator: LoadingIndicator;
 
-    constructor(model: TrackModel) {
+    constructor(model: TrackModel<'annotation'>) {
         super(model);
-        this.annotationStore = SharedTileStore[TrackType.Annotation][model.sequenceId];
+        
+        this.annotationStore = SharedTileStore['annotation'][model.sequenceId] as AnnotationTileStore;
 
         this.yScrollNode = new Object2D();
         this.yScrollNode.z = 0;
@@ -123,7 +123,7 @@ export class AnnotationTrack extends Track {
                         // @! only show mRNAs
                         // if (gene.class !== GeneClass.ProteinCoding) continue;
                         // @! only show + strand
-                        if (gene.strand !== Strand.Positive) continue;
+                        if (gene.strand !== this.model.strand) continue;
 
                         let annotationKey = this.annotationKey(gene);
 
