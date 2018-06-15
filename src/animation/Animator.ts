@@ -11,7 +11,6 @@
  */
 export class Animator {
 
-    // @! maybe better as a linked list - less error prone and potentially faster
     protected static active = new Set<{
         object: any,
         animatingFields: { [key: string]: {
@@ -31,9 +30,8 @@ export class Animator {
         once: boolean,
     }>();
 
-    public static springTo(
-        object: any,
-        fieldTargets: { [key: string]: number },
+    public static springTo(object: any, fieldTargets: { [key: string]: number }, criticalTension: number, velocity?: number): void;
+    public static springTo(object: any, fieldTargets: { [key: string]: number },
 
         /* @! Parameterization thoughts:
             - Resolution / or the size for which no change will be perceived
@@ -43,10 +41,16 @@ export class Animator {
         parameters: {
             tension: number,
             friction: number,
-        },
+        } | number,
+
         velocity?: number,
-    ) {
-        Animator.stepTo(object, fieldTargets, Animator.stringStep, parameters, velocity);
+    ): void {
+        let springParameters = parameters instanceof Object ? parameters : {
+            tension: parameters,
+            friction: Math.sqrt(parameters) * 2
+        };
+
+        Animator.stepTo(object, fieldTargets, Animator.stringStep, springParameters, velocity);
     }
 
     public static stepTo<T>(
