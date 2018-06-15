@@ -1,3 +1,5 @@
+import { Strand } from "./Strand";
+
 /**
  * # GFF3 File format
  * https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md
@@ -58,13 +60,6 @@ export type Attributes = {
     ontologyTerms?: Array<string>,
     isCircular: boolean,
     custom: { [key: string]: Array<string> }
-}
-
-export enum Strand {
-    None,
-    Unknown,
-    Positive,
-    Negative,
 }
 
 export type Phase = number;

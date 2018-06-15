@@ -1,4 +1,6 @@
-import Gff3LineParser, { Attributes, Phase, Strand } from './Gff3LineParser';
+import { Feature } from "./Feature";
+import Gff3LineParser, { Attributes, Phase } from './Gff3LineParser';
+import { Strand } from "./Strand";
 
 export type Gff3 = {
     version: string,
@@ -25,16 +27,6 @@ export type Gff3 = {
     fasta?: string,
 }
 
-export type Feature = {
-    id: string | undefined,
-    name: string | undefined,
-    type: string,
-    children: Array<Feature>,
-    start: number,
-    end: number,
-    strand: Strand,
-    phase: number | null
-}
 
 export type Callbacks = {
     onFeatureComplete: (feature: Feature) => void,
