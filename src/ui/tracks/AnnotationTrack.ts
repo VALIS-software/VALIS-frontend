@@ -12,12 +12,16 @@ import Text from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
 import Track from "./Track";
 import { Strand } from "../../../lib/gff3/Gff3LineParser";
+import { Animator } from "../../animation/Animator";
+import { DEFAULT_SPRING } from "../UIConstants";
 
 export class AnnotationTrack extends Track {
 
     protected annotationStore: AnnotationStore;
     protected yScrollNode: Object2D;
     protected annotationsNeedUpdate: boolean = true;
+
+    protected loadingIndicator: LoadingIndicator;
 
     constructor(model: TrackDataModel) {
         super(model);
@@ -31,6 +35,17 @@ export class AnnotationTrack extends Track {
         this.color.set([0.1, 0.1, 0.1, 1]);
 
         this.initializeYScrolling();
+
+        this.loadingIndicator = new LoadingIndicator();
+        this.loadingIndicator.cursorStyle = 'pointer';
+        this.loadingIndicator.layoutY = -1;
+        this.loadingIndicator.layoutParentY = 1;
+        this.loadingIndicator.x = 10;
+        this.loadingIndicator.y = -10;
+        // @! depth-box, should be at top, maybe layoutParentZ = 1
+        // - be careful to avoid conflict with cursor
+        this.toggleLoadingIndicator(false, false);
+        this.add(this.loadingIndicator);
     }
 
     setRange(x0: number, x1: number) {
@@ -67,6 +82,22 @@ export class AnnotationTrack extends Track {
         });
     }
 
+    /**
+     * Show or hide the loading indicator via animation
+     * Can be safely called repeatedly without accounting for the current state of the indicator
+     */
+    protected toggleLoadingIndicator(visible: boolean, animate: boolean) {
+        // we want a little bit of delay before the animation, for this we use a negative opacity when invisible
+        let targetOpacity = visible ? 1 : -0.1;
+
+        if (animate) {
+            Animator.springTo(this.loadingIndicator, { 'opacity': targetOpacity }, 50);
+        } else {
+            Animator.stop(this.loadingIndicator, ['opacity']);
+            this.loadingIndicator.opacity = targetOpacity;
+        }
+    }
+
     protected _annotationCache = new UsageCache<Object2D>();
     protected _pendingTiles = new UsageCache<Tile<any>>();
     protected updateAnnotations() {
@@ -92,7 +123,7 @@ export class AnnotationTrack extends Track {
                         // @! only show mRNAs
                         // if (gene.class !== GeneClass.ProteinCoding) continue;
                         // @! only show + strand
-                        // if (gene.strand === Strand.Negative) continue;
+                        if (gene.strand !== Strand.Positive) continue;
 
                         let annotationKey = this.annotationKey(gene);
 
@@ -110,14 +141,16 @@ export class AnnotationTrack extends Track {
                     }
 
                 } else {
-                    this._pendingTiles.use(tile.key, () => this.createTileDependency(tile));
+                    this._pendingTiles.use(tile.key, () => this.createTileLoadingDependency(tile));
                 }
             });
         }
 
-        this._pendingTiles.removeUnused(this.deleteTileDependency);
+        this._pendingTiles.removeUnused(this.deleteTileLoadingDependency);
         this._annotationCache.removeUnused(this.deleteAnnotation);
         this.annotationsNeedUpdate = false;
+
+        this.toggleLoadingIndicator(this._pendingTiles.count > 0, true);
     }
 
     protected createGeneAnnotation = (gene: Gene) => {
@@ -148,19 +181,34 @@ export class AnnotationTrack extends Track {
     }
 
     // when we're waiting on data from a tile we add a complete listener to update the annotation when the data arrives
-    protected createTileDependency = (tile: Tile<any>) => {
-        console.log('createTileDependency');
+    protected createTileLoadingDependency = (tile: Tile<any>) => {
         tile.addEventListener('complete', this.onDependentTileComplete);
         return tile;
     }
 
-    protected deleteTileDependency = (tile: Tile<any>) => {
-        console.log('deleteTileDependency');
+    protected deleteTileLoadingDependency = (tile: Tile<any>) => {
         tile.removeEventListener('complete', this.onDependentTileComplete);
     }
 
     protected onDependentTileComplete = () => {
         this.updateAnnotations();
+    }
+
+}
+
+class LoadingIndicator extends Text {
+
+    set opacity(v: number) {
+        this.color[3] = v;
+        this.visible = v > 0;
+    }
+
+    get opacity() {
+        return this.color[3];
+    }
+
+    constructor() {
+        super(OpenSansRegular, 'Loading', 12, [1, 1, 1, 1]);
     }
 
 }
