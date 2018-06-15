@@ -4,8 +4,9 @@
  * Todo:
  * - Improve data structures:
  *      - Can we avoid brute-force searches? (We should store hidden fields on the object, ugly but fast)
+ *          - Risky if the object might iterate over keys
  * - Parameterize springs by duration and normalized dampening
- * - Replace energy threshold with some user-controlled parameter
+ * - Replace energy threshold with some user-controlled parameter?
  * - Implement traditional easing via step functions
  * - For fixed time springs we can implement a fix/physical blended version of springStep, that lerps to 0 as t -> duration
  */
@@ -30,21 +31,16 @@ export class Animator {
         once: boolean,
     }>();
 
+
+    /* @! Parameterization thoughts:
+        - Resolution / or the size for which no change will be perceived
+        - Duration to reach this state
+        - [Some sort of normalized wobblyness control], 0 = no energy loss, 0.5 = critical, 1 = ?
+    */
     public static springTo(object: any, fieldTargets: { [key: string]: number }, criticalTension: number, velocity?: number): void;
-    public static springTo(object: any, fieldTargets: { [key: string]: number },
-
-        /* @! Parameterization thoughts:
-            - Resolution / or the size for which no change will be perceived
-            - Duration to reach this state
-            - [Some sort of normalized wobblyness control], 0 = no energy loss, 0.5 = critical, 1 = ?
-        */
-        parameters: {
-            tension: number,
-            friction: number,
-        } | number,
-
-        velocity?: number,
-    ): void {
+    public static springTo(object: any, fieldTargets: { [key: string]: number }, parameters: { tension: number, friction: number }, velocity?: number): void;
+    public static springTo(object: any, fieldTargets: { [key: string]: number }, parameters: any, velocity?: number): void {
+        // handle multiple types of spring parameters
         let springParameters = parameters instanceof Object ? parameters : {
             tension: parameters,
             friction: Math.sqrt(parameters) * 2
@@ -135,8 +131,6 @@ export class Animator {
 
         for (let entry of Animator.active) {
             let object = entry.object;
-
-            // @! todo, support normal fixed-path easings
 
             let animatingFields = Object.keys(entry.animatingFields);
             for (let field of animatingFields) {
@@ -298,13 +292,6 @@ export class Animator {
                 Animator.active.delete(entry);
                 return;
             }
-        }
-    }
-
-    private static setObjectFields(object: any, fieldTargets: { [key: string]: number }) {
-        let fields = Object.keys(fieldTargets);
-        for (let field of fields) {
-            object[field] = fieldTargets[field];
         }
     }
 
