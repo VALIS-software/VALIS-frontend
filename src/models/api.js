@@ -150,10 +150,20 @@ class GenomeAPI {
 		});
 	}
 
-	getQueryResults(query, full = false) {
+	getQueryResults(query, full = false, startIdx = null, endIdx = null) {
 		let requestUrl = `${this.baseUrl}/query/basic`;
 		if (full) {
 			requestUrl = `${this.baseUrl}/query/full`;
+		}
+		const options = [];
+		if (startIdx !== null) {
+			options.push(`result_start=${startIdx}`);
+		}
+		if (endIdx !== null) {
+			options.push(`result_end=${endIdx}`);
+		}
+		if (options.length > 0) {
+			requestUrl = `${requestUrl}?` + options.join('&');
 		}
 		return axios.post(requestUrl, query).then(data => {
 			return data.data;
