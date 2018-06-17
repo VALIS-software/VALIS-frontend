@@ -121,53 +121,35 @@ class SNPDetails extends React.Component {
 
     let variantType = (<div className="snp-type snp-type-non-coding">Non-coding Variant</div>);
 
-    if (details.info.mapped_gene) {
-      let geneId = null;
-      let geneName = details.info.mapped_gene;
-
-      if (details.info.GENEINFO) {
-        // TODO: We need to structure this data better on the backend
-        const geneDetails = details.info.GENEINFO.split('|');
-        geneId = geneDetails[0].split(':')[1];
-      } else if (geneName.indexOf('LOC') > 0) {
-        geneName = geneName.slice(geneName.indexOf('LOC'));
-      } else if (geneName.indexOf(' - ') > 0) {
-        geneName = geneName.slice(geneName.indexOf(' - ') + 3);
+    if (details.info.variant_affected_genes) {
+      let affectedGenes = details.info.variant_affected_genes;
+      if (affectedGenes) {
+        const geneLinks = [];
+        for (const geneName of affectedGenes) {
+          geneLinks.push(<GeneLink key={geneName} geneName={geneName} viewModel={this.props.viewModel} appModel={this.props.appModel} />)
+        }
+        variantType = (<div className="snp-type-wrapper">{details.type} of {geneLinks}</div>);
       }
-      const geneLink = (<GeneLink geneName={geneName} geneId={geneId} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
-      const type = (<span className="snp-type">{details.info.VC || 'Variant'}</span>);
-      variantType = (<div className="snp-type-wrapper">{type} of {geneLink}</div>);
-    } else {
-      const type = details.info.VC;
-      variantType = (<div className="snp-type-wrapper">Non-coding {type}</div>);
     }
 
-    let variantFreqChart = (<div />);
-
+    let variantFreqChart = (<div> Data not available </div>);
     if (details.info.variant_ref && details.info.variant_alt) {
       // snv : draw an arrow from ref --> alt
       const ref = details.info.variant_ref;
       const alt = details.info.variant_alt;
-
-      const freq = details.info.TOPMED || details.info.CAF;
-      if (freq) {
-        const percentages = freq.split(',').map(d => parseFloat(d));
+      const allele_frequencies = details.info.allele_frequencies;
+      if (allele_frequencies) {
+        let ref_percentage = 1.0;
         const data = [
-          { key: ref, value: percentages[0] },
+          { key: ref, value: ref_percentage },
         ];
-        let i = 1;
-        alt.split(',').forEach(letter => {
-          const v = isNaN(percentages[i]) ? 0.0 : percentages[i];
-          data.push({ key: letter, value: v });
-          i++;
-        });
+        for (const alt in allele_frequencies) {
+          data.push({ key: alt, value: allele_frequencies[alt] });
+          ref_percentage = ref_percentage - allele_frequencies[alt];
+        }
+        data[0].value = ref_percentage;
         variantFreqChart = (<FrequencyBarChart data={data} />);
-      } else {
-        variantFreqChart = (<div> Data not available </div>);
       }
-    } else {
-      // deletion or insertion: draw + or - symbol plus base pair
-      variantFreqChart = (<div> Data not available </div>);
     }
 
     const snpRS = details.name.toLowerCase();
