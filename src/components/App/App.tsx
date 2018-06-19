@@ -126,7 +126,7 @@ class App extends React.PureComponent<any, any> {
 
   reportFailure = (evt: any) => {
     const error: object = evt.data.error;
-    let newErrorList = this.state.errors.slice(0);
+    const newErrorList = this.state.errors.slice(0);
     newErrorList.push(error);
     this.setState({
       errors: newErrorList,
