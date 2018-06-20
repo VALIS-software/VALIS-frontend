@@ -1,9 +1,8 @@
-import { Device, GPUProgram, GPUVertexState, GPUBuffer, BufferUsageHint, VertexAttributeDataType, GPUTexture, TextureFormat, TextureDataType, TextureMagFilter, TextureMinFilter, TextureWrapMode, ColorSpaceConversion, TextureUsageHint } from "../../rendering/Device";
-import { SharedResources } from "./SharedResources";
-import { DrawContext, DrawMode, BlendMode } from "../../rendering/Renderer";
+import GPUText, { GlyphLayout, GPUTextFont } from "../../../lib/gputext/GPUText";
+import { BufferUsageHint, ColorSpaceConversion, Device, GPUBuffer, GPUTexture, TextureDataType, TextureFormat, TextureMagFilter, TextureMinFilter, TextureUsageHint, TextureWrapMode, VertexAttributeDataType } from "../../rendering/Device";
+import { BlendMode, DrawContext, DrawMode } from "../../rendering/Renderer";
 import { Object2D } from "./Object2D";
-import GPUText, { GPUTextFont, GlyphLayout, ResourceReference } from "../../../lib/gputext/GPUText";
-import { ReactObjectContainer } from "./ReactObject";
+import { SharedResources } from "./SharedResources";
 
 /**
  * Text
