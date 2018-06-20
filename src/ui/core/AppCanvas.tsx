@@ -85,7 +85,9 @@ export class AppCanvas extends React.Component<Props, State> {
 
         console.log(`AppCanvas created with device %c"${this.device.name}"`, 'font-weight: bold');
         let vao = this.device.capabilities.vertexArrayObjects;
+        let inst = this.device.capabilities.instancing;
         console.log(`\tVertex Array Objects: %c${vao ? 'enabled' : 'disabled'}`, `font-weight: bold; color: ${vao ? 'green' : 'red'}`);
+        console.log(`\tInstancing: %c${inst ? 'enabled' : 'disabled'}`, `font-weight: bold; color: ${inst ? 'green' : 'red'}`);
     }
 
     componentWillUnmount() {
