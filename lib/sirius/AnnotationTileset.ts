@@ -40,7 +40,7 @@ export type GeneInfo = {
 export enum TranscriptClass {
 	Unspecified,
 	// aka protein coding RNA
-	Messenger,
+	ProteinCoding,
 	// non-protein coding
 	NonProteinCoding,
 		// sub-types include
@@ -92,7 +92,7 @@ export class SoTranscriptClass {
 	[key: string]: undefined | TranscriptClass;
 
 	readonly 'lnc_RNA' = TranscriptClass.NonProteinCoding;
-	readonly 'mRNA' = TranscriptClass.Messenger;
+	readonly 'mRNA' = TranscriptClass.ProteinCoding;
 	readonly 'pseudogenic_transcript' = TranscriptClass.Unspecified;
 	readonly 'transcript' = TranscriptClass.Unspecified;
 	readonly 'miRNA' = TranscriptClass.NonProteinCoding;
@@ -152,19 +152,21 @@ export class AnnotationTileset {
 
 		if (SoGeneClass.instance[feature.type] !== undefined) {
 			// is gene
-			tile.content.push({
+			let gene: GenomeFeature<GenomeFeatureType.Gene> = {
 				...featureCommon,
 				type: GenomeFeatureType.Gene,
 				class: SoGeneClass.instance[feature.type] as any,
 				strand: feature.strand,
-			});
+			}
+			tile.content.push(gene);
 		} else if (SoTranscriptClass.instance[feature.type] !== undefined) {
 			// is transcript
-			tile.content.push({
+			let transcript: GenomeFeature<GenomeFeatureType.Transcript> = {
 				...featureCommon,
 				type: GenomeFeatureType.Transcript,
 				class: SoTranscriptClass.instance[feature.type] as any,
-			});
+			}
+			tile.content.push(transcript);
 		} else if (SoTranscriptComponentClass.instance[feature.type] !== undefined) {
 			// is transcript component
 			let info: GenomeFeature<GenomeFeatureType.TranscriptComponent> = {
