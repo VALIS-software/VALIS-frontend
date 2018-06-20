@@ -1,4 +1,4 @@
-import { TileContent, GeneInfo, TranscriptInfo, TranscriptComponentInfo, GenomeFeatureType } from "../../../lib/sirius/AnnotationTileset";
+import { TileContent, GeneInfo, TranscriptInfo, TranscriptComponentInfo, GenomeFeatureType, TranscriptClass, TranscriptComponentClass } from "../../../lib/sirius/AnnotationTileset";
 import SiriusApi from "../../../lib/sirius/SiriusApi";
 import { Tile, TileStore } from "./TileStore";
 
@@ -8,7 +8,10 @@ export type Gene = GeneInfo & {
 };
 
 export type Transcript = TranscriptInfo & {
-    components: Array<TranscriptComponentInfo>
+    exon: Array<TranscriptComponentInfo>,
+    cds: Array<TranscriptComponentInfo>,
+    utr: Array<TranscriptComponentInfo>,
+    other: Array<TranscriptComponentInfo>
 }
 
 export type TilePayload = Array<Gene>
@@ -59,12 +62,15 @@ export class AnnotationTileStore extends TileStore<TilePayload, void> {
                 if (feature.type === GenomeFeatureType.Transcript) {
                     let transcriptInfo = feature as TranscriptInfo;
                     if (activeGene == null) {
-                        console.warn(`Out of order Transcript - no parent gene found`);
+                        console.warn(`Out of order Transcript – no parent gene found`);
                         continue;
                     }
                     activeTranscript = {
                         ...transcriptInfo,
-                        components: [],
+                        exon: [],
+                        cds: [],
+                        utr: [],
+                        other: [],
                     };
                     activeGene.transcripts.push(activeTranscript);
                 }
@@ -72,10 +78,35 @@ export class AnnotationTileStore extends TileStore<TilePayload, void> {
                 if (feature.type === GenomeFeatureType.TranscriptComponent) {
                     let componentInfo = feature as TranscriptComponentInfo;
                     if (activeTranscript == null) {
-                        console.warn(`Out of order TranscriptComponent - no parent transcript found`);
+                        console.warn(`Out of order TranscriptComponent – no parent transcript found`);
                         continue;
                     }
-                    activeTranscript.components.push(componentInfo);
+
+                    // bucket components by class
+                    switch (componentInfo.class) {
+                        case TranscriptComponentClass.Exon: {
+                            activeTranscript.exon.push(componentInfo);
+                            break;
+                        }
+                        case TranscriptComponentClass.ProteinCodingSequence: {
+                            // validate CDS ordering (must be startIndex ascending)
+                            let lastCDS = activeTranscript.cds[activeTranscript.cds.length - 1];
+                            if (lastCDS != null && (lastCDS.startIndex >= componentInfo.startIndex)) {
+                                console.warn(`Out of order CDS – Protein coding components must be sorted by startIndex`);
+                            }
+
+                            activeTranscript.cds.push(componentInfo);
+                            break;
+                        }
+                        case TranscriptComponentClass.Untranslated: {
+                            activeTranscript.utr.push(componentInfo);
+                            break;
+                        }
+                        default: {
+                            activeTranscript.other.push(componentInfo);
+                            break;
+                        }
+                    }
                 }
             }
 
