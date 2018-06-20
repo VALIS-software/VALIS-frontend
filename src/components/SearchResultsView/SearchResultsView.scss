@@ -1,8 +1,12 @@
+@import "../../helpers/variables.scss";
+
 .search-results-view {
-	padding: 8px;
-	.result-info {
-		padding: 16px;
-		border-radius: 8px;
+	height:calc(100% - #{2*$sidebar-header-height});
+	user-select: none;
+	.search-results-list {
+		margin-top: $sidebar-header-height;
+		border-top: 1px solid red;
+		user-select: none;
+		outline-style:none;
 	}
-	
 }

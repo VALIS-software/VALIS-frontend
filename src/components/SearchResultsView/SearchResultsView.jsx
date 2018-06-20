@@ -29,7 +29,9 @@ class SearchResultsView extends React.Component {
   }
 
   componentDidMount() {
-    this.loadMore()
+    this.loadMore();
+    const height = document.getElementById('search-results-view').clientHeight;
+    this.setState({ height });
   }
 
   loadMore = () => {
@@ -71,8 +73,10 @@ class SearchResultsView extends React.Component {
   }
 
   rowRenderer = ({ index, key, style }) => {
-    if (index === this.state.results.length) {
+    if (index === this.state.results.length && this.state.hasMore) {
       return (<div key={key}>Loading...</div>);
+    } else if (index === this.state.results.length) {
+      return (<div key={key}> End of results </div>);
     }
     const result = this.state.results[index];
     let title = "";
@@ -82,7 +86,7 @@ class SearchResultsView extends React.Component {
       title = result.name;
       description = "Source: " + sourceStr;
     } else {
-      title = result.type + " " + result.name;
+      title = result.name;
       description = result.info.description
         ? result.info.description
         : "Source: " + sourceStr;
@@ -96,15 +100,15 @@ class SearchResultsView extends React.Component {
     //     key={key}
     //   />
     // );
-    return (<div style={style} key={key}>{title}</div>);
+    return (<div style={style} key={key}>{title}<hr />{description}</div>);
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
     if (!prevState) {
       prevState = {};
     }
-    // prevState.needsRefresh = prevState.query !== nextProps.query;
-    // prevState.cursor = prevState.needsRefresh ? 0 : prevState.cursor;
+    prevState.needsRefresh = prevState.query !== nextProps.query;
+    prevState.cursor = prevState.needsRefresh ? 0 : prevState.cursor;
     prevState.query = nextProps.query;
     prevState.appModel = nextProps.appModel;
     return prevState;
@@ -115,10 +119,10 @@ class SearchResultsView extends React.Component {
 
     const isRowLoaded = ({ index }) => index < this.state.results.length
 
-    const rowCount = this.state.hasMore ? this.state.results.length + 1 : this.state.results.length;
+    const rowCount = this.state.results.length + 1;
 
     return (
-      <div className="search-results-view">
+      <div id="search-results-view" className="search-results-view">
         <InfiniteLoader
           isRowLoaded={isRowLoaded}
           loadMoreRows={loadMoreRows}
@@ -126,10 +130,11 @@ class SearchResultsView extends React.Component {
         >
           {({ onRowsRendered, registerChild }) => (
             <List
+              className="search-results-list"
               ref={registerChild}
-              height={800}
+              height={this.state.height}
               rowCount={rowCount}
-              rowHeight={30}
+              rowHeight={100}
               width={300}
               onRowsRendered={onRowsRendered}
               rowRenderer={this.rowRenderer}

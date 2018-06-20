@@ -186,6 +186,7 @@ class TokenBox extends React.Component {
     // TODO: the AutoComplete component auto-closes when you click a menu item 
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
     const input = (<AutoComplete
+      id='search-box'
       ref='autoComplete'
       onKeyDown={this.onChange}
       openOnFocus={true}
