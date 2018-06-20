@@ -13,7 +13,7 @@ export class Rect extends Object2D {
 
     color = new Float32Array(4);
 
-    constructor(w: number = 10, h: number = 10, color: ArrayLike<number> = [1, 0, 0, 1], readonly debugDisplay: boolean = false) {
+    constructor(w: number = 10, h: number = 10, color: ArrayLike<number> = [1, 0, 0, 1]) {
         super();
         this.render = true;
         this.w = w;
@@ -25,37 +25,9 @@ export class Rect extends Object2D {
         this.gpuVertexState = SharedResources.quad1x1VertexState;
         this.gpuProgram = SharedResources.getProgram(
             device,
-            `
-                #version 100
-
-                attribute vec2 position;
-                uniform mat4 model;
-                uniform vec2 size;
-
-                varying vec2 vUv;
-
-                void main() {
-                    vUv = position;
-                    gl_Position = model * vec4(position * size, 0., 1.0);
-                }
-            `,
-            `
-                #version 100
-
-                precision mediump float;
-                varying vec2 vUv;
-
-                uniform vec4 color;
-                
-                void main() {
-                    ${
-                        this.debugDisplay ? 
-                            `gl_FragColor = vec4(vUv.xyx * color.rgb * color.a, color.a);` :
-                            `gl_FragColor = vec4(color.rgb * color.a, color.a);`
-                    }
-                }
-            `,
-            ['position']
+            this.getVertexCode(),
+            this.getFragmentCode(),
+            this.getAttributes()
         );
     }
 
@@ -70,6 +42,42 @@ export class Rect extends Object2D {
         context.uniformMatrix4fv('model', false, this.worldTransformMat4);
         context.uniform4fv('color', this.color);
         context.draw(DrawMode.TRIANGLES, 6, 0);
+    }
+
+    protected getVertexCode() {
+        return `
+            #version 100
+
+            attribute vec2 position;
+            uniform mat4 model;
+            uniform vec2 size;
+
+            varying vec2 vUv;
+
+            void main() {
+                vUv = position;
+                gl_Position = model * vec4(position * size, 0., 1.0);
+            }
+        `;
+    }
+
+    protected getFragmentCode() {
+        return `
+            #version 100
+
+            precision mediump float;
+            varying vec2 vUv;
+
+            uniform vec4 color;
+            
+            void main() {
+                gl_FragColor = vec4(color.rgb * color.a, color.a);
+            }
+        `;
+    }
+
+    protected getAttributes() {
+        return ['position'];
     }
 
 }
