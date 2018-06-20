@@ -43,23 +43,24 @@ export class App extends React.Component<Props, State> {
 		SharedTileStore['sequence']['chromosome1'].getTiles(0, 230e6, 1 << 23, true, () => {});
 
 		// initialize with some dummy data
-		let dummyTracks: Array<TrackModel> = [
-			{ sequenceId: 'chromosome1', name: '+ Strand', type: 'sequence' },
-			{ sequenceId: 'chromosome1', name: '+ Stand Genes', type: 'annotation', strand: Strand.Negative },
-			{ sequenceId: 'chromosome1', name: '- Stand Genes', type: 'annotation', strand: Strand.Positive },
+		let tracks: Array<TrackModel> = [
+			{ sequenceId: 'chromosome1', name: '→ Sequence', type: 'sequence' },
+			{ sequenceId: 'chromosome1', name: '→ Strand Genes', type: 'annotation', strand: Strand.Positive },
+			{ sequenceId: 'chromosome1', name: '← Strand Genes', type: 'annotation', strand: Strand.Negative },
 		];
 		let i = 0;
-		for (let model of dummyTracks) {
+		for (let model of tracks) {
 			let h = undefined;
+			// @! quick hack some initial layout
 			if (i === 0) h = 100;
-			if (i === 1) h = 250;
-			if (i === 2) h = 250;
+			if (i === 1) h = Math.max((this.canvasHeight() - 200) * 0.5, 0);
+			if (i === 2) h = Math.max((this.canvasHeight() - 200) * 0.5, 0);
 			trackViewer.addTrackRow(model, h);
 			i++;
 		}
 
 		for (let panel of [
-			{ name: 'Chromosome 1', x0: 10e5, x1: 10e5 + 10 }
+			{ name: 'Chromosome 1', x0: 1358.4e3, x1: 1358.6e3}
 			// { name: 'Chromosome 1', x0: 0, x1: 249e6 }
 		]) {
 			trackViewer.addPanel(panel, false);
