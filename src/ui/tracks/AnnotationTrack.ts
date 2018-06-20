@@ -535,12 +535,18 @@ class CDS extends Rect {
             uniform vec4 color;
 
             varying vec2 vUv;
+
+            float squareWaveIntegral(in float x, in float wavelength) {
+                float k = x / wavelength;
+                float u = fract(k);
+                float wave = step(0.5, u) * 2.0 - 1.0;
+                return (fract(k * wave) - 1.) * wavelength;
+            }
             
             void main() {
                 vec2 domPx = vUv * size;
             
                 const vec2 borderWidthPx = vec2(1.);
-
                 vec2 inner = step(borderWidthPx, domPx) * step(domPx, size - borderWidthPx);
                 float border = inner.x * inner.y;
 
@@ -549,19 +555,25 @@ class CDS extends Rect {
                 vec4 codonBColor = color + vec4(0.05);
                 // a codon is 3 bases wide
                 float codonWidthPx = baseWidthPx * 3.0;
-                
-                // x-coordinate used to determine codon tone
-                float wavelength = codonWidthPx * 2.0;
-                float posX = mix(domPx.x, size.x - domPx.x, reverse);
-                float codonU = fract((posX - baseWidthPx * phase) / wavelength);
-                float codon = step(0.5, codonU);
 
-                // wavelengthPixels = wavelength * pixelRatio
-                // wavePhase at pixel center = codonU
-                // pixel-coverage = f(wavelengthPixels, wavePhase)
+                // use square wave to create codon tones
+                // we use true pixel coordinates to make antialiasing easier
+                float xPixels = (mix(domPx.x, size.x - domPx.x, reverse) - baseWidthPx * phase) * pixelRatio;
+                float wavelengthPixels = codonWidthPx * pixelRatio * 2.0;
+
+                // antialiasing: we find the average over the pixel by sampling signal integral either side and dividing by sampling interval (1 in this case)
+                float waveAvg = (
+                    squareWaveIntegral(xPixels + 0.5, wavelengthPixels) -
+                    squareWaveIntegral(xPixels - 0.5, wavelengthPixels)
+                );
+
+                // lerp to midpoint (0) for small codonWidthPixels to avoid moire patterns
+                waveAvg = mix(waveAvg, 0., clamp(2. - wavelengthPixels, 0., 1.0));
+
+                float codon = waveAvg * 0.5 + 0.5; // scale wave to 0 - 1
 
                 vec4 c =
-                    mix(color, codonBColor, codon) // switch between codon colors
+                    mix(codonAColor, codonBColor, codon) // switch between codon colors
                     + (1.0 - border) * vec4(0.2); // additive blend border
 
                 gl_FragColor = vec4(c.rgb, 1.0) * c.a;
