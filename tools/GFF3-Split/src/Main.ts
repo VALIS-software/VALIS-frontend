@@ -17,7 +17,7 @@
 
 import * as fs from 'fs';
 import AnnotationTileset from '../../../lib/sirius/AnnotationTileset';
-import Gff3Parser, { Feature } from '../../../lib/gff3/Gff3Parser';
+import Gff3Parser from '../../../lib/gff3/Gff3Parser';
 import { Terminal } from './Terminal';
 
 // settings
