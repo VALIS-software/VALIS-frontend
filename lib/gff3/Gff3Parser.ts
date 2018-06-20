@@ -1,5 +1,5 @@
-import { Feature } from "./Feature";
-import Gff3LineParser, { Attributes, Phase } from './Gff3LineParser';
+import { Feature, FeatureAttributes } from "./Feature";
+import Gff3LineParser, { Phase } from './Gff3LineParser';
 import { Strand } from "./Strand";
 
 export type Gff3 = {
@@ -122,7 +122,7 @@ export class Gff3Parser {
         score: number | null,
         strand: Strand,
         phase: Phase | null,
-        attributes: Attributes,
+        attributes: FeatureAttributes,
     ) => {
         if (start == null || end == null) {
             this.callbacks.onError(`Invalid range for ${type} - ${attributes.id}/${attributes.name}; start or end is null (${start} - ${end})`);
@@ -138,6 +138,7 @@ export class Gff3Parser {
             strand: strand,
             children: new Array(),
             phase: phase,
+            attributes: attributes
         };
 
         // declare into local scope if it has an ID

@@ -1,4 +1,5 @@
 import { Strand } from "./Strand";
+import { FeatureAttributes } from "./Feature";
 
 /**
  * # GFF3 File format
@@ -27,7 +28,7 @@ export type LineCallbacks = {
         score: number | null,
         strand: Strand,
         phase: Phase | null,
-        attributes: Attributes,
+        attributes: FeatureAttributes,
     ) => void,
 
     // error handling
@@ -40,26 +41,6 @@ export type LineCallbacks = {
     onFastaChunk: (string: string) => void,
 
     onComplete: () => void
-}
-
-export type Attributes = {
-    id?: string,
-    name?: string,
-    aliases?: Array<string>,
-    parentIds?: Array<string>,
-    target?: { // Target=EST23 1 21
-        id: string,
-        start: number,
-        end: number,
-        strand?: Strand,
-    },
-    gap?: string,
-    derivesFromId?: string,
-    notes?: Array<string>,
-    dbxrefs?: Array<string>,
-    ontologyTerms?: Array<string>,
-    isCircular: boolean,
-    custom: { [key: string]: Array<string> }
 }
 
 export type Phase = number;
@@ -88,7 +69,7 @@ export class Gff3LineParser {
             score: number | null,
             strand: Strand,
             phase: Phase | null,
-            attributes: Attributes,
+            attributes: FeatureAttributes,
         ) => {},
 
         // error handling
@@ -199,9 +180,9 @@ export class Gff3LineParser {
         }
     }
 
-    protected parseAttributes(field: string | null): Attributes {
+    protected parseAttributes(field: string | null): FeatureAttributes {
         // create empty attributes object
-        let attributes: Attributes = {
+        let attributes: FeatureAttributes = {
             isCircular: false,
             custom: {}
         };

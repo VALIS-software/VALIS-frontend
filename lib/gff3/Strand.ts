@@ -4,3 +4,5 @@ export enum Strand {
     Positive,
     Negative
 }
+
+export default Strand;
