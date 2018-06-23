@@ -35,6 +35,7 @@ export type GeneInfo = {
 	strand: Strand,
 	class: GeneClass,
 	soClass: keyof SoGeneClass,
+	transcriptCount: number,
 }
 
 export enum TranscriptClass {
@@ -128,6 +129,7 @@ export class AnnotationTileset {
 
 	constructor(
 		protected tileSize: number,
+		protected topLevelOnly: boolean,
 		protected onUnknownFeature: (feature: Feature) => void,
 		protected onError: (reason: string) => void,
 	) {}
@@ -152,11 +154,17 @@ export class AnnotationTileset {
 
 		if (SoGeneClass.instance[feature.type] !== undefined) {
 			// is gene
+			// sum child transcripts
+			let transcriptCount = feature.children.reduce((p: number, c: Feature) => {
+				let isTranscript = SoTranscriptClass.instance[c.type] !== undefined;
+				return isTranscript ? (p + 1) : p;
+			}, 0);
 			let gene: GenomeFeature<GenomeFeatureType.Gene> = {
 				...featureCommon,
 				type: GenomeFeatureType.Gene,
 				class: SoGeneClass.instance[feature.type] as any,
 				strand: feature.strand,
+				transcriptCount: transcriptCount
 			}
 			tile.content.push(gene);
 		} else if (SoTranscriptClass.instance[feature.type] !== undefined) {
@@ -183,8 +191,10 @@ export class AnnotationTileset {
 			return;
 		}
 
-		for (let child of feature.children) {
-			this.addFeature(tile, child);
+		if (!this.topLevelOnly) {
+			for (let child of feature.children) {
+				this.addFeature(tile, child);
+			}
 		}
 	}
 
