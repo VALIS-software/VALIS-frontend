@@ -36,31 +36,6 @@ class Header extends React.Component {
     };
   }
 
-  onNewRequest = (chosen, index) => {
-    // treat as trait if the text is not from autocomplete
-    let text = chosen;
-    let value = 0;
-    if (index >= 0) {
-      text = chosen.textKey;
-      value = chosen.valueKey;
-    }
-    const builder = new QueryBuilder();
-    if (value === 0) {
-      builder.newInfoQuery();
-      builder.filterType('trait');
-      builder.searchText(text);
-      builder.setLimit(150);
-    } else if (value === 1) {
-      builder.newGenomeQuery();
-      builder.filterType('gene');
-      builder.filterName(text);
-      builder.setLimit(150);
-    }
-    const query = builder.build();
-    const view = (<SearchResultsView text={text} query={query} viewModel={this.props.viewModel} appModel={this.props.model} />);
-    this.props.viewModel.pushView('Search Results', query, view);
-  }
-
   addDatasetBrowser = () => {
     const view = (<DatasetSelector viewModel={this.props.viewModel} appModel={this.props.model} />);
     this.props.viewModel.pushView('Select Dataset', null, view);
