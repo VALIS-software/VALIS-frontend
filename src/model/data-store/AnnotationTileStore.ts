@@ -18,22 +18,17 @@ export type TilePayload = Array<Gene>
 
 export class AnnotationTileStore extends TileStore<TilePayload, void> {
 
-    constructor(sourceId: string) {
-        super(1 << 20, 1);
+    constructor(protected sourceId: string, tileSize: number = 1 << 20, protected macro: boolean = false) {
+        super(tileSize, 1);
     }
 
     protected mapLodLevel(l: number) {
-        return Math.floor(l / 8) * 8;
+        return 0;
     }
 
     protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
-        if (tile.lodLevel > 0) {
-            console.log('returning empty payload', tile.lodLevel);
-            return [];
-        }
-
-        console.log('Request annotations for ', tile.lodX, tile.lodSpan);
-        return SiriusApi.loadAnnotations('chromosome1', tile.lodX, tile.lodSpan).then((flatFeatures) => {
+        console.log('Request annotations for ', tile.lodLevel, tile.lodX, tile.lodSpan, tile.x, tile.span);
+        return SiriusApi.loadAnnotations(this.sourceId, this.macro, tile.x, tile.span).then((flatFeatures) => {
             // convert flat list of features into a nested structure which is easier to work with for rendering
             let payload: TilePayload = new Array();
             let activeGene: TilePayload[0];
@@ -112,6 +107,14 @@ export class AnnotationTileStore extends TileStore<TilePayload, void> {
 
             return payload;
         });
+    }
+
+}
+
+export class MacroAnnotationTileStore extends AnnotationTileStore {
+
+    constructor(sourceId: string) {
+        super(sourceId, 1 << 25, true);
     }
 
 }

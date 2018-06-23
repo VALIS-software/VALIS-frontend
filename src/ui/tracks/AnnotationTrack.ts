@@ -1,8 +1,8 @@
 import { Strand } from "../../../lib/gff3/Strand";
-import { GeneClass, TranscriptClass, TranscriptComponentClass, TranscriptComponentInfo } from "../../../lib/sirius/AnnotationTileset";
+import { TranscriptClass } from "../../../lib/sirius/AnnotationTileset";
 import { Animator } from "../../animation/Animator";
-import App from "../../App";
 import UsageCache from "../../ds/UsageCache";
+import { Scalar } from "../../math/Scalar";
 import { AnnotationTileStore, Gene, Transcript } from "../../model/data-store/AnnotationTileStore";
 import SharedTileStore from "../../model/data-store/SharedTileStores";
 import { Tile, TileState } from "../../model/data-store/TileStore";
@@ -13,11 +13,14 @@ import { Rect } from "../core/Rect";
 import Text from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
 import Track from "./Track";
-import { start } from "repl";
 
 export class AnnotationTrack extends Track<'annotation'> {
 
+    readonly macroLodThresholdLow = 8;
+    readonly macroLodBlendRange = 2;
+
     protected annotationStore: AnnotationTileStore;
+    protected macroAnnotationStore: AnnotationTileStore;
     protected yScrollNode: Object2D;
     protected annotationsNeedUpdate: boolean = true;
 
@@ -26,7 +29,8 @@ export class AnnotationTrack extends Track<'annotation'> {
     constructor(model: TrackModel<'annotation'>) {
         super(model);
         
-        this.annotationStore = SharedTileStore['annotation'][model.sequenceId] as AnnotationTileStore;
+        this.annotationStore = SharedTileStore.annotation[model.sequenceId];
+        this.macroAnnotationStore = SharedTileStore.macroAnnotation[model.sequenceId];
 
         this.yScrollNode = new Object2D();
         this.yScrollNode.z = 0;
@@ -47,13 +51,6 @@ export class AnnotationTrack extends Track<'annotation'> {
         // - be careful to avoid conflict with cursor
         this.toggleLoadingIndicator(false, false);
         this.add(this.loadingIndicator);
-
-        /*
-        let test = new TranscriptSpan(Strand.Negative);
-        test.layoutW = 1;
-        test.layoutH = 1;
-        this.add(test);
-        */
     }
 
     setRange(x0: number, x1: number) {
@@ -92,7 +89,7 @@ export class AnnotationTrack extends Track<'annotation'> {
 
     /**
      * Show or hide the loading indicator via animation
-     * Can be safely called repeatedly without accounting for the current state of the indicator
+     * This function can be safely called repeatedly without accounting for the current state of the indicator
      */
     protected toggleLoadingIndicator(visible: boolean, animate: boolean) {
         // we want a little bit of delay before the animation, for this we use a negative opacity when invisible
@@ -107,10 +104,11 @@ export class AnnotationTrack extends Track<'annotation'> {
     }
 
     protected _annotationCache = new UsageCache<Object2D>();
+    protected _activeAnnotations = new UsageCache<Object2D>();
     protected _pendingTiles = new UsageCache<Tile<any>>();
     protected updateAnnotations() {
         this._pendingTiles.markAllUnused();
-        this._annotationCache.markAllUnused();
+        this._activeAnnotations.markAllUnused();
 
         const x0 = this.x0;
         const x1 = this.x1;
@@ -119,44 +117,103 @@ export class AnnotationTrack extends Track<'annotation'> {
 
         if (widthPx > 0) {
             let basePairsPerDOMPixel = (span / widthPx);
-            let samplingDensity = basePairsPerDOMPixel / App.canvasPixelRatio;
+            let continuousLodLevel = Scalar.log2(Math.max(basePairsPerDOMPixel, 1));
 
-            this.annotationStore.getTiles(x0, x1, samplingDensity, true, (tile) => {
-                if (tile.state === TileState.Complete) {
-                    
+            let macroOpacity: number = Scalar.clamp((continuousLodLevel - this.macroLodThresholdLow) / this.macroLodBlendRange, 0, 1);
+            let microOpacity: number = 1.0 - macroOpacity;
+            
+            if (microOpacity > 0) {
+                this.updateMicroAnnotations(x0, x1, span, basePairsPerDOMPixel, microOpacity);
+            }
+
+            if (macroOpacity > 0) {
+                this.macroAnnotationStore.getTiles(x0, x1, basePairsPerDOMPixel, true, (tile) => {
+                    if (tile.state !== TileState.Complete) {
+                        // if the tile is incomplete then wait until complete and call updateAnnotations() again
+                        this._pendingTiles.use(tile.key, () => this.createTileLoadingDependency(tile));
+                        return;
+                    }
+
                     for (let gene of tile.payload) {
-                        // @! temp performance hack, only use node when visible
                         { if (!(gene.startIndex <= x1 && (gene.startIndex + gene.length) >= x0)) continue; }
-
-                        // apply gene filter
                         if (gene.strand !== this.model.strand) continue;
 
-                        let annotationKey = this.annotationKey(gene);
+                        let annotationKey = 'macro' + '\x1F' + this.annotationKey(gene);
 
                         let annotation = this._annotationCache.use(annotationKey, () => {
-                            let object = new GeneAnnotation(gene);
-                            object.y = 40;
+                            // create
+                            let object = new Rect(0, 0);
+                            object.color.set([82 / 255, 75 / 255, 165 / 255, 0.3]);
+                            object.transparent = true;
+                            object.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
+                            object.y = 0;
                             object.layoutH = 0;
-                            object.z = 1 / 4;
-                            this.addAnnotation(object);
+                            object.h = gene.transcriptCount * 20 + (gene.transcriptCount - 1) * 10 + 60;
+                            object.z = 0.75;
+                            object.mask = this;
+                            object.forEachSubNode((sub) => sub.mask = this);
                             return object;
+                        });
+
+                        this._activeAnnotations.use(annotationKey, () => {
+                            this.addAnnotation(annotation);
+                            return annotation;
                         });
 
                         annotation.layoutParentX = (gene.startIndex - x0) / span;
                         annotation.layoutW = (gene.length) / span;
+                        annotation.opacity = macroOpacity;
                     }
-
-                } else {
-                    this._pendingTiles.use(tile.key, () => this.createTileLoadingDependency(tile));
-                }
-            });
+                });
+            }
         }
 
         this._pendingTiles.removeUnused(this.deleteTileLoadingDependency);
-        this._annotationCache.removeUnused(this.deleteAnnotation);
+        this._activeAnnotations.removeUnused(this.removeAnnotation);
         this.annotationsNeedUpdate = false;
 
         this.toggleLoadingIndicator(this._pendingTiles.count > 0, true);
+    }
+
+    protected updateMicroAnnotations(x0: number, x1: number, span: number, samplingDensity: number, opacity: number) {
+        this.annotationStore.getTiles(x0, x1, samplingDensity, true, (tile) => {
+            if (tile.state !== TileState.Complete) {
+                // if the tile is incomplete then wait until complete and call updateAnnotations() again
+                this._pendingTiles.use(tile.key, () => this.createTileLoadingDependency(tile));
+                return;
+            }
+        
+            for (let gene of tile.payload) {
+                // @! temp performance hack, only use node when visible
+                // (don't need to do this when using instancing)
+                { if (!(gene.startIndex <= x1 && (gene.startIndex + gene.length) >= x0)) continue; }
+
+                // apply gene filter
+                if (gene.strand !== this.model.strand) continue;
+
+                let annotationKey = this.annotationKey(gene);
+
+                let annotation = this._annotationCache.use(annotationKey, () => {
+                    // create
+                    let object = new GeneAnnotation(gene);
+                    object.y = 40;
+                    object.layoutH = 0;
+                    object.z = 1 / 4;
+                    object.mask = this;
+                    object.forEachSubNode((sub) => sub.mask = this);
+                    return object;
+                });
+
+                this._activeAnnotations.use(annotationKey, () => {
+                    this.addAnnotation(annotation);
+                    return annotation;
+                });
+
+                annotation.layoutParentX = (gene.startIndex - x0) / span;
+                annotation.layoutW = (gene.length) / span;
+                annotation.opacity = opacity;
+            }
+        });
     }
 
     protected createGeneAnnotation = (gene: Gene) => {
@@ -165,16 +222,19 @@ export class AnnotationTrack extends Track<'annotation'> {
 
     protected addAnnotation = (annotation: Object2D) => {
         // mask to this object
-        annotation.mask = this;
-        annotation.forEachSubNode((sub) => {
-            sub.mask = this;
-        });
         this.yScrollNode.add(annotation);
     }
 
-    protected deleteAnnotation = (annotation: Object2D) => {
+    protected removeAnnotation = (annotation: Object2D) => {
+        // mask to this object
         this.yScrollNode.remove(annotation);
+    }
+
+    protected deleteAnnotation = (annotation: Object2D) => {
         annotation.releaseGPUResources();
+        annotation.forEachSubNode((sub) => {
+            sub.releaseGPUResources();
+        });
     }
 
     protected annotationKey = (feature: {
@@ -204,15 +264,6 @@ export class AnnotationTrack extends Track<'annotation'> {
 
 class LoadingIndicator extends Text {
 
-    set opacity(v: number) {
-        this.color[3] = v;
-        this.visible = v > 0;
-    }
-
-    get opacity() {
-        return this.color[3];
-    }
-
     constructor() {
         super(OpenSansRegular, 'Loading', 12, [1, 1, 1, 1]);
     }
@@ -221,35 +272,31 @@ class LoadingIndicator extends Text {
 
 class GeneAnnotation extends Object2D {
 
+    set opacity(v: number) {
+        this._opacity = v;
+        for (let child of this.children) {
+            child.opacity = v;
+        }
+    }
+    get opacity() {
+        return this._opacity;
+    }
+
+    protected _opacity: number = 1;
+
     constructor(protected readonly gene: Gene) {
         super();
 
-        let colors = {
-            [GeneClass.ProteinCoding]: [1, 0, 0, 0.5],
-            [GeneClass.NonProteinCoding]: [0, 0, 1, 0.5],
-            [GeneClass.Unspecified]: [1, 1, 1, 0.5],
-            [GeneClass.Pseudo]: [0, 1, 1, 0.5],
-        };
-
-        /*
-        let spanMarker = new Rect(0, 0);
-        spanMarker.color.set(colors[gene.class]);
+        let spanMarker = new TranscriptSpan(gene.strand);
+        spanMarker.color.set([138 / 0xFF, 136 / 0xFF, 191 / 0xFF, 0.38]);
         spanMarker.layoutW = 1;
-        spanMarker.h = 1;
+        spanMarker.h = 10;
         spanMarker.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
         spanMarker.transparent = true;
         this.add(spanMarker);
-        */
-        
-        /*
-        let strandIndication = '?';
-        if (gene.strand === Strand.Positive) {
-            strandIndication = '>';
-        } else if (gene.strand === Strand.Negative) {
-            strandIndication = '<';
-        }
-        */
 
+        devColorFromElement('gene', spanMarker.color);
+        
         let name = new Text(OpenSansRegular, gene.name, 16, [1, 1, 1, 1]);
         name.layoutY = -1;
         name.y = -5;
@@ -277,6 +324,18 @@ class GeneAnnotation extends Object2D {
 
 class TranscriptAnnotation extends Object2D {
 
+    set opacity(v: number) {
+        this._opacity = v;
+        for (let child of this.children) {
+            child.opacity = v;
+        }
+    }
+    get opacity() {
+        return this._opacity;
+    }
+
+    protected _opacity: number = 1;
+
     constructor(protected readonly transcript: Transcript, strand: Strand) {
         super();
 
@@ -288,7 +347,7 @@ class TranscriptAnnotation extends Object2D {
 
         /**
         let spanMarker = new TranscriptSpan(strand);
-        spanMarker.color.set(transcriptColor[transcript.class]);
+        spanMarker.color.set([138 / 0xFF, 136 / 0xFF, 191 / 0xFF, 0.38]);
         spanMarker.h = 10;
         spanMarker.layoutW = 1;
         spanMarker.layoutY = -0.5;
@@ -373,11 +432,11 @@ class Exon extends Rect {
     constructor() {
         super(0, 0);
 
-        this.transparent = true;
-        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
-
         this.color.set([255, 255, 255].map(v => v / 255));
         this.color[3] = 0.1;
+
+        this.transparent = true;
+        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
 
         devColorFromElement('exon', this.color);
     }
@@ -402,12 +461,13 @@ class Exon extends Rect {
                 vec2 domPx = vUv * size;
             
                 const vec2 borderWidthPx = vec2(1.);
-                const float borderStrength = 0.2;
+                const float borderStrength = 0.3;
 
                 vec2 inner = step(borderWidthPx, domPx) * step(domPx, size - borderWidthPx);
                 float border = inner.x * inner.y;
 
-                vec4 c = color + (1.0 - border) * vec4(borderStrength);
+                vec4 c = color;
+                c.rgb += (1.0 - border) * vec3(borderStrength);
 
                 gl_FragColor = vec4(c.rgb, 1.0) * c.a;
             }
@@ -421,16 +481,17 @@ class UTR extends Rect {
     constructor() {
         super(0, 0);
 
-        this.transparent = true;
-        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
-
         this.color.set([216., 231., 255.].map(v => v / 255));
         this.color[3] = 0.1;
+
+        this.transparent = true;
+        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
 
         devColorFromElement('utr', this.color);
     }
 
     draw(context: DrawContext) {
+        context.uniform1f('pixelRatio', this.worldTransformMat4[0] * context.viewport.w * 0.5);
         super.draw(context);
     }
 
@@ -441,8 +502,8 @@ class UTR extends Rect {
             precision highp float;
 
             uniform vec2 size;
-
             uniform vec4 color;
+            uniform float pixelRatio;
 
             varying vec2 vUv;
             
@@ -454,20 +515,20 @@ class UTR extends Rect {
                 vec2 inner = step(borderWidthPx, domPx) * step(domPx, size - borderWidthPx);
                 float border = inner.x * inner.y;
 
-
                 // crosshatch
-                // todo: anti-aliasing
                 const float angle = -0.520;
                 const float widthPx = 2.;
                 const float wavelengthPx = 7.584;
                 const float lineStrength = 0.25;
                 
                 vec2 centerPx = domPx - size * 0.5;
-                float l = centerPx.x * cos(angle) - centerPx.y * sin(angle);
-                float lines = step(widthPx, mod(l, wavelengthPx)) * lineStrength + (1. - lineStrength);
 
+                float lPx = centerPx.x * cos(angle) - centerPx.y * sin(angle);
+                // not antialiased but looks good enough with current color scheme
+                float lines = step(widthPx, mod(lPx, wavelengthPx)) * lineStrength + (1. - lineStrength);
 
-                vec4 c = color + (1.0 - border * lines) * vec4(0.2);
+                vec4 c = color;
+                c.rgb += (1.0 - border * lines) * vec3(0.3);
 
                 gl_FragColor = vec4(c.rgb, 1.0) * c.a;
             }
@@ -490,23 +551,23 @@ class CDS extends Rect {
         super(0, 0);
         this.phase = phase;
 
+        let defaultStartTone = phase > 0 ? 1 : 0;
+
         // we determine which 'tone' the first codon is by its position in the mRNA sequence (after splicing)
         let startTone = Math.floor(mRnaIndex / 3) % 2; // 0 = A, 1 = B
 
-        // b
-        let defaultStartTone = phase > 0 ? 1 : 0;
-
+        // if necessary swap start tone by offsetting phase
         if (defaultStartTone !== startTone) {
             this.phase += 3;
         }
         
         this.reverse = strand === Strand.Negative ? 1.0 : 0.0;
 
-        this.transparent = true;
-        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
-
         this.color.set([228, 25, 255].map(v => v/255));
         this.color[3] = 0.5;
+
+        this.transparent = true;
+        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
 
         devColorFromElement('cds', this.color);
     }
@@ -542,6 +603,15 @@ class CDS extends Rect {
                 float wave = step(0.5, u) * 2.0 - 1.0;
                 return (fract(k * wave) - 1.) * wavelength;
             }
+
+            float squareWaveAntialiased(in float xPixels, in float wavelengthPixels) {
+                // antialiasing: we find the average over the pixel by sampling signal integral either side and dividing by sampling interval (1 in this case)
+                float waveAvg = squareWaveIntegral(xPixels + 0.5, wavelengthPixels) - squareWaveIntegral(xPixels - 0.5, wavelengthPixels);
+
+                // lerp to midpoint (0) for small wavelengths (~ 1 pixel) to avoid moire patterns
+                waveAvg = mix(waveAvg, 0., clamp(2. - wavelengthPixels, 0., 1.0));
+                return waveAvg;
+            }
             
             void main() {
                 vec2 domPx = vUv * size;
@@ -561,20 +631,12 @@ class CDS extends Rect {
                 float xPixels = (mix(domPx.x, size.x - domPx.x, reverse) - baseWidthPx * phase) * pixelRatio;
                 float wavelengthPixels = codonWidthPx * pixelRatio * 2.0;
 
-                // antialiasing: we find the average over the pixel by sampling signal integral either side and dividing by sampling interval (1 in this case)
-                float waveAvg = (
-                    squareWaveIntegral(xPixels + 0.5, wavelengthPixels) -
-                    squareWaveIntegral(xPixels - 0.5, wavelengthPixels)
-                );
-
-                // lerp to midpoint (0) for small codonWidthPixels to avoid moire patterns
-                waveAvg = mix(waveAvg, 0., clamp(2. - wavelengthPixels, 0., 1.0));
-
-                float codon = waveAvg * 0.5 + 0.5; // scale wave to 0 - 1
+                float codon = squareWaveAntialiased(xPixels, wavelengthPixels) * 0.5 + 0.5; // scale wave to 0 - 1
 
                 vec4 c =
-                    mix(codonAColor, codonBColor, codon) // switch between codon colors
-                    + (1.0 - border) * vec4(0.2); // additive blend border
+                    mix(codonAColor, codonBColor, codon); // switch between codon colors
+
+                c.rgb += (1.0 - border) * vec3(0.3); // additive blend border
 
                 gl_FragColor = vec4(c.rgb, 1.0) * c.a;
             }
@@ -593,6 +655,7 @@ class TranscriptSpan extends Rect {
 
     draw(context: DrawContext) {
         context.uniform2f('pixelSize', 1/context.viewport.w, 1/context.viewport.h);
+        context.uniform1f('reverse', this.direction === Strand.Negative ? 1 : 0);
         super.draw(context);
     }
 
@@ -604,6 +667,7 @@ class TranscriptSpan extends Rect {
 
             uniform vec2 pixelSize;
             uniform vec2 size;
+            uniform float reverse;
 
             uniform vec4 color;
 
@@ -624,6 +688,8 @@ class TranscriptSpan extends Rect {
             
             void main() {
                 vec2 x = vec2(vUv.x, vUv.y - 0.5);
+
+                x.x = mix(x.x, 1.0 - x.x, reverse);
 
                 float n = 2.0;
                 x *= n; x.x = fract(x.x);
@@ -651,8 +717,8 @@ class TranscriptSpan extends Rect {
                     lineSegment(x, vec2(0), vec2(1.0, 0.), 0.1, pixelSize)
                 );
 
-                vec3 rgb = vec3(m);
-                float a = m * 0.1;
+                vec3 rgb = color.rgb * m;
+                float a = m * color.a;
 
                 gl_FragColor = vec4(rgb, 1.0) * a; return;
 

@@ -14,10 +14,11 @@ export class SiriusApi {
 
     static loadAnnotations(
         sequenceId: string,
+        macro: boolean,
         startBaseIndex: number,
         span: number,
     ): Promise<TileContent> {
-        let jsonPath = `/data/${sequenceId}/annotation/${startBaseIndex},${span}.json`;
+        let jsonPath = `/data/${sequenceId}/annotation${macro ? '-macro' : ''}/${startBaseIndex},${span}.json`;
         return axios.get(jsonPath).then((a) => {
             return a.data;
         });

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Strand } from "../lib/gff3/Strand";
 import Animator from "./animation/Animator";
-import AnnotationTileStore from "./model/data-store/AnnotationTileStore";
+import AnnotationTileStore, { MacroAnnotationTileStore } from "./model/data-store/AnnotationTileStore";
 import SequenceTileStore from "./model/data-store/SequenceTileStore";
 import SharedTileStore from "./model/data-store/SharedTileStores";
 import Header from "./ui/components/header/Header";
@@ -36,6 +36,7 @@ export class App extends React.Component<Props, State> {
 		// @! temporary create tile stores
 		SharedTileStore['sequence']['chromosome1'] = new SequenceTileStore('chromosome1');
 		SharedTileStore['annotation']['chromosome1'] = new AnnotationTileStore('chromosome1');
+		SharedTileStore['macroAnnotation']['chromosome1'] = new MacroAnnotationTileStore('chromosome1');
 
 		// @! temporary preload lods
 		SharedTileStore['sequence']['chromosome1'].getTiles(0.9, 1.1e6, 1 << 12, true, () => {});
