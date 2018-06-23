@@ -19,22 +19,34 @@ import * as fs from 'fs';
 import AnnotationTileset from '../../../lib/sirius/AnnotationTileset';
 import Gff3Parser from '../../../lib/gff3/Gff3Parser';
 import { Terminal } from './Terminal';
+import { Feature } from '../../../lib/gff3/Feature';
 
 // settings
 const outputDirectory = '../../data/chromosome1/annotation';
 const inputPath = 'data/Homo_sapiens.GRCh38.92.chromosome.1.gff3';
-const tileSize = 1 << 20; // ~1 million
+
 const featureTypeBlacklist = ['pseudogene', 'biological_region', 'chromosome'];
 
 // initialize
 let unknownFeatureTypes: { [key: string]: number }  = {};
 let skippedFeatureTypes: { [key: string]: number }  = {};
 
+let onUnknownFeature = (f: Feature) => { unknownFeatureTypes[f.type] = (unknownFeatureTypes[f.type] || 0) + 1 }
+
+let lodLevel0TileSize = 1 << 20;
+
 let tileset = new AnnotationTileset(
-	tileSize,
-	(f) => {
-		unknownFeatureTypes[f.type] = (unknownFeatureTypes[f.type] || 0) + 1;
-	},
+	lodLevel0TileSize, // ~1 million,
+	false,
+	onUnknownFeature,
+	Terminal.error,
+);
+
+let macroLodLevel = 5;
+let macroTileset = new AnnotationTileset(
+	lodLevel0TileSize * (1 << macroLodLevel),
+	true,
+	onUnknownFeature,
 	Terminal.error,
 );
 
@@ -52,6 +64,7 @@ let parser = new Gff3Parser({
 	onFeatureComplete: (feature) => {
 		if (featureTypeBlacklist.indexOf(feature.type) === -1) {
 			tileset.addTopLevelFeature(feature);
+			macroTileset.addTopLevelFeature(feature);
 		} else {
 			skippedFeatureTypes[feature.type] = (skippedFeatureTypes[feature.type] || 0) + 1;
 		}
@@ -83,32 +96,34 @@ let parser = new Gff3Parser({
 			Terminal.log('Skipped features:<b>', skippedFeatureTypes);
 		}
 
-		// delete output directory
-		if (fs.existsSync(outputDirectory)) {
-			for (let filename of fs.readdirSync(outputDirectory)) {
-				fs.unlinkSync(outputDirectory + '/' + filename);
-			}
-			fs.rmdirSync(outputDirectory)
-		}
-
-		// create output directory
-		if (!fs.existsSync(outputDirectory)) {
-			fs.mkdirSync(outputDirectory);
-		}
-
-		// write tile files to output directory
-		let nSavedFiles = 0;
-		for (let tile of tileset.tiles) {
-			let filename = `${tile.startIndex.toFixed(0)},${tile.span.toFixed(0)}`;
-			let filePath = `${outputDirectory}/${filename}.json`;
-			fs.writeFileSync(filePath, JSON.stringify(tile.content));
-			nSavedFiles++;
-		}
-
-		Terminal.success(`Saved <b>${nSavedFiles}</b> files into <b>${outputDirectory}</b>`);
+		saveTileset(tileset, outputDirectory);
+		saveTileset(macroTileset, outputDirectory + '-' + 'macro');
 	}
 
 });
+
+function saveTileset(tileset: AnnotationTileset, directory: string) {
+	// delete output directory
+	if (fs.existsSync(directory)) {
+		for (let filename of fs.readdirSync(directory)) {
+			fs.unlinkSync(directory + '/' + filename);
+		}
+		fs.rmdirSync(directory);
+	}
+	// create output directory
+	fs.mkdirSync(directory);
+
+	// write tile files to output directory
+	let nSavedFiles = 0;
+	for (let tile of tileset.tiles) {
+		let filename = `${tile.startIndex.toFixed(0)},${tile.span.toFixed(0)}`;
+		let filePath = `${directory}/${filename}.json`;
+		fs.writeFileSync(filePath, JSON.stringify(tile.content));
+		nSavedFiles++;
+	}
+
+	Terminal.success(`Saved <b>${nSavedFiles}</b> files into <b>${directory}</b>`);
+}
 
 stream.on('data', parser.parseChunk);
 stream.on('close', parser.end);
