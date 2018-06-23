@@ -48,6 +48,7 @@ export class Text extends Object2D {
     }
 
     color: Float32Array = new Float32Array(4);
+    opacity: number = 1;
 
     // when additive blend factor is 1, the blend mode is additive, when 0, it's normal premultiplied alpha blended
     additiveBlendFactor: number = 0;
@@ -241,7 +242,7 @@ export class Text extends Object2D {
 
         // text instance
         context.uniform1f('glyphScale', this._glyphLayout.glyphScale);
-        context.uniform4fv('color', this.color);
+        context.uniform4f('color', this.color[0], this.color[1], this.color[2], this.color[3] * this.opacity);
         context.uniform1f('blendFactor', 1.0 - this.additiveBlendFactor);
         context.uniformMatrix4fv('transform', false, this.worldTransformMat4);
 

@@ -29,13 +29,15 @@ export class Renderable<T extends Node<any>> extends Node<T> {
 	// set to false to disable any interaction with the rendering system (including masking)
 	// if this is true, the instance must have gpu* fields set before the rendering
 	render = true;
-	// set to false to disable writing to the color buffer, however the object will still be drawn to the stencil buffer if it's used as a mask
-	visible = true;
+	// set to 0 to disable writing to the color buffer, however the object will still be drawn to the stencil buffer if it's used as a mask
+	opacity: number = 1;
 	// when true, object is rendered in the transparency pass, this has a performance cost because z ordering has to take precedence over state-change-minimization ordering
-	transparent = false;
+	// when undefined the renderer assumes true if opacity < 1
+	transparent?: boolean;
+	// set blend mode (defaults to None or Premultiplied Alpha when opacity < 1)
+	blendMode?: BlendMode;
 
 	dependentRenderPasses = new Array<RenderPass>();
-	blendMode = BlendMode.NONE;
 
 	mask: Renderable<any> = null;
 

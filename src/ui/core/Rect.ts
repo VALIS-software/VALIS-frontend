@@ -12,6 +12,7 @@ import { Object2D } from "./Object2D";
 export class Rect extends Object2D {
 
     color = new Float32Array(4);
+    opacity: number = 1;
 
     constructor(w: number = 10, h: number = 10, color: ArrayLike<number> = [1, 0, 0, 1]) {
         super();
@@ -40,7 +41,7 @@ export class Rect extends Object2D {
     draw(context: DrawContext) {
         context.uniform2f('size', this.computedWidth, this.computedHeight);
         context.uniformMatrix4fv('model', false, this.worldTransformMat4);
-        context.uniform4fv('color', this.color);
+        context.uniform4f('color', this.color[0], this.color[1], this.color[2], this.color[3] * this.opacity);
         context.draw(DrawMode.TRIANGLES, 6, 0);
     }
 

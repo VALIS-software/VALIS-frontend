@@ -67,7 +67,7 @@ export class XAxis extends Object2D {
         this.clippingMask = new Rect(0, 0, [0.9, 0.9, 0.9, 1]);
         this.clippingMask.layoutW = 1;
         this.clippingMask.layoutH = 1;
-        this.clippingMask.visible = false;
+        this.clippingMask.opacity = 0;
         this.add(this.clippingMask);
     }
 
@@ -166,6 +166,7 @@ export class XAxis extends Object2D {
                 let textMinor = this.labelCache.use(xMinor + '_' + str, () => this.createLabel(str));
                 textMinor.layoutParentX = minorParentX;
                 textMinor.setColor(0, 0, 0, minorAlpha);
+                textMinor.opacity = minorAlpha;
             }
 
             if (xMajor >= this.minDisplay && xMajor <= this.maxDisplay && isFinite(xMajor)) {

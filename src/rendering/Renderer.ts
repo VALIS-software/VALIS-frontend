@@ -46,7 +46,7 @@ export class Renderer {
 		this.deviceInternal = device as any as DeviceInternal;
 		this.gl = this.deviceInternal.gl;
 		this.extVao = this.deviceInternal.extVao;
-		this.drawContext = new DrawContext(device, this.deviceInternal.extInstanced);
+		this.drawContext = DrawContext.create(device, this.deviceInternal.extInstanced);
 	}
 
 	private _masks = new Array<Renderable<any>>();
@@ -124,7 +124,14 @@ export class Renderer {
 				);
 
 				// transparent nodes are rendered from furthest to nearest
-				if (node.transparent) {
+
+				// if node.transparent is not defined then use opacity to determine if transparency pass is required
+				let useTransparentPass = node.transparent;
+				if (useTransparentPass === undefined) {
+					useTransparentPass = node.opacity < 1 ? true : false;
+				}
+
+				if (useTransparentPass) {
 					transparent[transparentIndex++] = node;
 				} else {
 					opaque[opaqueIndex++] = node;
@@ -267,11 +274,16 @@ export class Renderer {
 	protected renderArray(renderables: Array<Renderable<any>>) {
 		for (let i = 0; i < renderables.length; i++) {
 			let renderable = renderables[i];
-			if (!renderable.visible) continue;
+			if (renderable.opacity <= 0) continue;
 
 			let internal = renderable as any as RenderableInternal;
 
 			let blendMode = renderable.blendMode;
+
+			// default blend mode when unspecified
+			if (blendMode === undefined) {
+				blendMode = renderable.opacity < 1 ? BlendMode.PREMULTIPLIED_ALPHA : BlendMode.NONE;
+			}
 
 			// set state for renderable
 			this.setProgram(internal);
@@ -343,7 +355,6 @@ export class Renderer {
 
 	protected setBlendMode(blendMode: BlendMode) {
 		const gl = this.gl;
-		const drawContextInternal = this.drawContext as any as DrawContextInternal;
 
 		if (blendMode !== this.currentBlendMode) {
 
@@ -441,7 +452,7 @@ export class DrawContext {
 	readonly program: GPUProgram;
 	readonly vertexState: GPUVertexState;
 
-	constructor(protected readonly device: Device, protected readonly extInstanced: ANGLE_instanced_arrays) {
+	protected constructor(protected readonly device: Device, protected readonly extInstanced: ANGLE_instanced_arrays) {
 		const gl = (device as any as DeviceInternal).gl;
 		this.gl = gl;
 	}
@@ -549,6 +560,10 @@ export class DrawContext {
 			// @! fallback or warn
 			console.error(`extDrawInstanced() failed: Instance drawing extension is not available`);
 		}
+	}
+
+	static create(device: Device, extInstanced: ANGLE_instanced_arrays) {
+		return new DrawContext(device, extInstanced);
 	}
 
 }
