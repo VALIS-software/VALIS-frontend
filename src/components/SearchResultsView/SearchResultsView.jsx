@@ -34,12 +34,8 @@ class SearchResultsView extends React.Component {
     this.setState({ height });
   }
 
-  loadMore = () => {
-    this.setState({
-      isLoading: true,
-    });
+  runQuery = () => {
     const cursor = this.state.cursor;
-
     this.api.getQueryResults(this.state.query, true, cursor, cursor + FETCH_SIZE).then(results => {
 
       if (results.results_total === 1) {
@@ -49,8 +45,6 @@ class SearchResultsView extends React.Component {
 
         let newResults = this.state.results.slice(0);
         newResults = newResults.concat(results.data);
-        console.log(results.data);
-        console.log('total results', newResults.length);
         this.setState({
           results: newResults,
           needsRefresh: false,
@@ -66,6 +60,13 @@ class SearchResultsView extends React.Component {
         isLoading: false,
       });
     });
+  }
+
+  loadMore = () => {
+    this.setState({
+      isLoading: true,
+    });
+    this.runQuery();
   }
 
   resultSelected(result) {
@@ -91,15 +92,6 @@ class SearchResultsView extends React.Component {
         ? result.info.description
         : "Source: " + sourceStr;
     }
-    // return (
-    //   <DataListItem
-    //     title={title}
-    //     style={style}
-    //     description={description}
-    //     onClick={() => this.resultSelected(result)}
-    //     key={key}
-    //   />
-    // );
     return (<div style={style} key={key}>{title}<hr />{description}</div>);
   }
 
@@ -115,6 +107,10 @@ class SearchResultsView extends React.Component {
   }
 
   render() {
+    if (this.state.needsRefresh) {
+      this.runQuery();
+      return (<div id="search-results-view" className="search-results-view" />);
+    }
     const loadMoreRows = this.state.isLoading ? () => { } : this.loadMore
 
     const isRowLoaded = ({ index }) => index < this.state.results.length
@@ -123,6 +119,9 @@ class SearchResultsView extends React.Component {
 
     return (
       <div id="search-results-view" className="search-results-view">
+        <div className="search-filters">
+
+        </div>
         <InfiniteLoader
           isRowLoaded={isRowLoaded}
           loadMoreRows={loadMoreRows}
@@ -132,7 +131,7 @@ class SearchResultsView extends React.Component {
             <List
               className="search-results-list"
               ref={registerChild}
-              height={this.state.height}
+              height={this.state.height - 48}
               rowCount={rowCount}
               rowHeight={100}
               width={300}

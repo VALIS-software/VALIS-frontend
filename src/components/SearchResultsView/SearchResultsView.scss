@@ -1,12 +1,22 @@
 @import "../../helpers/variables.scss";
-
+$filter-header-height: 48px;
+$valis-blue: blue;
+$valis-light-grey: #EEF3F5;
 .search-results-view {
-	height:calc(100% - #{2*$sidebar-header-height});
+	.search-filters {
+		height: $filter-header-height;
+		background-color: $valis-blue;
+	}
+	height:calc(100% - #{$sidebar-header-height});
 	user-select: none;
 	.search-results-list {
-		margin-top: $sidebar-header-height;
-		border-top: 1px solid red;
+		border-top: 1px solid $valis-light-grey;
+		border-bottom: 1px solid $valis-light-grey;
 		user-select: none;
 		outline-style:none;
+		.search-result {
+			padding: 8px;
+			border-bottom: 1px solid $valis-light-grey;
+		}
 	}
 }
