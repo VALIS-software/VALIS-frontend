@@ -18,7 +18,7 @@ export class SequenceTrack extends TileTrack<TilePayload, BlockPayload> {
     protected densityMultiplier = 2.0;
  
     constructor(model: TrackModel) {
-        super(model, SharedTileStore['sequence'][model.sequenceId]);
+        super(model, SharedTileStore.sequence[model.sequenceId]);
         this.color.set([0, 0, 0, 1]);
     }
 
@@ -176,8 +176,6 @@ class SequenceTile extends TileNode<TilePayload> {
     }
 
     protected createLabel = (baseCharacter: string) => {
-        let textInstance = SequenceTile.baseTextInstances[baseCharacter];
-
         let textClone = new TextClone(SequenceTile.baseTextInstances[baseCharacter], [1, 1, 1, 1]);
         textClone.additiveBlendFactor = 1.0;
 
@@ -300,11 +298,11 @@ class SequenceTile extends TileNode<TilePayload> {
     // we only need 1 text instance of each letter which we can render multiple times
     // this saves reallocating new vertex buffers for each letter
     protected static baseTextInstances : { [key: string]: Text } = {
-        'A': new Text(OpenSansRegular, 'A', 1),
-        'C': new Text(OpenSansRegular, 'C', 1),
-        'G': new Text(OpenSansRegular, 'G', 1),
-        'T': new Text(OpenSansRegular, 'T', 1),
-        'N': new Text(OpenSansRegular, 'N', 1),
+        'A': new Text(OpenSansRegular, 'A', 1, [1, 1, 1, 1]),
+        'C': new Text(OpenSansRegular, 'C', 1, [1, 1, 1, 1]),
+        'G': new Text(OpenSansRegular, 'G', 1, [1, 1, 1, 1]),
+        'T': new Text(OpenSansRegular, 'T', 1, [1, 1, 1, 1]),
+        'N': new Text(OpenSansRegular, 'N', 1, [1, 1, 1, 1]),
     }
 }
 
