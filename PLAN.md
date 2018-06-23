@@ -1,36 +1,42 @@
-- On the reverse strand, the genes seem to be off-by-some
-    - See HES4: https://www.ensembl.org/Homo_sapiens/Location/View?db=core;g=ENSG00000188290;r=1:999960-999981
-        Phase is 0?
-    - Is this the same for forward strands?
+- Macro scale genes, design
+
+- Wrap up dev colors code
+    - Maybe make the color dev trick into a separate dev/utils module
+
+- Display gene direction
+    - Improve a bit
+- Display transcript span
+
+- Batch annotations into instance draw groups
+
+- Need some way to indicate incomplete / low confidence data, eg: ATAD3A-201 or ATAD3A-204
+    - What about high-confidence? CCDS?
+
+- Merge component shaders
+
+- Display annotation text at left of viewport
+    - Actually, maybe only on hover
+
+- Display transcript name
+
+- Need to consider ensemble biotypes
+    - https://www.ensembl.org/info/genome/genebuild/biotypes.html
+
+- Large-scale annotation rendering
+    - generate gene tiles, = array of genes with transcript count
+
+- Consider the Ensemble view where sequence is in the middle and strands are either side
+    - Too much work in the short term, instead I'll have + Strand and - Strand tracks
 
 Current experimental view: https://www.ensembl.org/Homo_sapiens/Location/View?db=core;g=ENSG00000188290;r=1:925926-925954
 
-- How to handle phase?
-    - Do we care about visualizing phase? Is this just
-    
-- How to handle transcript quality (transcript_support_level)
-    https://www.ensembl.org/Help/Glossary?id=492
-- Should we make clear merged and indicate source?
-    'Golden Transcript's
-- What about CCDS?
-
 * Ensemble course https://www.ebi.ac.uk/training/online/course/ensembl-browser-webinar-series-2016/how-take-course
-
-- Split y position for Strand + and Strand - ?
-    - This improves overlap quite well but not completely
-    - Is this a clear display?
-    - Separate tracks?
-
-- Should we split the sequence into forward and reverse like the ensemble browser?
 
 - On tall stacks: do we always want to show all the transcripts?
     - Try other browser, how do they handle things?
     - Does it make sense to show a compressed / overlapped view of RNAs by default?
 
-- Determine how best to show transcript components
-- Show transcript direction
-
-- Build gene groups from overlapping genes
+- Build gene groups from overlapping genes?
     - We can fully solve overlap this way but we end up with very tall stacks!
     - ! this has issues at tile boundaries, need to resolve
 
@@ -60,7 +66,14 @@ Current experimental view: https://www.ensembl.org/Homo_sapiens/Location/View?db
 - Variant visualization
     https://docs.google.com/document/d/1OBykSYS_NWl_BG1ZHlRYRmXa17YDplGZJYdLL-HqO-o/edit#heading=h.ydbtyrks62k1
 
-- Chrome caching bug
+- Continue on Chrome caching bug
+
+- Handle overlapping gene names
+    * After July 1st
+
+
+# Bugs
+- Right-click, move mouse, escape to dismiss = stuck dragging
 
 # Annotations
 - Micro-scale annotation loading using tile engine
@@ -105,6 +118,7 @@ Current experimental view: https://www.ensembl.org/Homo_sapiens/Location/View?db
 - Implement 'depth' as an analog to width to create bounded z-volumes
     - Improve tile z positioning maaybe
     - Fix track cursor
+    - search for @! depth-box tag
 
 - "Device" -> "GPUDevice"
 
