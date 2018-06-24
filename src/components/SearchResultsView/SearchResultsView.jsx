@@ -10,6 +10,7 @@ import { List, InfiniteLoader } from 'react-virtualized'
 // Styles
 import "./SearchResultsView.scss";
 import 'react-virtualized/styles.css'
+import { ENTITY_TYPE } from "../../helpers/constants";
 
 const FETCH_SIZE = 100;
 
@@ -32,6 +33,10 @@ class SearchResultsView extends React.Component {
     this.loadMore();
     const height = document.getElementById('search-results-view').clientHeight;
     this.setState({ height });
+  }
+
+  addQueryAsTrack = () => {
+    this.props.appModel.addAnnotationTrack(this.props.text, this.state.query);
   }
 
   runQuery = () => {
@@ -86,9 +91,13 @@ class SearchResultsView extends React.Component {
   renderRightInfo = (result) => {
     const ref = result.info.variant_ref;
     const alt = result.info.variant_alt;
-    const genomicType = this.renderPills(['SNP'], { backgroundColor: 'grey' });
+    const genomicType = this.renderPills([result.type], { backgroundColor: 'grey' });
     const location = this.renderLocation(result.contig, result.start, result.end);
-    return (<span className="right-info"><div>{location}</div><div>{genomicType} {alt} <span className="allele-arrow">⟶</span> {ref} </div></span>);
+    const mutation = null;
+    if (result.type === ENTITY_TYPE.SNP) {
+      mutation = (<span>{alt} <span className="allele-arrow">⟶</span> {ref}</span>);
+    }
+    return (<span className="right-info"><div>{location}</div><div>{genomicType} {mutation} </div></span>);
   }
 
   renderLocation = (contig, start, end) => {
@@ -121,17 +130,21 @@ class SearchResultsView extends React.Component {
       title = (<div><span>{result.name}</span>{alleles}</div>);
 
       const tags = result.info.variant_tags && result.info.variant_tags.length ? (<tr><td>Tags</td><td>{tagPills}</td></tr>) : null;
+      const genes = result.info.variant_affected_genes && result.info.variant_affected_genes.length ? (<tr><td>Genes</td><td>{genePills}</td></tr>) : null;
       description = (<div>
         <table className="result-info">
           <tbody>
-            <tr><td>Genes</td><td>{genePills}</td></tr>
+            {genes}
             <tr><td>Sources</td><td>{sourcePills}</td></tr>
             {tags}
           </tbody>
         </table>
       </div>)
     }
-    return (<div className="search-result" style={style} key={key}>
+    const openResult = () => {
+      this.props.viewModel.displayEntityDetails(result);
+    }
+    return (<div className="search-result" onClick={openResult} style={style} key={result.id}>
       <div className="search-result-inner">{title}{description}</div>
     </div>);
   }
@@ -161,7 +174,7 @@ class SearchResultsView extends React.Component {
     return (
       <div id="search-results-view" className="search-results-view">
         <div className="search-filters">
-          <div className="search-button float-left">Add as Track</div>
+          <div className="search-button float-left" onClick={this.addQueryAsTrack}>Add as Track</div>
           <div className="search-button float-right">Filter</div>
         </div>
         <InfiniteLoader
@@ -171,6 +184,7 @@ class SearchResultsView extends React.Component {
         >
           {({ onRowsRendered, registerChild }) => (
             <List
+              query={JSON.stringify(this.state.query)}
               className="search-results-list"
               ref={registerChild}
               height={this.state.height - 48}
