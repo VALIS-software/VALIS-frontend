@@ -1,5 +1,5 @@
 import { Strand } from "../../../lib/gff3/Strand";
-import { TranscriptClass } from "../../../lib/sirius/AnnotationTileset";
+import { TranscriptClass, GeneInfo, GeneClass } from "../../../lib/sirius/AnnotationTileset";
 import { Animator } from "../../animation/Animator";
 import UsageCache from "../../ds/UsageCache";
 import { Scalar } from "../../math/Scalar";
@@ -16,8 +16,13 @@ import Track from "./Track";
 
 export class AnnotationTrack extends Track<'annotation'> {
 
-    readonly macroLodThresholdLow = 8;
     readonly macroLodBlendRange = 2;
+    readonly macroLodThresholdLow = 10;
+    readonly macroLodThresholdHigh = this.macroLodThresholdLow + this.macroLodBlendRange;
+
+    readonly namesLodBlendRange = 2;
+    readonly namesLodThresholdLow = 8;
+    readonly namesLodThresholdHigh = this.namesLodThresholdLow + this.namesLodBlendRange;
 
     protected annotationStore: AnnotationTileStore;
     protected macroAnnotationStore: AnnotationTileStore;
@@ -119,11 +124,11 @@ export class AnnotationTrack extends Track<'annotation'> {
             let basePairsPerDOMPixel = (span / widthPx);
             let continuousLodLevel = Scalar.log2(Math.max(basePairsPerDOMPixel, 1));
 
-            let macroOpacity: number = Scalar.clamp((continuousLodLevel - this.macroLodThresholdLow) / this.macroLodBlendRange, 0, 1);
+            let macroOpacity: number = Scalar.linStep(this.macroLodThresholdLow, this.macroLodThresholdHigh, continuousLodLevel);
             let microOpacity: number = 1.0 - macroOpacity;
             
             if (microOpacity > 0) {
-                this.updateMicroAnnotations(x0, x1, span, basePairsPerDOMPixel, microOpacity);
+                this.updateMicroAnnotations(x0, x1, span, basePairsPerDOMPixel, continuousLodLevel, microOpacity);
             }
 
             if (macroOpacity > 0) {
@@ -142,13 +147,11 @@ export class AnnotationTrack extends Track<'annotation'> {
 
                         let annotation = this._annotationCache.use(annotationKey, () => {
                             // create
-                            let object = new Rect(0, 0);
-                            object.color.set([82 / 255, 75 / 255, 165 / 255, 0.3]);
-                            object.transparent = true;
-                            object.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
-                            object.y = 0;
+                            let object = new MacroGene(gene);
+                            object.y = 10;
                             object.layoutH = 0;
                             object.h = gene.transcriptCount * 20 + (gene.transcriptCount - 1) * 10 + 60;
+                            // object.h = 100;
                             object.z = 0.75;
                             object.mask = this;
                             object.forEachSubNode((sub) => sub.mask = this);
@@ -175,7 +178,10 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.toggleLoadingIndicator(this._pendingTiles.count > 0, true);
     }
 
-    protected updateMicroAnnotations(x0: number, x1: number, span: number, samplingDensity: number, opacity: number) {
+    protected updateMicroAnnotations(x0: number, x1: number, span: number, samplingDensity: number, continuousLodLevel: number,  opacity: number) {
+        
+        let namesOpacity = 1.0 - Scalar.linStep(this.namesLodThresholdLow, this.namesLodThresholdHigh, continuousLodLevel);
+
         this.annotationStore.getTiles(x0, x1, samplingDensity, true, (tile) => {
             if (tile.state !== TileState.Complete) {
                 // if the tile is incomplete then wait until complete and call updateAnnotations() again
@@ -203,6 +209,8 @@ export class AnnotationTrack extends Track<'annotation'> {
                     object.forEachSubNode((sub) => sub.mask = this);
                     return object;
                 });
+
+                (annotation as GeneAnnotation).nameOpacity = namesOpacity;
 
                 this._activeAnnotations.use(annotationKey, () => {
                     this.addAnnotation(annotation);
@@ -270,6 +278,63 @@ class LoadingIndicator extends Text {
 
 }
 
+class MacroGene extends Rect {
+
+    // when blend factor is 0, the blend mode is additive, when 1, it's normal premultiplied alpha blended
+    blendFactor: number = 0;
+
+    constructor(gene: GeneInfo) {
+        super(0, 0);
+
+        this.color.set([255, 255, 255].map(v => v / 255));
+        this.color[3] = 0.1;
+
+        this.transparent = true;
+        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
+        
+        if (gene.class === GeneClass.NonProteinCoding) {
+            devColorFromElement('exon', this.color);
+        } else {
+            devColorFromElement('cds', this.color);
+        }
+    }
+
+    draw(context: DrawContext) {
+        context.uniform1f('blendFactor', this.blendFactor);
+        super.draw(context);
+    }
+
+    getFragmentCode() {
+        return `
+            #version 100
+
+            precision highp float;
+
+            uniform vec2 size;
+            uniform vec4 color;
+            uniform float blendFactor;
+
+            varying vec2 vUv;
+            
+            void main() {
+                vec2 domPx = vUv * size;
+            
+                const vec2 borderWidthPx = vec2(1.);
+                const float borderStrength = 0.3;
+
+                vec2 inner = step(borderWidthPx, domPx) * step(domPx, size - borderWidthPx);
+                float border = inner.x * inner.y;
+
+                vec4 c = color;
+                c.rgb += (1.0 - border) * vec3(borderStrength);
+
+                gl_FragColor = vec4(c.rgb, blendFactor) * c.a;
+            }
+        `;
+    }
+
+}
+
 class GeneAnnotation extends Object2D {
 
     set opacity(v: number) {
@@ -282,6 +347,17 @@ class GeneAnnotation extends Object2D {
         return this._opacity;
     }
 
+    set nameOpacity(v: number) {
+        console.log('nameOpacity', v);
+        this.name.color[3] = v;
+        this.name.visible = v >= 0;
+    }
+
+    get nameOpacity() {
+        return this.name.color[3];
+    }
+
+    protected name: Text;
     protected _opacity: number = 1;
 
     constructor(protected readonly gene: Gene) {
@@ -297,10 +373,10 @@ class GeneAnnotation extends Object2D {
 
         devColorFromElement('gene', spanMarker.color);
         
-        let name = new Text(OpenSansRegular, gene.name, 16, [1, 1, 1, 1]);
-        name.layoutY = -1;
-        name.y = -5;
-        this.add(name);
+        this.name = new Text(OpenSansRegular, gene.name, 16, [1, 1, 1, 1]);
+        this.name.layoutY = -1;
+        this.name.y = -5;
+        this.add(this.name);
 
         let transcriptOffset = 20;
         let transcriptHeight = 20;
