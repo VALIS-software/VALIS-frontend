@@ -26,15 +26,28 @@ export type RenderableInternal = {
  */
 export class Renderable<T extends Node<any>> extends Node<T> {
 
-	// set to false to disable any interaction with the rendering system (including masking)
-	// if this is true, the instance must have gpu* fields set before the rendering
+	/**
+	 * Set to false to disable any interaction with the rendering system (including masking).
+	 * If this is true, the instance must have gpu* fields set before the rendering.
+	 */
 	render = true;
-	// set to 0 to disable writing to the color buffer, however the object will still be drawn to the stencil buffer if it's used as a mask
+	/**
+	 * When opacity is less than 1, the object is rendered in the transparent pass with premultiplied alpha blending (unless overridden).
+	 * When opacity is 0 or less, it's not rendered to the color buffer (but will still be rendered to the stencil buffer).
+	 */
 	opacity: number = 1;
-	// when true, object is rendered in the transparency pass, this has a performance cost because z ordering has to take precedence over state-change-minimization ordering
-	// when undefined the renderer assumes true if opacity < 1
+	/**
+	 * Set to false to disable writing to the color buffer, however the object will still be drawn to the stencil buffer if it's used as a mask
+	 */
+	visible: boolean = true;
+	/**
+	 * when true, object is rendered in the transparency pass, this has a performance cost because z ordering has to take precedence over state-change-minimization ordering
+	 * when undefined the renderer assumes true if opacity < 1
+	 */
 	transparent?: boolean;
-	// set blend mode (defaults to None or Premultiplied Alpha when opacity < 1)
+	/**
+	 * Blending preset to use when drawing (defaults to NONE or PREMULTIPLIED_ALPHA when opacity < 1)
+	 */
 	blendMode?: BlendMode;
 
 	dependentRenderPasses = new Array<RenderPass>();
@@ -45,7 +58,9 @@ export class Renderable<T extends Node<any>> extends Node<T> {
 	protected gpuVertexState: GPUVertexState = null;
 	protected gpuResourcesNeedAllocate = true;
 
-	// influences render order if transparent and sets precedence between otherwise equal render state
+	/**
+	 * influences render order if transparent and sets precedence between otherwise equal render state
+	 */
 	protected renderOrderZ: number;
 
 	// non-owned fields

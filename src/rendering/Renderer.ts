@@ -274,7 +274,7 @@ export class Renderer {
 	protected renderArray(renderables: Array<Renderable<any>>) {
 		for (let i = 0; i < renderables.length; i++) {
 			let renderable = renderables[i];
-			if (renderable.opacity <= 0) continue;
+			if (renderable.opacity <= 0 || (renderable.visible === false)) continue;
 
 			let internal = renderable as any as RenderableInternal;
 
