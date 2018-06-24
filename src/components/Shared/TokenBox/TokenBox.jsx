@@ -124,8 +124,10 @@ class TokenBox extends React.Component {
   }
 
   runSearch = () => {
-    const queryStr = this.buildQueryStringFromTokens(this.state.tokens) + ' ' + this.state.searchString;
-    const query = this.state.query;
+    // const queryStr = this.buildQueryStringFromTokens(this.state.tokens) + ' ' + this.state.searchString;
+    // const query = this.state.query;
+    const queryStr = "test";
+    const query = { "type": "GenomeNode", "filters": {}, "toEdges": [{ "type": "EdgeNode", "filters": { "info.p-value": { "<": 0.05 } }, "toNode": { "type": "InfoNode", "filters": { "type": "trait", "$text": "cancer" }, "toEdges": [] } }], "limit": 10000000 };
     const view = (<SearchResultsView text={queryStr} query={query} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
     this.props.viewModel.pushView('Search Results', query, view);
   }

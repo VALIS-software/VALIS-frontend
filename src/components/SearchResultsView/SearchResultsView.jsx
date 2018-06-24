@@ -73,6 +73,32 @@ class SearchResultsView extends React.Component {
     this.viewModel.displayEntityDetails(result);
   }
 
+  renderPills = (pills, style) => {
+    if (!pills) return (<div />);
+    const pillElems = pills.map(item => {
+      return (<span style={style} className="pill">{item}</span>)
+    })
+    return (<span className="pills-container">
+      {pillElems}
+    </span>);
+  }
+
+  renderRightInfo = (result) => {
+    const ref = result.info.variant_ref;
+    const alt = result.info.variant_alt;
+    const genomicType = this.renderPills(['SNP'], { backgroundColor: 'grey' });
+    const location = this.renderLocation(result.contig, result.start, result.end);
+    return (<span className="right-info"><div>{location}</div><div>{genomicType} {alt} <span className="allele-arrow">⟶</span> {ref} </div></span>);
+  }
+
+  renderLocation = (contig, start, end) => {
+    if (start === end) {
+      return (<span className="location"><span className="contig">{contig}</span><span className="range">{start}</span></span>);
+    } else {
+      return (<span className="location"><span className="contig">{contig}</span><span className="range">{start}:{end}</span></span>);
+    }
+  }
+
   rowRenderer = ({ index, key, style }) => {
     if (index === this.state.results.length && this.state.hasMore) {
       return (<div key={key}>Loading...</div>);
@@ -87,12 +113,27 @@ class SearchResultsView extends React.Component {
       title = result.name;
       description = "Source: " + sourceStr;
     } else {
-      title = result.name;
-      description = result.info.description
-        ? result.info.description
-        : "Source: " + sourceStr;
+
+      const sourcePills = this.renderPills(result.source);
+      const genePills = this.renderPills(result.info.variant_affected_genes);
+      const tagPills = this.renderPills(result.info.variant_tags);
+      const alleles = this.renderRightInfo(result);
+      title = (<div><span>{result.name}</span>{alleles}</div>);
+
+      const tags = result.info.variant_tags && result.info.variant_tags.length ? (<tr><td>Tags</td><td>{tagPills}</td></tr>) : null;
+      description = (<div>
+        <table className="result-info">
+          <tbody>
+            <tr><td>Genes</td><td>{genePills}</td></tr>
+            <tr><td>Sources</td><td>{sourcePills}</td></tr>
+            {tags}
+          </tbody>
+        </table>
+      </div>)
     }
-    return (<div style={style} key={key}>{title}<hr />{description}</div>);
+    return (<div className="search-result" style={style} key={key}>
+      <div className="search-result-inner">{title}{description}</div>
+    </div>);
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
@@ -120,7 +161,8 @@ class SearchResultsView extends React.Component {
     return (
       <div id="search-results-view" className="search-results-view">
         <div className="search-filters">
-
+          <div className="search-button float-left">Add as Track</div>
+          <div className="search-button float-right">Filter</div>
         </div>
         <InfiniteLoader
           isRowLoaded={isRowLoaded}
@@ -133,7 +175,7 @@ class SearchResultsView extends React.Component {
               ref={registerChild}
               height={this.state.height - 48}
               rowCount={rowCount}
-              rowHeight={100}
+              rowHeight={120}
               width={300}
               onRowsRendered={onRowsRendered}
               rowRenderer={this.rowRenderer}
