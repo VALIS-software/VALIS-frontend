@@ -79,12 +79,6 @@ class App extends React.PureComponent<any, any> {
     }
   }
 
-  displaySearchResults = (event: any) => {
-    if (event.data !== null) {
-
-    }
-  }
-
   popView = () => {
     const viewsCopy = this.state ? this.state.views.slice() : [];
     viewsCopy.pop();

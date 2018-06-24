@@ -6,7 +6,6 @@ import CircularProgress from "material-ui/CircularProgress";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 import { List, InfiniteLoader } from 'react-virtualized'
 
-
 // Styles
 import "./SearchResultsView.scss";
 import 'react-virtualized/styles.css'
@@ -72,6 +71,12 @@ class SearchResultsView extends React.Component {
       isLoading: true,
     });
     this.runQuery();
+  }
+
+  toggleFilters = () => {
+    this.setState({
+      showFilters: !this.state.showFilters,
+    });
   }
 
   resultSelected(result) {
@@ -171,11 +176,21 @@ class SearchResultsView extends React.Component {
 
     const rowCount = this.state.results.length + 1;
 
+    let filterMenu = null;
+
+    if (this.state.showFilters) {
+      filterMenu = (<div className="filter-menu">
+        filters
+      </div>);
+    }
     return (
       <div id="search-results-view" className="search-results-view">
         <div className="search-filters">
-          <div className="search-button float-left" onClick={this.addQueryAsTrack}>Add as Track</div>
-          <div className="search-button float-right">Filter</div>
+          <div className="clearfix">
+            <div className="search-button float-left" onClick={this.addQueryAsTrack}>Add as Track</div>
+            <div className="search-button float-right" onClick={this.toggleFilters}>Filter</div>
+          </div>
+          <div>{filterMenu}</div>
         </div>
         <InfiniteLoader
           isRowLoaded={isRowLoaded}
