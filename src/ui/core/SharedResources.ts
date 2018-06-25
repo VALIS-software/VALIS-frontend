@@ -2,8 +2,12 @@ import { Device, GPUVertexState, VertexAttributeDataType, GPUProgram, GPUBuffer,
 
 export class SharedResources {
 
-    static quadIndicies: GPUIndexBuffer;
+    static quadIndexBuffer: GPUIndexBuffer;
+
+    static unitQuadVertexBuffer: GPUBuffer;
     static unitQuadVertexState: GPUVertexState;
+
+    static quad1x1VertexBuffer: GPUBuffer;
     static quad1x1VertexState: GPUVertexState;
 
     private static programs: { [key: string]: GPUProgram } = {};
@@ -12,11 +16,11 @@ export class SharedResources {
 
     static getProgram(device: Device, vertexCode: string, fragmentCode: string, attributeBindings: Array<string>) {
         let key = vertexCode + '\x1D' + fragmentCode + '\x1D' + attributeBindings.join('\x1F');
-        let gpuProgram = SharedResources.programs[key];
+        let gpuProgram = this.programs[key];
 
         if (gpuProgram == null) {
             gpuProgram = device.createProgram(vertexCode, fragmentCode, attributeBindings);
-            SharedResources.programs[key] = gpuProgram;
+            this.programs[key] = gpuProgram;
         }
 
         return gpuProgram;
@@ -24,11 +28,11 @@ export class SharedResources {
 
     static deleteProgram(vertexCode: string, fragmentCode: string, attributeBindings: Array<string>) {
         let key = vertexCode + '\x1D' + fragmentCode + '\x1D' + attributeBindings.join('\x1F');
-        let gpuProgram = SharedResources.programs[key];
+        let gpuProgram = this.programs[key];
 
         if (gpuProgram != null) {
             gpuProgram.delete();
-            delete SharedResources.programs[key];
+            delete this.programs[key];
             return true;
         }
 
@@ -36,22 +40,22 @@ export class SharedResources {
     }
 
     static getTexture(device: Device, key: string, descriptor: TextureDescriptor) {
-        let gpuTexture = SharedResources.textures[key];
+        let gpuTexture = this.textures[key];
 
         if (gpuTexture == null) {
             gpuTexture = device.createTexture(descriptor);
-            SharedResources.textures[key] = gpuTexture;
+            this.textures[key] = gpuTexture;
         }
 
         return gpuTexture;
     }
 
     static deleteTexture(key: string) {
-        let gpuTexture = SharedResources.textures[key];
+        let gpuTexture = this.textures[key];
 
         if (gpuTexture != null) {
             gpuTexture.delete();
-            delete SharedResources.textures[key];
+            delete this.textures[key];
             return true;
         }
 
@@ -59,22 +63,22 @@ export class SharedResources {
     }
 
     static getBuffer(device: Device, key: string, descriptor: BufferDescriptor) {
-        let gpuBuffer = SharedResources.buffers[key];
+        let gpuBuffer = this.buffers[key];
 
         if (gpuBuffer == null) {
             gpuBuffer = device.createBuffer(descriptor);
-            SharedResources.buffers[key] = gpuBuffer;
+            this.buffers[key] = gpuBuffer;
         }
 
         return gpuBuffer;
     }
 
     static deleteBuffer(key: string) {
-        let gpuBuffer = SharedResources.buffers[key];
+        let gpuBuffer = this.buffers[key];
 
         if (gpuBuffer != null) {
             gpuBuffer.delete();
-            delete SharedResources.buffers[key];
+            delete this.buffers[key];
             return true;
         }
 
@@ -82,25 +86,27 @@ export class SharedResources {
     }
 
     static initialize(device: Device) {
-        this.quadIndicies = device.createIndexBuffer({
+        this.quadIndexBuffer = device.createIndexBuffer({
             data: new Uint8Array([
                 0, 1, 2,
                 0, 3, 1
             ])
         });
 
-        SharedResources.unitQuadVertexState = device.createVertexState({
-            index: this.quadIndicies,
+        this.unitQuadVertexBuffer = device.createBuffer({
+            data: new Float32Array([
+                -1.0, -1.0,
+                 1.0, 1.0,
+                -1.0, 1.0,
+                 1.0, -1.0,
+            ]),
+        });
+
+        this.unitQuadVertexState = device.createVertexState({
+            index: this.quadIndexBuffer,
             attributes: [
                 {
-                    buffer: device.createBuffer({
-                        data: new Float32Array([
-                            -1.0, -1.0,
-                             1.0,  1.0,
-                            -1.0,  1.0,
-                             1.0, -1.0,
-                        ]),
-                    }),
+                    buffer: this.unitQuadVertexBuffer,
                     size: 2,
                     dataType: VertexAttributeDataType.FLOAT,
                     offsetBytes: 0,
@@ -109,18 +115,20 @@ export class SharedResources {
             ]
         });
 
-        SharedResources.quad1x1VertexState = device.createVertexState({
-            index: this.quadIndicies,
+        this.quad1x1VertexBuffer = device.createBuffer({
+            data: new Float32Array([
+                  0,   0,
+                1.0, 1.0,
+                  0, 1.0,
+                1.0,   0,
+            ]),
+        });
+
+        this.quad1x1VertexState = device.createVertexState({
+            index: this.quadIndexBuffer,
             attributes: [
                 {
-                    buffer: device.createBuffer({
-                        data: new Float32Array([
-                            0, 0,
-                            1.0, 1.0,
-                            0, 1.0,
-                            1.0, 0,
-                        ]),
-                    }),
+                    buffer: this.quad1x1VertexBuffer,
                     size: 2,
                     dataType: VertexAttributeDataType.FLOAT,
                     offsetBytes: 0,
@@ -131,27 +139,33 @@ export class SharedResources {
     }
 
     static release() {
-        SharedResources.quadIndicies.delete();
-        SharedResources.quadIndicies = null;
-        SharedResources.unitQuadVertexState.delete();
-        SharedResources.unitQuadVertexState = null;
-        SharedResources.quad1x1VertexState.delete();
-        SharedResources.quad1x1VertexState = null;
+        this.quadIndexBuffer.delete();
+        this.quadIndexBuffer = null;
 
-        for (let key of Object.keys(SharedResources.programs)) {
-            SharedResources.programs[key].delete();
-        }
-        SharedResources.programs = {};
+        this.unitQuadVertexState.delete();
+        this.unitQuadVertexState = null;
+        this.unitQuadVertexBuffer.delete();
+        this.unitQuadVertexBuffer = null;
 
-        for (let key of Object.keys(SharedResources.textures)) {
-            SharedResources.textures[key].delete();
-        }
-        SharedResources.textures = {};
+        this.quad1x1VertexState.delete();
+        this.quad1x1VertexState = null;
+        this.quad1x1VertexBuffer.delete();
+        this.quad1x1VertexBuffer = null;
 
-        for (let key of Object.keys(SharedResources.buffers)) {
-            SharedResources.buffers[key].delete();
+        for (let key of Object.keys(this.programs)) {
+            this.programs[key].delete();
         }
-        SharedResources.buffers = {};
+        this.programs = {};
+
+        for (let key of Object.keys(this.textures)) {
+            this.textures[key].delete();
+        }
+        this.textures = {};
+
+        for (let key of Object.keys(this.buffers)) {
+            this.buffers[key].delete();
+        }
+        this.buffers = {};
     }
 
 }
