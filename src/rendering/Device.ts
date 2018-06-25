@@ -146,11 +146,12 @@ export class Device {
 	}
 
 	updateBufferData(handle: GPUBuffer | GPUIndexBuffer, data: BufferDataSource, offsetBytes: number = 0) {
-		if (handle instanceof GPUIndexBuffer) {
-			this.gl.bufferSubData(this.gl.ELEMENT_ARRAY_BUFFER, offsetBytes, data);
-		} else {
-			this.gl.bufferSubData(this.gl.ARRAY_BUFFER, offsetBytes, data);
-		}
+		const gl = this.gl;
+		let target = handle instanceof GPUIndexBuffer ? gl.ELEMENT_ARRAY_BUFFER : gl.ARRAY_BUFFER;
+
+		this.gl.bindBuffer(target, handle.native);
+		this.gl.bufferSubData(this.gl.ELEMENT_ARRAY_BUFFER, offsetBytes, data);
+		this.gl.bindBuffer(target, null);
 	}
 
 	deleteBuffer(handle: GPUBuffer | GPUIndexBuffer) {
@@ -361,7 +362,7 @@ export class Device {
 	/**
 	 * @throws string if shaders cannot be compiled or program cannot be linked
 	 */
-	createProgram(vertexCode: string, fragmentCode: string, attributeBindings: Array<string>) {
+	createProgram(vertexCode: string, fragmentCode: string, attributeBindings: AttributeLayout) {
 		const gl = this.gl;
 		let vs: WebGLShader = this.vertexShaderCache.reference(vertexCode);
 		let fs: WebGLShader = this.fragmentShaderCache.reference(fragmentCode);
@@ -381,9 +382,24 @@ export class Device {
 		gl.attachShader(p, fs);
 
 		// set attribute bindings (before linking)
+		// see applyVertexStateDescriptor() for corresponding layout handling
+		let attributeRow = 0;
 		for (let i = 0; i < attributeBindings.length; i++) {
-			if (attributeBindings[i] == null) continue;
-			gl.bindAttribLocation(p, i, attributeBindings[i]);
+			let attribute = attributeBindings[i];
+
+			// how many elements are stored in this type?
+			let typeLength = uniformTypeLength[attribute.type];
+
+			// determine how many rows this attribute will cover
+			// e.g. float -> 1, vec4 -> 1, mat2 -> 2
+			let attributeRowSpan = attributeTypeRowSpan[attribute.type];
+
+			// "It is permissible to bind a generic attribute index to an attribute variable name that is never used in a vertex shader."
+			// this enables us to have consistent attribute layouts between shaders
+			// if attributeRowSpan > 1, the other rows are automatically bound
+			gl.bindAttribLocation(p, attributeRow, attribute.name);
+
+			attributeRow += attributeRowSpan;
 		}
 
 		gl.linkProgram(p);
@@ -455,18 +471,69 @@ export class Device {
 		}
 
 		// set attributes
+		// some attributes may span more than 1 attribute row (a vec4) so we track the current attribute row so attributes are packed sequentially
+		let attributeRow = 0;
 		for (let i = 0; i < vertexStateDescriptor.attributes.length; i++) {
 			let attribute = vertexStateDescriptor.attributes[i];
-			if (attribute instanceof Float32Array) {
-				gl.vertexAttrib4fv(i, attribute);
+
+			// how many elements are stored in this type?
+			let typeLength = uniformTypeLength[attribute.type];
+
+			// determine how many rows this attribute will cover
+			// e.g. float -> 1, vec4 -> 1, mat2 -> 2
+			let attributeRowSpan = attributeTypeRowSpan[attribute.type];
+
+			// determine number of generic attribute columns (from 1 - 4)
+			// 1, 2, 3, 4, 9, 16 -> 1, 2, 3, 4, 3, 4
+			let columns = typeLength / attributeRowSpan;
+
+			// if .buffer is set then assume it's a VertexAttributeBuffer
+			if ((attribute as VertexAttributeBuffer).buffer !== undefined) {
+				let attributeBuffer = attribute as VertexAttributeBuffer;
+				let sourceDataType = attributeBuffer.sourceDataType;
+				if (sourceDataType == null) {
+					// assume source type is FLOAT (in WebGL1 all shader generic attributes are required to be floats)
+					sourceDataType = VertexAttributeSourceType.FLOAT;
+				}
+
+				gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffer.buffer.native);
+
+				// set all attribute arrays
+				for (let r = 0; r < attributeRowSpan; r++) {
+					let row = attributeRow + r;
+
+					// column offset for this attribute row
+					// this is only non-zero for matrix types
+					let columnBytesOffset = (r * columns * dataTypeByteLength[sourceDataType]);
+
+					gl.enableVertexAttribArray(row);
+					gl.vertexAttribPointer(
+						row,
+						columns,
+						sourceDataType,
+						!!attributeBuffer.normalize,
+						attributeBuffer.strideBytes,
+						// offset of attribute row
+						attributeBuffer.offsetBytes + columnBytesOffset
+					);
+
+					if (attributeBuffer.instanceDivisor != null && this.extInstanced) {
+						this.extInstanced.vertexAttribDivisorANGLE(row, attributeBuffer.instanceDivisor);
+					}
+				}
 			} else {
-				gl.bindBuffer(gl.ARRAY_BUFFER, attribute.buffer.native);
-				gl.enableVertexAttribArray(i);
-				gl.vertexAttribPointer(i, attribute.size, attribute.dataType, !!attribute.normalize, attribute.strideBytes, attribute.offsetBytes);
-				if (attribute.instanceDivisor != null && this.extInstanced) {
-					this.extInstanced.vertexAttribDivisorANGLE(i, attribute.instanceDivisor);
+				let attributeConstant = attribute as VertexAttributeConstant;
+				if (attributeRowSpan === 1) {
+					// slightly faster path for most common case
+					gl.vertexAttrib4fv(attributeRow, attributeConstant.data);
+				} else {
+					for (let r = 0; r < attributeRowSpan; r++) {
+						gl.vertexAttrib4fv(attributeRow + r, attributeConstant.data.subarray(r * 4, (r * 4) + 4));
+					}
 				}
 			}
+
+			attributeRow += attributeRowSpan;
 		}
 	}
 	
@@ -546,7 +613,7 @@ export enum IndexDataType {
 	UNSIGNED_INT = WebGLRenderingContext.UNSIGNED_INT, // requires 'OES_element_index_uint' extension in WebGL1
 }
 
-export enum VertexAttributeDataType {
+export enum VertexAttributeSourceType {
 	BYTE = WebGLRenderingContext.BYTE,
 	SHORT = WebGLRenderingContext.SHORT,
 	UNSIGNED_BYTE = WebGLRenderingContext.UNSIGNED_BYTE,
@@ -560,6 +627,41 @@ export enum BufferUsageHint {
 	STATIC = WebGLRenderingContext.STATIC_DRAW,
 	DYNAMIC = WebGLRenderingContext.DYNAMIC_DRAW,
 }
+
+export enum ShaderUniformType {
+	FLOAT = WebGLRenderingContext.FLOAT,
+	VEC2 = WebGLRenderingContext.FLOAT_VEC2,
+	VEC3 = WebGLRenderingContext.FLOAT_VEC3,
+	VEC4 = WebGLRenderingContext.FLOAT_VEC4,
+	IVEC2 = WebGLRenderingContext.INT_VEC2,
+	IVEC3 = WebGLRenderingContext.INT_VEC3,
+	IVEC4 = WebGLRenderingContext.INT_VEC4,
+	BOOL = WebGLRenderingContext.BOOL,
+	BVEC2 = WebGLRenderingContext.BOOL_VEC2,
+	BVEC3 = WebGLRenderingContext.BOOL_VEC3,
+	BVEC4 = WebGLRenderingContext.BOOL_VEC4,
+	MAT2 = WebGLRenderingContext.FLOAT_MAT2,
+	MAT3 = WebGLRenderingContext.FLOAT_MAT3,
+	MAT4 = WebGLRenderingContext.FLOAT_MAT4,
+	SAMPLER_2D = WebGLRenderingContext.SAMPLER_2D,
+	SAMPLER_CUBE = WebGLRenderingContext.SAMPLER_CUBE,
+}
+
+// subset of UniformType
+export enum ShaderAttributeType {
+	FLOAT = WebGLRenderingContext.FLOAT,
+	VEC2 = WebGLRenderingContext.FLOAT_VEC2,
+	VEC3 = WebGLRenderingContext.FLOAT_VEC3,
+	VEC4 = WebGLRenderingContext.FLOAT_VEC4,
+	MAT2 = WebGLRenderingContext.FLOAT_MAT2,
+	MAT3 = WebGLRenderingContext.FLOAT_MAT3,
+	MAT4 = WebGLRenderingContext.FLOAT_MAT4,
+}
+
+export type AttributeLayout = Array <{
+	name: string | null,
+	type: ShaderAttributeType
+}>;
 
 export type BufferDataSource = Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | ArrayBuffer;
 
@@ -576,17 +678,22 @@ export type IndexBufferDescriptor = {
 	usageHint?: BufferUsageHint,
 }
 
-export type VertexConstant = Float32Array;
+export type VertexAttributeConstant = {
+	type: ShaderAttributeType,
+	data: Float32Array,
+}
 
-export type VertexAttribute = VertexConstant | {
+export type VertexAttributeBuffer = {
 	buffer: GPUBuffer,
-	size: number,
-	dataType: VertexAttributeDataType,
+	type: ShaderAttributeType,
 	offsetBytes: number,
 	strideBytes: number,
+	sourceDataType?: VertexAttributeSourceType,
 	normalize?: boolean,
 	instanceDivisor?: number,
 }
+
+export type VertexAttribute = VertexAttributeConstant | VertexAttributeBuffer; 
 
 export type VertexStateDescriptor = {
 	index?: GPUIndexBuffer,
@@ -671,6 +778,48 @@ export type TextureDescriptor = {
 		colorSpaceConversion?: ColorSpaceConversion,
 	},
 
+}
+
+export const uniformTypeLength = {
+	[ShaderUniformType.FLOAT]: 1,
+	[ShaderUniformType.VEC2]: 2,
+	[ShaderUniformType.VEC3]: 3,
+	[ShaderUniformType.VEC4]: 4,
+	[ShaderUniformType.IVEC2]: 1,
+	[ShaderUniformType.IVEC3]: 2,
+	[ShaderUniformType.IVEC4]: 3,
+	[ShaderUniformType.BOOL]: 1,
+	[ShaderUniformType.BVEC2]: 2,
+	[ShaderUniformType.BVEC3]: 3,
+	[ShaderUniformType.BVEC4]: 4,
+	[ShaderUniformType.MAT2]: 2 * 2,
+	[ShaderUniformType.MAT3]: 3 * 3,
+	[ShaderUniformType.MAT4]: 4 * 4,
+	[ShaderUniformType.SAMPLER_2D]: 1,
+	[ShaderUniformType.SAMPLER_CUBE]: 1,
+};
+
+export const attributeTypeRowSpan = {
+	[ShaderAttributeType.FLOAT]: 1,
+	[ShaderAttributeType.VEC2]: 1,
+	[ShaderAttributeType.VEC3]: 1,
+	[ShaderAttributeType.VEC4]: 1,
+	[ShaderAttributeType.MAT2]: 2,
+	[ShaderAttributeType.MAT3]: 3,
+	[ShaderAttributeType.MAT4]: 4,
+};
+
+export const dataTypeByteLength = {
+	[WebGLRenderingContext.BYTE]: 1, 
+	[WebGLRenderingContext.UNSIGNED_BYTE]: 1, 
+
+	[WebGLRenderingContext.SHORT]: 2,
+	[WebGLRenderingContext.UNSIGNED_SHORT]: 2,
+
+	[WebGLRenderingContext.INT]: 4,
+	[WebGLRenderingContext.UNSIGNED_INT]: 4,
+
+	[WebGLRenderingContext.FLOAT]: 4,
 }
 
 // Object Handles
@@ -766,7 +915,7 @@ export class GPUProgram implements GPUObjectHandle {
 		readonly native: WebGLProgram,
 		readonly vertexCode: string,
 		readonly fragmentCode: string,
-		readonly attributeBindings: Array<string>,
+		readonly attributeLayout: AttributeLayout,
 		readonly uniformInfo: { [ name: string ]: WebGLActiveInfo },
 		readonly uniformLocation: { [ name: string ]: WebGLUniformLocation }
 	) {}
