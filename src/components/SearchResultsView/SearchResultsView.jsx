@@ -4,7 +4,7 @@ import * as PropTypes from "prop-types";
 import DataListItem from "../DataListItem/DataListItem.jsx";
 import CircularProgress from "material-ui/CircularProgress";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
-import { List, InfiniteLoader } from 'react-virtualized'
+import { List, InfiniteLoader } from 'react-virtualized';
 
 // Styles
 import "./SearchResultsView.scss";
