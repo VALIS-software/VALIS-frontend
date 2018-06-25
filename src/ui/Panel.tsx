@@ -1,17 +1,14 @@
 import React = require("react");
+import IconButton from "material-ui/IconButton";
+import SvgClose from "material-ui/svg-icons/navigation/close";
+import PanelModel from "../model/PanelModel";
+import { InteractionEvent, WheelInteractionEvent } from "./core/InteractionEvent";
 import Object2D from "./core/Object2D";
 import ReactObject from "./core/ReactObject";
 import Rect from "./core/Rect";
-
-import PanelModel from "../model/PanelModel";
-
-import IconButton from "material-ui/IconButton";
-import SvgClose from "material-ui/svg-icons/navigation/close";
-import Track, { AxisPointerStyle } from "./tracks/Track";
-import { InteractionEvent, WheelInteractionEvent } from "./core/InteractionEvent";
-import { runInThisContext } from "vm";
-import XAxis from "./XAxis";
 import { OpenSansRegular } from "./font/Fonts";
+import Track, { AxisPointerStyle } from "./tracks/Track";
+import XAxis from "./XAxis";
 
 export class Panel extends Object2D {
 
