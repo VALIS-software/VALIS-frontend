@@ -1,5 +1,5 @@
 import { Strand } from "../../../lib/gff3/Strand";
-import { TranscriptClass, GeneInfo, GeneClass } from "../../../lib/sirius/AnnotationTileset";
+import { GeneClass, GeneInfo, TranscriptClass } from "../../../lib/sirius/AnnotationTileset";
 import { Animator } from "../../animation/Animator";
 import UsageCache from "../../ds/UsageCache";
 import { Scalar } from "../../math/Scalar";
@@ -7,9 +7,11 @@ import { AnnotationTileStore, Gene, Transcript } from "../../model/data-store/An
 import SharedTileStore from "../../model/data-store/SharedTileStores";
 import { Tile, TileState } from "../../model/data-store/TileStore";
 import TrackModel from "../../model/TrackModel";
-import { BlendMode, DrawContext } from "../../rendering/Renderer";
+import Device, { AttributeLayout, ShaderAttributeType, VertexAttributeSourceType } from "../../rendering/Device";
+import { BlendMode, DrawContext, DrawMode } from "../../rendering/Renderer";
 import Object2D from "../core/Object2D";
 import { Rect } from "../core/Rect";
+import SharedResources from "../core/SharedResources";
 import Text from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
 import Track from "./Track";
@@ -44,7 +46,7 @@ export class AnnotationTrack extends Track<'annotation'> {
         
         this.color.set([0.1, 0.1, 0.1, 1]);
 
-        this.initializeYScrolling();
+        this.initializeYDrag();
 
         this.loadingIndicator = new LoadingIndicator();
         this.loadingIndicator.cursorStyle = 'pointer';
@@ -56,6 +58,10 @@ export class AnnotationTrack extends Track<'annotation'> {
         // - be careful to avoid conflict with cursor
         this.toggleLoadingIndicator(false, false);
         this.add(this.loadingIndicator);
+
+        let instanceTest = new RectInstances();
+        this.add(instanceTest);
+        console.log(instanceTest);
     }
 
     setRange(x0: number, x1: number) {
@@ -74,7 +80,7 @@ export class AnnotationTrack extends Track<'annotation'> {
         super.applyTransformToSubNodes(root);
     }
 
-    protected initializeYScrolling() {
+    protected initializeYDrag() {
         // scroll follows the primary pointer only
         let pointerY0 = 0;
         let scrollY0 = 0;
@@ -112,6 +118,7 @@ export class AnnotationTrack extends Track<'annotation'> {
     protected _activeAnnotations = new UsageCache<Object2D>();
     protected _pendingTiles = new UsageCache<Tile<any>>();
     protected updateAnnotations() {
+        return;
         this._pendingTiles.markAllUnused();
         this._activeAnnotations.markAllUnused();
 
@@ -124,7 +131,7 @@ export class AnnotationTrack extends Track<'annotation'> {
             let basePairsPerDOMPixel = (span / widthPx);
             let continuousLodLevel = Scalar.log2(Math.max(basePairsPerDOMPixel, 1));
 
-            let macroOpacity: number = Scalar.linStep(this.macroLodThresholdLow, this.macroLodThresholdHigh, continuousLodLevel);
+            let macroOpacity: number = Scalar.linstep(this.macroLodThresholdLow, this.macroLodThresholdHigh, continuousLodLevel);
             let microOpacity: number = 1.0 - macroOpacity;
             
             if (microOpacity > 0) {
@@ -180,7 +187,7 @@ export class AnnotationTrack extends Track<'annotation'> {
 
     protected updateMicroAnnotations(x0: number, x1: number, span: number, samplingDensity: number, continuousLodLevel: number,  opacity: number) {
         
-        let namesOpacity = 1.0 - Scalar.linStep(this.namesLodThresholdLow, this.namesLodThresholdHigh, continuousLodLevel);
+        let namesOpacity = 1.0 - Scalar.linstep(this.namesLodThresholdLow, this.namesLodThresholdHigh, continuousLodLevel);
 
         this.annotationStore.getTiles(x0, x1, samplingDensity, true, (tile) => {
             if (tile.state !== TileState.Complete) {
@@ -274,6 +281,218 @@ class LoadingIndicator extends Text {
 
     constructor() {
         super(OpenSansRegular, 'Loading', 12, [1, 1, 1, 1]);
+    }
+
+}
+
+class RectInstances extends Object2D {
+
+    protected instanceCount: number;
+    protected indexCount: number; // ??
+
+    constructor() {
+        super();
+        this.render = true;
+    }
+
+    allocateGPUResources(device: Device) {
+        // @! tmp: generate instance data
+        // @! todo: interleave buffers
+
+        let numInstances = 3;
+        this.instanceCount = numInstances;
+
+        let dataTypeLength = {
+            'float': 1,
+            'mat4': 16,
+            'vec2': 2,
+            'vec3': 3,
+            'vec4': 4,
+        }
+
+        let instanceModelArray /* mat4 */ = new Float32Array(dataTypeLength['mat4'] * numInstances);
+        let instanceSizeArray /* vec2 */ = new Float32Array(dataTypeLength['vec2'] * numInstances);
+        let instanceColorArray /* vec4 */ = new Float32Array(dataTypeLength['vec4'] * numInstances);
+        let instanceBlendFactorArray /* float */ = new Float32Array(dataTypeLength['float'] * numInstances);
+
+        for (let i = 0; i < numInstances; i++) {
+            let x = i * 100;
+            let y = i * 50;
+            // model
+            instanceModelArray.set([
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                x, y, 1, 1
+            ], i * dataTypeLength['mat4']);
+            // size
+            instanceSizeArray.set([
+                20, 10,
+            ], i * dataTypeLength['vec2']);
+            // color
+            instanceColorArray.set([
+                i === 0 ? 1 : 0,
+                i === 1 ? 1 : 0,
+                i === 2 ? 1 : 0,
+                1
+            ], i * dataTypeLength['vec4']);
+            // blendFactor
+            instanceBlendFactorArray.set([
+                1
+            ], i * dataTypeLength['float']);
+        }
+
+        console.warn('Need to release buffers');
+        let instanceModelBuffer = device.createBuffer({ data: instanceModelArray });
+        let instanceSizeBuffer = device.createBuffer({ data: instanceSizeArray });
+        let instanceColorBuffer = device.createBuffer({ data: instanceColorArray });
+        let instanceBlendFactorBuffer = device.createBuffer({ data: instanceBlendFactorArray });
+
+        // attribute budget = 16 rows of 4, each each attribute counts as at least 4
+        // vec2 = 1
+        // mat4 = 4
+        // vec2 = 1
+        // vec4 = 1
+        // float = 1
+        // = 8
+        this.gpuVertexState = device.createVertexState({
+            index: SharedResources.quadIndexBuffer,
+            attributes: [
+                // vertices (attribute 'position')
+                {
+                    buffer: SharedResources.quad1x1VertexBuffer, 
+                    type: ShaderAttributeType.VEC2,
+                    offsetBytes: 0,
+                    strideBytes: 2 * 4,
+                },
+
+                // instanceModel - mat4
+                {
+                    buffer: instanceModelBuffer,
+                    type: ShaderAttributeType.MAT4,
+                    offsetBytes: 0,
+                    strideBytes: dataTypeLength['mat4'] * 4,
+                    instanceDivisor: 1,
+                },
+                // instanceSizeArray - vec2
+                {
+                    buffer: instanceSizeBuffer,
+                    type: ShaderAttributeType.VEC2,
+                    offsetBytes: 0,
+                    strideBytes: dataTypeLength['vec2'] * 4,
+                    instanceDivisor: 1,
+                },
+                // instanceColorArray - vec4
+                {
+                    buffer: instanceColorBuffer,
+                    type: ShaderAttributeType.VEC4,
+                    sourceDataType: VertexAttributeSourceType.FLOAT,
+                    offsetBytes: 0,
+                    strideBytes: dataTypeLength['vec4'] * 4,
+                    instanceDivisor: 1,
+                },
+                // instanceBlendFactorArray - float
+                {
+                    buffer: instanceBlendFactorBuffer,
+                    type: ShaderAttributeType.FLOAT,
+                    offsetBytes: 0,
+                    strideBytes: dataTypeLength['float'] * 4,
+                    instanceDivisor: 1,
+                }
+            ]
+        });
+
+        this.gpuProgram = SharedResources.getProgram(
+            device,
+            this.getVertexCode(),
+            this.getFragmentCode(),
+            this.attributeLayout
+        );
+
+        console.log(this.gpuVertexState);
+    }
+
+    releaseGPUResources() {
+        // since our resources are shared we don't actually want to release anything here
+        if (this.gpuVertexState != null) {
+            this.gpuVertexState.delete();
+        }
+        this.gpuVertexState = null;
+        this.gpuProgram = null;
+    }
+
+    draw(context: DrawContext) {
+        context.uniformMatrix4fv('model', false, this.worldTransformMat4);
+        context.extDrawInstanced(DrawMode.TRIANGLES, 6, 0, this.instanceCount);
+    }
+
+    protected attributeLayout: AttributeLayout = [
+        { name: 'position', type: ShaderAttributeType.VEC2 },
+        { name: 'instanceModel', type: ShaderAttributeType.MAT4 },
+        { name: 'instanceSize', type: ShaderAttributeType.VEC2 },
+        { name: 'instanceColor', type: ShaderAttributeType.VEC4 },
+        { name: 'instanceBlendFactor', type: ShaderAttributeType.FLOAT },
+    ];
+
+    protected getVertexCode() {
+        return `
+            #version 100
+
+            // for all instances
+            attribute vec2 position;
+            uniform mat4 model;
+            
+            // per instance attributes
+            attribute mat4 instanceModel;
+            attribute vec2 instanceSize;
+            attribute vec4 instanceColor;
+            attribute float instanceBlendFactor;
+
+            varying vec2 vUv;
+
+            varying vec2 size;
+            varying vec4 color;
+            varying float blendFactor;
+
+            void main() {
+                vUv = position;
+                
+                size = instanceSize;
+                color = instanceColor;
+                blendFactor = instanceBlendFactor;
+
+                gl_Position = model * instanceModel * vec4(position * instanceSize, 0., 1.0);
+            }
+        `;
+    }
+
+    protected getFragmentCode() {
+        return `
+            #version 100
+
+            precision highp float;
+
+            varying vec2 size;
+            varying vec4 color;
+            varying float blendFactor;
+
+            varying vec2 vUv;
+            
+            void main() {
+                vec2 domPx = vUv * size;
+            
+                const vec2 borderWidthPx = vec2(1.);
+                const float borderStrength = 0.3;
+
+                vec2 inner = step(borderWidthPx, domPx) * step(domPx, size - borderWidthPx);
+                float border = inner.x * inner.y;
+
+                vec4 c = color;
+                c.rgb += (1.0 - border) * vec3(borderStrength);
+
+                gl_FragColor = vec4(c.rgb, blendFactor) * c.a;
+            }
+        `;
     }
 
 }
