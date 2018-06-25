@@ -1,5 +1,5 @@
 import GPUText, { GlyphLayout, GPUTextFont } from "../../../lib/gputext/GPUText";
-import { BufferUsageHint, ColorSpaceConversion, Device, GPUBuffer, GPUTexture, TextureDataType, TextureFormat, TextureMagFilter, TextureMinFilter, TextureUsageHint, TextureWrapMode, VertexAttributeDataType } from "../../rendering/Device";
+import { AttributeLayout, BufferUsageHint, ColorSpaceConversion, Device, GPUBuffer, GPUTexture, ShaderAttributeType, TextureDataType, TextureFormat, TextureMagFilter, TextureMinFilter, TextureUsageHint, TextureWrapMode, VertexAttributeSourceType } from "../../rendering/Device";
 import { BlendMode, DrawContext, DrawMode } from "../../rendering/Renderer";
 import { Object2D } from "./Object2D";
 import { SharedResources } from "./SharedResources";
@@ -152,7 +152,7 @@ export class Text extends Object2D {
                     gl_FragColor = vec4(color.rgb, blendFactor) * color.a * alpha;
                 }
                 `,
-                ['position', 'uv']
+                Text.attributeLayout
             );
         }
 
@@ -199,8 +199,7 @@ export class Text extends Object2D {
                 // position
                 {
                     buffer: this.gpuVertexBuffer,
-                    size: vertexData.vertexLayout.position.elements,
-                    dataType: VertexAttributeDataType.FLOAT,
+                    type: ShaderAttributeType.VEC2,
                     offsetBytes: vertexData.vertexLayout.position.offsetBytes,
                     strideBytes: vertexData.vertexLayout.position.strideBytes,
                     normalize: false,
@@ -208,8 +207,7 @@ export class Text extends Object2D {
                 // uv
                 {
                     buffer: this.gpuVertexBuffer,
-                    size: vertexData.vertexLayout.uv.elements,
-                    dataType: VertexAttributeDataType.FLOAT,
+                    type: ShaderAttributeType.VEC3,
                     offsetBytes: vertexData.vertexLayout.uv.offsetBytes,
                     strideBytes: vertexData.vertexLayout.uv.strideBytes,
                     normalize: false,
@@ -419,6 +417,11 @@ export class Text extends Object2D {
 
     protected static fontMap: { [path: string]: Promise<FontAsset> } = {};
     protected static fontCache: { [path: string]: FontAsset } = {};
+
+    protected static attributeLayout: AttributeLayout = [
+        { name: 'position', type: ShaderAttributeType.VEC2 },
+        { name: 'uv', type: ShaderAttributeType.VEC3 },
+    ];
 
 }
 

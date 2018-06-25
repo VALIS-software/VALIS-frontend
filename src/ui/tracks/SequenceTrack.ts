@@ -1,16 +1,16 @@
 import { UsageCache } from "../../ds/UsageCache";
 import { Scalar } from "../../math/Scalar";
+import { BlockPayload, TilePayload } from "../../model/data-store/SequenceTileStore";
+import { SharedTileStore } from "../../model/data-store/SharedTileStores";
+import { Tile, TileState } from "../../model/data-store/TileStore";
 import { TrackModel } from "../../model/TrackModel";
-import Device, { GPUTexture } from "../../rendering/Device";
+import Device, { GPUTexture, ShaderAttributeType } from "../../rendering/Device";
 import { DrawContext, DrawMode } from "../../rendering/Renderer";
 import Object2D, { Object2DInternal } from "../core/Object2D";
 import SharedResources from "../core/SharedResources";
 import { Text } from "../core/Text";
-import { BlockPayload, TilePayload } from "../../model/data-store/SequenceTileStore";
-import { SharedTileStore } from "../../model/data-store/SharedTileStores";
-import { Tile, TileState } from "../../model/data-store/TileStore";
-import { TileNode, TileTrack } from "./TileTrack";
 import { OpenSansRegular } from "../font/Fonts";
+import { TileNode, TileTrack } from "./TileTrack";
 
 
 export class SequenceTrack extends TileTrack<TilePayload, BlockPayload> {
@@ -77,7 +77,7 @@ class SequenceTile extends TileNode<TilePayload> {
             device,
             SequenceTile.vertexShader,
             SequenceTile.fragmentShader,
-            ['position']
+            SequenceTile.attributeLayout
         );
 
         // we assume .tile is set and in the complete state before allocateGPUResources is called
@@ -199,6 +199,10 @@ class SequenceTile extends TileNode<TilePayload> {
         super.onTileComplete();
         this.updateLabels();
     }
+
+    protected static attributeLayout = [
+        { name: 'position', type: ShaderAttributeType.VEC2 }
+    ];
 
     protected static vertexShader = `
         #version 100

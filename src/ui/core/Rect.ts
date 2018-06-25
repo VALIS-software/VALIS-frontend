@@ -1,4 +1,4 @@
-import { Device, GPUProgram } from "../../rendering/Device";
+import { Device, GPUProgram, AttributeLayout, ShaderAttributeType } from "../../rendering/Device";
 import { SharedResources } from "./SharedResources";
 import { DrawContext, DrawMode } from "../../rendering/Renderer";
 import { Object2D } from "./Object2D";
@@ -14,6 +14,10 @@ export class Rect extends Object2D {
     color = new Float32Array(4);
     opacity: number = 1;
 
+    protected attributeLayout: AttributeLayout = [
+        { name: 'position', type: ShaderAttributeType.VEC2 },
+    ];
+
     constructor(w: number = 10, h: number = 10, color: ArrayLike<number> = [1, 0, 0, 1]) {
         super();
         this.render = true;
@@ -28,7 +32,7 @@ export class Rect extends Object2D {
             device,
             this.getVertexCode(),
             this.getFragmentCode(),
-            this.getAttributes()
+            this.attributeLayout
         );
     }
 
@@ -75,10 +79,6 @@ export class Rect extends Object2D {
                 gl_FragColor = vec4(color.rgb * color.a, color.a);
             }
         `;
-    }
-
-    protected getAttributes() {
-        return ['position'];
     }
 
 }

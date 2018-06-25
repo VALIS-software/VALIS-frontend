@@ -1,4 +1,4 @@
-import { Device, GPUVertexState, VertexAttributeDataType, GPUProgram, GPUBuffer, GPUIndexBuffer, TextureDescriptor, GPUTexture, BufferDescriptor } from "../../rendering/Device";
+import { AttributeLayout, BufferDescriptor, Device, GPUBuffer, GPUIndexBuffer, GPUProgram, GPUTexture, GPUVertexState, ShaderAttributeType, TextureDescriptor } from "../../rendering/Device";
 
 export class SharedResources {
 
@@ -14,20 +14,20 @@ export class SharedResources {
     private static textures: { [key: string]: GPUTexture } = {};
     private static buffers: { [key: string]: GPUBuffer } = {};
 
-    static getProgram(device: Device, vertexCode: string, fragmentCode: string, attributeBindings: Array<string>) {
-        let key = vertexCode + '\x1D' + fragmentCode + '\x1D' + attributeBindings.join('\x1F');
+    static getProgram(device: Device, vertexCode: string, fragmentCode: string, attributeLayout: AttributeLayout) {
+        let key = vertexCode + '\x1D' + fragmentCode + '\x1D' + attributeLayout.map(a => a.name + ':' + a.type).join('\x1F');
         let gpuProgram = this.programs[key];
 
         if (gpuProgram == null) {
-            gpuProgram = device.createProgram(vertexCode, fragmentCode, attributeBindings);
+            gpuProgram = device.createProgram(vertexCode, fragmentCode, attributeLayout);
             this.programs[key] = gpuProgram;
         }
 
         return gpuProgram;
     }
 
-    static deleteProgram(vertexCode: string, fragmentCode: string, attributeBindings: Array<string>) {
-        let key = vertexCode + '\x1D' + fragmentCode + '\x1D' + attributeBindings.join('\x1F');
+    static deleteProgram(vertexCode: string, fragmentCode: string, attributeLayout: AttributeLayout) {
+        let key = vertexCode + '\x1D' + fragmentCode + '\x1D' + attributeLayout.map(a => a.name + ':' + a.type).join('\x1F');
         let gpuProgram = this.programs[key];
 
         if (gpuProgram != null) {
@@ -107,8 +107,7 @@ export class SharedResources {
             attributes: [
                 {
                     buffer: this.unitQuadVertexBuffer,
-                    size: 2,
-                    dataType: VertexAttributeDataType.FLOAT,
+                    type: ShaderAttributeType.VEC2,
                     offsetBytes: 0,
                     strideBytes: 2 * 4
                 }
@@ -129,8 +128,7 @@ export class SharedResources {
             attributes: [
                 {
                     buffer: this.quad1x1VertexBuffer,
-                    size: 2,
-                    dataType: VertexAttributeDataType.FLOAT,
+                    type: ShaderAttributeType.VEC2,
                     offsetBytes: 0,
                     strideBytes: 2 * 4
                 }
