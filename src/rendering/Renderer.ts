@@ -344,7 +344,11 @@ export class Renderer {
 				}
 
 				let descriptor = internal.gpuVertexState.native as VertexStateDescriptor;
+
+				// @! todo: this is incomplete – it doesn't account for changes to global state caused be previous calls
+				// example: a number of vertex attributes may be set to array mode (enableVertexAttribArray), but never disabled
 				this.deviceInternal.applyVertexStateDescriptor(descriptor);
+
 				this.currentVaoFallbackAttributes = descriptor.attributes;
 			}
 
