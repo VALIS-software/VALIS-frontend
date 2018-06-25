@@ -57,18 +57,21 @@ class DatasetSelector extends React.Component {
         <GenomeSelector appModel={this.appModel} viewModel={this.viewModel} />
       );
     } else if (trackType === TRACK_TYPE_GWAS) {
+      mixpanel.track("Add GWAS Track");
       this.viewModel.pushView(
         "GWAS Track",
         null,
         <GWASSelector appModel={this.appModel} viewModel={this.viewModel} />
       );
     } else if (trackType === TRACK_TYPE_ENCODE) {
+      mixpanel.track("Add ENCODE Track");
       this.viewModel.pushView(
         "ENCODE Track",
         null,
         <ENCODESelector appModel={this.appModel} viewModel={this.viewModel} />
       );
     } else if (trackType === TRACK_TYPE_FUNCTIONAL) {
+      mixpanel.track("Add Functional Track");
       this.viewModel.pushView(
         "Functional Tracks",
         null,
