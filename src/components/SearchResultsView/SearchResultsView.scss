@@ -1,8 +1,92 @@
+@import "../../helpers/variables.scss";
+$filter-header-height: 48px;
+
 .search-results-view {
-	padding: 8px;
-	.result-info {
-		padding: 16px;
-		border-radius: 8px;
+	font-family: $font-stack;
+	.search-filters {
+		min-height: $filter-header-height;
+		background-color: lighten($valis-blue-light, 15%);
+		border-bottom: 1px solid $valis-grey-dark;
+		.search-button {
+			border-radius: 8px;
+			background-color: $valis-blue-light;
+			padding: 2px 16px 2px 16px;
+			margin: 14px 8px 0px 8px;
+			color: white;
+			font-size: 14px;
+			&:hover {
+				cursor: pointer;
+				background-color: darken($valis-blue-light, 15%);
+			}
+		}
+
+		.filter-menu {
+			height: 80px;
+			background-color: 1px solid $valis-grey-dark;
+		}
 	}
-	
+
+	height:calc(100% - #{$sidebar-header-height});
+	user-select: none;
+	.search-results-list {
+		background-color: lighten($valis-blue-light, 30%);
+		user-select: none;
+		outline-style:none;
+		.search-result-inner {
+			&:hover {
+				border: 1px solid lighten($valis-blue-light, 20%);
+			}
+			cursor: pointer;
+			background-color: $valis-white;
+			border: 1px solid $valis-grey-light;
+			border-radius: 6px;
+			height: calc(100% - 18px);
+			padding: 6px;
+			margin: 6px;
+
+			.location {
+				font-size: 10px;
+				.contig {
+					background-color: $valis-grey-dark;
+					border-radius: 8px 0px 0px 8px;
+					padding: 2px 2px 2px 6px;
+					border-right: 1px solid $valis-grey-dark;
+					color: $valis-white;
+				}
+				.range {
+					background-color: $valis-grey-light;
+					border-radius: 0px 8px 8px 0px;
+					padding: 2px 6px 2px 2px;
+				}
+			}
+			.right-info { 
+				float: right;
+				margin-right: 4px;
+				.allele-arrow {
+					color: $valis-grey-dark;
+				}
+			}
+			.result-info {
+				font-size: 10px;
+				font-weight: bold;
+				color: $valis-grey-dark;
+				td {
+					padding: 2px;
+				}
+			}
+			.pills-container {
+				.pill {
+					padding: 4px;
+					padding-top: 2px;
+					padding-bottom: 2px;
+					font-size: 10px;
+					border-radius: 4px;
+					background-color: $valis-blue-medium;
+					color: white;
+					font-weight: bold;
+					margin-right: 2px;
+				}
+			}
+		}
+	}
 }

@@ -37,10 +37,10 @@ class NavigationController extends React.Component {
       this.state.views.length === 1 ? (
         <div />
       ) : (
-        <IconButton onClick={popView}>
-          <NavigationArrowBack />
-        </IconButton>
-      );
+          <IconButton onClick={popView}>
+            <NavigationArrowBack />
+          </IconButton>
+        );
     const closeButton = (
       <IconButton onClick={closeView}>
         <NavigationClose />

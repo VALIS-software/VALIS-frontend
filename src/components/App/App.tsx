@@ -3,6 +3,7 @@ import * as React from "react";
 import MuiThemeProvider from "material-ui/styles/MuiThemeProvider";
 import LinearProgress from "material-ui/LinearProgress";
 
+
 // Components
 import IconButton from 'material-ui/IconButton';
 import FlatButton from 'material-ui/FlatButton';
@@ -17,6 +18,7 @@ import GWASDetails from '../GWASDetails/GWASDetails.jsx';
 import GeneDetails from '../GeneDetails/GeneDetails.jsx';
 import TraitDetails from '../TraitDetails/TraitDetails.jsx';
 import Dialog from 'material-ui/Dialog';
+import BasicTheme from '../../themes/BasicTheme.jsx';
 import { ENTITY_TYPE } from '../../helpers/constants.js';
 
 import AppModel, { AppEvent } from "../../models/appModel";
@@ -32,7 +34,6 @@ import ViewModel, {
 } from "../../models/viewModel.js";
 
 import QueryBuilder from "../../models/query.js";
-
 
 // Styles
 import "./App.scss";
@@ -126,7 +127,7 @@ class App extends React.PureComponent<any, any> {
 
   reportFailure = (evt: any) => {
     const error: object = evt.data.error;
-    let newErrorList = this.state.errors.slice(0);
+    const newErrorList = this.state.errors.slice(0);
     newErrorList.push(error);
     this.setState({
       errors: newErrorList,
@@ -214,7 +215,7 @@ class App extends React.PureComponent<any, any> {
     const views = this.state.views;
 
     return (
-      <MuiThemeProvider>
+      <MuiThemeProvider muiTheme={BasicTheme}>
         <div className="site-wrapper">
           <Header viewModel={this.viewModel} model={this.appModel} />
           {progress}
