@@ -7,23 +7,6 @@ $filter-header-height: 48px;
 		min-height: $filter-header-height;
 		background-color: lighten($valis-blue-light, 15%);
 		border-bottom: 1px solid $valis-grey-dark;
-		.search-button {
-			border-radius: 8px;
-			background-color: $valis-blue-light;
-			padding: 2px 16px 2px 16px;
-			margin: 14px 8px 0px 8px;
-			color: white;
-			font-size: 14px;
-			&:hover {
-				cursor: pointer;
-				background-color: darken($valis-blue-light, 15%);
-			}
-		}
-
-		.filter-menu {
-			height: 80px;
-			background-color: 1px solid $valis-grey-dark;
-		}
 	}
 
 	height:calc(100% - #{$sidebar-header-height});

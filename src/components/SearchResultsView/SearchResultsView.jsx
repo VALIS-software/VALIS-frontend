@@ -4,7 +4,9 @@ import * as PropTypes from "prop-types";
 import DataListItem from "../DataListItem/DataListItem.jsx";
 import CircularProgress from "material-ui/CircularProgress";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import SearchFilter from "../Shared/SearchFilter/SearchFilter.jsx";
 import { List, InfiniteLoader } from 'react-virtualized';
+import Checkbox from 'material-ui/Checkbox';
 
 // Styles
 import "./SearchResultsView.scss";
@@ -179,16 +181,14 @@ class SearchResultsView extends React.Component {
     let filterMenu = null;
 
     if (this.state.showFilters) {
-      filterMenu = (<div className="filter-menu">
-        filters
-      </div>);
+      filterMenu = (<SearchFilter />);
     }
     return (
       <div id="search-results-view" className="search-results-view">
         <div className="search-filters">
           <div className="clearfix">
-            <div className="search-button float-left" onClick={this.addQueryAsTrack}>Add as Track</div>
-            <div className="search-button float-right" onClick={this.toggleFilters}>Filter</div>
+            <button className="float-left" onClick={this.addQueryAsTrack}>Add as Track</button>
+            <button className="float-right" onClick={this.toggleFilters}>Filter</button>
           </div>
           <div>{filterMenu}</div>
         </div>
