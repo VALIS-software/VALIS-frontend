@@ -6,7 +6,6 @@ import CircularProgress from "material-ui/CircularProgress";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 import SearchFilter from "../Shared/SearchFilter/SearchFilter.jsx";
 import { List, InfiniteLoader } from 'react-virtualized';
-import Checkbox from 'material-ui/Checkbox';
 
 // Styles
 import "./SearchResultsView.scss";

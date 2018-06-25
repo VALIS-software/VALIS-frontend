@@ -55,9 +55,10 @@ class SearchFilter extends React.Component {
                     { title: 'GTexPortal', value: 'gtexportal' },
                     { title: 'Clinvar', value: 'clinvar' },
                 ];
-                setTimeout(resolve, 2500, filterTypes);
+                setTimeout(resolve, 500, filterTypes);
             })).then(result => {
-                const newMap = this.state.filterOptions.setIn(type, result);
+                this.filterOptionsLoading[type] = false;
+                const newMap = this.state.filterOptions.set(type, result);
                 this.setState({
                     filterOptions: newMap
                 });
@@ -71,19 +72,17 @@ class SearchFilter extends React.Component {
         if (this.state.currFilterMenu === null) {
             // show the filter selector
             menuItems = rootFilterOptions.map(item => {
-                return (<div onClick={() => this.setFilter(item.type)} className="filter-type-chooser">{item.title}</div>);
+                return (<div key={item.title} onClick={() => this.setFilter(item.type)} className="filter-type-chooser">{item.title}</div>);
             });
         } else {
-
-            if (!this.state.filterOptions[this.state.currFilterMenu]) {
+            const filterTypes = this.state.filterOptions.get(this.state.currFilterMenu);
+            if (!filterTypes) {
                 this.loadFilterOptions(this.state.currFilterMenu);
                 menuItems = (<div> Loading...</div>);
             } else {
                 const check = (<span className="float-right">✔</span>);
-                let i = 0;
                 menuItems = filterTypes.map(item => {
-                    ++i;
-                    return (<div key={i} onClick={() => this.setFilter(item.type)} className="filter-type-chooser">{item.title}{check}</div>);
+                    return (<div key={item.title} onClick={() => this.setFilter(item.type)} className="filter-type-chooser">{item.title}{check}</div>);
                 });
             }
             menuOptions = (<div className="clearfix">
