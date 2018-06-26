@@ -174,10 +174,11 @@ export class Device {
 			this.applyVertexStateDescriptor(vertexStateDescriptor);
 			extVao.bindVertexArrayOES(null);
 
-			vertexStateHandle = new GPUVertexState(this, this.vertexStateIds.assign(), vao, true, indexDataType);
+			vertexStateHandle = new GPUVertexState(this, this.vertexStateIds.assign(), vao, vertexStateDescriptor.attributeLayout, indexDataType);
 		} else {
 			// when VAO is not supported, pass in the descriptor so vertex state can be applied when rendering
-			vertexStateHandle = new GPUVertexState(this, this.vertexStateIds.assign(), vertexStateDescriptor, false, indexDataType);
+			vertexStateHandle = new GPUVertexState(this, this.vertexStateIds.assign(), null, vertexStateDescriptor.attributeLayout, indexDataType);
+			(vertexStateHandle as any as GPUVertexStateInternal)._vaoFallbackDescriptor = vertexStateDescriptor;
 		}
 
 		this._vertexStateCount++;
@@ -898,13 +899,20 @@ export class GPUIndexBuffer extends GPUBuffer {
 
 }
 
+export type GPUVertexStateInternal = {
+	_vaoFallbackDescriptor: VertexStateDescriptor;
+}
+
 export class GPUVertexState implements GPUObjectHandle {
+
+	// only set if VAOs are not available
+	protected _vaoFallbackDescriptor: undefined | VertexStateDescriptor;
 
 	constructor(
 		protected readonly device: Device,
 		readonly id: number,
-		readonly native: WebGLVertexArrayObjectOES | VertexStateDescriptor,
-		readonly isVao: boolean,
+		readonly native: null | WebGLVertexArrayObjectOES,
+		readonly attributeLayout: AttributeLayout,
 		readonly indexType?: IndexDataType,
 	) {}
 

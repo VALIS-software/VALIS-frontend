@@ -3,7 +3,7 @@
  * - State grouping: Often we want hierarchical state - i.e, set viewport for this node _and_ all of its children
  */
 
-import Device, { DeviceInternal, GPUProgram, GPUProgramInternal, GPUTexture, GPUTextureInternal, GPUVertexState, VertexAttribute, VertexStateDescriptor, AttributeLayout, shaderTypeLength, shaderTypeRows } from '../rendering/Device';
+import Device, { DeviceInternal, GPUProgram, GPUProgramInternal, GPUTexture, GPUTextureInternal, GPUVertexState, VertexAttribute, VertexStateDescriptor, AttributeLayout, shaderTypeLength, shaderTypeRows, GPUVertexStateInternal } from '../rendering/Device';
 import RenderPass from './RenderPass';
 import { Renderable, RenderableInternal } from './Renderable';
 
@@ -332,7 +332,7 @@ export class Renderer {
 
 		if (internal.gpuVertexState.id !== this.currentVertexStateId) {
 			
-			if (internal.gpuVertexState.isVao) {
+			if (internal.gpuVertexState.native !== null) {
 				this.extVao.bindVertexArrayOES(internal.gpuVertexState.native);
 			} else {
 				// handle setting vertex state when VAO extension is not available 
@@ -361,10 +361,9 @@ export class Renderer {
 
 				// @! todo: this is incomplete – it doesn't account for changes to global state caused be previous calls
 				// example: a number of vertex attributes may be set to array mode (enableVertexAttribArray), but never disabled
-				let descriptor = internal.gpuVertexState.native as VertexStateDescriptor;
-				this.deviceInternal.applyVertexStateDescriptor(descriptor);
+				this.deviceInternal.applyVertexStateDescriptor((internal.gpuVertexState as any as GPUVertexStateInternal)._vaoFallbackDescriptor);
 
-				this.currentVaoFallbackAttributeLayout = descriptor.attributeLayout;
+				this.currentVaoFallbackAttributeLayout = internal.gpuVertexState.attributeLayout;
 			}
 
 			drawContextInternal.vertexState = internal.gpuVertexState;
