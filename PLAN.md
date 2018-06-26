@@ -1,4 +1,50 @@
-- Macro scale genes, design
+- instanced rendering
+    - use of bindAttributeLocation isn't valid because it assumes single rows
+    - use of vertexAttribPointer isn't valid either for the same reason
+
+    => Either we drop support for specifying bindings, maybe make it optional or require more information
+        - Do we have enough information from reflection to drop support?
+            - yes because we get the type from the info
+        - If we want to render the same object with two different shaders, each different attribute layouts then we need two different VAOs
+        - What extra information do we need?
+            - attribute type
+        - Packing assumed to be top-down
+
+! what about when we want to skip a mat3 say
+
+ShaderA           ShaderB
+vec2 pos          vec2 pos
+mat3 model        
+vec4 color        vec4 color
+
+Layout for both Shaders AND VAOs
+[
+    ('pos', vec2),
+    ('model', mat3),
+    ('color', vec4)
+]
+
+Can we actually bind things correctly?
+    "It is also permissible to bind a generic attribute index to an attribute variable name that is never used in a vertex shader."
+    => Yes for shaders
+
+We could optionally supply the shader layout check against a VAO?
+    - Could we make the AttributeLayout part of specifying a vertex state?
+        ? Are .size and .dataType are covered by layout .type
+            => no
+        => Maybe data type can be determined by the buffer. NO because we can interlace data
+        => So you may want to load data as an array of colors with RGBA bytes, but have them translated to
+
+        - Maybe we add .type and .sourceType, where .sourceType is optional and inferred
+            => yes
+        - What about constants? They don't discuss a type
+            => add .type to constants
+        - Is there value in specifying Layout type?
+            - It would be nice to drop .size
+            - Say you have a shader that takes vec3 pos, can you supply vec2 pos data?
+
+How's that represented? Can we Render the same VAO with both shaders?
+
 
 - Wrap up dev colors code
     - Maybe make the color dev trick into a separate dev/utils module
