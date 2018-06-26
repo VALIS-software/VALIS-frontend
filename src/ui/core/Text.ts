@@ -195,24 +195,25 @@ export class Text extends Object2D {
 
         // re-create text vertex state
         this.gpuVertexState = device.createVertexState({
-            attributes: [
+            attributeLayout: Text.attributeLayout,
+            attributes: {
                 // position
-                {
+                'position': {
                     buffer: this.gpuVertexBuffer,
-                    type: AttributeType.VEC2,
+                    sourceColumns: vertexData.vertexLayout.position.elements,
                     offsetBytes: vertexData.vertexLayout.position.offsetBytes,
                     strideBytes: vertexData.vertexLayout.position.strideBytes,
                     normalize: false,
                 },
                 // uv
-                {
+                'uv': {
                     buffer: this.gpuVertexBuffer,
-                    type: AttributeType.VEC3,
+                    sourceColumns: vertexData.vertexLayout.uv.elements,
                     offsetBytes: vertexData.vertexLayout.uv.offsetBytes,
                     strideBytes: vertexData.vertexLayout.uv.strideBytes,
                     normalize: false,
                 }
-            ]
+            }
         });
     }
 

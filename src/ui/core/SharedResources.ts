@@ -2,6 +2,10 @@ import { AttributeLayout, BufferDescriptor, Device, GPUBuffer, GPUIndexBuffer, G
 
 export class SharedResources {
 
+    static quadAttributeLayout: AttributeLayout = [
+        { name: 'position', type: AttributeType.VEC2 },
+    ];
+
     static quadIndexBuffer: GPUIndexBuffer;
 
     static unitQuadVertexBuffer: GPUBuffer;
@@ -104,14 +108,14 @@ export class SharedResources {
 
         this.unitQuadVertexState = device.createVertexState({
             index: this.quadIndexBuffer,
-            attributes: [
-                {
+            attributeLayout: this.quadAttributeLayout,
+            attributes: {
+                'position': {
                     buffer: this.unitQuadVertexBuffer,
-                    type: AttributeType.VEC2,
                     offsetBytes: 0,
                     strideBytes: 2 * 4
                 }
-            ]
+            }
         });
 
         this.quad1x1VertexBuffer = device.createBuffer({
@@ -125,14 +129,14 @@ export class SharedResources {
 
         this.quad1x1VertexState = device.createVertexState({
             index: this.quadIndexBuffer,
-            attributes: [
-                {
+            attributeLayout: this.quadAttributeLayout,
+            attributes: {
+                'position': {
                     buffer: this.quad1x1VertexBuffer,
-                    type: AttributeType.VEC2,
                     offsetBytes: 0,
                     strideBytes: 2 * 4
                 }
-            ]
+            }
         });
     }
 

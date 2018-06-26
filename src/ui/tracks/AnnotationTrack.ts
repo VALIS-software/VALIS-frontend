@@ -348,49 +348,39 @@ class RectInstances extends Object2D {
         // = 8
         this.gpuVertexState = device.createVertexState({
             index: SharedResources.quadIndexBuffer,
-            attributes: [
+            attributeLayout: this.attributeLayout,
+            attributes: {
                 // vertices (attribute 'position')
-                {
+                'position': {
                     buffer: SharedResources.quad1x1VertexBuffer, 
-                    type: AttributeType.VEC2,
                     offsetBytes: 0,
                     strideBytes: 2 * 4,
                 },
-
-                // instanceModel - mat4
-                {
+                'instanceModel': {
                     buffer: instanceModelBuffer,
-                    type: AttributeType.MAT4,
                     offsetBytes: 0,
                     strideBytes: shaderTypeLength[AttributeType.MAT4] * 4,
                     instanceDivisor: 1,
                 },
-                // instanceSizeArray - vec2
-                {
+                'instanceSize': {
                     buffer: instanceSizeBuffer,
-                    type: AttributeType.VEC2,
                     offsetBytes: 0,
                     strideBytes: shaderTypeLength[AttributeType.VEC2] * 4,
                     instanceDivisor: 1,
                 },
-                // instanceColorArray - vec4
-                {
+                'instanceColor': {
                     buffer: instanceColorBuffer,
-                    type: AttributeType.VEC4,
-                    sourceDataType: VertexAttributeSourceType.FLOAT,
                     offsetBytes: 0,
                     strideBytes: shaderTypeLength[AttributeType.VEC4] * 4,
                     instanceDivisor: 1,
                 },
-                // instanceBlendFactorArray - float
-                {
+                'instanceBlendFactor': {
                     buffer: instanceBlendFactorBuffer,
-                    type: AttributeType.FLOAT,
                     offsetBytes: 0,
                     strideBytes: shaderTypeLength[AttributeType.FLOAT] * 4,
                     instanceDivisor: 1,
                 }
-            ]
+            }
         });
 
         this.gpuProgram = SharedResources.getProgram(
@@ -558,7 +548,6 @@ class GeneAnnotation extends Object2D {
     }
 
     set nameOpacity(v: number) {
-        console.log('nameOpacity', v);
         this.name.color[3] = v;
         this.name.visible = v >= 0;
     }
