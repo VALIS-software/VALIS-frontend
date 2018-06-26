@@ -362,7 +362,7 @@ export class Device {
 	/**
 	 * @throws string if shaders cannot be compiled or program cannot be linked
 	 */
-	createProgram(vertexCode: string, fragmentCode: string, attributeBindings: AttributeLayout) {
+	createProgram(vertexCode: string, fragmentCode: string, attributeLayout: AttributeLayout) {
 		const gl = this.gl;
 		let vs: WebGLShader = this.vertexShaderCache.reference(vertexCode);
 		let fs: WebGLShader = this.fragmentShaderCache.reference(fragmentCode);
@@ -384,8 +384,8 @@ export class Device {
 		// set attribute bindings (before linking)
 		// see applyVertexStateDescriptor() for corresponding layout handling
 		let attributeRow = 0;
-		for (let i = 0; i < attributeBindings.length; i++) {
-			let attribute = attributeBindings[i];
+		for (let i = 0; i < attributeLayout.length; i++) {
+			let attribute = attributeLayout[i];
 
 			// how many elements are stored in this type?
 			let typeLength = shaderTypeLength[attribute.type];
@@ -424,7 +424,7 @@ export class Device {
 			p,
 			vertexCode,
 			fragmentCode,
-			attributeBindings,
+			attributeLayout,
 			uniformInfo,
 			uniformLocation
 		);
@@ -473,63 +473,86 @@ export class Device {
 		// set attributes
 		// some attributes may span more than 1 attribute row (a vec4) so we track the current attribute row so attributes are packed sequentially
 		let attributeRow = 0;
-		for (let i = 0; i < vertexStateDescriptor.attributes.length; i++) {
-			let attribute = vertexStateDescriptor.attributes[i];
+		for (let i = 0; i < vertexStateDescriptor.attributeLayout.length; i++) {
+			let {name, type} = vertexStateDescriptor.attributeLayout[i];
 
 			// how many elements are stored in this type?
-			let typeLength = shaderTypeLength[attribute.type];
+			let typeLength = shaderTypeLength[type];
 
 			// determine how many rows this attribute will cover
-			// e.g. float -> 1, vec4 -> 1, mat2 -> 2
-			let attributeRowSpan = shaderTypeRows[attribute.type];
+			// e.g. float -> 1, vec4 -> 1, mat2 -> 2, mat4 -> 4
+			let attributeRowSpan = shaderTypeRows[type];
 
-			// determine number of generic attribute columns (from 1 - 4)
+			// determine number of generic attribute columns this type requires (from 1 - 4)
 			// 1, 2, 3, 4, 9, 16 -> 1, 2, 3, 4, 3, 4
-			let columns = typeLength / attributeRowSpan;
+			let typeColumns = typeLength / attributeRowSpan;
+			
+			// get the attribute assignment for this name (may be null or undefined)
+			let vertexAttribute = vertexStateDescriptor.attributes[name];
 
-			// if .buffer is set then assume it's a VertexAttributeBuffer
-			if ((attribute as VertexAttributeBuffer).buffer !== undefined) {
-				let attributeBuffer = attribute as VertexAttributeBuffer;
-				let sourceDataType = attributeBuffer.sourceDataType;
-				if (sourceDataType == null) {
-					// assume source type is FLOAT (in WebGL1 all shader generic attributes are required to be floats)
-					sourceDataType = VertexAttributeSourceType.FLOAT;
-				}
+			if (vertexAttribute != null) {
 
-				gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffer.buffer.native);
+				// if .buffer is set then assume it's a VertexAttributeBuffer
+				if ((vertexAttribute as VertexAttributeBuffer).buffer !== undefined) {
+					let attributeBuffer = vertexAttribute as VertexAttributeBuffer;
+					let sourceDataType = attributeBuffer.sourceDataType;
+					if (sourceDataType == null) {
+						// assume source type is FLOAT (in WebGL1 all shader generic attributes are required to be floats)
+						sourceDataType = VertexAttributeSourceType.FLOAT;
+					}
 
-				// set all attribute arrays
-				for (let r = 0; r < attributeRowSpan; r++) {
-					let row = attributeRow + r;
+					gl.bindBuffer(gl.ARRAY_BUFFER, attributeBuffer.buffer.native);
 
-					// column offset for this attribute row
-					// this is only non-zero for matrix types
-					let columnBytesOffset = (r * columns * dataTypeByteLength[sourceDataType]);
+					// set all attribute arrays
+					for (let r = 0; r < attributeRowSpan; r++) {
+						let row = attributeRow + r;
 
-					gl.enableVertexAttribArray(row);
-					gl.vertexAttribPointer(
-						row,
-						columns,
-						sourceDataType,
-						!!attributeBuffer.normalize,
-						attributeBuffer.strideBytes,
-						// offset of attribute row
-						attributeBuffer.offsetBytes + columnBytesOffset
-					);
+						// assume the data is formatted with columns that match the attribute type, but allow override with .sourceColumns field
+						let sourceColumns = attributeBuffer.sourceColumns != null ? attributeBuffer.sourceColumns : typeColumns;
 
-					if (attributeBuffer.instanceDivisor != null && this.extInstanced) {
-						this.extInstanced.vertexAttribDivisorANGLE(row, attributeBuffer.instanceDivisor);
+						// column offset for this attribute row
+						// this is only non-zero for matrix types
+						let columnBytesOffset = (r * sourceColumns * dataTypeByteLength[sourceDataType]);
+
+						// console.log('enableVertexAttribArray', row);
+						gl.enableVertexAttribArray(row);
+						gl.vertexAttribPointer(
+							row,
+							sourceColumns,
+							sourceDataType,
+							!!attributeBuffer.normalize,
+							attributeBuffer.strideBytes,
+							// offset of attribute row
+							attributeBuffer.offsetBytes + columnBytesOffset
+						);
+
+						if (this.extInstanced) {
+							// we should make sure to set vertexAttribDivisorANGLE even if 0, so that if we're altering global state we don't run into issues
+							// this helps ensure we can applyVertexStateDescriptor even when VAOs are unavailable
+							this.extInstanced.vertexAttribDivisorANGLE(row, attributeBuffer.instanceDivisor != null ? attributeBuffer.instanceDivisor : 0);
+						}
+					}
+
+				} else {
+					// constant value attribute
+					let attributeConstant = vertexAttribute as VertexAttributeConstant;
+
+					if (attributeRowSpan === 1) {
+						// slightly faster path for most common case
+						gl.disableVertexAttribArray(attributeRow);
+						gl.vertexAttrib4fv(attributeRow, attributeConstant.data);
+					} else {
+						for (let r = 0; r < attributeRowSpan; r++) {
+							gl.disableVertexAttribArray(attributeRow + r);
+							gl.vertexAttrib4fv(attributeRow + r, attributeConstant.data.subarray(r * 4, (r * 4) + 4));
+						}
 					}
 				}
 			} else {
-				let attributeConstant = attribute as VertexAttributeConstant;
-				if (attributeRowSpan === 1) {
-					// slightly faster path for most common case
-					gl.vertexAttrib4fv(attributeRow, attributeConstant.data);
-				} else {
-					for (let r = 0; r < attributeRowSpan; r++) {
-						gl.vertexAttrib4fv(attributeRow + r, attributeConstant.data.subarray(r * 4, (r * 4) + 4));
-					}
+				// set attribute value to constant 0s
+				for (let r = 0; r < attributeRowSpan; r++) {
+					gl.disableVertexAttribArray(attributeRow + r);
+					gl.vertexAttrib4f(attributeRow + r, 0, 0, 0, 0);
 				}
 			}
 
@@ -685,9 +708,9 @@ export type VertexAttributeConstant = {
 
 export type VertexAttributeBuffer = {
 	buffer: GPUBuffer,
-	type: AttributeType,
 	offsetBytes: number,
 	strideBytes: number,
+	sourceColumns?: number,
 	sourceDataType?: VertexAttributeSourceType,
 	normalize?: boolean,
 	instanceDivisor?: number,
@@ -697,7 +720,8 @@ export type VertexAttribute = VertexAttributeConstant | VertexAttributeBuffer;
 
 export type VertexStateDescriptor = {
 	index?: GPUIndexBuffer,
-	attributes: Array<VertexAttribute>
+	attributeLayout: AttributeLayout,
+	attributes: { [name: string]: VertexAttribute }
 }
 
 export enum TextureDataType {
