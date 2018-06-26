@@ -1,8 +1,11 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
-import './SearchFilter.scss';
+import { DATA_SOURCES, VARIANT_TAGS } from '../../../helpers/constants.js';
 
 const { Map, Set } = require('immutable');
+
+import './SearchFilter.scss';
+import 'rc-slider/assets/index.css';
 
 const rootFilterOptions = [
     { title: 'By Dataset', type: 'dataset' },
@@ -12,6 +15,21 @@ const rootFilterOptions = [
     { title: 'By p-value', type: 'p_value' }
 ];
 
+const ALLELE_FREQUENCY_BUCKETS = [
+    '< 1/10,000',
+    '< 1/1,000',
+    '< 1%',
+    '< 5%',
+    '< 50%',
+    '> 50%',
+];
+
+const P_VALUE_BUCKETS = [
+    '<1e-8',
+    '<1e-5',
+    '<1e-4',
+    '<1e-3',
+];
 
 class SearchFilter extends React.Component {
     constructor(props) {
@@ -70,23 +88,32 @@ class SearchFilter extends React.Component {
         if (this.filterOptionsLoading[type]) return;
         else {
             // TODO: run actual async request for filter type
-            this.filterOptionsLoading[type] = new Promise(((resolve, reject) => {
-                const filterTypes = [
-                    { title: 'TCGA', type: 'tcga' },
-                    { title: 'ExAC', type: 'exac' },
-                    { title: 'dbSNP', type: 'dbsnp' },
-                    { title: 'ENCODE', type: 'encode' },
-                    { title: 'GTexPortal', type: 'gtexportal' },
-                    { title: 'Clinvar', type: 'clinvar' },
-                ];
-                setTimeout(resolve, 500, filterTypes);
-            })).then(result => {
+            let promise = null;
+            if (type === 'dataset') {
+                promise = new Promise(((resolve, reject) => {
+                    resolve(DATA_SOURCES);
+                }));
+            } else if (type === 'variant_tag') {
+                promise = new Promise(((resolve, reject) => {
+                    resolve(VARIANT_TAGS);
+                }));
+            } else if (type === 'allele_frequency') {
+                promise = new Promise(((resolve, reject) => {
+                    resolve(ALLELE_FREQUENCY_BUCKETS);
+                }));
+            } else if (type === 'p_value') {
+                promise = new Promise(((resolve, reject) => {
+                    resolve(P_VALUE_BUCKETS);
+                }));
+            }
+
+            this.filterOptionsLoading[type] = promise.then(result => {
                 this.filterOptionsLoading[type] = false;
                 const newMap = this.state.filterOptions.set(type, result);
 
                 // By default all filters are enabled:
                 const newFilters = this.state.filters;
-                if (!this.state.filters.get(type)) newFilters = this.state.filters.set(type, new Set(result.map(x => x.type)));
+                if (!this.state.filters.get(type)) newFilters = this.state.filters.set(type, new Set(result));
                 this.setState({
                     filterOptions: newMap,
                     filters: newFilters,
@@ -97,12 +124,16 @@ class SearchFilter extends React.Component {
 
     render() {
         let menuItems = null;
-        let menuOptions = null;
+        let menuOptions = (<div className="clearfix">
+            <button onClick={this.props.onCancel} className="float-left">Cancel</button>
+            <button onClick={this.applyFilter} className="float-right">Apply</button>
+        </div>);
         if (this.state.currFilterMenu === null) {
             // show the filter selector
             menuItems = rootFilterOptions.map(item => {
                 return (<div key={item.title} onClick={() => this.setFilter(item.type)} className="filter-type-chooser">{item.title}</div>);
             });
+            menuOptions = null;
         } else {
             const filterTypes = this.state.filterOptions.get(this.state.currFilterMenu);
             if (!filterTypes) {
@@ -110,14 +141,11 @@ class SearchFilter extends React.Component {
                 menuItems = (<div> Loading...</div>);
             } else {
                 menuItems = filterTypes.map(item => {
-                    const check = this.isSelected(this.state.currFilterMenu, item.type) ? (<span className="float-right">✔</span>) : (<div />);
-                    return (<div key={item.title} onClick={() => this.toggleSelected(this.state.currFilterMenu, item.type)} className="filter-type-chooser">{item.title}{check}</div>);
+                    const check = this.isSelected(this.state.currFilterMenu, item) ? (<span className="float-right">✔</span>) : (<div />);
+                    return (<div key={item} onClick={() => this.toggleSelected(this.state.currFilterMenu, item)} className="filter-type-chooser">{item}{check}</div>);
                 });
             }
-            menuOptions = (<div className="clearfix">
-                <button onClick={this.props.onCancel} className="float-left">Cancel</button>
-                <button onClick={this.applyFilter} className="float-right">Apply</button>
-            </div>);
+
         }
 
         return (<div className="search-filter">
