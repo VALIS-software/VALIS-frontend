@@ -8,7 +8,7 @@ import { UsageCache } from "../ds/UsageCache";
 
 export class XAxis extends Object2D {
 
-    maxMajorTicks: number = 10000; // failsafe to avoid rendering hangs
+    maxMajorTicks: number = 10000; // failsafe to avoid rendering hangs in case of bugs
 
     set maxTextLength(v: number) {
         let change = this._maxTextLength !== v;
