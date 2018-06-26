@@ -89,12 +89,6 @@ export class AppCanvas extends React.Component<Props, State> {
         console.log(`\tVertex Array Objects: %c${vao ? 'enabled' : 'disabled'}`, `font-weight: bold; color: ${vao ? 'green' : 'red'}`);
         console.log(`\tInstancing: %c${inst ? 'enabled' : 'disabled'}`, `font-weight: bold; color: ${inst ? 'green' : 'red'}`);
 
-        if (!this.device.capabilities.vertexArrayObjects) {
-            // this can be worked around by improving fallback handling in Renderer.ts setVertexState (see todo note)
-            // however expecting support to be about ~97% of devices
-            throw 'WebGL extension OES_vertex_array_object is required but not available on this device';
-        }
-
         if (!this.device.capabilities.instancing) {
             // support is expected on 100% of desktops and ~95% of mobile devices
             // a work around is possible to reach the final 5% of mobile devices
