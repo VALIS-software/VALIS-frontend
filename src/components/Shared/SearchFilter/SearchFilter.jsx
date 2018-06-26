@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import './SearchFilter.scss';
 
-const { Map } = require('immutable');
+const { Map, Set } = require('immutable');
 
 const rootFilterOptions = [
     { title: 'By Dataset', type: 'dataset' },
@@ -19,8 +19,32 @@ class SearchFilter extends React.Component {
         this.filterOptionsLoading = {};
         this.state = {
             currFilterMenu: null,
-            filters: {},
+            filters: new Map(),
             filterOptions: new Map(),
+        }
+    }
+
+    toggleSelected = (filterType, filterValue) => {
+        if (this.state.filters.has(filterType) && this.state.filters.get(filterType).has(filterValue)) {
+            let previousFilters = this.state.filters.get(filterType);
+            const newFilters = this.state.filters.set(filterType, previousFilters.remove(filterValue));
+            this.setState({
+                filters: newFilters,
+            });
+        } else {
+            let previousFilters = this.state.filters.get(filterType) ? this.state.filters.get(filterType) : new Set();
+            const newFilters = this.state.filters.set(filterType, previousFilters.add(filterValue));
+            this.setState({
+                filters: newFilters,
+            });
+        }
+    }
+
+    isSelected = (filterType, filterValue) => {
+        if (this.state.filters.has(filterType) && this.state.filters.get(filterType).has(filterValue)) {
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -48,12 +72,12 @@ class SearchFilter extends React.Component {
             // TODO: run actual async request for filter type
             this.filterOptionsLoading[type] = new Promise(((resolve, reject) => {
                 const filterTypes = [
-                    { title: 'TCGA', value: 'tcga' },
-                    { title: 'ExAC', value: 'exac' },
-                    { title: 'dbSNP', value: 'dbsnp' },
-                    { title: 'ENCODE', value: 'encode' },
-                    { title: 'GTexPortal', value: 'gtexportal' },
-                    { title: 'Clinvar', value: 'clinvar' },
+                    { title: 'TCGA', type: 'tcga' },
+                    { title: 'ExAC', type: 'exac' },
+                    { title: 'dbSNP', type: 'dbsnp' },
+                    { title: 'ENCODE', type: 'encode' },
+                    { title: 'GTexPortal', type: 'gtexportal' },
+                    { title: 'Clinvar', type: 'clinvar' },
                 ];
                 setTimeout(resolve, 500, filterTypes);
             })).then(result => {
@@ -80,9 +104,9 @@ class SearchFilter extends React.Component {
                 this.loadFilterOptions(this.state.currFilterMenu);
                 menuItems = (<div> Loading...</div>);
             } else {
-                const check = (<span className="float-right">✔</span>);
                 menuItems = filterTypes.map(item => {
-                    return (<div key={item.title} onClick={() => this.setFilter(item.type)} className="filter-type-chooser">{item.title}{check}</div>);
+                    const check = this.isSelected(this.state.currFilterMenu, item.type) ? (<span className="float-right">✔</span>) : (<div />);
+                    return (<div key={item.title} onClick={() => this.toggleSelected(this.state.currFilterMenu, item.type)} className="filter-type-chooser">{item.title}{check}</div>);
                 });
             }
             menuOptions = (<div className="clearfix">
