@@ -175,6 +175,12 @@ class GenomeAPI {
 			return data.data;
 		});
 	}
+
+	getUserProfile() {
+		return axios.get(`${this.baseUrl}/user_profile`).then(data => {
+			return data.data;
+		});
+	}
 }
 
 export default GenomeAPI;

@@ -13,6 +13,7 @@ import EntityDetails from '../EntityDetails/EntityDetails';
 import TokenBox from '../Shared/TokenBox/TokenBox';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
+import Avatar from 'material-ui/Avatar';
 import QueryBuilder, { QUERY_TYPE_INFO } from '../../models/query.js';
 import { DATA_SOURCE_GWAS, DATA_SOURCE_CLINVAR } from '../../helpers/constants.js';
 
@@ -30,9 +31,8 @@ class Header extends React.Component {
     super(props);
     this.api = new GenomeAPI();
     this.state = {
-      dataSource: [],
-      inputValue: '',
-      searchFilter: 1,
+      userName: null,
+      userPicture: null,
     };
   }
 
@@ -42,17 +42,28 @@ class Header extends React.Component {
     this.props.viewModel.pushView('Select Dataset', null, view);
   }
 
+  componentDidMount() {
+    this.api.getUserProfile().then(userProfile => {
+      this.setState({
+        userName: userProfile.name,
+        userPicture: userProfile.picture,
+      })
+    })
+  }
+
   render() {
     const addDatasetBrowser = this.addDatasetBrowser;
+    const { userName, userPicture } = this.state;
     return (<div className="header">
       <Toolbar>
-        <ToolbarGroup firstChild={true} style={{ width: '768px' }}>
+        <ToolbarGroup firstChild={true}>
           <div className="search-box">
             <TokenBox appModel={this.props.model} viewModel={this.props.viewModel} />
           </div>
         </ToolbarGroup>
         <ToolbarGroup>
           <RaisedButton label="Browse Data" primary={true} onClick={addDatasetBrowser} />
+          <UserProfileButton name={userName} picture={userPicture} />
         </ToolbarGroup>
       </Toolbar>
     </div>);
@@ -63,5 +74,25 @@ Header.propTypes = {
   model: PropTypes.object,
   viewModel: PropTypes.object,
 };
+
+
+function UserProfileButton(props) {
+  if (!props.name || !props.picture) {
+    const loginButton = <RaisedButton href='login' label='Sign In' primary={true} />
+    return loginButton;
+  } else {
+
+    return (
+      <Button onClick={}>
+        <Avatar src={props.picture} />
+      </Button>
+    )
+  }
+}
+
+UserProfileButton.propTypes = {
+  name: PropTypes.string,
+  picture: PropTypes.string,
+}
 
 export default Header;
