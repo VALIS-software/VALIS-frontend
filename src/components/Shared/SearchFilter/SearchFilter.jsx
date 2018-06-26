@@ -54,16 +54,16 @@ class SearchFilter extends React.Component {
         });
     }
 
-    cancelEdit = () => {
-        this.setState({
-            currFilterMenu: null,
-        });
+    applyFilter = () => {
+        this.props.onFinish(this.state.filters);
     }
 
-    saveEdit = () => {
-        this.setState({
-            currFilterMenu: null,
-        });
+    static getDerivedStateFromProps(nextProps, prevState) {
+        if (!prevState) {
+            prevState = {};
+        }
+        prevState.filters = nextProps.filters || new Map();
+        return prevState;
     }
 
     loadFilterOptions = (type) => {
@@ -83,8 +83,13 @@ class SearchFilter extends React.Component {
             })).then(result => {
                 this.filterOptionsLoading[type] = false;
                 const newMap = this.state.filterOptions.set(type, result);
+
+                // By default all filters are enabled:
+                const newFilters = this.state.filters;
+                if (!this.state.filters.get(type)) newFilters = this.state.filters.set(type, new Set(result.map(x => x.type)));
                 this.setState({
-                    filterOptions: newMap
+                    filterOptions: newMap,
+                    filters: newFilters,
                 });
             });
         }
@@ -110,8 +115,8 @@ class SearchFilter extends React.Component {
                 });
             }
             menuOptions = (<div className="clearfix">
-                <button key="b3" onClick={this.cancelEdit} className="float-right">Cancel</button>
-                <button key="b4" onClick={this.saveEdit} className="float-right">Apply</button>
+                <button onClick={this.props.onCancel} className="float-left">Cancel</button>
+                <button onClick={this.applyFilter} className="float-right">Apply</button>
             </div>);
         }
 
@@ -126,6 +131,8 @@ class SearchFilter extends React.Component {
 }
 
 SearchFilter.propTypes = {
+    onFinish: PropTypes.func,
+    onCancel: PropTypes.func,
 };
 
 export default SearchFilter;

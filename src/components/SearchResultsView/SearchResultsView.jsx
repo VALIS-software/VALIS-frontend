@@ -6,6 +6,7 @@ import CircularProgress from "material-ui/CircularProgress";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 import SearchFilter from "../Shared/SearchFilter/SearchFilter.jsx";
 import { List, InfiniteLoader } from 'react-virtualized';
+const { Map, Set } = require('immutable');
 
 // Styles
 import "./SearchResultsView.scss";
@@ -25,6 +26,7 @@ class SearchResultsView extends React.Component {
       needsRefresh: true,
       isLoading: false,
       results: [],
+      filters: null,
       cursor: 0
     };
   }
@@ -77,6 +79,13 @@ class SearchResultsView extends React.Component {
   toggleFilters = () => {
     this.setState({
       showFilters: !this.state.showFilters,
+    });
+  }
+
+  updateFilters = (filters) => {
+    this.setState({
+      filters: new Map(filters),
+      showFilters: false,
     });
   }
 
@@ -180,7 +189,7 @@ class SearchResultsView extends React.Component {
     let filterMenu = null;
 
     if (this.state.showFilters) {
-      filterMenu = (<SearchFilter />);
+      filterMenu = (<SearchFilter filters={this.state.filters} onFinish={this.updateFilters} onCancel={this.toggleFilters} />);
     }
     return (
       <div id="search-results-view" className="search-results-view">
