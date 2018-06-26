@@ -1,7 +1,6 @@
-import { Renderable, RenderableInternal } from '../../rendering/Renderable';
 import { EventEmitter } from 'events';
-import { debug } from 'util';
-import { InteractionEvent, InteractionEventMap } from './InteractionEvent';
+import { Renderable, RenderableInternal } from '../../rendering/Renderable';
+import { InteractionEventMap } from './InteractionEvent';
 
 export type Object2DInternal = RenderableInternal & {
     eventEmitter: EventEmitter,
