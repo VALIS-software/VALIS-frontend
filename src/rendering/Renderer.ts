@@ -3,7 +3,7 @@
  * - State grouping: Often we want hierarchical state - i.e, set viewport for this node _and_ all of its children
  */
 
-import Device, { DeviceInternal, GPUProgram, GPUProgramInternal, GPUTexture, GPUTextureInternal, GPUVertexState, VertexAttribute, VertexStateDescriptor } from '../rendering/Device';
+import Device, { DeviceInternal, GPUProgram, GPUProgramInternal, GPUTexture, GPUTextureInternal, GPUVertexState, VertexAttribute, VertexStateDescriptor, AttributeLayout, shaderTypeLength, shaderTypeRows } from '../rendering/Device';
 import RenderPass from './RenderPass';
 import { Renderable, RenderableInternal } from './Renderable';
 
@@ -301,18 +301,18 @@ export class Renderer {
 	protected currentProgramId: number = -1;
 	protected currentVertexStateId: number = -1;
 	protected currentBlendMode = -1;
-	protected currentVaoFallbackAttributes: Array<VertexAttribute> = undefined;
 	protected currentStencilTestEnabled = -1;
 	protected currentMaskTestValue = -1;
+	protected currentVaoFallbackAttributeLayout: AttributeLayout = undefined;
 
 	protected resetGLStateAssumptions() {
 		this.currentFramebuffer = undefined;
 		this.currentProgramId = -1;
 		this.currentVertexStateId = -1;
 		this.currentBlendMode = -1;
-		this.currentVaoFallbackAttributes = undefined;
 		this.currentStencilTestEnabled = -1;
 		this.currentMaskTestValue = -1;
+		// this.currentVaoFallbackAttributeLayout = undefined;
 	}
 
 	protected setProgram(internal: RenderableInternal) {
@@ -335,21 +335,36 @@ export class Renderer {
 			if (internal.gpuVertexState.isVao) {
 				this.extVao.bindVertexArrayOES(internal.gpuVertexState.native);
 			} else {
-				// disable unused attribute arrays
-				// assume the only enabled attributes are the ones from the last fallback descriptor
-				if (this.currentVaoFallbackAttributes != null) {
-					for (let a = 0; a < this.currentVaoFallbackAttributes.length; a++) {
-						gl.disableVertexAttribArray(a);
+				// handle setting vertex state when VAO extension is not available 
+
+				// WebGL requires that all enabled attribute vertex arrays must have valid buffers, whether consumed by shader or not
+				// to work around this we disable all vertex arrays enabled by the last layout
+				// applying the new layout then re-enables just the vertex arrays required
+				if (this.currentVaoFallbackAttributeLayout !== undefined) {
+					let attributeRow = 0;
+					for (let i = 0; i < this.currentVaoFallbackAttributeLayout.length; i++) {
+						let type = this.currentVaoFallbackAttributeLayout[i].type;
+						// determine how many rows this attribute will cover
+						// e.g. float -> 1, vec4 -> 1, mat2 -> 2, mat4 -> 4
+						let attributeRowSpan = shaderTypeRows[type];
+						if (attributeRowSpan === 1) {
+							// fast path
+							gl.disableVertexAttribArray(attributeRow);
+						} else {
+							for (let r = 0; r < attributeRowSpan; r++) {
+								gl.disableVertexAttribArray(attributeRow + r);
+							}
+						}
+						attributeRow += attributeRowSpan;
 					}
 				}
 
-				let descriptor = internal.gpuVertexState.native as VertexStateDescriptor;
-
 				// @! todo: this is incomplete – it doesn't account for changes to global state caused be previous calls
 				// example: a number of vertex attributes may be set to array mode (enableVertexAttribArray), but never disabled
+				let descriptor = internal.gpuVertexState.native as VertexStateDescriptor;
 				this.deviceInternal.applyVertexStateDescriptor(descriptor);
 
-				this.currentVaoFallbackAttributes = descriptor.attributes;
+				this.currentVaoFallbackAttributeLayout = descriptor.attributeLayout;
 			}
 
 			drawContextInternal.vertexState = internal.gpuVertexState;
