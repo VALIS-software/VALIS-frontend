@@ -150,7 +150,7 @@ export class Device {
 		let target = handle instanceof GPUIndexBuffer ? gl.ELEMENT_ARRAY_BUFFER : gl.ARRAY_BUFFER;
 
 		this.gl.bindBuffer(target, handle.native);
-		this.gl.bufferSubData(this.gl.ELEMENT_ARRAY_BUFFER, offsetBytes, data);
+		this.gl.bufferSubData(target, offsetBytes, data);
 		this.gl.bindBuffer(target, null);
 	}
 
@@ -388,11 +388,11 @@ export class Device {
 			let attribute = attributeBindings[i];
 
 			// how many elements are stored in this type?
-			let typeLength = uniformTypeLength[attribute.type];
+			let typeLength = shaderTypeLength[attribute.type];
 
 			// determine how many rows this attribute will cover
 			// e.g. float -> 1, vec4 -> 1, mat2 -> 2
-			let attributeRowSpan = attributeTypeRowSpan[attribute.type];
+			let attributeRowSpan = shaderTypeRows[attribute.type];
 
 			// "It is permissible to bind a generic attribute index to an attribute variable name that is never used in a vertex shader."
 			// this enables us to have consistent attribute layouts between shaders
@@ -477,11 +477,11 @@ export class Device {
 			let attribute = vertexStateDescriptor.attributes[i];
 
 			// how many elements are stored in this type?
-			let typeLength = uniformTypeLength[attribute.type];
+			let typeLength = shaderTypeLength[attribute.type];
 
 			// determine how many rows this attribute will cover
 			// e.g. float -> 1, vec4 -> 1, mat2 -> 2
-			let attributeRowSpan = attributeTypeRowSpan[attribute.type];
+			let attributeRowSpan = shaderTypeRows[attribute.type];
 
 			// determine number of generic attribute columns (from 1 - 4)
 			// 1, 2, 3, 4, 9, 16 -> 1, 2, 3, 4, 3, 4
@@ -628,7 +628,7 @@ export enum BufferUsageHint {
 	DYNAMIC = WebGLRenderingContext.DYNAMIC_DRAW,
 }
 
-export enum ShaderUniformType {
+export enum UniformType {
 	FLOAT = WebGLRenderingContext.FLOAT,
 	VEC2 = WebGLRenderingContext.FLOAT_VEC2,
 	VEC3 = WebGLRenderingContext.FLOAT_VEC3,
@@ -648,7 +648,7 @@ export enum ShaderUniformType {
 }
 
 // subset of UniformType
-export enum ShaderAttributeType {
+export enum AttributeType {
 	FLOAT = WebGLRenderingContext.FLOAT,
 	VEC2 = WebGLRenderingContext.FLOAT_VEC2,
 	VEC3 = WebGLRenderingContext.FLOAT_VEC3,
@@ -660,7 +660,7 @@ export enum ShaderAttributeType {
 
 export type AttributeLayout = Array <{
 	name: string | null,
-	type: ShaderAttributeType
+	type: AttributeType
 }>;
 
 export type BufferDataSource = Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | ArrayBuffer;
@@ -679,13 +679,13 @@ export type IndexBufferDescriptor = {
 }
 
 export type VertexAttributeConstant = {
-	type: ShaderAttributeType,
+	type: AttributeType,
 	data: Float32Array,
 }
 
 export type VertexAttributeBuffer = {
 	buffer: GPUBuffer,
-	type: ShaderAttributeType,
+	type: AttributeType,
 	offsetBytes: number,
 	strideBytes: number,
 	sourceDataType?: VertexAttributeSourceType,
@@ -780,33 +780,57 @@ export type TextureDescriptor = {
 
 }
 
-export const uniformTypeLength = {
-	[ShaderUniformType.FLOAT]: 1,
-	[ShaderUniformType.VEC2]: 2,
-	[ShaderUniformType.VEC3]: 3,
-	[ShaderUniformType.VEC4]: 4,
-	[ShaderUniformType.IVEC2]: 1,
-	[ShaderUniformType.IVEC3]: 2,
-	[ShaderUniformType.IVEC4]: 3,
-	[ShaderUniformType.BOOL]: 1,
-	[ShaderUniformType.BVEC2]: 2,
-	[ShaderUniformType.BVEC3]: 3,
-	[ShaderUniformType.BVEC4]: 4,
-	[ShaderUniformType.MAT2]: 2 * 2,
-	[ShaderUniformType.MAT3]: 3 * 3,
-	[ShaderUniformType.MAT4]: 4 * 4,
-	[ShaderUniformType.SAMPLER_2D]: 1,
-	[ShaderUniformType.SAMPLER_CUBE]: 1,
+// Data Tables
+
+export const shaderTypeLength = {
+	[UniformType.FLOAT]: 1,
+	[UniformType.VEC2]: 2,
+	[UniformType.VEC3]: 3,
+	[UniformType.VEC4]: 4,
+	[UniformType.IVEC2]: 1,
+	[UniformType.IVEC3]: 2,
+	[UniformType.IVEC4]: 3,
+	[UniformType.BOOL]: 1,
+	[UniformType.BVEC2]: 2,
+	[UniformType.BVEC3]: 3,
+	[UniformType.BVEC4]: 4,
+	[UniformType.MAT2]: 2 * 2,
+	[UniformType.MAT3]: 3 * 3,
+	[UniformType.MAT4]: 4 * 4,
 };
 
-export const attributeTypeRowSpan = {
-	[ShaderAttributeType.FLOAT]: 1,
-	[ShaderAttributeType.VEC2]: 1,
-	[ShaderAttributeType.VEC3]: 1,
-	[ShaderAttributeType.VEC4]: 1,
-	[ShaderAttributeType.MAT2]: 2,
-	[ShaderAttributeType.MAT3]: 3,
-	[ShaderAttributeType.MAT4]: 4,
+export const shaderTypeRows = {
+	[UniformType.FLOAT]: 1,
+	[UniformType.VEC2]: 1,
+	[UniformType.VEC3]: 1,
+	[UniformType.VEC4]: 1,
+	[UniformType.IVEC2]: 1,
+	[UniformType.IVEC3]: 1,
+	[UniformType.IVEC4]: 1,
+	[UniformType.BOOL]: 1,
+	[UniformType.BVEC2]: 1,
+	[UniformType.BVEC3]: 1,
+	[UniformType.BVEC4]: 1,
+	[UniformType.MAT2]: 2,
+	[UniformType.MAT3]: 3,
+	[UniformType.MAT4]: 4,
+};
+
+export const shaderTypeColumns = {
+	[UniformType.FLOAT]: 1,
+	[UniformType.VEC2]: 2,
+	[UniformType.VEC3]: 3,
+	[UniformType.VEC4]: 4,
+	[UniformType.IVEC2]: 2,
+	[UniformType.IVEC3]: 3,
+	[UniformType.IVEC4]: 4,
+	[UniformType.BOOL]: 1,
+	[UniformType.BVEC2]: 2,
+	[UniformType.BVEC3]: 3,
+	[UniformType.BVEC4]: 4,
+	[UniformType.MAT2]: 2,
+	[UniformType.MAT3]: 3,
+	[UniformType.MAT4]: 4,
 };
 
 export const dataTypeByteLength = {

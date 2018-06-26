@@ -4,7 +4,7 @@ import { BlockPayload, TilePayload } from "../../model/data-store/SequenceTileSt
 import { SharedTileStore } from "../../model/data-store/SharedTileStores";
 import { Tile, TileState } from "../../model/data-store/TileStore";
 import { TrackModel } from "../../model/TrackModel";
-import Device, { GPUTexture, ShaderAttributeType } from "../../rendering/Device";
+import Device, { GPUTexture, AttributeType } from "../../rendering/Device";
 import { DrawContext, DrawMode } from "../../rendering/Renderer";
 import Object2D, { Object2DInternal } from "../core/Object2D";
 import SharedResources from "../core/SharedResources";
@@ -201,7 +201,7 @@ class SequenceTile extends TileNode<TilePayload> {
     }
 
     protected static attributeLayout = [
-        { name: 'position', type: ShaderAttributeType.VEC2 }
+        { name: 'position', type: AttributeType.VEC2 }
     ];
 
     protected static vertexShader = `

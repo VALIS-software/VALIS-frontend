@@ -7,7 +7,7 @@ import { AnnotationTileStore, Gene, Transcript } from "../../model/data-store/An
 import SharedTileStore from "../../model/data-store/SharedTileStores";
 import { Tile, TileState } from "../../model/data-store/TileStore";
 import TrackModel from "../../model/TrackModel";
-import Device, { AttributeLayout, ShaderAttributeType, VertexAttributeSourceType } from "../../rendering/Device";
+import Device, { AttributeLayout, AttributeType, shaderTypeLength, VertexAttributeSourceType } from "../../rendering/Device";
 import { BlendMode, DrawContext, DrawMode } from "../../rendering/Renderer";
 import Object2D from "../core/Object2D";
 import { Rect } from "../core/Rect";
@@ -118,7 +118,6 @@ export class AnnotationTrack extends Track<'annotation'> {
     protected _activeAnnotations = new UsageCache<Object2D>();
     protected _pendingTiles = new UsageCache<Tile<any>>();
     protected updateAnnotations() {
-        return;
         this._pendingTiles.markAllUnused();
         this._activeAnnotations.markAllUnused();
 
@@ -302,18 +301,10 @@ class RectInstances extends Object2D {
         let numInstances = 3;
         this.instanceCount = numInstances;
 
-        let dataTypeLength = {
-            'float': 1,
-            'mat4': 16,
-            'vec2': 2,
-            'vec3': 3,
-            'vec4': 4,
-        }
-
-        let instanceModelArray /* mat4 */ = new Float32Array(dataTypeLength['mat4'] * numInstances);
-        let instanceSizeArray /* vec2 */ = new Float32Array(dataTypeLength['vec2'] * numInstances);
-        let instanceColorArray /* vec4 */ = new Float32Array(dataTypeLength['vec4'] * numInstances);
-        let instanceBlendFactorArray /* float */ = new Float32Array(dataTypeLength['float'] * numInstances);
+        let instanceModelArray /* mat4 */ = new Float32Array(shaderTypeLength[AttributeType.MAT4] * numInstances);
+        let instanceSizeArray /* vec2 */ = new Float32Array(shaderTypeLength[AttributeType.VEC2] * numInstances);
+        let instanceColorArray /* vec4 */ = new Float32Array(shaderTypeLength[AttributeType.VEC4] * numInstances);
+        let instanceBlendFactorArray /* float */ = new Float32Array(shaderTypeLength[AttributeType.FLOAT] * numInstances);
 
         for (let i = 0; i < numInstances; i++) {
             let x = i * 100;
@@ -324,22 +315,22 @@ class RectInstances extends Object2D {
                 0, 1, 0, 0,
                 0, 0, 1, 0,
                 x, y, 1, 1
-            ], i * dataTypeLength['mat4']);
+            ], i * shaderTypeLength[AttributeType.MAT4]);
             // size
             instanceSizeArray.set([
                 20, 10,
-            ], i * dataTypeLength['vec2']);
+            ], i * shaderTypeLength[AttributeType.VEC2]);
             // color
             instanceColorArray.set([
                 i === 0 ? 1 : 0,
                 i === 1 ? 1 : 0,
                 i === 2 ? 1 : 0,
                 1
-            ], i * dataTypeLength['vec4']);
+            ], i * shaderTypeLength[AttributeType.VEC4]);
             // blendFactor
             instanceBlendFactorArray.set([
                 1
-            ], i * dataTypeLength['float']);
+            ], i * shaderTypeLength[AttributeType.FLOAT]);
         }
 
         console.warn('Need to release buffers');
@@ -361,7 +352,7 @@ class RectInstances extends Object2D {
                 // vertices (attribute 'position')
                 {
                     buffer: SharedResources.quad1x1VertexBuffer, 
-                    type: ShaderAttributeType.VEC2,
+                    type: AttributeType.VEC2,
                     offsetBytes: 0,
                     strideBytes: 2 * 4,
                 },
@@ -369,34 +360,34 @@ class RectInstances extends Object2D {
                 // instanceModel - mat4
                 {
                     buffer: instanceModelBuffer,
-                    type: ShaderAttributeType.MAT4,
+                    type: AttributeType.MAT4,
                     offsetBytes: 0,
-                    strideBytes: dataTypeLength['mat4'] * 4,
+                    strideBytes: shaderTypeLength[AttributeType.MAT4] * 4,
                     instanceDivisor: 1,
                 },
                 // instanceSizeArray - vec2
                 {
                     buffer: instanceSizeBuffer,
-                    type: ShaderAttributeType.VEC2,
+                    type: AttributeType.VEC2,
                     offsetBytes: 0,
-                    strideBytes: dataTypeLength['vec2'] * 4,
+                    strideBytes: shaderTypeLength[AttributeType.VEC2] * 4,
                     instanceDivisor: 1,
                 },
                 // instanceColorArray - vec4
                 {
                     buffer: instanceColorBuffer,
-                    type: ShaderAttributeType.VEC4,
+                    type: AttributeType.VEC4,
                     sourceDataType: VertexAttributeSourceType.FLOAT,
                     offsetBytes: 0,
-                    strideBytes: dataTypeLength['vec4'] * 4,
+                    strideBytes: shaderTypeLength[AttributeType.VEC4] * 4,
                     instanceDivisor: 1,
                 },
                 // instanceBlendFactorArray - float
                 {
                     buffer: instanceBlendFactorBuffer,
-                    type: ShaderAttributeType.FLOAT,
+                    type: AttributeType.FLOAT,
                     offsetBytes: 0,
-                    strideBytes: dataTypeLength['float'] * 4,
+                    strideBytes: shaderTypeLength[AttributeType.FLOAT] * 4,
                     instanceDivisor: 1,
                 }
             ]
@@ -427,11 +418,11 @@ class RectInstances extends Object2D {
     }
 
     protected attributeLayout: AttributeLayout = [
-        { name: 'position', type: ShaderAttributeType.VEC2 },
-        { name: 'instanceModel', type: ShaderAttributeType.MAT4 },
-        { name: 'instanceSize', type: ShaderAttributeType.VEC2 },
-        { name: 'instanceColor', type: ShaderAttributeType.VEC4 },
-        { name: 'instanceBlendFactor', type: ShaderAttributeType.FLOAT },
+        { name: 'position', type: AttributeType.VEC2 },
+        { name: 'instanceModel', type: AttributeType.MAT4 },
+        { name: 'instanceSize', type: AttributeType.VEC2 },
+        { name: 'instanceColor', type: AttributeType.VEC4 },
+        { name: 'instanceBlendFactor', type: AttributeType.FLOAT },
     ];
 
     protected getVertexCode() {

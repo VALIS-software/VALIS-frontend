@@ -1,4 +1,4 @@
-import { AttributeLayout, BufferDescriptor, Device, GPUBuffer, GPUIndexBuffer, GPUProgram, GPUTexture, GPUVertexState, ShaderAttributeType, TextureDescriptor } from "../../rendering/Device";
+import { AttributeLayout, BufferDescriptor, Device, GPUBuffer, GPUIndexBuffer, GPUProgram, GPUTexture, GPUVertexState, AttributeType, TextureDescriptor } from "../../rendering/Device";
 
 export class SharedResources {
 
@@ -107,7 +107,7 @@ export class SharedResources {
             attributes: [
                 {
                     buffer: this.unitQuadVertexBuffer,
-                    type: ShaderAttributeType.VEC2,
+                    type: AttributeType.VEC2,
                     offsetBytes: 0,
                     strideBytes: 2 * 4
                 }
@@ -128,7 +128,7 @@ export class SharedResources {
             attributes: [
                 {
                     buffer: this.quad1x1VertexBuffer,
-                    type: ShaderAttributeType.VEC2,
+                    type: AttributeType.VEC2,
                     offsetBytes: 0,
                     strideBytes: 2 * 4
                 }

@@ -1,5 +1,5 @@
 import GPUText, { GlyphLayout, GPUTextFont } from "../../../lib/gputext/GPUText";
-import { AttributeLayout, BufferUsageHint, ColorSpaceConversion, Device, GPUBuffer, GPUTexture, ShaderAttributeType, TextureDataType, TextureFormat, TextureMagFilter, TextureMinFilter, TextureUsageHint, TextureWrapMode, VertexAttributeSourceType } from "../../rendering/Device";
+import { AttributeLayout, BufferUsageHint, ColorSpaceConversion, Device, GPUBuffer, GPUTexture, AttributeType, TextureDataType, TextureFormat, TextureMagFilter, TextureMinFilter, TextureUsageHint, TextureWrapMode, VertexAttributeSourceType } from "../../rendering/Device";
 import { BlendMode, DrawContext, DrawMode } from "../../rendering/Renderer";
 import { Object2D } from "./Object2D";
 import { SharedResources } from "./SharedResources";
@@ -199,7 +199,7 @@ export class Text extends Object2D {
                 // position
                 {
                     buffer: this.gpuVertexBuffer,
-                    type: ShaderAttributeType.VEC2,
+                    type: AttributeType.VEC2,
                     offsetBytes: vertexData.vertexLayout.position.offsetBytes,
                     strideBytes: vertexData.vertexLayout.position.strideBytes,
                     normalize: false,
@@ -207,7 +207,7 @@ export class Text extends Object2D {
                 // uv
                 {
                     buffer: this.gpuVertexBuffer,
-                    type: ShaderAttributeType.VEC3,
+                    type: AttributeType.VEC3,
                     offsetBytes: vertexData.vertexLayout.uv.offsetBytes,
                     strideBytes: vertexData.vertexLayout.uv.strideBytes,
                     normalize: false,
@@ -419,8 +419,8 @@ export class Text extends Object2D {
     protected static fontCache: { [path: string]: FontAsset } = {};
 
     protected static attributeLayout: AttributeLayout = [
-        { name: 'position', type: ShaderAttributeType.VEC2 },
-        { name: 'uv', type: ShaderAttributeType.VEC3 },
+        { name: 'position', type: AttributeType.VEC2 },
+        { name: 'uv', type: AttributeType.VEC3 },
     ];
 
 }
