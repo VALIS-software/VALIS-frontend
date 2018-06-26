@@ -124,6 +124,7 @@ class TokenBox extends React.Component {
   }
 
   runSearch = () => {
+    mixpanel.track("Run search");
     const queryStr = this.buildQueryStringFromTokens(this.state.tokens) + ' ' + this.state.searchString;
     const query = this.state.query;
     const view = (<SearchResultsView text={queryStr} query={query} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
@@ -131,6 +132,7 @@ class TokenBox extends React.Component {
   }
 
   clearSearch = () => {
+    mixpanel.track("Clear searchbox");
     this.setState({
       tokens: [],
       searchString: '',
@@ -183,7 +185,7 @@ class TokenBox extends React.Component {
     }
 
 
-    // TODO: the AutoComplete component auto-closes when you click a menu item 
+    // TODO: the AutoComplete component auto-closes when you click a menu item
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
     const input = (<AutoComplete
       id='search-box'

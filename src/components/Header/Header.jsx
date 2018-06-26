@@ -37,6 +37,7 @@ class Header extends React.Component {
   }
 
   addDatasetBrowser = () => {
+    mixpanel.track("Click BROWSE DATA");
     const view = (<DatasetSelector viewModel={this.props.viewModel} appModel={this.props.model} />);
     this.props.viewModel.pushView('Select Dataset', null, view);
   }
