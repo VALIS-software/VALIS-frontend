@@ -124,8 +124,8 @@ class TokenBox extends React.Component {
   }
 
   runSearch = () => {
-    mixpanel.track("Run search");
     const queryStr = this.buildQueryStringFromTokens(this.state.tokens) + ' ' + this.state.searchString;
+    mixpanel.track("Run search", {'queryStr': queryStr});
     const query = this.state.query;
     const view = (<SearchResultsView text={queryStr} query={query} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
     this.props.viewModel.pushView('Search Results', query, view);
