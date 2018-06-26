@@ -7,7 +7,7 @@ import { AnnotationTileStore, Gene, Transcript } from "../../model/data-store/An
 import SharedTileStore from "../../model/data-store/SharedTileStores";
 import { Tile, TileState } from "../../model/data-store/TileStore";
 import TrackModel from "../../model/TrackModel";
-import Device, { AttributeLayout, AttributeType, shaderTypeLength, VertexAttributeSourceType } from "../../rendering/Device";
+import Device, { AttributeLayout, AttributeType, GPUBuffer, shaderTypeLength, VertexAttributeBuffer } from "../../rendering/Device";
 import { BlendMode, DrawContext, DrawMode } from "../../rendering/Renderer";
 import Object2D from "../core/Object2D";
 import { Rect } from "../core/Rect";
@@ -59,9 +59,30 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.toggleLoadingIndicator(false, false);
         this.add(this.loadingIndicator);
 
-        let instanceTest = new RectInstances();
+
+        let rectInstances = new Array<Rect>();
+        for (let i = 0; i < 3; i++) {
+            let rect = new Rect(10, 10, [1, 0, 0, 1]);
+            rect.x = i * 100;
+            rectInstances.push(rect);
+        }
+
+        let instanceTest = new RectInstances(rectInstances);
         this.add(instanceTest);
-        console.log(instanceTest);
+
+        for (let i = 0; i < rectInstances.length; i++) {
+            // @! I don't like the interactor concept because it's easy to get out of sync
+            let rect = rectInstances[i];
+            rect.render = false;
+
+            rect.addInteractionListener('click', () => {
+                rect.color.set([Math.random(), Math.random(), Math.random(), 1]);
+                instanceTest.updateInstance(i, rect);
+            });
+
+            instanceTest.add(rect);
+        }
+
     }
 
     setRange(x0: number, x1: number) {
@@ -132,6 +153,7 @@ export class AnnotationTrack extends Track<'annotation'> {
 
             let macroOpacity: number = Scalar.linstep(this.macroLodThresholdLow, this.macroLodThresholdHigh, continuousLodLevel);
             let microOpacity: number = 1.0 - macroOpacity;
+            microOpacity = 0;// @! tmp
             
             if (microOpacity > 0) {
                 this.updateMicroAnnotations(x0, x1, span, basePairsPerDOMPixel, continuousLodLevel, microOpacity);
@@ -286,100 +308,90 @@ class LoadingIndicator extends Text {
 
 class RectInstances extends Object2D {
 
-    protected instanceCount: number;
-    protected indexCount: number; // ??
+    protected gpuInstanceBuffer: GPUBuffer;
 
-    constructor() {
+    protected instanceCount: number;
+    protected instancePacking: {
+        [name: string]: {
+            length: number,
+            offset: number,
+        }
+    };
+    protected instancePackLength: number;
+    protected instanceDataArray: Float32Array;
+
+    protected singleInstanceUploadBuffer: Float32Array;
+
+    constructor(instances: Array<Rect>) {
         super();
         this.render = true;
+        this.instanceCount = instances.length;
+
+        // generate instance attribute buffer packing from the attribute layout
+        this.instancePacking = {};
+
+        let runningLength = 0;
+        for (let instanceAttribute of this.instanceAttributes) {
+            let typeLength = shaderTypeLength[instanceAttribute.type];
+            this.instancePacking[instanceAttribute.name] = {
+                length: typeLength,
+                offset: runningLength
+            };
+            runningLength += typeLength;
+        }
+
+        // length in floats of a single set of instance attributes
+        this.instancePackLength = runningLength;
+
+        this.singleInstanceUploadBuffer = new Float32Array(this.instancePackLength);
+
+        // allocate a array large enough to fit all instance attribute for all instances
+        this.instanceDataArray = new Float32Array(this.instancePackLength * instances.length);
+
+        // populate the array with attribute data
+        for (let i = 0; i < instances.length; i++) {
+            this.writeInstanceAttributes(this.instanceDataArray, instances[i], i);
+        }
+    }
+
+    updateInstance(index: number, instance: Rect) {
+        this.writeInstanceAttributes(this.instanceDataArray, instance, index);
+
+        if (this.gpuInstanceBuffer != null) {
+            // upload to subsection of gpu buffer
+            let offsetFloats = index * this.instancePackLength;
+            let offsetBytes = offsetFloats * 4;
+            this.gpuInstanceBuffer.updateBufferData(this.instanceDataArray.subarray(offsetFloats, offsetFloats + this.instancePackLength), offsetBytes);
+        }
     }
 
     allocateGPUResources(device: Device) {
-        // @! tmp: generate instance data
-        // @! todo: interleave buffers
+        // generate interleaved instance buffer
 
-        let numInstances = 3;
-        this.instanceCount = numInstances;
+        this.gpuInstanceBuffer = device.createBuffer({ data: this.instanceDataArray });
 
-        let instanceModelArray /* mat4 */ = new Float32Array(shaderTypeLength[AttributeType.MAT4] * numInstances);
-        let instanceSizeArray /* vec2 */ = new Float32Array(shaderTypeLength[AttributeType.VEC2] * numInstances);
-        let instanceColorArray /* vec4 */ = new Float32Array(shaderTypeLength[AttributeType.VEC4] * numInstances);
-        let instanceBlendFactorArray /* float */ = new Float32Array(shaderTypeLength[AttributeType.FLOAT] * numInstances);
-
-        for (let i = 0; i < numInstances; i++) {
-            let x = i * 100;
-            let y = i * 50;
-            // model
-            instanceModelArray.set([
-                1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0,
-                x, y, 1, 1
-            ], i * shaderTypeLength[AttributeType.MAT4]);
-            // size
-            instanceSizeArray.set([
-                20, 10,
-            ], i * shaderTypeLength[AttributeType.VEC2]);
-            // color
-            instanceColorArray.set([
-                i === 0 ? 1 : 0,
-                i === 1 ? 1 : 0,
-                i === 2 ? 1 : 0,
-                1
-            ], i * shaderTypeLength[AttributeType.VEC4]);
-            // blendFactor
-            instanceBlendFactorArray.set([
-                1
-            ], i * shaderTypeLength[AttributeType.FLOAT]);
+        let instanceVertexAttributes: { [name: string]: VertexAttributeBuffer } = {};
+        for (let instanceAttribute of this.instanceAttributes) {
+            instanceVertexAttributes[instanceAttribute.name] = {
+                buffer: this.gpuInstanceBuffer,
+                offsetBytes: this.instancePacking[instanceAttribute.name].offset * 4,
+                strideBytes: this.instancePackLength * 4,
+                instanceDivisor: 1
+            }
         }
 
-        console.warn('Need to release buffers');
-        let instanceModelBuffer = device.createBuffer({ data: instanceModelArray });
-        let instanceSizeBuffer = device.createBuffer({ data: instanceSizeArray });
-        let instanceColorBuffer = device.createBuffer({ data: instanceColorArray });
-        let instanceBlendFactorBuffer = device.createBuffer({ data: instanceBlendFactorArray });
-
-        // attribute budget = 16 rows of 4, each each attribute counts as at least 4
-        // vec2 = 1
-        // mat4 = 4
-        // vec2 = 1
-        // vec4 = 1
-        // float = 1
-        // = 8
+        // create vertex state
         this.gpuVertexState = device.createVertexState({
             index: SharedResources.quadIndexBuffer,
             attributeLayout: this.attributeLayout,
             attributes: {
                 // vertices (attribute 'position')
                 'position': {
-                    buffer: SharedResources.quad1x1VertexBuffer, 
+                    buffer: SharedResources.quad1x1VertexBuffer,
                     offsetBytes: 0,
                     strideBytes: 2 * 4,
                 },
-                'instanceModel': {
-                    buffer: instanceModelBuffer,
-                    offsetBytes: 0,
-                    strideBytes: shaderTypeLength[AttributeType.MAT4] * 4,
-                    instanceDivisor: 1,
-                },
-                'instanceSize': {
-                    buffer: instanceSizeBuffer,
-                    offsetBytes: 0,
-                    strideBytes: shaderTypeLength[AttributeType.VEC2] * 4,
-                    instanceDivisor: 1,
-                },
-                'instanceColor': {
-                    buffer: instanceColorBuffer,
-                    offsetBytes: 0,
-                    strideBytes: shaderTypeLength[AttributeType.VEC4] * 4,
-                    instanceDivisor: 1,
-                },
-                'instanceBlendFactor': {
-                    buffer: instanceBlendFactorBuffer,
-                    offsetBytes: 0,
-                    strideBytes: shaderTypeLength[AttributeType.FLOAT] * 4,
-                    instanceDivisor: 1,
-                }
+                ...instanceVertexAttributes
             }
         });
 
@@ -394,11 +406,15 @@ class RectInstances extends Object2D {
     }
 
     releaseGPUResources() {
-        // since our resources are shared we don't actually want to release anything here
         if (this.gpuVertexState != null) {
             this.gpuVertexState.delete();
+            this.gpuVertexState = null;
         }
-        this.gpuVertexState = null;
+        if (this.gpuInstanceBuffer != null) {
+            this.gpuInstanceBuffer.delete();
+            this.gpuInstanceBuffer = null;
+        }
+        // since our resources are shared we don't actually want to release anything here
         this.gpuProgram = null;
     }
 
@@ -407,13 +423,28 @@ class RectInstances extends Object2D {
         context.extDrawInstanced(DrawMode.TRIANGLES, 6, 0, this.instanceCount);
     }
 
-    protected attributeLayout: AttributeLayout = [
-        { name: 'position', type: AttributeType.VEC2 },
-        { name: 'instanceModel', type: AttributeType.MAT4 },
+    protected writeInstanceAttributes(instanceArray: Float32Array, instance: Rect, instanceIndex: number) {
+        let instanceOffset = this.instancePackLength * instanceIndex;
+        // instancePosition
+        instanceArray.set([instance.x, instance.y, instance.z], instanceOffset + this.instancePacking['instancePosition'].offset);
+        // instanceSize
+        instanceArray.set([instance.w, instance.h], instanceOffset + this.instancePacking['instanceSize'].offset);
+        // instanceColor
+        instanceArray.set(instance.color, instanceOffset + this.instancePacking['instanceColor'].offset);
+        // instanceBlendFactor
+        instanceArray.set([1], instanceOffset + this.instancePacking['instanceBlendFactor'].offset);
+    }
+
+    protected instanceAttributes: AttributeLayout = [
+        { name: 'instancePosition', type: AttributeType.VEC3 },
         { name: 'instanceSize', type: AttributeType.VEC2 },
         { name: 'instanceColor', type: AttributeType.VEC4 },
         { name: 'instanceBlendFactor', type: AttributeType.FLOAT },
     ];
+
+    protected attributeLayout: AttributeLayout = [
+        { name: 'position', type: AttributeType.VEC2 },
+    ].concat(this.instanceAttributes);
 
     protected getVertexCode() {
         return `
@@ -424,7 +455,7 @@ class RectInstances extends Object2D {
             uniform mat4 model;
             
             // per instance attributes
-            attribute mat4 instanceModel;
+            attribute vec3 instancePosition;
             attribute vec2 instanceSize;
             attribute vec4 instanceColor;
             attribute float instanceBlendFactor;
@@ -442,7 +473,7 @@ class RectInstances extends Object2D {
                 color = instanceColor;
                 blendFactor = instanceBlendFactor;
 
-                gl_Position = model * instanceModel * vec4(position * instanceSize, 0., 1.0);
+                gl_Position = model * vec4(vec3(position * instanceSize, 0.0) + instancePosition, 1.0);
             }
         `;
     }
