@@ -320,14 +320,12 @@ class RectInstances extends Object2D {
     protected instancePackLength: number;
     protected instanceDataArray: Float32Array;
 
-    protected singleInstanceUploadBuffer: Float32Array;
-
     constructor(instances: Array<Rect>) {
         super();
         this.render = true;
         this.instanceCount = instances.length;
 
-        // generate instance attribute buffer packing from the attribute layout
+        // translate attribute layout into a details for packing attributes into a buffer
         this.instancePacking = {};
 
         let runningLength = 0;
@@ -343,12 +341,10 @@ class RectInstances extends Object2D {
         // length in floats of a single set of instance attributes
         this.instancePackLength = runningLength;
 
-        this.singleInstanceUploadBuffer = new Float32Array(this.instancePackLength);
-
         // allocate a array large enough to fit all instance attribute for all instances
         this.instanceDataArray = new Float32Array(this.instancePackLength * instances.length);
 
-        // populate the array with attribute data
+        // populate the array with attribute data (interleaved into a single array)
         for (let i = 0; i < instances.length; i++) {
             this.writeInstanceAttributes(this.instanceDataArray, instances[i], i);
         }
@@ -366,8 +362,6 @@ class RectInstances extends Object2D {
     }
 
     allocateGPUResources(device: Device) {
-        // generate interleaved instance buffer
-
         this.gpuInstanceBuffer = device.createBuffer({ data: this.instanceDataArray });
 
         let instanceVertexAttributes: { [name: string]: VertexAttributeBuffer } = {};
@@ -401,8 +395,6 @@ class RectInstances extends Object2D {
             this.getFragmentCode(),
             this.attributeLayout
         );
-
-        console.log(this.gpuVertexState);
     }
 
     releaseGPUResources() {
