@@ -224,6 +224,7 @@ class FunctionalTrackSelector extends React.Component {
   }
 
   addFunctionalTrack = () => {
+    mixpanel.track('Add FunctionalTrack', {'accession': this.selectedAccession});
     this.appModel.addDataTrack(this.selectedAccession);
   }
 

@@ -143,10 +143,10 @@ class SNPDetails extends React.Component {
         const data = [
           { key: ref, value: ref_percentage },
         ];
-        for (const alt in allele_frequencies) {
-          data.push({ key: alt, value: allele_frequencies[alt] });
-          ref_percentage = ref_percentage - allele_frequencies[alt];
-        }
+        allele_frequencies.forEach((allele) => {
+          data.push({ key: allele, value: allele_frequencies[allele] });
+          ref_percentage = ref_percentage - allele_frequencies[allele];
+        });
         data[0].value = ref_percentage;
         variantFreqChart = (<FrequencyBarChart data={data} />);
       }
