@@ -170,7 +170,7 @@ class SearchResultsView extends React.Component {
       this.runQuery();
       return (<div id="search-results-view" className="search-results-view" />);
     }
-    const loadMoreRows = this.state.isLoading ? () => { } : this.loadMore
+    const loadMoreRows = this.state.isLoading ? () => { return null; } : this.loadMore
 
     const isRowLoaded = ({ index }) => index < this.state.results.length
 

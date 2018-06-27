@@ -9,10 +9,10 @@ const GRAPH_CACHE = {};
 const ANNOTATION_CACHE = {};
 const CHAOS_ENABLED = false;
 
-const chaos = (axios, probabilityOfFailure) => {
-	const oldGet = axios.get;
-	const oldPost = axios.post;
-	axios.get = (x) => {
+const chaos = (_axios, probabilityOfFailure) => {
+	const oldGet = _axios.get;
+	const oldPost = _axios.post;
+	_axios.get = (x) => {
 		if (Math.random() < probabilityOfFailure) {
 			return Promise.reject({ errorMsg: 'mock error' });
 		} else {
@@ -20,14 +20,14 @@ const chaos = (axios, probabilityOfFailure) => {
 		}
 	}
 
-	axios.post = (x, d) => {
+	_axios.post = (x, d) => {
 		if (Math.random() < probabilityOfFailure) {
 			return Promise.reject({ errorMsg: 'mock error' });
 		} else {
 			return oldPost(x, d);
 		}
 	}
-	return axios;
+	return _axios;
 }
 
 let axios = require('axios');

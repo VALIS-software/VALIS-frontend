@@ -98,10 +98,10 @@ export default class AppModel extends EventCreator {
       });
   };
 
-  error = (sender: object, error: object) => {
+  error = (source: object, errorMsg: object) => {
     this.notifyListeners(AppEvent.Failure, {
-      sender: sender,
-      error: error,
+      sender: source,
+      error: errorMsg,
     });
   }
 
