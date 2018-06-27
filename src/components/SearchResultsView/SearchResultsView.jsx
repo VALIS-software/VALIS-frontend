@@ -6,6 +6,8 @@ import CircularProgress from "material-ui/CircularProgress";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 import SearchFilter from "../Shared/SearchFilter/SearchFilter.jsx";
 import { List, InfiniteLoader } from 'react-virtualized';
+import Util from "../../helpers/util.js";
+
 const { Map, Set } = require('immutable');
 
 // Styles
@@ -38,12 +40,14 @@ class SearchResultsView extends React.Component {
   }
 
   addQueryAsTrack = () => {
-    this.props.appModel.addAnnotationTrack(this.props.text, this.state.query);
+    // TODO: addAnnotationTrack should also take a list of filters
+    this.props.appModel.addAnnotationTrack(this.props.text, this.state.query, this.state.filters);
   }
 
   runQuery = () => {
     const cursor = this.state.cursor;
-    this.api.getQueryResults(this.state.query, true, cursor, cursor + FETCH_SIZE).then(results => {
+    const filteredQuery = Util.applyFilterToQuery(this.state.query, this.state.filters);
+    this.api.getQueryResults(filteredQuery, true, cursor, cursor + FETCH_SIZE).then(results => {
 
       if (results.results_total === 1) {
         this.viewModel.popView();
@@ -83,10 +87,13 @@ class SearchResultsView extends React.Component {
   }
 
   updateFilters = (filters) => {
+    // TODO: if this search result is a track, then update the filters
     this.setState({
       filters: new Map(filters),
       showFilters: false,
     });
+    // re-run the query:
+    this.runQuery();
   }
 
   resultSelected(result) {
@@ -225,6 +232,7 @@ class SearchResultsView extends React.Component {
 }
 
 SearchResultsView.propTypes = {
+  //trackGuid: PropTypes.string.optional,
   appModel: PropTypes.object,
   viewModel: PropTypes.object,
   query: PropTypes.object,

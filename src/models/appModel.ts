@@ -58,7 +58,7 @@ export default class AppModel extends EventCreator {
     });
   };
 
-  public addAnnotationTrack = (annotationId: any, query: any = null) => {
+  public addAnnotationTrack = (annotationId: any, query: any = null, filters: any = null) => {
     return this.api.getAnnotation(annotationId, query).then((model: any) => {
       const track: object = {
         guid: uuid(),
@@ -120,6 +120,10 @@ export default class AppModel extends EventCreator {
     this.tracks = arr;
     this.notifyListeners(AppEvent.ReorderTracks, trackMoved);
   };
+
+  public setTrackFilter = (trackViewGuid: any, filter: any) => {
+    // TODO: implement this!
+  }
 
   public setTrackColor = (trackViewGuid: any, color: any) => {
     const index = this.indexOfTrack(trackViewGuid);

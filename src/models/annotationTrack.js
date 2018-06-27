@@ -5,11 +5,12 @@ import { GENOME_LENGTH, CHROMOSOME_START_BASE_PAIRS } from '../helpers/constants
 import Track, { TRACK_EVENT_LOADING } from './track.js';
 
 class AnnotationTrack extends Track {
-  constructor(api, annotationId, query = null) {
+  constructor(api, annotationId, query = null, filters = null) {
     super();
     this.api = api;
     this.annotationId = annotationId;
     this.query = query;
+    this.filters = filters;
     this.loadData = this.loadData.bind(this);
     this.cache = new TileCache(0, GENOME_LENGTH, this.loadData, LinearCacheSampler(), LinearCacheSampler(8, 8));
   }
@@ -57,7 +58,7 @@ class AnnotationTrack extends Track {
         range.end,
         samplingRate,
         trackHeightPx,
-        this.query
+        Util.applyFilterToQuery(this.query),
       ).then(result => {
         return { range: range, data: result };
       }, (err) => {
