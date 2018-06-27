@@ -558,6 +558,9 @@ export class DrawContext {
 		}
 	}
 
+	/**
+	 * Draw, automatically accounting for vertex indexing
+	 */
 	draw(mode: DrawMode, indexCount: number, indexOffset: number) {
 		const gl = this.gl;
 		if (this.vertexState.indexType != null) {
@@ -567,16 +570,14 @@ export class DrawContext {
 		}
 	}
 
+	/**
+	 * Draw instances, automatically accounting for vertex indexing
+	 */
 	extDrawInstanced(mode: DrawMode, indexCount: number, indexOffset: number, primCount: number) {
-		if (this.extInstanced !== null) {
-			if (this.vertexState.indexType != null) {
-				this.extInstanced.drawElementsInstancedANGLE(mode, indexCount, this.vertexState.indexType, indexOffset, primCount);
-			} else {
-				this.extInstanced.drawArraysInstancedANGLE(mode, indexOffset, indexCount, primCount);
-			}
+		if (this.vertexState.indexType != null) {
+			this.extInstanced.drawElementsInstancedANGLE(mode, indexCount, this.vertexState.indexType, indexOffset, primCount);
 		} else {
-			// @! fallback or warn
-			console.error(`extDrawInstanced() failed: Instance drawing extension is not available`);
+			this.extInstanced.drawArraysInstancedANGLE(mode, indexOffset, indexCount, primCount);
 		}
 	}
 
