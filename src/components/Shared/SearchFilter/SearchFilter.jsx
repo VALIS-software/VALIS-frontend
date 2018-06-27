@@ -1,11 +1,11 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import { DATA_SOURCES, VARIANT_TAGS } from '../../../helpers/constants.js';
+import QueryBuilder from '../../../models/query.js';
 
 const { Map, Set } = require('immutable');
-
 import './SearchFilter.scss';
-import 'rc-slider/assets/index.css';
+
 
 const rootFilterOptions = [
     { title: 'By Dataset', type: 'dataset' },
@@ -87,7 +87,7 @@ class SearchFilter extends React.Component {
     loadFilterOptions = (type) => {
         if (this.filterOptionsLoading[type]) return;
         else {
-            // TODO: run actual async request for filter type
+
             let promise = null;
             if (type === 'dataset') {
                 promise = new Promise(((resolve, reject) => {
@@ -105,6 +105,11 @@ class SearchFilter extends React.Component {
                 promise = new Promise(((resolve, reject) => {
                     resolve(P_VALUE_BUCKETS);
                 }));
+            } else if (type === 'type') {
+                const builder = new QueryBuilder();
+                builder.newGenomeQuery();
+                const genomeQuery = builder.build();
+                promise = this.props.appModel.api.getDistinctValues('type', genomeQuery)
             }
 
             this.filterOptionsLoading[type] = promise.then(result => {
@@ -159,6 +164,8 @@ class SearchFilter extends React.Component {
 }
 
 SearchFilter.propTypes = {
+    appModel: PropTypes.object,
+    viewModel: PropTypes.object,
     onFinish: PropTypes.func,
     onCancel: PropTypes.func,
 };

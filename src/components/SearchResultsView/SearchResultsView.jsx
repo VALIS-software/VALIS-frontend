@@ -196,7 +196,7 @@ class SearchResultsView extends React.Component {
     let filterMenu = null;
 
     if (this.state.showFilters) {
-      filterMenu = (<SearchFilter filters={this.state.filters} onFinish={this.updateFilters} onCancel={this.toggleFilters} />);
+      filterMenu = (<SearchFilter appModel={this.props.appModel} viewModel={this.props.viewModel} filters={this.state.filters} onFinish={this.updateFilters} onCancel={this.toggleFilters} />);
     }
     return (
       <div id="search-results-view" className="search-results-view">
