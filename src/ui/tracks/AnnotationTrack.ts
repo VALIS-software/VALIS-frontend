@@ -1,5 +1,5 @@
 import { Strand } from "../../../lib/gff3/Strand";
-import { GeneClass, GeneInfo, TranscriptClass } from "../../../lib/sirius/AnnotationTileset";
+import { GeneClass, TranscriptClass } from "../../../lib/sirius/AnnotationTileset";
 import { Animator } from "../../animation/Animator";
 import UsageCache from "../../ds/UsageCache";
 import { Scalar } from "../../math/Scalar";
@@ -17,6 +17,13 @@ import Text from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
 import Track from "./Track";
 
+/**
+ * WIP Annotation tracks:
+ * 
+ * Todo:
+ * - Convert micro-scale annotations to use instancing (and text batching)
+ * - Merge shaders where possible and clean up
+ */
 export class AnnotationTrack extends Track<'annotation'> {
 
     readonly macroLodBlendRange = 2;
