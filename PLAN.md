@@ -1,76 +1,31 @@
-- Instanced annotations
-    ! Tile boundary issues, a gene spanning two tiles will be drawn twice !
-    - Micro annotation instancing
-        - Merge component shaders?
-    - Text batching
-
-- Instance buffers should be local to tile payloads
-
 - Wrap up dev colors code
     - Maybe make the color dev trick into a separate dev/utils module
-
-- Display annotation text at left of viewport
-    - Actually, maybe only on hover
-
-- Display transcript name
-
-- Need to consider ensemble biotypes
-    - https://www.ensembl.org/info/genome/genebuild/biotypes.html
 
 - Large-scale annotation rendering
     - generate gene tiles, = array of genes with transcript count
 
-- Consider the Ensemble view where sequence is in the middle and strands are either side
-    - Too much work in the short term, instead I'll have + Strand and - Strand tracks
-
-Current experimental view: https://www.ensembl.org/Homo_sapiens/Location/View?db=core;g=ENSG00000188290;r=1:925926-925954
-
-* Ensemble course https://www.ebi.ac.uk/training/online/course/ensembl-browser-webinar-series-2016/how-take-course
-
-- On tall stacks: do we always want to show all the transcripts?
-    - Try other browser, how do they handle things?
-    - Does it make sense to show a compressed / overlapped view of RNAs by default?
-
-- Build gene groups from overlapping genes?
-    - We can fully solve overlap this way but we end up with very tall stacks!
-    - ! this has issues at tile boundaries, need to resolve
-
-- !! What if annotations have state which is lots when creating / deleting as view changes
-
-- Understand current representations
-    GFF3 Gene sets: https://www.ensembl.org/info/data/ftp/index.html
-    https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md
-    
-    Gene Annotations: https://www.ensembl.org/info/genome/genebuild/genome_annotation.html
-    Regulatory Regions Annotations: https://www.ensembl.org/info/genome/funcgen/regulatory_build.html 
-
-    To understand all the _types_ of feature
-    http://www.sequenceontology.org/miso/current_svn/term/SO:0001877
-
-- Displays
-    - Genes
-    - Exon
-    - CDS
-        - "A CDS or coding sequence is the part of a transcript that is actually translated into protein"
-        - Therefore a CDS will (almost) always start with an AUG codon and stop at one of the three STOP codons (UAA,UGA,UAG).
-        
-    - Transcripts => possible RNA sequences from the gene
-    - cDNAs ???
-    - EST ???
+- !! What if annotations have state which is lost when creating / deleting as view changes
 
 - Variant visualization
     https://docs.google.com/document/d/1OBykSYS_NWl_BG1ZHlRYRmXa17YDplGZJYdLL-HqO-o/edit#heading=h.ydbtyrks62k1
 
 - Continue on Chrome caching bug
 
-- Handle overlapping gene names
-    * After July 1st
+- Track request boundaries
 
 
 # Bugs
 - Right-click, move mouse, escape to dismiss = stuck dragging
 
 # Annotations
+- Instance buffers should be local to tile payloads
+- ! Tile boundary issues, a gene spanning two tiles will be drawn twice !
+- Instanced micro-scale
+    - Text batching
+- Display annotation text at left of viewport
+    - Actually, maybe only on hover
+- Display transcript name on hover
+- Handle overlapping gene names * After July 1st
 
 # Tracks
 - Track Resizing, should move tracks below rather than resizing
@@ -91,7 +46,6 @@ Current experimental view: https://www.ensembl.org/Homo_sapiens/Location/View?db
 - Move tile texture management out of Sequence track
 - Improve performance by pooling tile textures system
     - Allocate a pool of textures to use to avoid creating new textures frequently
-    - 
 - Fix out of bounds sequence
     - .minmax file should report sequence length?
 - Remove hard coding in sirius test API
@@ -125,6 +79,9 @@ Current experimental view: https://www.ensembl.org/Homo_sapiens/Location/View?db
 
 ---- consider
 
+- Represent ensemble biotypes
+    - https://www.ensembl.org/info/genome/genebuild/biotypes.html
+
 - Need some way to indicate incomplete / low confidence data, eg: ATAD3A-201 or ATAD3A-204
     - What about high-confidence? CCDS?
 
@@ -139,3 +96,8 @@ Current experimental view: https://www.ensembl.org/Homo_sapiens/Location/View?db
 
 Prod: http://35.230.87.182/
 Dev: http://35.185.230.75/
+
+Ontology of feature types http://www.sequenceontology.org/miso/current_svn/term/SO:0001877
+
+Ensemble course https://www.ebi.ac.uk/training/online/course/ensembl-browser-webinar-series-2016/how-take-course
+Example Ensmble Browser View https://www.ensembl.org/Homo_sapiens/Location/View?db=core;g=ENSG00000188290;r=1:925926-925954
