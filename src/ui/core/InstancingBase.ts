@@ -1,5 +1,5 @@
+import Device, { AttributeLayout, GPUBuffer, GPUVertexState, shaderTypeLength, VertexAttributeBuffer } from "../../rendering/Device";
 import Object2D from "./Object2D";
-import Device, { AttributeLayout, GPUBuffer, shaderTypeLength, VertexAttributeBuffer, GPUVertexState } from "../../rendering/Device";
 import SharedResources from "./SharedResources";
 
 /**
