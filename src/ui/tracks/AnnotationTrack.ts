@@ -7,7 +7,7 @@ import { AnnotationTileStore, Gene, Transcript } from "../../model/data-store/An
 import SharedTileStore from "../../model/data-store/SharedTileStores";
 import { Tile, TileState } from "../../model/data-store/TileStore";
 import TrackModel from "../../model/TrackModel";
-import Device, { AttributeLayout, AttributeType, VertexAttributeBuffer } from "../../rendering/Device";
+import GPUDevice, { AttributeLayout, AttributeType, VertexAttributeBuffer } from "../../rendering/GPUDevice";
 import { BlendMode, DrawContext, DrawMode } from "../../rendering/Renderer";
 import InstancingBase from "../core/InstancingBase";
 import Object2D from "../core/Object2D";
@@ -155,8 +155,8 @@ export class AnnotationTrack extends Track<'annotation'> {
                         // initialize macro gene instances
                         // create array of gene annotation data
                         let instanceData = new Array<MacroGeneInstance>();
-                        let nonCodingColor = [82 / 0xff, 75 / 0xff, 165 / 0xff, 0.3];
-                        let codingColor = [26 / 0xff, 174/0xff, 222/0xff, 0.58];
+                        let nonCodingColor = [82 / 0xff, 75 / 0xff, 165 / 0xff, 0.4];
+                        let codingColor = [26 / 0xff, 174/0xff, 222/0xff, 0.4];
 
                         for (let gene of tile.payload) {
                             if (gene.strand !== this.model.strand) continue;
@@ -341,7 +341,7 @@ class MacroGeneInstances extends InstancingBase<MacroGeneInstance> {
 
     // @! not sure this works
     protected allocateGPUVertexState(
-        device: Device,
+        device: GPUDevice,
         attributeLayout: AttributeLayout,
         instanceVertexAttributes: { [name: string]: VertexAttributeBuffer }
     ) {
@@ -510,9 +510,9 @@ class TranscriptAnnotation extends Object2D {
             [TranscriptClass.NonProteinCoding]: [0, 1, 1, 0.25],
         }
 
-        /**
+        /**/
         let spanMarker = new TranscriptSpan(strand);
-        spanMarker.color.set([138 / 0xFF, 136 / 0xFF, 191 / 0xFF, 0.38]);
+        spanMarker.color.set([138 / 0xFF, 136 / 0xFF, 191 / 0xFF, 0.38 * 0.5]);
         spanMarker.h = 10;
         spanMarker.layoutW = 1;
         spanMarker.layoutY = -0.5;
