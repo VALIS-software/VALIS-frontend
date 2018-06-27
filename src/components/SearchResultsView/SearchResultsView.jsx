@@ -40,7 +40,6 @@ class SearchResultsView extends React.Component {
   }
 
   addQueryAsTrack = () => {
-    // TODO: addAnnotationTrack should also take a list of filters
     this.props.appModel.addAnnotationTrack(this.props.text, this.state.query, this.state.filters);
   }
 
