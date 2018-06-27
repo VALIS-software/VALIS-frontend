@@ -1,4 +1,4 @@
-import { Device, GPUProgram, AttributeLayout, AttributeType } from "../../rendering/Device";
+import { GPUDevice, GPUProgram, AttributeLayout, AttributeType } from "../../rendering/GPUDevice";
 import { SharedResources } from "./SharedResources";
 import { DrawContext, DrawMode } from "../../rendering/Renderer";
 import { Object2D } from "./Object2D";
@@ -26,7 +26,7 @@ export class Rect extends Object2D {
         this.color.set(color);
     }
 
-    allocateGPUResources(device: Device) {
+    allocateGPUResources(device: GPUDevice) {
         this.gpuVertexState = SharedResources.quad1x1VertexState;
         this.gpuProgram = SharedResources.getProgram(
             device,

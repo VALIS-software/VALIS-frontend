@@ -1,4 +1,4 @@
-import Device, { AttributeLayout, GPUBuffer, GPUVertexState, shaderTypeLength, VertexAttributeBuffer } from "../../rendering/Device";
+import GPUDevice, { AttributeLayout, GPUBuffer, GPUVertexState, shaderTypeLength, VertexAttributeBuffer } from "../../rendering/GPUDevice";
 import Object2D from "./Object2D";
 import SharedResources from "./SharedResources";
 
@@ -6,7 +6,7 @@ import SharedResources from "./SharedResources";
  * Base class for instance rendering
  * 
  * To use, override:
- * - draw(),
+ * - draw()
  * - allocateVertexState()
  * - getVertexCode()
  * - getFragmentCode()
@@ -76,7 +76,7 @@ export class InstancingBase<Instance> extends Object2D {
         }
     }
 
-    allocateGPUResources(device: Device) {
+    allocateGPUResources(device: GPUDevice) {
         this.gpuInstanceBuffer = device.createBuffer({ data: this.instanceDataArray });
 
         let instanceVertexAttributes: { [name: string]: VertexAttributeBuffer } = {};
@@ -130,7 +130,7 @@ export class InstancingBase<Instance> extends Object2D {
 
     // override the following
     protected allocateGPUVertexState(
-        device: Device,
+        device: GPUDevice,
         attributeLayout: AttributeLayout,
         instanceVertexAttributes: { [name: string]: VertexAttributeBuffer }
     ): GPUVertexState {

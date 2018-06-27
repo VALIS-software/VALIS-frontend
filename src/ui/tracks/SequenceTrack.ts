@@ -4,7 +4,7 @@ import { BlockPayload, TilePayload } from "../../model/data-store/SequenceTileSt
 import { SharedTileStore } from "../../model/data-store/SharedTileStores";
 import { Tile, TileState } from "../../model/data-store/TileStore";
 import { TrackModel } from "../../model/TrackModel";
-import Device, { GPUTexture, AttributeType } from "../../rendering/Device";
+import GPUDevice, { GPUTexture, AttributeType } from "../../rendering/GPUDevice";
 import { DrawContext, DrawMode } from "../../rendering/Renderer";
 import Object2D, { Object2DInternal } from "../core/Object2D";
 import SharedResources from "../core/SharedResources";
@@ -70,7 +70,7 @@ class SequenceTile extends TileNode<TilePayload> {
         super.applyTransformToSubNodes(root);
     }
 
-    allocateGPUResources(device: Device) {
+    allocateGPUResources(device: GPUDevice) {
         // static initializations
         this.gpuVertexState = SharedResources.quad1x1VertexState;
         this.gpuProgram = SharedResources.getProgram(
@@ -342,7 +342,7 @@ class TextClone extends Object2D {
         }
     }
 
-    allocateGPUResources(device: Device) {
+    allocateGPUResources(device: GPUDevice) {
         let textInternal = (this.text as any as Object2DInternal);
 
         if (textInternal.gpuResourcesNeedAllocate) {

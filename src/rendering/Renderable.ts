@@ -1,6 +1,6 @@
 import Node from './Node';
 import RenderPass from './RenderPass';
-import { Device, GPUProgram, GPUVertexState } from './Device';
+import { GPUDevice, GPUProgram, GPUVertexState } from './GPUDevice';
 import { BlendMode, DrawContext } from './Renderer';
 
 export type RenderableInternal = {
@@ -10,7 +10,7 @@ export type RenderableInternal = {
 	renderOrderZ: number;
 	_renderStateKey: number,
 	_maskIndex: number,
-	allocateGPUResources: (device: Device) => void,
+	allocateGPUResources: (device: GPUDevice) => void,
 }
 
 /**
@@ -71,7 +71,7 @@ export class Renderable<T extends Node<any>> extends Node<T> {
 		super();
 	}
 
-	allocateGPUResources(device: Device) {}
+	allocateGPUResources(device: GPUDevice) {}
 	releaseGPUResources() {}
 	draw(context: DrawContext) {}
 

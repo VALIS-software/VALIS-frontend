@@ -8,7 +8,7 @@ Dev Notes:
 
 **/
 
-export type DeviceInternal = {
+export type GPUDeviceInternal = {
 	gl: WebGLRenderingContext,
 	extVao: OES_vertex_array_object,
 	extInstanced: ANGLE_instanced_arrays,
@@ -25,7 +25,7 @@ export type DeviceInternal = {
 	}>,
 }
 
-export class Device {
+export class GPUDevice {
 
 	get programCount() { return this._programCount; }
 	get vertexStateCount() { return this._vertexStateCount; }
@@ -879,7 +879,7 @@ interface GPUObjectHandle {
 
 export class GPUBuffer implements GPUObjectHandle {
 
-	constructor(protected readonly device: Device, readonly native: WebGLBuffer) {}
+	constructor(protected readonly device: GPUDevice, readonly native: WebGLBuffer) {}
 
 	updateBufferData(data: BufferDataSource, offsetBytes: number = 0) {
 		this.device.updateBufferData(this, data, offsetBytes);
@@ -893,7 +893,7 @@ export class GPUBuffer implements GPUObjectHandle {
 
 export class GPUIndexBuffer extends GPUBuffer {
 
-	constructor(device: Device, native: WebGLBuffer, readonly dataType: IndexDataType) {
+	constructor(device: GPUDevice, native: WebGLBuffer, readonly dataType: IndexDataType) {
 		super(device, native);
 	}
 
@@ -909,7 +909,7 @@ export class GPUVertexState implements GPUObjectHandle {
 	protected _vaoFallbackDescriptor: undefined | VertexStateDescriptor;
 
 	constructor(
-		protected readonly device: Device,
+		protected readonly device: GPUDevice,
 		readonly id: number,
 		readonly native: null | WebGLVertexArrayObjectOES,
 		readonly attributeLayout: AttributeLayout,
@@ -933,7 +933,7 @@ export class GPUTexture implements GPUObjectHandle {
 	protected boundUnit: number = -1;
 
 	constructor(
-		protected readonly device: Device,
+		protected readonly device: GPUDevice,
 		readonly native: WebGLTexture,
 		readonly w: number,
 		readonly h: number,
@@ -966,7 +966,7 @@ export class GPUProgram implements GPUObjectHandle {
 	protected stateCache: { [key: string]: any } = {};
 
 	constructor(
-		protected readonly device: Device,
+		protected readonly device: GPUDevice,
 		readonly id: number,
 		readonly native: WebGLProgram,
 		readonly vertexCode: string,
@@ -982,7 +982,7 @@ export class GPUProgram implements GPUObjectHandle {
 
 }
 
-export default Device;
+export default GPUDevice;
 
 // private data structures
 

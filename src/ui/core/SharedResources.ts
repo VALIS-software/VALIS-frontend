@@ -1,4 +1,4 @@
-import { AttributeLayout, BufferDescriptor, Device, GPUBuffer, GPUIndexBuffer, GPUProgram, GPUTexture, GPUVertexState, AttributeType, TextureDescriptor } from "../../rendering/Device";
+import { AttributeLayout, BufferDescriptor, GPUDevice, GPUBuffer, GPUIndexBuffer, GPUProgram, GPUTexture, GPUVertexState, AttributeType, TextureDescriptor } from "../../rendering/GPUDevice";
 
 export class SharedResources {
 
@@ -18,7 +18,7 @@ export class SharedResources {
     private static textures: { [key: string]: GPUTexture } = {};
     private static buffers: { [key: string]: GPUBuffer } = {};
 
-    static getProgram(device: Device, vertexCode: string, fragmentCode: string, attributeLayout: AttributeLayout) {
+    static getProgram(device: GPUDevice, vertexCode: string, fragmentCode: string, attributeLayout: AttributeLayout) {
         let key = vertexCode + '\x1D' + fragmentCode + '\x1D' + attributeLayout.map(a => a.name + ':' + a.type).join('\x1F');
         let gpuProgram = this.programs[key];
 
@@ -43,7 +43,7 @@ export class SharedResources {
         return false;
     }
 
-    static getTexture(device: Device, key: string, descriptor: TextureDescriptor) {
+    static getTexture(device: GPUDevice, key: string, descriptor: TextureDescriptor) {
         let gpuTexture = this.textures[key];
 
         if (gpuTexture == null) {
@@ -66,7 +66,7 @@ export class SharedResources {
         return false;
     }
 
-    static getBuffer(device: Device, key: string, descriptor: BufferDescriptor) {
+    static getBuffer(device: GPUDevice, key: string, descriptor: BufferDescriptor) {
         let gpuBuffer = this.buffers[key];
 
         if (gpuBuffer == null) {
@@ -89,7 +89,7 @@ export class SharedResources {
         return false;
     }
 
-    static initialize(device: Device) {
+    static initialize(device: GPUDevice) {
         this.quadIndexBuffer = device.createIndexBuffer({
             data: new Uint8Array([
                 0, 1, 2,

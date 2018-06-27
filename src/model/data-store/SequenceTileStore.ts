@@ -1,5 +1,5 @@
 import SiriusApi from "../../../lib/sirius/SiriusApi";
-import Device, { ColorSpaceConversion, GPUTexture, TextureDataType, TextureFormat, TextureMagFilter, TextureMinFilter, TextureWrapMode } from "../../rendering/Device";
+import GPUDevice, { ColorSpaceConversion, GPUTexture, TextureDataType, TextureFormat, TextureMagFilter, TextureMinFilter, TextureWrapMode } from "../../rendering/GPUDevice";
 import TileStore, { Tile } from "./TileStore";
 
 export type TilePayload = {
@@ -9,12 +9,12 @@ export type TilePayload = {
         max: number,
     };
     dataUploaded: boolean,
-    getTexture(device: Device): GPUTexture;
+    getTexture(device: GPUDevice): GPUTexture;
 }
 
 export type BlockPayload = {
     _gpuTexture: GPUTexture,
-    getTexture(device: Device): GPUTexture;
+    getTexture(device: GPUDevice): GPUTexture;
 }
 
 export class SequenceTileStore extends TileStore<TilePayload, BlockPayload> {
@@ -35,7 +35,7 @@ export class SequenceTileStore extends TileStore<TilePayload, BlockPayload> {
                 return {
                     ...sequenceData,
                     dataUploaded: false,
-                    getTexture(device: Device): GPUTexture {
+                    getTexture(device: GPUDevice): GPUTexture {
                         let payload: TilePayload = this;
 
                         let blockPayload = tileStore.getBlockPayload(tile);
@@ -68,7 +68,7 @@ export class SequenceTileStore extends TileStore<TilePayload, BlockPayload> {
     protected createBlockPayload(lodLevel: number, lodX: number, tileWidth: number, rows: number): BlockPayload {
         return {
             _gpuTexture: null,
-            getTexture(device: Device) {
+            getTexture(device: GPUDevice) {
                 let payload: BlockPayload = this;
 
                 // allocate texture if it doesn't already exist

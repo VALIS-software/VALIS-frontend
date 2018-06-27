@@ -8,7 +8,7 @@
 
 import * as React from "react";
 import Node from '../../rendering/Node';
-import Device from '../../rendering/Device';
+import GPUDevice from '../../rendering/GPUDevice';
 import RenderPass from '../../rendering/RenderPass';
 import Renderer from '../../rendering/Renderer';
 import Renderable from '../../rendering/Renderable';
@@ -38,7 +38,7 @@ interface State {
 export class AppCanvas extends React.Component<Props, State> {
 
     protected canvas: HTMLCanvasElement;
-    protected device: Device;
+    protected device: GPUDevice;
     protected renderer: Renderer;
     protected mainRenderPass: RenderPass;
     protected scene: Object2D;
@@ -76,7 +76,7 @@ export class AppCanvas extends React.Component<Props, State> {
         gl.depthFunc(gl.LEQUAL);
         gl.disable(gl.CULL_FACE);
 
-        this.device = new Device(gl);
+        this.device = new GPUDevice(gl);
         this.renderer = new Renderer(this.device);
 
         SharedResources.initialize(this.device);

@@ -3,7 +3,7 @@
  * - State grouping: Often we want hierarchical state - i.e, set viewport for this node _and_ all of its children
  */
 
-import Device, { DeviceInternal, GPUProgram, GPUProgramInternal, GPUTexture, GPUTextureInternal, GPUVertexState, VertexAttribute, VertexStateDescriptor, AttributeLayout, shaderTypeLength, shaderTypeRows, GPUVertexStateInternal } from '../rendering/Device';
+import GPUDevice, { GPUDeviceInternal, GPUProgram, GPUProgramInternal, GPUTexture, GPUTextureInternal, GPUVertexState, VertexAttribute, VertexStateDescriptor, AttributeLayout, shaderTypeLength, shaderTypeRows, GPUVertexStateInternal } from '../rendering/GPUDevice';
 import RenderPass from './RenderPass';
 import { Renderable, RenderableInternal } from './Renderable';
 
@@ -32,8 +32,8 @@ export enum DrawMode {
 
 export class Renderer {
 
-	protected device: Device;
-	protected deviceInternal: DeviceInternal;
+	protected device: GPUDevice;
+	protected deviceInternal: GPUDeviceInternal;
 	protected gl: WebGLRenderingContext;
 	protected extVao: null | OES_vertex_array_object;
 	protected drawContext: DrawContext;
@@ -41,9 +41,9 @@ export class Renderer {
 	// if number of unique masks used exceeds MAX_SAFE_MASKS then there may be mask-collisions when nodes overlap
 	readonly MAX_SAFE_MASKS = 254;
 
-	constructor(device: Device) {
+	constructor(device: GPUDevice) {
 		this.device = device;
-		this.deviceInternal = device as any as DeviceInternal;
+		this.deviceInternal = device as any as GPUDeviceInternal;
 		this.gl = this.deviceInternal.gl;
 		this.extVao = this.deviceInternal.extVao;
 		this.drawContext = DrawContext.create(device, this.deviceInternal.extInstanced);
@@ -470,8 +470,8 @@ export class DrawContext {
 	readonly program: GPUProgram;
 	readonly vertexState: GPUVertexState;
 
-	protected constructor(protected readonly device: Device, protected readonly extInstanced: ANGLE_instanced_arrays) {
-		const gl = (device as any as DeviceInternal).gl;
+	protected constructor(protected readonly device: GPUDevice, protected readonly extInstanced: ANGLE_instanced_arrays) {
+		const gl = (device as any as GPUDeviceInternal).gl;
 		this.gl = gl;
 	}
 
@@ -543,7 +543,7 @@ export class DrawContext {
 
 	uniformTexture2D(name: string, texture: GPUTexture) {
 		const gl = this.gl;
-		const deviceInternal = this.device as any as DeviceInternal;
+		const deviceInternal = this.device as any as GPUDeviceInternal;
 		const textureInternal = texture as any as GPUTextureInternal;
 
 		// texture already has an assigned unit
@@ -581,7 +581,7 @@ export class DrawContext {
 		}
 	}
 
-	static create(device: Device, extInstanced: ANGLE_instanced_arrays) {
+	static create(device: GPUDevice, extInstanced: ANGLE_instanced_arrays) {
 		return new DrawContext(device, extInstanced);
 	}
 

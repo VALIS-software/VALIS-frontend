@@ -1,5 +1,5 @@
 import GPUText, { GlyphLayout, GPUTextFont } from "../../../lib/gputext/GPUText";
-import { AttributeLayout, BufferUsageHint, ColorSpaceConversion, Device, GPUBuffer, GPUTexture, AttributeType, TextureDataType, TextureFormat, TextureMagFilter, TextureMinFilter, TextureUsageHint, TextureWrapMode, VertexAttributeSourceType } from "../../rendering/Device";
+import { AttributeLayout, BufferUsageHint, ColorSpaceConversion, GPUDevice, GPUBuffer, GPUTexture, AttributeType, TextureDataType, TextureFormat, TextureMagFilter, TextureMinFilter, TextureUsageHint, TextureWrapMode, VertexAttributeSourceType } from "../../rendering/GPUDevice";
 import { BlendMode, DrawContext, DrawMode } from "../../rendering/Renderer";
 import { Object2D } from "./Object2D";
 import { SharedResources } from "./SharedResources";
@@ -86,7 +86,7 @@ export class Text extends Object2D {
         this.color.set(color);
     }
 
-    allocateGPUResources(device: Device) {
+    allocateGPUResources(device: GPUDevice) {
         let programNeedsUpdate = false;
 
         if (this.gpuProgram == null || programNeedsUpdate) {
