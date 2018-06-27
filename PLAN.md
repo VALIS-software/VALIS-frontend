@@ -1,18 +1,13 @@
 - Instanced annotations
+    ! Tile boundary issues, a gene spanning two tiles will be drawn twice !
+    - Micro annotation instancing
+        - Merge component shaders?
+    - Text batching
+
+- Instance buffers should be local to tile payloads
 
 - Wrap up dev colors code
     - Maybe make the color dev trick into a separate dev/utils module
-
-- Display gene direction
-    - Improve a bit
-- Display transcript span
-
-- Batch annotations into instance draw groups
-
-- Need some way to indicate incomplete / low confidence data, eg: ATAD3A-201 or ATAD3A-204
-    - What about high-confidence? CCDS?
-
-- Merge component shaders
 
 - Display annotation text at left of viewport
     - Actually, maybe only on hover
@@ -76,11 +71,6 @@ Current experimental view: https://www.ensembl.org/Homo_sapiens/Location/View?db
 - Right-click, move mouse, escape to dismiss = stuck dragging
 
 # Annotations
-- Micro-scale annotation loading using tile engine
-- Micro-scale annotation rendering
-- Instanced drawing?
-- Annotation density map, with downscaled LODs
-- Macro-scale annotation density rendering
 
 # Tracks
 - Track Resizing, should move tracks below rather than resizing
@@ -134,6 +124,9 @@ Current experimental view: https://www.ensembl.org/Homo_sapiens/Location/View?db
     - Pointer down on any track should contribute to the gesture (not just two touches within the same track)
 
 ---- consider
+
+- Need some way to indicate incomplete / low confidence data, eg: ATAD3A-201 or ATAD3A-204
+    - What about high-confidence? CCDS?
 
 - Animator field removal
     - Can we improve on the condition? Currently a magic number
