@@ -64,22 +64,22 @@ export class Object2D extends Renderable<Object2D> implements Layout {
     set layoutY(hy: number) { this._layoutY = hy; this.worldTransformNeedsUpdate = true; }
     get layoutY() { return this._layoutY; }
     /**
-     * When computing the world-transform, layoutParentX applies an offset in units of this object's _parent_ width
+     * When computing the world-transform, layoutParentX applies an offset in units of this object's _parent's_ width
      */
     set layoutParentX(wx: number) { this._layoutParentX = wx; this.worldTransformNeedsUpdate = true; }
     get layoutParentX() { return this._layoutParentX; }
     /**
-     * When computing the world-transform, layoutParentY applies an offset in units of this object's _parent_ height
+     * When computing the world-transform, layoutParentY applies an offset in units of this object's _parent's_ height
      */
     set layoutParentY(hy: number) { this._layoutParentY = hy; this.worldTransformNeedsUpdate = true; }
     get layoutParentY() { return this._layoutParentY; }
     /**
-     * When computing the world-transform, applies an offset to this object's width in units of this Object's parent width
+     * When computing the world-transform, layoutW applies an offset to this object's width in units of this object's _parent's_ width
      */
     set layoutW(w: number) { this._layoutW = w; this.worldTransformNeedsUpdate = true; }
     get layoutW() { return this._layoutW; }
     /**
-     * When computing the world-transform, applies an offset to this object's height in units of this Object's parent height
+     * When computing the world-transform, layoutH applies an offset to this object's height in units of this object's _parent's_ height
      */
     set layoutH(h: number) { this._layoutH = h; this.worldTransformNeedsUpdate = true; }
     get layoutH() { return this._layoutH; }
