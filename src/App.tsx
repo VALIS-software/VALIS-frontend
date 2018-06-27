@@ -61,8 +61,8 @@ export class App extends React.Component<Props, State> {
 		}
 
 		for (let panel of [
-			{ name: 'Chromosome 1', x0: 1358.4e3, x1: 1358.6e3}
-			// { name: 'Chromosome 1', x0: 0, x1: 249e6 }
+			// { name: 'Chromosome 1', x0: 1358.4e3, x1: 1358.6e3}
+			{ name: 'Chromosome 1', x0: 0, x1: 249e6 }
 		]) {
 			trackViewer.addPanel(panel, false);
 		}
