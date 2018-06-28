@@ -196,7 +196,12 @@ class Util {
   static applyFilterToQuery(query, filter) {
     if (!filter || !query) return query;
     if (filter.get(FILTER_TYPES.DATASET)) {
-      console.log('has dataset filter', filter.get(FILTER_TYPES.DATASET));
+      const datasets = filter.get(FILTER_TYPES.DATASET).toArray();
+      if (datasets.length === 1) {
+        query.filters['source'] = datasets[0];
+      } else {
+        query.filters['source'] = { "$in": datasets };
+      }
     }
     if (filter.get(FILTER_TYPES.TYPE)) {
       // only apply this filter to the top level query if it is a genome query
@@ -205,10 +210,8 @@ class Util {
         if (types.length === 1) {
           query.filters['type'] = types[0];
         } else {
-          // construct an OR query:
+          query.filters['type'] = { "$in": types };
         }
-
-
       }
     }
     if (filter.get(FILTER_TYPES.VARIANT_TAG)) {
