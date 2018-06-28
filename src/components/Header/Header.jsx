@@ -2,18 +2,14 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 
-
-import MenuItem from 'material-ui/MenuItem';
-import DropDownMenu from 'material-ui/DropDownMenu';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import RaisedButton from 'material-ui/RaisedButton';
+
 import DatasetSelector from '../DatasetSelector/DatasetSelector.jsx';
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
-import EntityDetails from '../EntityDetails/EntityDetails';
-import TokenBox from '../Shared/TokenBox/TokenBox';
-import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
-import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
-import Avatar from 'material-ui/Avatar';
+import TokenBox from '../Shared/TokenBox/TokenBox.jsx';
+import UserProfileButton from '../Shared/UserProfileButton/UserProfileButton.jsx';
+
 import QueryBuilder, { QUERY_TYPE_INFO } from '../../models/query.js';
 import { DATA_SOURCE_GWAS, DATA_SOURCE_CLINVAR } from '../../helpers/constants.js';
 
@@ -47,13 +43,16 @@ class Header extends React.Component {
       this.setState({
         userName: userProfile.name,
         userPicture: userProfile.picture,
+        logged: true,
       })
     })
   }
 
   render() {
-    const addDatasetBrowser = this.addDatasetBrowser;
-    const { userName, userPicture } = this.state;
+    const { userName, userPicture, logged } = this.state;
+    // redirect to login page if not authorized and not in dev mode
+    if (logged && !userName && window.location.hostname !== 'localhost')
+      window.location.href = '/login';
     return (<div className="header">
       <Toolbar>
         <ToolbarGroup firstChild={true}>
@@ -62,8 +61,9 @@ class Header extends React.Component {
           </div>
         </ToolbarGroup>
         <ToolbarGroup>
-          <RaisedButton label="Browse Data" primary={true} onClick={addDatasetBrowser} />
-          <UserProfileButton name={userName} picture={userPicture} />
+          <RaisedButton label="Browse Data" primary={true} onClick={this.addDatasetBrowser} />
+          {userName ? (<UserProfileButton name={userName} picture={userPicture} />) :
+            (<RaisedButton href='login' label='Sign In' primary={true} />)}
         </ToolbarGroup>
       </Toolbar>
     </div>);
@@ -74,25 +74,5 @@ Header.propTypes = {
   model: PropTypes.object,
   viewModel: PropTypes.object,
 };
-
-
-function UserProfileButton(props) {
-  if (!props.name || !props.picture) {
-    const loginButton = <RaisedButton href='login' label='Sign In' primary={true} />
-    return loginButton;
-  } else {
-
-    return (
-      <Button onClick={}>
-        <Avatar src={props.picture} />
-      </Button>
-    )
-  }
-}
-
-UserProfileButton.propTypes = {
-  name: PropTypes.string,
-  picture: PropTypes.string,
-}
 
 export default Header;

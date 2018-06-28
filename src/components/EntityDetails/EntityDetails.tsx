@@ -46,9 +46,9 @@ class EntityDetails extends React.Component<any, any> {
             this.viewModel = props.viewModel;
             this.api = this.appModel.api;
         }
-        this.state = {
+        this.setState({
             dataID: props.dataID
-        };
+        });
         this.loadDetailsData();
     }
 
