@@ -15,44 +15,21 @@ import { DATA_SOURCE_GWAS, DATA_SOURCE_CLINVAR } from '../../helpers/constants.j
 
 import './Header.scss';
 
-import GenomeAPI from '../../models/api.js';
-
-const dataSourceConfig = {
-  text: 'textKey',
-  value: 'valueKey',
-};
-
 class Header extends React.Component {
   constructor(props) {
     super(props);
-    this.api = new GenomeAPI();
-    this.state = {
-      userName: null,
-      userPicture: null,
-    };
   }
 
   addDatasetBrowser = () => {
-    mixpanel.track("Click BROWSE DATA");
     const view = (<DatasetSelector viewModel={this.props.viewModel} appModel={this.props.model} />);
     this.props.viewModel.pushView('Select Dataset', null, view);
   }
 
-  componentDidMount() {
-    this.api.getUserProfile().then(userProfile => {
-      this.setState({
-        userName: userProfile.name,
-        userPicture: userProfile.picture,
-        logged: true,
-      })
-    })
-  }
-
   render() {
-    const { userName, userPicture, logged } = this.state;
-    // redirect to login page if not authorized and not in dev mode
-    if (logged && !userName && window.location.hostname !== 'localhost')
-      window.location.href = '/login';
+    // const { userName, userPicture, logged } = this.state;
+    // // redirect to login page if not authorized and not in dev mode
+    // if (logged && !userName && window.location.hostname !== 'localhost')
+    //   window.location.href = '/login';
     return (<div className="header">
       <Toolbar>
         <ToolbarGroup firstChild={true}>
@@ -62,8 +39,7 @@ class Header extends React.Component {
         </ToolbarGroup>
         <ToolbarGroup>
           <RaisedButton label="Browse Data" primary={true} onClick={this.addDatasetBrowser} />
-          {userName ? (<UserProfileButton name={userName} picture={userPicture} />) :
-            (<RaisedButton href='login' label='Sign In' primary={true} />)}
+          <UserProfileButton userProfile={this.props.userProfile} />
         </ToolbarGroup>
       </Toolbar>
     </div>);
@@ -73,6 +49,7 @@ class Header extends React.Component {
 Header.propTypes = {
   model: PropTypes.object,
   viewModel: PropTypes.object,
+  userProfile: PropTypes.object,
 };
 
 export default Header;

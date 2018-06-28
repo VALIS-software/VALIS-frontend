@@ -145,6 +145,17 @@ class App extends React.PureComponent<any, any> {
 
     this.viewModel = new ViewModel();
     this.appModel = new AppModel();
+    // Get User Profile, redirect if not logged in
+    this.appModel.api.getUserProfile().then((userProfile: any) => {
+      if (!userProfile.name) {
+        window.location.href = '/login';
+      }
+      this.setState({
+        userProfile,
+      })
+    }, (err: object) => {
+      window.location.href = '/login';
+    });
     // Default sequence track
     this.appModel.addDataTrack('sequence');
     // Default GRCh38 gene track
@@ -155,6 +166,7 @@ class App extends React.PureComponent<any, any> {
     this.appModel.addAnnotationTrack('GRCh38 Genes', query);
     this.appModel.addListener(this.reportFailure, AppEvent.Failure);
     this.appModel.addListener(this.updateLoadingState, AppEvent.LoadingStateChanged);
+    this.appModel.addListener(this.trackMixPanel, AppEvent.TrackMixPanel)
     this.viewModel.addListener(this.clickTrackElement, VIEW_EVENT_TRACK_ELEMENT_CLICKED);
     this.viewModel.addListener(this.showTrackSettings, VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS);
 
@@ -175,6 +187,15 @@ class App extends React.PureComponent<any, any> {
     this.setState({
       displayErrors: false,
     })
+  }
+
+  trackMixPanel = (event: any) => {
+    if (event.data !== null) {
+      const msg: string = event.data.msg;
+      const details: any = event.data.details;
+      details.user = this.state.userProfile.name;
+      mixpanel.track(msg, details);
+    }
   }
 
   render() {
@@ -217,7 +238,7 @@ class App extends React.PureComponent<any, any> {
     return (
       <MuiThemeProvider muiTheme={BasicTheme}>
         <div className="site-wrapper">
-          <Header viewModel={this.viewModel} model={this.appModel} />
+          <Header viewModel={this.viewModel} model={this.appModel} userProfile={this.state.userProfile} />
           {progress}
           <MultiTrackViewer model={this.appModel} viewModel={this.viewModel} />
           <NavigationController viewModel={this.viewModel} views={views} />

@@ -5,19 +5,18 @@ import Avatar from 'material-ui/Avatar';
 import Popover from 'material-ui/Popover';
 import { Card, CardActions, CardHeader, CardMedia, CardTitle, CardText } from 'material-ui/Card';
 import FlatButton from 'material-ui/FlatButton';
-import RaisedButton from 'material-ui/RaisedButton';
+import IconButton from 'material-ui/IconButton';
+import Person from 'material-ui/svg-icons/social/person';
 
 import './UserProfileButton.scss';
-import { RaisedButton } from 'material-ui';
 
 class UserProfileButton extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      name: props.name,
-      picture: props.picture,
       open: false,
-    };
+      anchorEl: null,
+    }
   }
 
   handleClick = (event) => {
@@ -36,11 +35,16 @@ class UserProfileButton extends React.Component {
   };
 
   render() {
-    const { name, picture, open, anchorEl } = this.state;
-    if (!name || !picture) return (<div />);
+    const { userProfile, open, anchorEl } = this.state;
+    const userProfile = this.props.userProfile;
+    if (!userProfile)
+      return (<IconButton href="login" tooltip="Log In">
+        <Person />
+      </IconButton>
+      );
     return (
       <button onClick={this.handleClick} className="user-button">
-        <Avatar src={picture} />
+        <Avatar src={userProfile.picture} />
         <Popover
           open={open}
           anchorEl={anchorEl}
@@ -50,8 +54,8 @@ class UserProfileButton extends React.Component {
         >
           <Card >
             <CardHeader
-              subtitle={name}
-              avatar={picture}
+              subtitle={userProfile.name}
+              avatar={userProfile.picture}
             />
             <CardActions>
               <FlatButton href='logout' label='Switch User' />
@@ -65,8 +69,7 @@ class UserProfileButton extends React.Component {
 }
 
 UserProfileButton.propTypes = {
-  user: PropTypes.string,
-  picture: PropTypes.string,
+  userProfile: PropTypes.object,
 };
 
 export default UserProfileButton;

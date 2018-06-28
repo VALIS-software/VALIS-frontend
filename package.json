@@ -43,6 +43,7 @@
     "@types/html-webpack-plugin": "^2.30.3",
     "@types/jest": "^22.2.3",
     "@types/material-ui": "^0.20.0",
+    "@types/mixpanel": "^2.14.0",
     "@types/mini-css-extract-plugin": "^0.2.0",
     "@types/node": "^9.6.1",
     "@types/prop-types": "^15.5.2",

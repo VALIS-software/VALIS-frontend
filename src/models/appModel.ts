@@ -14,10 +14,11 @@ export enum AppEvent {
   LoadingStateChanged,
   TrackViewSettingsUpdated,
   Failure,
+  TrackMixPanel,
 }
 
 export default class AppModel extends EventCreator {
-  private api: any = new GenomeAPI();
+  public api: any = new GenomeAPI();
   private tracks: any[] = [];
   private overlays: any[] = [];
   private tracksLoading: number = 0;
@@ -103,6 +104,10 @@ export default class AppModel extends EventCreator {
       sender: source,
       error: errorMsg,
     });
+  }
+
+  public trackMixPanel = (msg: string, details: any = {}) => {
+    this.notifyListeners(AppEvent.TrackMixPanel, { msg, details });
   }
 
   public indexOfTrack = (trackViewGuid: any) => {
