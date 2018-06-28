@@ -204,7 +204,7 @@ class Util {
       }
     }
     if (filter.get(FILTER_TYPES.TYPE)) {
-      // only apply this filter to the top level query if it is a genome query
+      //  only apply this filter to the top level query if it is a genome query
       if (query.type === QUERY_TYPE_GENOME) {
         const types = filter.get(FILTER_TYPES.TYPE).toArray();
         if (types.length === 1) {
@@ -216,23 +216,27 @@ class Util {
     }
     if (filter.get(FILTER_TYPES.VARIANT_TAG)) {
       // only apply this filter to the top level query if it is a genome query
-      if (query.type === QUERY_TYPE_GENOME) {
-
+      const tags = filter.get(FILTER_TYPES.VARIANT_TAG).toArray();
+      if (tags.length === 1) {
+        query.filters['info.variant_tags'] = tags[0];
+      } else {
+        query.filters['info.variant_tags'] = { "$in": tags };
       }
     }
+    /*
     if (filter.get(FILTER_TYPES.P_VALUE)) {
       // if a p-value filter exists, remove it and add this one
       if (query.toEdges[0].filters['info.p-value']) {
-
+        // TODO
       }
-      // create a new one
     }
     if (filter.get(FILTER_TYPES.ALLELE_FREQUENCY)) {
       // only apply this filter to the top level query if it is a genome query
       if (query.type === QUERY_TYPE_GENOME) {
-
+        // TODO
       }
     }
+    */
     return query;
   }
 

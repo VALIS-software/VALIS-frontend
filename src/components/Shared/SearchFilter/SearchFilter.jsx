@@ -11,8 +11,8 @@ const rootFilterOptions = [
     { title: 'By Dataset', type: FILTER_TYPES.DATASET },
     { title: 'By Type', type: FILTER_TYPES.TYPE },
     { title: 'By Variant Effect', type: FILTER_TYPES.VARIANT_TAG },
-    { title: 'By Allele Frequency', type: FILTER_TYPES.ALLELE_FREQUENCY },
-    { title: 'By p-value', type: FILTER_TYPES.P_VALUE }
+    // { title: 'By Allele Frequency', type: FILTER_TYPES.ALLELE_FREQUENCY },
+    // { title: 'By p-value', type: FILTER_TYPES.P_VALUE }
 ];
 
 const ALLELE_FREQUENCY_BUCKETS = [

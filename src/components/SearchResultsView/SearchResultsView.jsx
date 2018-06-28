@@ -202,7 +202,9 @@ class SearchResultsView extends React.Component {
   render() {
     if (this.state.needsRefresh) {
       this.runQuery();
-      return (<div id="search-results-view" className="search-results-view" />);
+      return (<div id="search-results-view" className="navigation-controller-loading">
+        <CircularProgress size={80} thickness={5} />
+      </div>);
     }
     const loadMoreRows = this.state.isLoading ? () => { return null; } : this.loadMore
 
