@@ -135,7 +135,7 @@ export default (env = defaultEnv) => ({
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".json", ".jsx"]
   },
-  optimization: {
+  optimization: env.dev ? {} : {
     minimize: true,
     minimizer: [new UglifyJsPlugin({
       include: /\.(j|t)sx?$/,
