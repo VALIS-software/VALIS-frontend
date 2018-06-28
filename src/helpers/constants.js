@@ -107,6 +107,15 @@ const DATA_SOURCES = [
   DATA_SOURCE_ENSEMBL,
   DATA_SOURCE_GTEX
 ];
+
+const FILTER_TYPES = {
+  DATASET: 'dataset',
+  TYPE: 'type',
+  VARIANT_TAG: 'variant_tag',
+  ALLELE_FREQUENCY: 'allele_frequency',
+  P_VALUE: 'p_value',
+};
+
 export {
   GENOME_LENGTH,
   LOCAL_API_URL,
@@ -141,6 +150,7 @@ export {
   DATA_SOURCE_ENSEMBL,
   DATA_SOURCE_GTEX,
   DATA_SOURCES,
+  FILTER_TYPES,
   ENTITY_TYPE,
   TRACK_TYPE_SEQUENCE,
   TRACK_TYPE_FUNCTIONAL,

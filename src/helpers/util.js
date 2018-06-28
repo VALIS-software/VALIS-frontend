@@ -3,7 +3,8 @@ import { Igloo } from "../../lib/igloojs/igloo.js";
 const d3 = require("d3");
 const _ = require("underscore");
 
-import { CHROMOSOME_START_BASE_PAIRS, CHROMOSOME_SIZES, ENTITY_TYPE, ASSOCIATION_TYPE } from './constants.js';
+import { FILTER_TYPES, CHROMOSOME_START_BASE_PAIRS, CHROMOSOME_SIZES, ENTITY_TYPE, ASSOCIATION_TYPE } from './constants.js';
+import { QUERY_TYPE_GENOME } from '../models/query.js';
 
 const formatSi = d3.format(".6s");
 
@@ -193,7 +194,42 @@ class Util {
   }
 
   static applyFilterToQuery(query, filter) {
-    // TODO: generate and query!
+    if (!filter || !query) return query;
+    if (filter.get(FILTER_TYPES.DATASET)) {
+      console.log('has dataset filter', filter.get(FILTER_TYPES.DATASET));
+    }
+    if (filter.get(FILTER_TYPES.TYPE)) {
+      // only apply this filter to the top level query if it is a genome query
+      if (query.type === QUERY_TYPE_GENOME) {
+        const types = filter.get(FILTER_TYPES.TYPE).toArray();
+        if (types.length === 1) {
+          query.filters['type'] = types[0];
+        } else {
+          // construct an OR query:
+        }
+
+
+      }
+    }
+    if (filter.get(FILTER_TYPES.VARIANT_TAG)) {
+      // only apply this filter to the top level query if it is a genome query
+      if (query.type === QUERY_TYPE_GENOME) {
+
+      }
+    }
+    if (filter.get(FILTER_TYPES.P_VALUE)) {
+      // if a p-value filter exists, remove it and add this one
+      if (query.toEdges[0].filters['info.p-value']) {
+
+      }
+      // create a new one
+    }
+    if (filter.get(FILTER_TYPES.ALLELE_FREQUENCY)) {
+      // only apply this filter to the top level query if it is a genome query
+      if (query.type === QUERY_TYPE_GENOME) {
+
+      }
+    }
     return query;
   }
 

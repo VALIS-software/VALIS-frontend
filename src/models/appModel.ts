@@ -65,6 +65,7 @@ export default class AppModel extends EventCreator {
         height: 0.1,
         basePairOffset: 0,
         dataTrack: null,
+        query: query,
         color: Math.sin(this.tracks.length * 0.1) / 2.0 + 0.5,
         annotationTrack: model
       };
@@ -122,7 +123,25 @@ export default class AppModel extends EventCreator {
   };
 
   public setTrackFilter = (trackViewGuid: any, filter: any) => {
-    // TODO: implement this!
+    // const index = this.indexOfTrack(trackViewGuid);
+    // this.api.getAnnotation('', Util.applyFilterToQuery(this.tracks[index].query, filter)).then((model: any) => {
+    //   // remove listener from old track:
+    //   this.tracks[index].annotationTrack.removeListener(this.loadingStarted);
+    //   this.tracks[index].annotationTrack = model;
+    //   model.addListener(this.loadingStarted, TRACK_EVENT_LOADING);
+    // }, (err: object) => {
+    //   this.notifyListeners(AppEvent.Failure, err);
+    // });
+  }
+
+  public getTrackFilter = (trackViewGuid: any) => {
+    const index = this.indexOfTrack(trackViewGuid);
+    return this.tracks[index].filter;
+  }
+
+  public getTrackQuery = (trackViewGuid: any) => {
+    const index = this.indexOfTrack(trackViewGuid);
+    return this.tracks[index].query;
   }
 
   public setTrackColor = (trackViewGuid: any, color: any) => {

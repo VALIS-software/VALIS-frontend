@@ -15,7 +15,7 @@ import "./SearchResultsView.scss";
 import 'react-virtualized/styles.css'
 import { ENTITY_TYPE } from "../../helpers/constants";
 
-const FETCH_SIZE = 100;
+const FETCH_SIZE = 30;
 
 class SearchResultsView extends React.Component {
   constructor(props) {
@@ -44,6 +44,7 @@ class SearchResultsView extends React.Component {
   }
 
   runQuery = () => {
+    if (!this.state.query) return;
     const cursor = this.state.cursor;
     const filteredQuery = Util.applyFilterToQuery(this.state.query, this.state.filters);
     this.api.getQueryResults(filteredQuery, true, cursor, cursor + FETCH_SIZE).then(results => {
@@ -86,13 +87,18 @@ class SearchResultsView extends React.Component {
   }
 
   updateFilters = (filters) => {
-    // TODO: if this search result is a track, then update the filters
     this.setState({
       filters: new Map(filters),
       showFilters: false,
+      cursor: 0,
+      results: [],
+      needsRefresh: true,
     });
-    // re-run the query:
-    this.runQuery();
+
+    // update the track:
+    if (this.props.trackGuid) {
+      this.props.appModel.setTrackFilter(this.props.trackGuid, this.state.filters);
+    }
   }
 
   resultSelected(result) {
@@ -174,9 +180,21 @@ class SearchResultsView extends React.Component {
     if (!prevState) {
       prevState = {};
     }
-    prevState.needsRefresh = prevState.query !== nextProps.query;
+    // if there is a trackViewGuid, load filters and query from the track view!
+    let query = null;
+    let filter = null;
+    if (nextProps.trackGuid) {
+      query = nextProps.appModel.getTrackQuery(nextProps.trackGuid);
+      filter = nextProps.appModel.getTrackFilter(nextProps.trackGuid);
+    } else {
+      query = nextProps.query;
+    }
+
+    prevState.needsRefresh = prevState.query !== query;
+    prevState.results = prevState.needsRefresh ? [] : prevState.results;
     prevState.cursor = prevState.needsRefresh ? 0 : prevState.cursor;
-    prevState.query = nextProps.query;
+    prevState.query = query;
+    prevState.filter = filter;
     prevState.appModel = nextProps.appModel;
     return prevState;
   }
@@ -213,13 +231,13 @@ class SearchResultsView extends React.Component {
         >
           {({ onRowsRendered, registerChild }) => (
             <List
-              query={JSON.stringify(this.state.query)}
               className="search-results-list"
               ref={registerChild}
               height={this.state.height - 48}
               rowCount={rowCount}
               rowHeight={120}
               width={300}
+              query={this.state.query}
               onRowsRendered={onRowsRendered}
               rowRenderer={this.rowRenderer}
             />
@@ -231,11 +249,11 @@ class SearchResultsView extends React.Component {
 }
 
 SearchResultsView.propTypes = {
-  //trackGuid: PropTypes.string.optional,
+  trackGuid: PropTypes.string,
   appModel: PropTypes.object,
   viewModel: PropTypes.object,
   query: PropTypes.object,
-  text: PropTypes.string
+  text: PropTypes.string,
 };
 
 export default SearchResultsView;

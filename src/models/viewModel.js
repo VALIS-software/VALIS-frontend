@@ -15,8 +15,8 @@ const VIEW_EVENT_PUSH_VIEW = 'PUSH_VIEW';
 const VIEW_EVENT_POP_VIEW = 'POP_VIEW';
 const VIEW_EVENT_CLOSE_VIEW = 'CLOSE_VIEW';
 const VIEW_EVENT_DISPLAY_ENTITY_DETAILS = 'DISPLAY_ENTITY_DETAILS';
-
-export { 
+const VIEW_EVENT_DISPLAY_TRACK_RESULTS = 'DISPLAY_TRACK_RESULTS';
+export {
   VIEW_EVENT_STATE_CHANGED,
   VIEW_EVENT_CLICK,
   VIEW_EVENT_SELECTION,
@@ -27,6 +27,7 @@ export {
   VIEW_EVENT_POP_VIEW,
   VIEW_EVENT_CLOSE_VIEW,
   VIEW_EVENT_DISPLAY_ENTITY_DETAILS,
+  VIEW_EVENT_DISPLAY_TRACK_RESULTS,
 };
 
 class ViewModel extends EventCreator {
@@ -130,8 +131,8 @@ class ViewModel extends EventCreator {
     this.notifyListeners(VIEW_EVENT_CLOSE_VIEW);
   }
 
-  editTrackViewSettings(viewGuid) {
-    this.notifyListeners(VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS, viewGuid);
+  displayTrackSearchResults(viewGuid) {
+    this.notifyListeners(VIEW_EVENT_DISPLAY_TRACK_RESULTS, viewGuid);
   }
 
   clickTrackElement(element) {

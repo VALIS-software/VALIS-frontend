@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
-import { DATA_SOURCES, VARIANT_TAGS } from '../../../helpers/constants.js';
+import { DATA_SOURCES, VARIANT_TAGS, FILTER_TYPES } from '../../../helpers/constants.js';
 import QueryBuilder from '../../../models/query.js';
 
 const { Map, Set } = require('immutable');
@@ -8,11 +8,11 @@ import './SearchFilter.scss';
 
 
 const rootFilterOptions = [
-    { title: 'By Dataset', type: 'dataset' },
-    { title: 'By Type', type: 'type' },
-    { title: 'By Variant Effect', type: 'variant_tag' },
-    { title: 'By Allele Frequency', type: 'allele_frequency' },
-    { title: 'By p-value', type: 'p_value' }
+    { title: 'By Dataset', type: FILTER_TYPES.DATASET },
+    { title: 'By Type', type: FILTER_TYPES.TYPE },
+    { title: 'By Variant Effect', type: FILTER_TYPES.VARIANT_TAG },
+    { title: 'By Allele Frequency', type: FILTER_TYPES.ALLELE_FREQUENCY },
+    { title: 'By p-value', type: FILTER_TYPES.P_VALUE }
 ];
 
 const ALLELE_FREQUENCY_BUCKETS = [
@@ -89,19 +89,19 @@ class SearchFilter extends React.Component {
         else {
 
             let promise = null;
-            if (type === 'dataset') {
+            if (type === FILTER_TYPES.DATASET) {
                 promise = new Promise(((resolve, reject) => {
                     resolve(DATA_SOURCES);
                 }));
-            } else if (type === 'variant_tag') {
+            } else if (type === FILTER_TYPES.VARIANT_TAG) {
                 promise = new Promise(((resolve, reject) => {
                     resolve(VARIANT_TAGS);
                 }));
-            } else if (type === 'allele_frequency') {
+            } else if (type === FILTER_TYPES.ALLELE_FREQUENCY) {
                 promise = new Promise(((resolve, reject) => {
                     resolve(ALLELE_FREQUENCY_BUCKETS);
                 }));
-            } else if (type === 'p_value') {
+            } else if (type === FILTER_TYPES.P_VALUE) {
                 promise = new Promise(((resolve, reject) => {
                     resolve(P_VALUE_BUCKETS);
                 }));
