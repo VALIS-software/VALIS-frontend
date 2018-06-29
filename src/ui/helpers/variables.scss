@@ -1,0 +1,32 @@
+
+// Track headers
+$track-header-width: 200px;
+$axis-width: 30px;
+$margin-width: 8px;
+$header-content-width: calc(100% - #{$axis-width} - #{$margin-width});
+$white-color: #e8e8e8;
+$dark-color: darken(#242321, 5%);
+
+
+// Browser
+$padding-right: 16px;
+$browser-width: calc(100% - #{$track-header-width} - #{$padding-right});
+$browser-height: 100%;
+$axis-height: 32px;
+$bg-color: #fff;
+$link-color: $dark-color;
+
+$sidebar-header-height: 64px;
+
+// Colors
+$valis-blue-light: #6BBBE6;
+$valis-blue-medium: #55ACDB;
+$valis-blue-dark: #446577;
+$valis-grey-light: #EEF3F5;
+$valis-grey-dark: darken($valis-grey-light, 20%);
+$valis-white: #ffffff;
+
+// Fonts
+@import url('https://fonts.googleapis.com/css?family=Open+Sans');
+$font-stack: 'Open Sans', sans-serif;
+

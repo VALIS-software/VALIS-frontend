@@ -1,0 +1,9 @@
+.token-box {
+	display: flex;
+	list-style: none;
+	.token {
+		cursor: pointer;
+		margin: 2px 2px 2px 0px;
+		padding-top: 8px;
+	}
+}

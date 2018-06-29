@@ -19,10 +19,11 @@
   "homepage": "https://github.com/haxiomic/VALIS-frontend#readme",
   "devDependencies": {
     "@types/material-ui": "0.20.x",
+    "@types/mixpanel": "^2.14.0",
     "@types/node": "9.6.x",
+    "@types/prop-types": "15.5.x",
     "@types/react": "16.1.x",
     "@types/react-dom": "16.0.x",
-    "@types/prop-types": "15.5.x",
     "css-loader": "0.28.x",
     "file-loader": "1.1.x",
     "node-sass": "4.9.x",
@@ -40,8 +41,12 @@
     "material-ui": "0.20.x",
     "mixpanel-browser": "2.22.x",
     "prop-types": "15.6.x",
-    "react": "16.2.x",
-    "react-dom": "16.2.x",
-    "react-virtualized": "9.20.x"
+    "react": "16.3.x",
+    "react-dom": "16.3.x",
+    "react-virtualized": "9.20.x",
+    "@fortawesome/fontawesome": "^1.1.8",
+    "@fortawesome/fontawesome-free-regular": "^5.0.13",
+    "@fortawesome/fontawesome-free-solid": "^5.0.13",
+    "@fortawesome/react-fontawesome": "0.0.19"
   }
 }

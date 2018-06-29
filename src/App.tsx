@@ -4,15 +4,29 @@ import Animator from "./animation/Animator";
 import AnnotationTileStore, { MacroAnnotationTileStore } from "./model/data-store/AnnotationTileStore";
 import SequenceTileStore from "./model/data-store/SequenceTileStore";
 import SharedTileStore from "./model/data-store/SharedTileStores";
-import Header from "./ui/components/header/Header";
+import { TrackModel } from "./model/TrackModel";
 import { AppCanvas } from "./ui/core/AppCanvas";
 import Object2D from "./ui/core/Object2D";
 import TrackViewer from "./ui/TrackViewer";
-import { TrackModel } from "./model/TrackModel";
+import Header from "./ui/components/Header/Header";
+import View from "./ui/View";
+// models
+import AppModel, { AppEvent } from "./ui/models/AppModel";
+import ViewModel, { VIEW_EVENT_POP_VIEW, VIEW_EVENT_PUSH_VIEW, VIEW_EVENT_CLOSE_VIEW, VIEW_EVENT_DISPLAY_ENTITY_DETAILS } from "./ui/models/viewModel";
+import NavigationController from "./ui/components/NavigationController/NavigationController";
+import { MuiThemeProvider } from "material-ui/styles";
+import BasicTheme from "./ui/themes/BasicTheme";
+import { EntityDetails } from "./ui/components/EntityDetails/EntityDetails";
 
-interface Props {}
+// telemetry
+// add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
+(window as any).mixpanel = require('mixpanel-browser')
 
-interface State {
+type Props = {}
+
+type State = {
+	views: Array<View>,
+
 	headerHeight: number;
 	viewerWidth: number;
 	viewerHeight: number;
@@ -21,16 +35,26 @@ interface State {
 }
 
 export class App extends React.Component<Props, State> {
-
 	static readonly canvasPixelRatio = window.devicePixelRatio || 1;
 
 	readonly headerHeight: number = 50;
 	readonly headerMargin: number = 30;
+
+	protected appModel: AppModel;
+	protected viewModel: ViewModel;
 	protected appCanvas: AppCanvas;
 
 	constructor(props: Props) {
 		super(props);
 
+		// initialize telemetry
+		mixpanel.init("641d46068eb631cfc8ba590288fe4679");
+
+		// initialize app model
+		this.appModel = new AppModel();
+		this.viewModel = new ViewModel();
+
+		// initialize UI
 		let trackViewer = new TrackViewer();
 
 		// @! temporary create tile stores
@@ -68,6 +92,7 @@ export class App extends React.Component<Props, State> {
 		}
 		
 		this.state = {
+			views: [],
 			headerHeight: this.headerHeight,
 			viewerWidth: window.innerWidth,
 			viewerHeight: this.canvasHeight(),
@@ -76,29 +101,51 @@ export class App extends React.Component<Props, State> {
 	}
 
 	componentDidMount() {
-		window.addEventListener('resize', this.onResize);
 		this.startFrameLoop();
+
+		// add event listeners
+		window.addEventListener('resize', this.onResize);
+
+		// @! refactor
+		this.appModel.addListener(this.reportFailure, AppEvent.Failure);
+		// this.appModel.addListener(this.updateLoadingState, AppEvent.LoadingStateChanged);
+
+		// this.viewModel.addListener(this.clickTrackElement, VIEW_EVENT_TRACK_ELEMENT_CLICKED);
+		// this.viewModel.addListener(this.showTrackSettings, VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS);
+
+		this.viewModel.addListener(this.pushView, VIEW_EVENT_PUSH_VIEW);
+		this.viewModel.addListener(this.popView, VIEW_EVENT_POP_VIEW);
+		this.viewModel.addListener(this.closeView, VIEW_EVENT_CLOSE_VIEW);
+		this.viewModel.addListener(this.displayDetails, VIEW_EVENT_DISPLAY_ENTITY_DETAILS);
 	}
 
 	componentWillUnmount() {
-		window.removeEventListener('resize', this.onResize);
 		this.stopFrameLoop();
+
+		// remove event listeners
+		window.removeEventListener('resize', this.onResize);
 	}
 
 	componentDidUpdate(prevProps: Props, prevState: State, snapshot: any) {
 	}
 
 	render() {
-		return (<div>
-			<Header marginBottom={this.headerMargin} height={this.headerHeight}/>
-			<AppCanvas
-				ref={(v) => this.appCanvas = v}
-				width={this.state.viewerWidth}
-				height={this.state.viewerHeight} 
-				content={this.state.canvasContent}
-				pixelRatio={App.canvasPixelRatio}
-			/>
-		</div>)
+		// @! refactor
+		return (
+			<MuiThemeProvider muiTheme={BasicTheme}>
+				<div>
+					<Header viewModel={this.viewModel} model={this.appModel} />
+					<AppCanvas
+						ref={(v) => this.appCanvas = v}
+						width={this.state.viewerWidth}
+						height={this.state.viewerHeight} 
+						content={this.state.canvasContent}
+						pixelRatio={App.canvasPixelRatio}
+					/>
+					<NavigationController viewModel={this.viewModel} views={this.state.views} />
+				</div>
+			</MuiThemeProvider>
+		);
 	}
 
 	private _frameLoopHandle: number;
@@ -132,11 +179,40 @@ export class App extends React.Component<Props, State> {
 		return window.innerHeight - this.headerHeight - this.headerMargin;
 	}
 
+	// event handling
+
 	protected onResize = () => {
 		this.setState({
 			viewerWidth: window.innerWidth,
 			viewerHeight: this.canvasHeight(),
 		});
+	}
+
+	protected pushView = (e: {data: View}) => {
+		this.setState({ views: this.state.views.concat([e.data]) });
+	}
+
+	protected popView = () => {
+		this.setState({ views: this.state.views.slice(0, -1) });
+	}
+
+	protected closeView = () => {
+		this.setState({ views: [] });
+	}
+
+	protected displayDetails = (event: {data: any}) => {
+		console.warn('@! refactor displayEntityDetails');
+		if (event.data != null) {
+			this.viewModel.pushView(
+				'',
+				event.data.id,
+				<EntityDetails entity={event.data} appModel={this.appModel} viewModel={this.viewModel} />
+			);
+		}
+	}
+
+	protected reportFailure = (evt: any) => {
+		console.error('@! refactor reportFailure', evt);
 	}
 
 }
