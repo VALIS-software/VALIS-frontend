@@ -57,7 +57,7 @@ class AnnotationTrack extends Track {
         range.end,
         samplingRate,
         trackHeightPx,
-        this.query
+        this.query,
       ).then(result => {
         return { range: range, data: result };
       }, (err) => {
