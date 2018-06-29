@@ -1,3 +1,17 @@
+- Integrate latest UI
+    - Get network requests working properly
+    - Fill out viewModel.js and appModel.ts functionality
+    - There's not a clear distinction of responsibilities between view and app models
+    - Solve all @! refactor
+    - Remove console.debug
+    - Why are lots of classes in eval??
+    - Remove as much as possible from util.js
+    - Reorganise directories:
+        - models shouldn't be in /ui
+        - helpers shouldn't be in /ui
+    - EventCreator -> node.js events
+
+
 - Wrap up dev colors code
     - Maybe make the color dev trick into a separate dev/utils module
 
