@@ -79,10 +79,11 @@ export class Renderer {
 			if (node instanceof Renderable && node.render === true) {
 				let nodeInternal = node as any as RenderableInternal;
 
+				// @! for future
 				// render any dependent render passes
-				for (let subpass of node.dependentRenderPasses) {
-					this.render(subpass);
-				}
+				// for (let subpass of node.dependentRenderPasses) {
+					// this.render(subpass);
+				// }
 
 				if (node.mask != null) {
 					// we can't used indexOf because masks may contain data from previous frame that extends beyond existingMaskIndex

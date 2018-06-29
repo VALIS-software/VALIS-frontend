@@ -41,18 +41,21 @@ export class Renderable<T extends Node<any>> extends Node<T> {
 	 */
 	visible: boolean = true;
 	/**
-	 * when true, object is rendered in the transparency pass, this has a performance cost because z ordering has to take precedence over state-change-minimization ordering
-	 * when undefined the renderer assumes true if opacity < 1
+	 * When true, object is rendered in the transparency pass, this has a performance cost because z ordering has to take precedence over state-change-minimization ordering.
+	 * When undefined the renderer assumes true if opacity < 1.
 	 */
 	transparent?: boolean;
 	/**
 	 * Blending preset to use when drawing (defaults to NONE or PREMULTIPLIED_ALPHA when opacity < 1)
 	 */
 	blendMode?: BlendMode;
-
-	dependentRenderPasses = new Array<RenderPass>();
-
+	/**
+	 * Use another renderable as a clipping mask for this renderable. This is done by rendering the mask renderable to the stencil buffer and then stencil testing against it
+	 */
 	mask: Renderable<any> = null;
+	
+	// for future use
+	// dependentRenderPasses = new Array<RenderPass>();
 
 	protected gpuProgram: GPUProgram = null;
 	protected gpuVertexState: GPUVertexState = null;
