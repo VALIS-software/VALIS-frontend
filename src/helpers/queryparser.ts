@@ -1,11 +1,18 @@
 const _ = require("underscore");
 
 type TokenType = string;
-type TokenParseRule = RegExp;
+type TerminalRule = RegExp;
 type Rule = TokenType | Array<TokenType>;
-type Grammar = Map<Rule, Array<Rule> | Rule>;
-type Terminals = Map<Rule, TokenParseRule>;
-
+type Expansions = Map<Rule, Rule>;
+type Terminals = Map<Rule, TerminalRule>;
+type SuggestionResultPromise = Promise<Array<string>>;
+type SuggestionResultProvider = (text: string, numResults: number) => SuggestionResultPromise
+type Suggestion = {
+    path: ParsePath,
+    suggestions: Array<SuggestionResultPromise>,
+    query: any,
+    isQuoted: boolean
+};
 
 const EOF: TokenType = 'EOF';
 const ANY: TokenType = 'ANY';
@@ -16,22 +23,27 @@ const TRIM = (x: string): string => {
     return x.replace(/(^[ '\^\$\*#&]+)|([ '\^\$\*#&]+$)/g, '');
 }
 
+const REGEX_TO_STRING = (x: RegExp): string => {
+    const str = x.toString();
+    return str.slice(1, str.length - 2);
+}
+
 const DEFAULT_GRAMMAR: any = {
-    tokens: {
-        'TRAIT': '"(.+?)"',
-        'GENE': '"(.+?)"',
-        'INFLUENCING': 'influencing',
-        'OF': 'of',
-        'VARIANTS': 'variants',
-        'GENE_T': 'gene',
-        'TRAIT_T': 'trait',
-        'NEAR': 'near',
-        'IN': 'in',
-        'PROMOTER': 'promoters',
-        'ENHANCER': 'enhancers',
-        'CELL_TYPE': '"(.+?)"'
+    terminals: {
+        'TRAIT': /"(.+?)"/g,
+        'GENE': /"(.+?)"/g,
+        'INFLUENCING': /influencing/g,
+        'OF': /of/g,
+        'VARIANTS': /variants/g,
+        'GENE_T': /gene/g,
+        'TRAIT_T': /trait/g,
+        'NEAR': /near/g,
+        'IN': /in/g,
+        'PROMOTER': /promoters/g,
+        'ENHANCER': /enhancers/g,
+        'CELL_TYPE': /"(.+?)"/g
     },
-    grammar: {
+    expansions: {
         'VARIANT_QUERY': [ALL, 'VARIANTS', 'INFLUENCING', 'TRAIT', EOF],
         'GENE_QUERY': [ALL, 'GENE_T', 'GENE', EOF],
         'ANNOTATION_TYPE': [ANY, 'PROMOTER', 'ENHANCER'],
@@ -41,8 +53,6 @@ const DEFAULT_GRAMMAR: any = {
         'ROOT': [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'TRAIT_QUERY', 'ANNOTATION_QUERY']
     }
 };
-
-
 
 export class ParsedToken {
     public rule: Rule;
@@ -69,18 +79,13 @@ export class ParsePath {
 
 export class QueryParser {
     // grammar elements are expansions 
-    private grammar: Grammar;
-
-    // tokens are terminal rules (Regular expressions)
-    private terminals: Map<Rule, TokenParseRule>;
-    // private suggestions: Map<Rule, Array<string>>;
-    constructor(grammar: Grammar, terminals: Terminals, suggestions: Map<string, any>) {
+    private grammar: Expansions;
+    private terminals: Map<Rule, TerminalRule>;
+    private suggestions: Map<Rule, SuggestionResultProvider>;
+    constructor(grammar: Expansions, terminals: Terminals, suggestions: Map<Rule, SuggestionResultProvider>) {
         this.grammar = grammar;
         this.terminals = terminals;
-        // this.suggestions = suggestions;
-        this.terminals.forEach((v: any, k: string) => {
-
-        })
+        this.suggestions = suggestions;
     }
 
     eat(soFar: string, rule: Rule): { parsed: string, rest: string } {
@@ -95,7 +100,7 @@ export class QueryParser {
         }
     }
 
-    parse(soFar: string, rule: Rule, path: Array<ParsedToken>): Array<ParsePath> {
+    parse(soFar: string, rule: Rule, path: Array<ParsedToken> = []): Array<ParsePath> {
         if (rule === EOF && soFar.length === 0) {
             const newPath = path.slice(0);
             newPath.push(new ParsedToken(EOF, ''));
@@ -110,7 +115,7 @@ export class QueryParser {
                 return [new ParsePath(rule, soFar, path.slice(0), false)]
             }
         } else if (this.grammar.get(rule)) {
-            // expand this rule
+            // expand this rule and return result
             const expandedRule: Rule = this.grammar.get(rule) as Rule;
             return this.parse(soFar, expandedRule, path.slice(0));
         } else if (rule[0] === ANY) {
@@ -150,4 +155,63 @@ export class QueryParser {
         }
         return [];
     }
+
+    buildSuggestionsFromParse(results: Array<ParsePath>, maxSuggestions = 15): Suggestion {
+        const maxParse: ParsePath = _.max(results, (x: ParsePath) => { x.path.length; })
+        const maxDepth: number = maxParse.path.length;
+        const finalSuggestions: Array<SuggestionResultPromise> = [];
+        let quoteSuggestion: boolean = false;
+        for (let i = 0; i < results.length; i++) {
+            const subPath: ParsePath = results[i];
+            let rule: Rule = subPath.rule;
+            let tokenText: string = subPath.value;
+            if (subPath.path.length === maxDepth) {
+                if (subPath.rule === EOF) {
+                    // ignore the EOF and keep giving suggestions for the previous token
+                    rule = subPath.path[subPath.path.length - 2].rule;
+                    //set the token text to the text with '"' characters removed
+                    const val: string = subPath.path[subPath.path.length - 2].value;
+                    tokenText = val.slice(1, val.length - 1);
+                }
+
+                if (this.suggestions.get(subPath.rule)) {
+                    tokenText = TRIM(tokenText).toLowerCase();
+                    quoteSuggestion = true;
+                    finalSuggestions.push(this.suggestions.get(subPath.rule)(tokenText, maxSuggestions / 2));
+                } else {
+                    quoteSuggestion = false;
+                    finalSuggestions.push(new Promise((resolve, reject) => {
+                        resolve([
+                            REGEX_TO_STRING(this.terminals.get(rule))
+                        ]);
+                    }));
+                }
+            }
+        }
+        let query: any = null;
+        if (maxParse.rule === EOF) {
+            query = {};
+        }
+        return {
+            path: maxParse,
+            suggestions: finalSuggestions,
+            query: query,
+            isQuoted: quoteSuggestion
+        }
+    }
+
+    getSuggestions(inputText: string, maxSuggestions: number = 15): Suggestion {
+        const results = this.parse(inputText, ROOT);
+        if (results.length == 0) return null;
+        return this.buildSuggestionsFromParse(results, maxSuggestions);
+    }
 }
+
+
+function buildQueryParser(): QueryParser {
+    const expansions = DEFAULT_GRAMMAR.expansions;
+    const terminals = DEFAULT_GRAMMAR.terminals;
+    return new QueryParser(expansions, terminals, null);
+}
+
+export default buildQueryParser;
