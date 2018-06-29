@@ -22,5 +22,26 @@
 	.float-right {
 		float: right;
 	}
+
+	.clearfix {
+		overflow: auto;
+	}
+
+	button {
+		&:focus {
+			outline:0;
+		}
+		border:none;
+		border-radius: 8px;
+		background-color: $valis-blue-light;
+		padding: 2px 16px 2px 16px;
+		margin: 14px 8px 8px 8px;
+		color: white;
+		font-size: 14px;
+		&:hover {
+			cursor: pointer;
+			background-color: darken($valis-blue-light, 15%);
+		}
+	}
 }
 

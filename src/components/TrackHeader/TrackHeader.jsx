@@ -19,7 +19,7 @@ class TrackHeader extends React.Component {
   }
 
   onClick = (evt) => {
-    this.props.viewModel.editTrackViewSettings(this.props.guid);
+    this.props.viewModel.displayTrackSearchResults(this.props.guid);
   }
 
   onDragStart = (evt) => {

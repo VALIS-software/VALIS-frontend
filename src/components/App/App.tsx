@@ -13,6 +13,7 @@ import EntityDetails from "../EntityDetails/EntityDetails";
 import TrackViewSettings from "../TrackViewSettings/TrackViewSettings.jsx";
 import MultiTrackViewer from "../MultiTrackViewer/MultiTrackViewer";
 import NavigationController from "../NavigationController/NavigationController.jsx";
+import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
 import SNPDetails from '../SNPDetails/SNPDetails.jsx';
 import GWASDetails from '../GWASDetails/GWASDetails.jsx';
 import GeneDetails from '../GeneDetails/GeneDetails.jsx';
@@ -26,7 +27,7 @@ import AppModel, { AppEvent } from "../../models/appModel";
 import ViewModel, {
   VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS,
   VIEW_EVENT_TRACK_ELEMENT_CLICKED,
-  // VIEW_EVENT_DATA_SET_SELECTED,
+  VIEW_EVENT_DISPLAY_TRACK_RESULTS,
   VIEW_EVENT_PUSH_VIEW,
   VIEW_EVENT_POP_VIEW,
   VIEW_EVENT_CLOSE_VIEW,
@@ -57,6 +58,15 @@ class App extends React.PureComponent<any, any> {
       }
     }
   }
+
+  displayTrackSearchResults = (event: any) => {
+    if (event.data !== null) {
+      const trackGuid: string = event.data;
+      const view = (<SearchResultsView trackGuid={trackGuid} viewModel={this.viewModel} appModel={this.appModel} />);
+      this.viewModel.pushView('Search Results', trackGuid, view);
+    }
+  }
+
 
   displayEntityDetails = (event: any) => {
     if (event.data !== null) {
@@ -169,6 +179,7 @@ class App extends React.PureComponent<any, any> {
     this.appModel.addListener(this.trackMixPanel, AppEvent.TrackMixPanel)
     this.viewModel.addListener(this.clickTrackElement, VIEW_EVENT_TRACK_ELEMENT_CLICKED);
     this.viewModel.addListener(this.showTrackSettings, VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS);
+    this.viewModel.addListener(this.displayTrackSearchResults, VIEW_EVENT_DISPLAY_TRACK_RESULTS);
 
     // this.viewModel.addListener(this.dataSetSelected, VIEW_EVENT_DATA_SET_SELECTED); //! method doesn't exist
     this.viewModel.addListener(this.popView, VIEW_EVENT_POP_VIEW);
