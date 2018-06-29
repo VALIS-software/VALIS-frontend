@@ -27,7 +27,6 @@ export class AnnotationTileStore extends TileStore<TilePayload, void> {
     }
 
     protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
-        console.log('Request annotations for ', tile.lodLevel, tile.lodX, tile.lodSpan, tile.x, tile.span);
         return SiriusApi.loadAnnotations(this.sourceId, this.macro, tile.x, tile.span).then((flatFeatures) => {
             // convert flat list of features into a nested structure which is easier to work with for rendering
             let payload: TilePayload = new Array();
