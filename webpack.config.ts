@@ -6,7 +6,6 @@ import { HotModuleReplacementPlugin, DefinePlugin } from "webpack";
 import * as MiniCssExtractPlugin from "mini-css-extract-plugin";
 const WebpackGoogleCloudStoragePlugin = require("webpack-google-cloud-storage-plugin");
 const ZipPlugin = require("zip-webpack-plugin");
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 const defaultEnv = {
   dev: false,
@@ -134,11 +133,5 @@ export default (env = defaultEnv) => ({
   devtool: env.dev ? "cheap-module-eval-source-map" : "cheap-module-source-map",
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".json", ".jsx"]
-  },
-  optimization: {
-    minimize: true,
-    minimizer: [new UglifyJsPlugin({
-      include: /\.(j|t)sx?$/,
-    })]
   }
 });
