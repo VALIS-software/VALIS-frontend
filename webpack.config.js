@@ -1,6 +1,7 @@
 const path = require('path');
+const DefinePlugin = require("webpack").DefinePlugin;
 
-module.exports = {
+module.exports = (env) => ({
 	context: path.resolve(__dirname, "src"),
 	entry: "./index.tsx",
 
@@ -20,8 +21,9 @@ module.exports = {
 
 	module: {
 		rules: [
+			// enable importing scss files (and translate to CSS)
 			{
-				test: /\.scss$/,
+				test: /\.(scss|css)$/,
 				use: [{
 					loader: "style-loader" // creates style nodes from JS strings
 				}, {
@@ -63,6 +65,10 @@ module.exports = {
 		]
 	},
 
+	plugins: [
+		new DefinePlugin({ "process.env": JSON.stringify(env) })
+	],
+
 	// When importing a module whose path matches one of the following, just
 	// assume a corresponding global variable exists and use that instead.
 	// This is important because it allows us to avoid bundling all of our
@@ -71,4 +77,4 @@ module.exports = {
 		"react": "React",
 		"react-dom": "ReactDOM"
 	},
-};
+});
