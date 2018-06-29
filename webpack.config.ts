@@ -15,7 +15,7 @@ const defaultEnv = {
 };
 
 export default (env = defaultEnv) => ({
-  mode: env.production ? "production" : "development",
+  mode: (env.production || env.deploy) ? "production" : "development",
   entry: [
     ...(env.dev
       ? [
