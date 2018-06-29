@@ -6,9 +6,9 @@
   "scripts": {
     "dev": "webpack-dev-server --env.dev",
     "dev-remote": "webpack-dev-server --env.dev --env.API_URL=http://35.185.230.75",
-    "production": "webpack -p --env.production",
-    "pack": "webpack --display-error-details",
-    "deploy": "webpack --display-error-details --env.deploy",
+    "production": "webpack --env.production",
+    "pack": "webpack --env.production --display-error-details",
+    "deploy": "webpack --env.deploy --display-error-details",
     "test": "jest"
   },
   "keywords": [],
@@ -22,6 +22,7 @@
     "axios": "^0.17.1",
     "color-space": "^1.16.0",
     "d3": "^4.12.0",
+    "immutable": "^3.8.2",
     "interval-tree2": "^1.1.0",
     "lru-cache": "^4.1.1",
     "material-ui": "^0.20.0",
