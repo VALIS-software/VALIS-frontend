@@ -297,7 +297,7 @@ export class AppCanvas extends React.Component<Props, State> {
         }
         this.canvas.addEventListener('click', this.onClick);
         this.canvas.addEventListener('dblclick', this.onDoubleClick);
-        this.canvas.addEventListener('wheel', this.onWheel);
+        this.canvas.addEventListener('wheel', this.onWheel, { passive: false } as any);
     }
 
     protected removeInputListeners() {
@@ -316,7 +316,7 @@ export class AppCanvas extends React.Component<Props, State> {
         }
         this.canvas.removeEventListener('click', this.onClick);
         this.canvas.removeEventListener('dblclick', this.onDoubleClick);
-        this.canvas.removeEventListener('wheel', this.onWheel);
+        this.canvas.removeEventListener('wheel', this.onWheel, {passive: false} as any);
     }
 
     private dragData: {
