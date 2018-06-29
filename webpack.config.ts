@@ -133,5 +133,11 @@ export default (env = defaultEnv) => ({
   devtool: env.dev ? "cheap-module-eval-source-map" : "cheap-module-source-map",
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".json", ".jsx"]
+  },
+  node: {
+    console: true,
+    fs: 'empty',
+    net: 'empty',
+    tls: 'empty'
   }
 });

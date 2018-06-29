@@ -9,6 +9,7 @@ import DatasetSelector from '../DatasetSelector/DatasetSelector.jsx';
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
 import TokenBox from '../Shared/TokenBox/TokenBox.jsx';
 import UserProfileButton from '../Shared/UserProfileButton/UserProfileButton.jsx';
+import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton.jsx';
 
 import QueryBuilder, { QUERY_TYPE_INFO } from '../../models/query.js';
 import { DATA_SOURCE_GWAS, DATA_SOURCE_CLINVAR } from '../../helpers/constants.js';
@@ -35,6 +36,7 @@ class Header extends React.Component {
         </ToolbarGroup>
         <ToolbarGroup>
           <RaisedButton label="Browse Data" primary={true} onClick={this.addDatasetBrowser} />
+          <UserFeedBackButton userProfile={this.props.userProfile} />
           <div className="user-button">
             <UserProfileButton userProfile={this.props.userProfile} />
           </div>
