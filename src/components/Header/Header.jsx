@@ -26,10 +26,6 @@ class Header extends React.Component {
   }
 
   render() {
-    // const { userName, userPicture, logged } = this.state;
-    // // redirect to login page if not authorized and not in dev mode
-    // if (logged && !userName && window.location.hostname !== 'localhost')
-    //   window.location.href = '/login';
     return (<div className="header">
       <Toolbar>
         <ToolbarGroup firstChild={true}>
@@ -39,7 +35,9 @@ class Header extends React.Component {
         </ToolbarGroup>
         <ToolbarGroup>
           <RaisedButton label="Browse Data" primary={true} onClick={this.addDatasetBrowser} />
-          <UserProfileButton userProfile={this.props.userProfile} />
+          <div className="user-button">
+            <UserProfileButton userProfile={this.props.userProfile} />
+          </div>
         </ToolbarGroup>
       </Toolbar>
     </div>);
