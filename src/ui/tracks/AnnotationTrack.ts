@@ -174,7 +174,6 @@ export class AnnotationTrack extends Track<'annotation'> {
                             });
                         }
                         
-                        console.log('Creating MacroGeneInstances', instanceData);
                         let geneInstances = new MacroGeneInstances(instanceData);
                         geneInstances.y = 10;
                         geneInstances.z = 0.75;
@@ -339,7 +338,6 @@ class MacroGeneInstances extends InstancingBase<MacroGeneInstance> {
         context.extDrawInstanced(DrawMode.TRIANGLES, 6, 0, this.instanceCount);
     }
 
-    // @! not sure this works
     protected allocateGPUVertexState(
         device: GPUDevice,
         attributeLayout: AttributeLayout,
@@ -382,8 +380,10 @@ class MacroGeneInstances extends InstancingBase<MacroGeneInstance> {
             void main() {
                 vUv = position;
                 
+                // yz are absolute domPx units, x is in fractions of groupSize
                 vec3 pos = vec3(groupSize.x * instancePosition.x, instancePosition.yz);
                 size = vec2(groupSize.x * instanceSize.x, instanceSize.y);
+
                 color = instanceColor;
 
                 gl_Position = groupModel * vec4(vec3(position * size, 0.0) + pos, 1.0);
