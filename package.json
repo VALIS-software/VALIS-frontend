@@ -37,7 +37,6 @@
   },
   "dependencies": {
     "axios": "0.18.x",
-    "d3-format": "1.3.x",
     "material-ui": "0.20.x",
     "mixpanel-browser": "2.22.x",
     "prop-types": "15.6.x",

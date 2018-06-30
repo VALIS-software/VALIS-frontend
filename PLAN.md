@@ -12,6 +12,7 @@
         - models shouldn't be in /ui
         - helpers shouldn't be in /ui
     - EventCreator -> node.js events
+    - Rebuild TrackTooltip
 
 - We only use a teeeny bit of fontawesome, can we save bytes here?
 
