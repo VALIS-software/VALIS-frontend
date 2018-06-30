@@ -201,7 +201,6 @@ export class App extends React.Component<Props, State> {
 	}
 
 	protected displayDetails = (event: {data: any}) => {
-		console.warn('@! refactor displayEntityDetails');
 		if (event.data != null) {
 			this.viewModel.pushView(
 				'',
