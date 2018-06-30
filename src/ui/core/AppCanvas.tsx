@@ -350,10 +350,24 @@ export class AppCanvas extends React.Component<Props, State> {
         }
     }
 
+    private _lastActivePointers: AppCanvas['activePointers'];
+
     protected handlePointerChanges() {
+        for (let pointerId in this._lastActivePointers) {
+            let inactivePointer = this._lastActivePointers[pointerId];
+            if (this.activePointers[pointerId] === undefined) {
+                // pointer became inactive, fire 'pointerleave' on all nodes it was hitting 
+                this.executePointerInteraction(inactivePointer.lastHitNodes, 'pointerleave', inactivePointer.interactionData, (init) => new InteractionEvent(init, inactivePointer.sourceEvent));
+            }
+        }
+
+        // reset lastActivePointers and fill in from active pointers
+        this._lastActivePointers = {};
+
         // for all registered pointers:
         for (let pointerId in this.activePointers) {
-            let {interactionData, lastHitNodes, sourceEvent}  = this.activePointers[pointerId];
+            let activePointer = this.activePointers[pointerId];
+            let { interactionData, lastHitNodes, sourceEvent } = activePointer;
 
             let hitNodes = this.hitTestNodesForInteraction(
                 [
@@ -363,6 +377,8 @@ export class AppCanvas extends React.Component<Props, State> {
                 interactionData.worldX,
                 interactionData.worldY
             );
+
+            this._lastActivePointers[pointerId] = activePointer;
 
             // early exit
             if (hitNodes.length === 0 && lastHitNodes.size === 0) {
@@ -422,16 +438,22 @@ export class AppCanvas extends React.Component<Props, State> {
         interactionData.buttonChange = -1; // normalize between MouseEvent and PointerEvent
 
         // update pointer data in activePointers
-        if (this.activePointers[interactionData.pointerId] === undefined) {
-            this.activePointers[interactionData.pointerId] = {
-                interactionData: interactionData,
-                sourceEvent: e,
-                lastHitNodes: new Set()
+        if (e.target === this.canvas) {
+            // pointer moving directly over the canvas; ensure this pointer is considered an active pointer
+            if (this.activePointers[interactionData.pointerId] === undefined) {
+                this.activePointers[interactionData.pointerId] = {
+                    interactionData: interactionData,
+                    sourceEvent: e,
+                    lastHitNodes: new Set()
+                }
+            } else {
+                this.activePointers[interactionData.pointerId].interactionData = interactionData;
             }
         } else {
-            this.activePointers[interactionData.pointerId].interactionData = interactionData;
+            // pointer not directly over the canvas another DOM element may be overlaying
+            // this is no longer an active pointer
+            delete this.activePointers[interactionData.pointerId];
         }
-
 
         let dragData = this.dragData[interactionData.pointerId];
 
@@ -448,16 +470,17 @@ export class AppCanvas extends React.Component<Props, State> {
             });
         }
 
-        if (!defaultPrevented) {
-            let eventName: keyof InteractionEventMap = 'pointermove';
-            let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
-            this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => {
-                return new InteractionEvent(init, e);
-            });
+        if (e.target === this.canvas) {
+            if (!defaultPrevented) {
+                let eventName: keyof InteractionEventMap = 'pointermove';
+                let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
+                this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => {
+                    return new InteractionEvent(init, e);
+                });
+            } 
         }
 
         this.applyCursor();
-
         this.handlePointerChanges();
     }
 
