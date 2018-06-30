@@ -13,9 +13,7 @@ import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton.jsx';
 import './SNPDetails.scss';
 
 function FrequencyBarChart(props) {
-  // @! refactor, drop underscore here
-  // const sorted = _.sortBy(props.data, d => -d.value);
-  const sorted = props.data.slice().sort(d => -d.value); // @! need verifying
+  const sorted = props.data.slice().sort(((a, b) => b.value - a.value));
   const rows = sorted.map(row => {
     const p = Math.max(1.0, (100.0 * row.value));
     const widthStyle = {
