@@ -1,6 +1,11 @@
 - Integrate latest UI
+    - Missing bits of App.tsx - Error reporting
     - Fill out viewModel.js and appModel.ts functionality
+        - Connect up TrackViewSettings
+    - api.js
+    - Migrate constants to src/Constants.ts
     - There's not a clear distinction of responsibilities between view and app models
+        - should viewModel exist? What's its purpose Should it's behaviour be mingrated to some navigation controller?
     - Solve all @! refactor
     - Remove as much as possible from util.js
     - Reorganise directories:
