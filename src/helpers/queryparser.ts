@@ -11,7 +11,6 @@ class ParsedToken {
     }
 }
 
-
 class ParsePath {
     public rule: Rule;
     public value: any;
@@ -44,6 +43,10 @@ const ANY: TokenType = 'ANY';
 const ALL: TokenType = 'ALL';
 const ROOT: TokenType = 'ROOT';
 
+const STRIP_QUOTES = (x: string): string => {
+    return x.slice(1, x.length - 1);
+}
+
 const TRIM = (x: string): string => {
     return x.replace(/(^[ '\^\$\*#&]+)|([ '\^\$\*#&]+$)/g, '');
 }
@@ -62,6 +65,81 @@ function mergeResults(promises: Promise<Array<string>>[]): Promise<Array<string>
         return allResults;
     });
 }
+
+function buildVariantQuery(parsePath: ParsedToken[]): any {
+    const token = parsePath[0];
+    if (token.rule === 'INFLUENCING') {
+        const traitName = STRIP_QUOTES(parsePath[1].value);
+        return {
+            "type": "GenomeNode",
+            "filters": {
+
+            },
+            "toEdges": [
+                {
+                    "type": "EdgeNode",
+                    "filters": {
+                        "info.p-value": {
+                            "<": 0.05
+                        }
+                    },
+                    "toNode": {
+                        "type": "InfoNode",
+                        "filters": {
+                            "type": "trait",
+                            "$text": traitName,
+                        },
+                        "toEdges": [
+
+                        ]
+                    }
+                }
+            ],
+            "limit": 10000000
+        }
+    }
+}
+
+
+function buildTraitQuery(parsePath: ParsedToken[]): any {
+    const traitName = STRIP_QUOTES(parsePath[0].value);
+    return { "type": "InfoNode", "filters": { "type": "trait", "$text": traitName }, "toEdges": [], "limit": 150 }
+}
+
+function buildGeneQuery(parsePath: ParsedToken[]): any {
+    const geneName = STRIP_QUOTES(parsePath[0].value);
+    return { "type": "GenomeNode", "filters": { "type": "gene", "name": geneName }, "toEdges": [], "limit": 150 }
+}
+
+function buildCellQuery(parsePath: ParsedToken[]): any {
+    const cellType = STRIP_QUOTES(parsePath[2].value);
+
+    const annotationType = (parsePath[0].rule == 'PROMOTER') ? "Promoter-like" : "Enhancer-like";
+    return {
+        "type": "GenomeNode",
+        "filters": {
+            "type": annotationType,
+            "info.biosample": cellType
+        },
+        "toEdges": [],
+        "arithmetics": [],
+        "limit": 2000000
+    }
+}
+
+function buildQuery(parsePath: ParsedToken[]): any {
+    const token: ParsedToken = parsePath[0];
+    if (token.rule === 'VARIANTS') {
+        return buildVariantQuery(parsePath.slice(1));
+    } else if (token.rule === 'GENE_T') {
+        return buildGeneQuery(parsePath.slice(1));
+    } else if (token.rule === 'TRAIT_T') {
+        return buildTraitQuery(parsePath.slice(1));
+    } else if (token.rule === 'PROMOTER' || token.rule === 'ENHANCER') {
+        return buildCellQuery(parsePath);
+    }
+}
+
 
 export class QueryParser {
     // grammar elements are expansions 
@@ -127,43 +205,44 @@ export class QueryParser {
                     if (remainingRules.length === 0) {
                         return [];
                     } else if (remainingRules.length === 1) {
-                        return this.parse(rest, rule[2], newPath);
+                        const ret = this.parse(rest, rule[2], newPath);
+                        return ret;
                     } else {
                         return this.parse(rest, [ALL].concat(remainingRules), newPath);
                     }
                 }
             } else if (this.grammar.get(rule[1])) {
                 const expandedRule: Rule = this.grammar.get(rule[1]) as Rule;
-
                 // try parsing the first rule in the ALL clause
                 const tryParseResults: ParsePath[] = this.parse(soFar, expandedRule, path.slice(0));
 
                 // get the maximum parse depth of all possible paths
                 const maxParse: ParsePath = _.max(tryParseResults, (x: ParsePath) => x.path.length)
-                const maxDepth: number = maxParse.path.length;
+                const maxDepth: number = maxParse.path ? maxParse.path.length : 0;
                 const paths: ParsePath[] = [];
+
                 // filter to the max depth parses and try to continue
-                tryParseResults
-                    .filter(x => x.path.length === maxDepth)
-                    .forEach((subParse) => {
-                        if (subParse.isTerminal) {
-                            // if the parser has fully parsed the first rule
-                            const parsedSoFar: string = subParse.path.slice(path.length).map((x: ParsePath) => x.value).join(' ');
-                            const cleanedSoFar: string = TRIM(soFar);
-                            const idxTo = cleanedSoFar.indexOf(parsedSoFar)
-                            const rest: string = cleanedSoFar.slice(idxTo + parsedSoFar.length);
-                            if (rule.slice(2).length === 0) {
-                                paths.push(new ParsePath(subParse.rule, subParse.value, subParse.path, subParse.isTerminal))
-                            } else if (rule.slice(2).length === 1) {
-                                return this.parse(rest, rule[2], subParse.path.slice(0))
-                            } else {
-                                return this.parse(rest, [ALL].concat(rule.slice(2)), subParse.path.slice(0))
-                            }
+                let maxDepthPaths = tryParseResults.filter(x => x.path.length === maxDepth);
+                for (let i = 0; i < maxDepthPaths.length; i++) {
+                    const subParse = maxDepthPaths[i];
+                    if (subParse.isTerminal) {
+                        // if the parser has fully parsed the first rule
+                        const parsedSoFar: string = subParse.path.slice(path.length).map((x: ParsePath) => x.value).join(' ');
+                        const cleanedSoFar: string = TRIM(soFar);
+                        const idxTo = cleanedSoFar.indexOf(parsedSoFar)
+                        const rest: string = cleanedSoFar.slice(idxTo + parsedSoFar.length);
+                        if (rule.slice(2).length === 0) {
+                            paths.push(new ParsePath(subParse.rule, subParse.value, subParse.path, subParse.isTerminal));
+                        } else if (rule.slice(2).length === 1) {
+                            return this.parse(rest, rule[2], subParse.path.slice(0));
                         } else {
-                            // otherwise return suggestions for the first rule in the ALL clasue
-                            paths.push(new ParsePath(subParse.rule, subParse.value, subParse.path, subParse.isTerminal))
+                            return this.parse(rest, [ALL].concat(rule.slice(2)), subParse.path.slice(0));
                         }
-                    });
+                    } else {
+                        // otherwise return suggestions for the first rule in the ALL clasue
+                        paths.push(new ParsePath(subParse.rule, subParse.value, subParse.path.slice(0), subParse.isTerminal));
+                    }
+                }
                 return paths;
             }
         }
@@ -189,7 +268,7 @@ export class QueryParser {
             if (this.suggestions.get(rule)) {
                 tokenText = TRIM(tokenText).toLowerCase();
                 quoteSuggestion = true;
-                finalSuggestions.push(this.suggestions.get(subPath.rule)(tokenText, maxSuggestions / 2));
+                finalSuggestions.push(this.suggestions.get(rule)(tokenText, maxSuggestions / 2));
             } else {
                 quoteSuggestion = false;
                 finalSuggestions.push(new Promise((resolve, reject) => {
@@ -201,7 +280,7 @@ export class QueryParser {
         });
         let query: any = null;
         if (maxParse.rule === EOF) {
-            query = {};
+            query = buildQuery(maxParse.path);
         }
         return {
             tokens: maxParse.path,

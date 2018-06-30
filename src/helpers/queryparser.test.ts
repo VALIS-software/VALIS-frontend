@@ -22,10 +22,14 @@ function buildSuggestionFromArray(arr: string[]) {
 function parseText(text: string): any {
     const geneSuggestions = buildSuggestionFromArray(['MAOA', 'MAOB', 'PCSK9', 'NF2']);
     const traitSuggestions = buildSuggestionFromArray(['Cancer', 'Alzheimers', 'Depression']);
+    const cellSuggestions = buildSuggestionFromArray(['liver cells', 'lung cells', 'heart cells']);
+    const annotationSuggestions = buildSuggestionFromArray(['promoters', 'enhancers']);
 
     const suggestions = new Map();
     suggestions.set('GENE', geneSuggestions);
     suggestions.set('TRAIT', traitSuggestions);
+    suggestions.set('CELL_TYPE', cellSuggestions);
+    suggestions.set('ANNOTATION_TYPE', annotationSuggestions);
     const parser: QueryParser = buildQueryParser(suggestions);
     return parser.getSuggestions(text);
 }
@@ -34,8 +38,9 @@ test('test_empty_query', () => {
     const result: Suggestion = parseText('');
     const promise = result.suggestions;
     promise.then((results: string[]) => {
-        expect(results.length).toBe(0);
+        expect(results.length).toBe(5);
     });
+    return promise;
 });
 
 test('test_parse_variant_query_incomplete', () => {
@@ -81,8 +86,8 @@ test('test_parse_gene_query_prefix_quoted', () => {
     const result = parseText('gene "MAO"');
     const promise = result.suggestions;
     promise.then((results: string[]) => {
-        expect(results.indexOf("MAOA")).toBeGreaterThan(0);
-        expect(results.indexOf("MAOB")).toBeGreaterThan(0);
+        expect(results.indexOf("MAOA")).toBeGreaterThan(-1);
+        expect(results.indexOf("MAOB")).toBeGreaterThan(-1);
         expect(results.length).toBe(2);
     });
     expect(result.tokens.length).toBe(3);
@@ -95,8 +100,8 @@ test('test_parse_cell_query', () => {
     promise.then((results: string[]) => {
         expect(1).toBe(1);
     });
-
-    // self.assertEqual(query['filters']['type'], 'Enhancer-like')
-    // self.assertEqual(query['filters']['info.biosample'], 'heart cell')
-    // self.assertNotEqual(query, None)
+    const query = result.query;
+    expect(query).toBeDefined();
+    expect(query['filters']['type']).toBe('Enhancer-like');
+    expect(query['filters']['info.biosample']).toBe('heart cell');
 });

@@ -196,7 +196,7 @@ class App extends React.PureComponent<any, any> {
     this.viewModel.addListener(this.closeView, VIEW_EVENT_CLOSE_VIEW);
     this.viewModel.addListener(this.displayEntityDetails, VIEW_EVENT_DISPLAY_ENTITY_DETAILS);
 
-    parseText('variants');
+    parseText('enhancers in "heart cells"');
   }
 
   displayErrors = () => {
