@@ -27,20 +27,6 @@ export default class AppModel extends EventCreator {
         return this.tracks;
     };
 
-    public loadingStarted = (event: any) => {
-        throw `@! refactor todo`;
-        const wasLoading = this.tracksLoading > 0;
-        if (event.data === true) {
-            this.tracksLoading++;
-        } else {
-            this.tracksLoading--;
-        }
-        const isLoading = this.tracksLoading > 0;
-        if (wasLoading !== isLoading) {
-            this.notifyListeners(AppEvent.LoadingStateChanged, isLoading);
-        }
-    };
-
     public addDataTrack = (trackId: any) => {
         throw `@! refactor todo addDataTrack`;
     };

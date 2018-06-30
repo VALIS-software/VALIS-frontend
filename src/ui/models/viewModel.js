@@ -20,35 +20,6 @@ class ViewModel extends EventCreator {
         super();
     }
 
-    init() {
-        this.notifyViewStateChange(true);
-    }
-
-    notifyViewStateChange(saveHistory = false) {
-        console.warn('@! refactor, notifyViewStateChange');
-
-        const currentViewState = this.getViewState();
-        const eventData = {
-            currentViewState: currentViewState
-        };
-
-        this.notifyListeners(VIEW_EVENT_STATE_CHANGED, eventData);
-
-        if (saveHistory) {
-            const spanToSave = this.viewStateHistory.length + this.historyOffset + 1;
-            this.historyOffset = -1;
-            this.viewStateHistory = this.viewStateHistory.slice(0, spanToSave);
-            this.viewStateHistory.push(currentViewState);
-        }
-    }
-
-    loadViewHistory() {
-        const idx = this.viewStateHistory.length + this.historyOffset;
-        const state = this.viewStateHistory[idx];
-        
-        this.notifyViewStateChange();
-    }
-
     pushView(title, info, elem) {
         this.notifyListeners(VIEW_EVENT_PUSH_VIEW, {
             title: title,
@@ -81,21 +52,6 @@ class ViewModel extends EventCreator {
         this.notifyListeners(VIEW_EVENT_DISPLAY_ENTITY_DETAILS, entity);
     }
 
-    back() {
-        console.warn('@! refactor, todo back');
-        /*
-        this.historyOffset = Math.max(
-            -this.viewStateHistory.length,
-            this.historyOffset - 1
-        );
-        this.loadViewHistory();
-        */
-    }
-
-    forward() {
-        console.warn('@! refactor, todo forward');
-    }
-
     getViewState() {
         let x = null;
         let y = null;
@@ -106,31 +62,10 @@ class ViewModel extends EventCreator {
     }
 
     /* @! refactor
-    setViewRegion(startBasePair, basePairsPerPixel) {
-        this.startBasePair = startBasePair;
-        this.basePairsPerPixel = basePairsPerPixel;
-        this.notifyViewStateChange();
-    }
-    */
-
-    /* @! refactor
     setViewRegionUsingRange(startBasePair, endBasePair) {
         const basePairsPerPixel =
             (endBasePair - startBasePair) / this.windowSize[0];
         this.setViewRegion(startBasePair, basePairsPerPixel);
-    }
-
-    @! refactor
-    centerOnBasePair(basePair) {
-        this.startBasePair =
-            basePair - this.basePairsPerPixel * this.windowSize[0] / 2.0;
-        this.notifyViewStateChange();
-    }
-
-    @! refactor
-    centerBasePairOnPixel(basePair, pixel) {
-        this.startBasePair = basePair - pixel * this.basePairsPerPixel;
-        this.notifyViewStateChange();
     }
     */
 
