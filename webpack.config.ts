@@ -135,7 +135,7 @@ export default (env = defaultEnv) => ({
     extensions: [".ts", ".tsx", ".js", ".json", ".jsx"]
   },
   node: {
-    console: true,
+    console: false,
     fs: 'empty',
     net: 'empty',
     tls: 'empty'
