@@ -19,9 +19,9 @@ export default (env = defaultEnv) => ({
   entry: [
     ...(env.dev
       ? [
-          "webpack-dev-server/client?http://localhost:8080",
-          "webpack/hot/only-dev-server"
-        ]
+        "webpack-dev-server/client?http://localhost:8080",
+        "webpack/hot/only-dev-server"
+      ]
       : []),
     path.join(__dirname, "src/index.tsx")
   ],
@@ -34,10 +34,10 @@ export default (env = defaultEnv) => ({
     ...(env.dev
       ? [new HotModuleReplacementPlugin()]
       : [
-          new MiniCssExtractPlugin({
-            filename: "static/[name].css"
-          })
-        ]),
+        new MiniCssExtractPlugin({
+          filename: "static/[name].css"
+        })
+      ]),
     new HtmlWebpackPlugin({
       // Here we do a little hack, to allow webpack-dev-server to find the index.html, but also use URL like static/bundle.js in the packed version in /dist
       // The packed version want to use URL static/bundle.js because we need to seperate the requrest between / and /static to use Nginx
@@ -53,27 +53,27 @@ export default (env = defaultEnv) => ({
     }),
     ...(env.deploy
       ? [
-          new ZipPlugin({
-            // path: path.join(__dirname, 'dist'),
-            filename: "dist.zip"
-          }),
-          new WebpackGoogleCloudStoragePlugin({
-            directory: "./dist",
-            include: ["dist.zip"],
-            exclude: [],
-            storageOptions: {
-              projectId: "valis-194104",
-              keyFilename: path.join(
-                process.env.HOME,
-                "gcloud-service-key.json"
-              ) // This shouldn't be included in the repository!
-            },
-            uploadOptions: {
-              bucketName: "valis-front-dev",
-              gzip: false
-            }
-          })
-        ]
+        new ZipPlugin({
+          // path: path.join(__dirname, 'dist'),
+          filename: "dist.zip"
+        }),
+        new WebpackGoogleCloudStoragePlugin({
+          directory: "./dist",
+          include: ["dist.zip"],
+          exclude: [],
+          storageOptions: {
+            projectId: "valis-194104",
+            keyFilename: path.join(
+              process.env.HOME,
+              "gcloud-service-key.json"
+            ) // This shouldn't be included in the repository!
+          },
+          uploadOptions: {
+            bucketName: "valis-front-dev",
+            gzip: false
+          }
+        })
+      ]
       : [])
   ],
   module: {
@@ -102,7 +102,7 @@ export default (env = defaultEnv) => ({
         test: /\.(j|t)sx?$/,
         loader: "ts-loader",
         include: path.resolve(__dirname, "src"),
-        exclude: [path.resolve(__dirname, "node_modules")]
+        exclude: [path.resolve(__dirname, "node_modules")],
       },
       {
         test: /\.(j|t)sx?$/,

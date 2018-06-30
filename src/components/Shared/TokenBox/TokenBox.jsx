@@ -16,6 +16,8 @@ import './TokenBox.scss';
 class TokenBox extends React.Component {
   constructor(props) {
     super(props);
+    this.appModel = props.appModel;
+    this.viewModel = props.viewModel;
     this.state = {
       tokens: [],
       dataSource: [],
@@ -97,7 +99,7 @@ class TokenBox extends React.Component {
 
   getSuggestions(tokens, openOnLoad = true) {
     const searchText = this.buildQueryStringFromTokens(tokens);
-    this.props.appModel.api.parseSearchQuery(searchText).then(result => {
+    this.appModel.api.parseSearchQuery(searchText).then(result => {
       this.setState({
         dataSource: result.suggestions.slice(0, 5),
         open: openOnLoad,
@@ -109,7 +111,7 @@ class TokenBox extends React.Component {
         this.refs.autoComplete.refs.searchTextField.input.focus();
       }
     }, (err) => {
-      this.props.appModel.error(this, err);
+      this.appModel.error(this, err);
       this.setState({
         error: err,
       });
@@ -125,14 +127,14 @@ class TokenBox extends React.Component {
 
   runSearch = () => {
     const queryStr = this.buildQueryStringFromTokens(this.state.tokens) + ' ' + this.state.searchString;
-    mixpanel.track("Run search", {'queryStr': queryStr});
+    this.appModel.trackMixPanel("Run search", { 'queryStr': queryStr });
     const query = this.state.query;
-    const view = (<SearchResultsView text={queryStr} query={query} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
-    this.props.viewModel.pushView('Search Results', query, view);
+    const view = (<SearchResultsView text={queryStr} query={query} viewModel={this.viewModel} appModel={this.appModel} />);
+    this.viewModel.pushView('Search Results', query, view);
   }
 
   clearSearch = () => {
-    mixpanel.track("Clear searchbox");
+    this.appModel.trackMixPanel("Clear searchbox");
     this.setState({
       tokens: [],
       searchString: '',
