@@ -114,10 +114,15 @@ class TokenBox extends React.Component {
     const searchText = this.buildQueryStringFromTokens(tokens);
 
     const result = this.queryParser.getSuggestions(searchText);
+    const timeOfPromise = window.performance.now();
     result.suggestions.then(results => {
-      this.setState({
-        dataSource: results,
-      });
+      if (timeOfPromise >= this.state.lastResultTime || !this.state.lastResultTime) {
+        this.setState({
+          lastResultTime: timeOfPromise,
+          dataSource: results,
+        });
+      }
+
     });
     this.setState({
       query: result.query,
