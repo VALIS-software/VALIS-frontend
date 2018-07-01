@@ -16,7 +16,11 @@ import './TokenBox.scss';
 class TokenBox extends React.Component {
   constructor(props) {
     super(props);
+
     this.queryParser = buildQueryParser(new Map());
+    this.appModel = props.appModel;
+    this.viewModel = props.viewModel;
+
     this.state = {
       tokens: [],
       dataSource: [],
@@ -98,8 +102,10 @@ class TokenBox extends React.Component {
 
   getSuggestions(tokens, openOnLoad = true) {
     const searchText = this.buildQueryStringFromTokens(tokens);
+
     const result = this.queryParser.getSuggestions(searchText);
     result.suggestions.then(results => {
+
       this.setState({
         dataSource: results,
       });
@@ -123,14 +129,14 @@ class TokenBox extends React.Component {
 
   runSearch = () => {
     const queryStr = this.buildQueryStringFromTokens(this.state.tokens) + ' ' + this.state.searchString;
-    mixpanel.track("Run search", { 'queryStr': queryStr });
+    this.appModel.trackMixPanel("Run search", { 'queryStr': queryStr });
     const query = this.state.query;
-    const view = (<SearchResultsView text={queryStr} query={query} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
-    this.props.viewModel.pushView('Search Results', query, view);
+    const view = (<SearchResultsView text={queryStr} query={query} viewModel={this.viewModel} appModel={this.appModel} />);
+    this.viewModel.pushView('Search Results', query, view);
   }
 
   clearSearch = () => {
-    mixpanel.track("Clear searchbox");
+    this.appModel.trackMixPanel("Clear searchbox");
     this.setState({
       tokens: [],
       searchString: '',

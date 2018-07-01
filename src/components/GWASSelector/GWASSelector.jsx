@@ -143,7 +143,7 @@ class GWASSelector extends React.Component {
 
   addQueryTrack() {
     const query = this.buildGWASQuery();
-    mixpanel.track('Add GWAS Track', {'query': query});
+    this.appModel.trackMixPanel('Add GWAS Track', { 'query': query });
     this.appModel.addAnnotationTrack(this.state.title, query);
   }
 
