@@ -21,6 +21,27 @@ import TraitDetails from '../TraitDetails/TraitDetails.jsx';
 import Dialog from 'material-ui/Dialog';
 import BasicTheme from '../../themes/BasicTheme.jsx';
 import { ENTITY_TYPE } from '../../helpers/constants.js';
+import { QueryParser, buildQueryParser } from '../../helpers/queryparser';
+
+
+function parseText(text: string): any {
+  const geneSuggestions = (text: string, maxResults: number) => {
+    return new Promise((resolve, reject) => {
+      resolve(['MAOA', 'MAOB', 'PCSK9', 'NF2']);
+    })
+  };
+  const traitSuggestions = (text: string, maxResults: number) => {
+    return new Promise((resolve, reject) => {
+      resolve(['Cancer', 'Alzheimers', 'Depression']);
+    })
+  }
+
+  const suggestions = new Map();
+  suggestions.set('GENE', geneSuggestions);
+  suggestions.set('TRAIT', traitSuggestions);
+  const parser: QueryParser = buildQueryParser(suggestions);
+  return parser.getSuggestions(text);
+}
 
 import AppModel, { AppEvent } from "../../models/appModel";
 
@@ -186,6 +207,8 @@ class App extends React.PureComponent<any, any> {
     this.viewModel.addListener(this.pushView, VIEW_EVENT_PUSH_VIEW);
     this.viewModel.addListener(this.closeView, VIEW_EVENT_CLOSE_VIEW);
     this.viewModel.addListener(this.displayEntityDetails, VIEW_EVENT_DISPLAY_ENTITY_DETAILS);
+
+    parseText('enhancers in "heart cells"');
   }
 
   displayErrors = () => {

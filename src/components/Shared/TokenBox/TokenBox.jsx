@@ -10,14 +10,17 @@ import ActionSearch from 'material-ui/svg-icons/action/search';
 import ContentClear from 'material-ui/svg-icons/content/clear';
 import SearchResultsView from '../../SearchResultsView/SearchResultsView.jsx';
 import ErrorDetails from "../ErrorDetails/ErrorDetails.jsx";
-
+import buildQueryParser from "../../../helpers/queryparser";
 import './TokenBox.scss';
 
 class TokenBox extends React.Component {
   constructor(props) {
     super(props);
+
+    this.queryParser = buildQueryParser(new Map());
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
+
     this.state = {
       tokens: [],
       dataSource: [],
@@ -99,23 +102,22 @@ class TokenBox extends React.Component {
 
   getSuggestions(tokens, openOnLoad = true) {
     const searchText = this.buildQueryStringFromTokens(tokens);
-    this.appModel.api.parseSearchQuery(searchText).then(result => {
-      this.setState({
-        dataSource: result.suggestions.slice(0, 5),
-        open: openOnLoad,
-        quoteInput: result.quoted_suggestion,
-        query: result.query
-      });
 
-      if (!result.query && openOnLoad) {
-        this.refs.autoComplete.refs.searchTextField.input.focus();
-      }
-    }, (err) => {
-      this.appModel.error(this, err);
+    const result = this.queryParser.getSuggestions(searchText);
+    result.suggestions.then(results => {
+
       this.setState({
-        error: err,
+        dataSource: results,
       });
     });
+    this.setState({
+      query: result.query,
+      quoteInput: result.isQuoted,
+      open: openOnLoad,
+    });
+    if (!result.query && openOnLoad) {
+      this.refs.autoComplete.refs.searchTextField.input.focus();
+    }
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
