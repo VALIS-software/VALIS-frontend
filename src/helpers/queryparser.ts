@@ -1,7 +1,3 @@
-const _ = require("underscore");
-
-
-
 class ParsedToken {
     public rule: Rule;
     public value: string;

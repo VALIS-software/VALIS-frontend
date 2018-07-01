@@ -16,10 +16,11 @@ import './TokenBox.scss';
 class TokenBox extends React.Component {
   constructor(props) {
     super(props);
-
-    this.queryParser = buildQueryParser(new Map());
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
+
+    this.queryParser = buildQueryParser(this.getSuggestionHandlers());
+
 
     this.state = {
       tokens: [],
@@ -92,6 +93,15 @@ class TokenBox extends React.Component {
     }
   };
 
+  getSuggestionHandlers() {
+    const suggestionMap = new Map();
+    ['TRAIT', 'GENE', 'CELL_TYPE'].forEach(rule => {
+      suggestionMap.set(rule, (searchText, maxResults) => {
+        return this.appModel.api.getSuggestions(rule, searchText, maxResults);
+      });
+    });
+    return suggestionMap;
+  }
 
   buildQueryStringFromTokens(tokens) {
     let pieces = tokens.map(token => {
@@ -105,7 +115,6 @@ class TokenBox extends React.Component {
 
     const result = this.queryParser.getSuggestions(searchText);
     result.suggestions.then(results => {
-
       this.setState({
         dataSource: results,
       });

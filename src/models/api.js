@@ -170,9 +170,13 @@ class GenomeAPI {
 		});
 	}
 
-	parseSearchQuery(query) {
-		return axios.post(`${this.baseUrl}/search`, { query: query }).then(data => {
-			return data.data;
+	getSuggestions(termType, searchText, maxResults = 100) {
+		return axios.post(`${this.baseUrl}/suggestions`, {
+			term_type: termType,
+			search_text: searchText,
+			max_results: Math.round(maxResults),
+		}).then(data => {
+			return data.data.results;
 		});
 	}
 
