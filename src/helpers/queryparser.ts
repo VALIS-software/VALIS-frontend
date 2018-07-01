@@ -217,7 +217,7 @@ export class QueryParser {
                 const tryParseResults: ParsePath[] = this.parse(soFar, expandedRule, path.slice(0));
 
                 // get the maximum parse depth of all possible paths
-                const maxParse: ParsePath = _.max(tryParseResults, (x: ParsePath) => x.path.length)
+                const maxParse: ParsePath = tryParseResults.reduce((a, b) => a.path.length > b.path.length ? a : b);;
                 const maxDepth: number = maxParse.path ? maxParse.path.length : 0;
                 const paths: ParsePath[] = [];
 
@@ -250,7 +250,7 @@ export class QueryParser {
     }
 
     buildSuggestionsFromParse(results: ParsePath[], maxSuggestions = 15): Suggestion {
-        const maxParse: ParsePath = _.max(results, (x: ParsePath) => x.path.length)
+        const maxParse: ParsePath = results.reduce((a, b) => a.path.length > b.path.length ? a : b);
         const maxDepth: number = maxParse.path.length;
         const finalSuggestions: SuggestionResultPromise[] = [];
         let quoteSuggestion: boolean = false;
