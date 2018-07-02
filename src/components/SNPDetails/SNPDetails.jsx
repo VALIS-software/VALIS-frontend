@@ -133,7 +133,7 @@ class SNPDetails extends React.Component {
     }
 
     let variantFreqChart = (<div> Data not available </div>);
-    if (details.info.variant_ref && details.info.variant_alt) {
+    if (details.info.variant_ref && details.info.variant_alt && details.info.allele_frequencies) {
       // snv : draw an arrow from ref --> alt
       const ref = details.info.variant_ref;
       const alt = details.info.variant_alt;
