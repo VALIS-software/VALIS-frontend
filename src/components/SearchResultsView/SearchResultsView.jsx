@@ -5,6 +5,7 @@ import DataListItem from "../DataListItem/DataListItem.jsx";
 import CircularProgress from "material-ui/CircularProgress";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 import SearchFilter from "../Shared/SearchFilter/SearchFilter.jsx";
+import GenomicLocation from "../Shared/GenomicLocation/GenomicLocation.jsx";
 import { List, InfiniteLoader } from 'react-virtualized';
 import Util from "../../helpers/util.js";
 
@@ -119,20 +120,12 @@ class SearchResultsView extends React.Component {
     const ref = result.info.variant_ref;
     const alt = result.info.variant_alt;
     const genomicType = this.renderPills([result.type], { backgroundColor: 'grey' });
-    const location = this.renderLocation(result.contig, result.start, result.end);
+    const location = (<GenomicLocation contig={result.contig} start={result.start} end={result.end} />);
     const mutation = null;
     if (result.type === ENTITY_TYPE.SNP) {
       mutation = (<span>{alt} <span className="allele-arrow">⟶</span> {ref}</span>);
     }
     return (<span className="right-info"><div>{location}</div><div>{genomicType} {mutation} </div></span>);
-  }
-
-  renderLocation = (contig, start, end) => {
-    if (start === end) {
-      return (<span className="location"><span className="contig">{contig}</span><span className="range">{start}</span></span>);
-    } else {
-      return (<span className="location"><span className="contig">{contig}</span><span className="range">{start}:{end}</span></span>);
-    }
   }
 
   rowRenderer = ({ index, key, style }) => {

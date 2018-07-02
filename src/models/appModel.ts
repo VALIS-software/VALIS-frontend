@@ -27,16 +27,30 @@ export default class AppModel extends EventCreator {
     return this.tracks;
   };
 
-  public loadingStarted = (event: any) => {
-    const wasLoading = this.tracksLoading > 0;
-    if (event.data === true) {
-      this.tracksLoading++;
-    } else {
-      this.tracksLoading--;
-    }
+  public updateLoadingState = (wasLoading: boolean) => {
     const isLoading = this.tracksLoading > 0;
     if (wasLoading !== isLoading) {
       this.notifyListeners(AppEvent.LoadingStateChanged, isLoading);
+    }
+  }
+
+  public pushLoading = () => {
+    const wasLoading = this.tracksLoading > 0;
+    this.tracksLoading++;
+    this.updateLoadingState(wasLoading);
+  }
+
+  public popLoading = () => {
+    const wasLoading = this.tracksLoading > 0;
+    this.tracksLoading--;
+    this.updateLoadingState(wasLoading);
+  }
+
+  public loadingStarted = (event: any) => {
+    if (event.data === true) {
+      this.pushLoading();
+    } else {
+      this.popLoading();
     }
   };
 

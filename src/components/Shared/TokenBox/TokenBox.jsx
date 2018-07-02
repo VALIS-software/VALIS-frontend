@@ -8,6 +8,7 @@ import AutoComplete from 'material-ui/AutoComplete';
 import IconButton from 'material-ui/IconButton';
 import ActionSearch from 'material-ui/svg-icons/action/search';
 import ContentClear from 'material-ui/svg-icons/content/clear';
+import CircularProgress from "material-ui/CircularProgress";
 import SearchResultsView from '../../SearchResultsView/SearchResultsView.jsx';
 import ErrorDetails from "../ErrorDetails/ErrorDetails.jsx";
 import buildQueryParser from "../../../helpers/queryparser";
@@ -117,21 +118,27 @@ class TokenBox extends React.Component {
 
     const result = this.queryParser.getSuggestions(searchText);
     const timeOfPromise = window.performance.now();
-    result.suggestions.then(results => {
-      if (timeOfPromise >= this.state.lastResultTime || !this.state.lastResultTime) {
-        this.setState({
-          lastResultTime: timeOfPromise,
-          dataSource: results,
-        });
-      }
-    });
+    if (timeOfPromise >= this.state.lastResultTime || !this.state.lastResultTime) {
+      this.appModel.pushLoading();
+      result.suggestions.then(results => {
+        this.appModel.popLoading();
+        if (timeOfPromise >= this.state.lastResultTime || !this.state.lastResultTime) {
+          this.setState({
+            lastResultTime: timeOfPromise,
+            dataSource: results,
+          });
+        }
+      }, err => {
+        this.appModel.popLoading();
+      });
+    }
 
     this.setState({
       query: result.query,
       quoteInput: result.isQuoted,
       open: openOnLoad,
     });
-    if (!result.query) {
+    if (!result.query && openOnLoad) {
       setTimeout(() => {
         this.refs.autoComplete.refs.searchTextField.input.focus();
       }, 100);
@@ -231,7 +238,9 @@ class TokenBox extends React.Component {
     const tooltip = searchEnabled ? 'Search' : 'Enter a valid search';
     const clearButton = drawClear ? (<IconButton tooltip="Clear" onClick={this.clearSearch}><ContentClear /></IconButton>) : (<div />);
     const searchButton = (<IconButton onClick={this.runSearch} disabled={!searchEnabled} tooltip={tooltip}><ActionSearch /></IconButton>);
+    const progress = this.state.loading ? (<CircularProgress size={80} thickness={5} />) : null;
     const status = (<div style={style}>
+      {progress}
       {clearButton}
       {searchButton}
     </div>);
