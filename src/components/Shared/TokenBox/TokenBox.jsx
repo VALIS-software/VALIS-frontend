@@ -74,6 +74,7 @@ class TokenBox extends React.Component {
       });
       this.setState({
         tokens: this.state.tokens.slice(0),
+        dataSource: [],
       });
 
       // fetch new suggestions:
@@ -81,13 +82,14 @@ class TokenBox extends React.Component {
       if (this.state.tokens[this.state.tokens.length - 1].quoted && this.state.query) {
         showSuggestions = false;
       }
+
       this.getSuggestions(this.state.tokens, showSuggestions);
     } else {
       // fetch new suggestions:
       const newTokens = this.state.tokens.slice(0);
       newTokens.push({
         value: value,
-        quoted: this.state.quoteInput
+        quoted: this.state.quoteInput,
       });
       this.getSuggestions(newTokens);
     }
@@ -122,15 +124,17 @@ class TokenBox extends React.Component {
           dataSource: results,
         });
       }
-
     });
+
     this.setState({
       query: result.query,
       quoteInput: result.isQuoted,
       open: openOnLoad,
     });
-    if (!result.query && openOnLoad) {
-      this.refs.autoComplete.refs.searchTextField.input.focus();
+    if (!result.query) {
+      setTimeout(() => {
+        this.refs.autoComplete.refs.searchTextField.input.focus();
+      }, 100);
     }
   }
 
