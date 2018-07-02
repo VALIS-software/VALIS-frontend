@@ -86,7 +86,7 @@ class UserFeedBackButton extends React.Component {
   }
 
   render() {
-    const { userProfile, subject, description, open, anchorEl, snackOpen } = this.state;
+    const { subject, description, open, anchorEl, snackOpen } = this.state;
     const userProfile = this.props.userProfile;
     if (!userProfile) return <div />
     return (
@@ -96,7 +96,7 @@ class UserFeedBackButton extends React.Component {
           <Popover
             open={open}
             anchorEl={anchorEl}
-            anchorOrigin={{ "horizontal": "middle", "vertical": "bottom" }}
+            anchorOrigin={{ "horizontal": "right", "vertical": "bottom" }}
             targetOrigin={{ "horizontal": "right", "vertical": "top" }}
             onRequestClose={this.handleRequestClose}
           >

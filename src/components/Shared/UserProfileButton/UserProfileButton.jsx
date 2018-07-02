@@ -6,6 +6,7 @@ import Popover from 'material-ui/Popover';
 import { Card, CardActions, CardHeader, CardMedia, CardTitle, CardText } from 'material-ui/Card';
 import FlatButton from 'material-ui/FlatButton';
 import IconButton from 'material-ui/IconButton';
+import Menu from 'material-ui/Menu';
 import Person from 'material-ui/svg-icons/social/person';
 
 import './UserProfileButton.scss';
@@ -35,7 +36,7 @@ class UserProfileButton extends React.Component {
   };
 
   render() {
-    const { userProfile, open, anchorEl } = this.state;
+    const { open, anchorEl } = this.state;
     const userProfile = this.props.userProfile;
     if (!userProfile)
       return (<IconButton href="login" tooltip="Log In">
@@ -48,11 +49,12 @@ class UserProfileButton extends React.Component {
         <Popover
           open={open}
           anchorEl={anchorEl}
-          anchorOrigin={{ "horizontal": "middle", "vertical": "bottom" }}
+          anchorOrigin={{ "horizontal": "right", "vertical": "bottom" }}
           targetOrigin={{ "horizontal": "right", "vertical": "top" }}
           onRequestClose={this.handleRequestClose}
         >
-          <Card >
+          {/* We use Menu instead of Card here just for temp fix the "flicker" bug in this version of mui */}
+          <Menu>
             <CardHeader
               subtitle={userProfile.name}
               avatar={userProfile.picture}
@@ -61,7 +63,7 @@ class UserProfileButton extends React.Component {
               <FlatButton href='logout' label='Switch User' />
               <FlatButton href='logout' label='Log Out' />
             </CardActions>
-          </Card>
+          </Menu>
         </Popover>
       </button>
     );
