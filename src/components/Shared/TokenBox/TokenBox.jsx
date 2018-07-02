@@ -63,7 +63,7 @@ class TokenBox extends React.Component {
     });
     if (!value) return;
     const match = this.perfectMatch(dataSource, value);
-    if (match) {
+    if (match && (!this.state.quoteInput || params.source === 'click')) {
       // clear the search box:
       this.refs.autoComplete.setState({ searchText: '' });
 
