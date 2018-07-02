@@ -143,7 +143,7 @@ class SNPDetails extends React.Component {
         const data = [
           { key: ref, value: ref_percentage },
         ];
-        allele_frequencies.forEach((allele) => {
+        for (const allele in allele_frequencies) => {
           data.push({ key: allele, value: allele_frequencies[allele] });
           ref_percentage = ref_percentage - allele_frequencies[allele];
         });
