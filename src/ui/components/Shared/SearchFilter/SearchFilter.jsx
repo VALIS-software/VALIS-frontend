@@ -56,14 +56,28 @@ class SearchFilter extends React.Component {
                 filters: newFilters,
             });
         }
+        console.log(this.state.filters);
+    }
+
+    noneSelected = (filterType) => {
+        if (!this.state.filters.has(filterType)) return true;
+        if (this.state.filters.has(filterType) && this.state.filters.get(filterType).isEmpty()) return true;
+        return false;
     }
 
     isSelected = (filterType, filterValue) => {
-        if (this.state.filters.has(filterType) && this.state.filters.get(filterType).has(filterValue)) {
+        if (this.noneSelected(filterType) || (this.state.filters.has(filterType) && this.state.filters.get(filterType).has(filterValue))) {
             return true;
         } else {
             return false;
         }
+    }
+
+    cancelFilter = () => {
+        this.setState({
+            currFilterMenu: null,
+            filters: this.state.previousFilters
+        });
     }
 
     setFilter = (type) => {
@@ -80,7 +94,8 @@ class SearchFilter extends React.Component {
         if (!prevState) {
             prevState = {};
         }
-        prevState.filters = nextProps.filters || new Map();
+        prevState.filters = nextProps.filters || prevState.filters || new Map();
+        prevState.originalFilter = prevState.filters;
         return prevState;
     }
 
@@ -115,13 +130,8 @@ class SearchFilter extends React.Component {
             this.filterOptionsLoading[type] = promise.then(result => {
                 this.filterOptionsLoading[type] = false;
                 const newMap = this.state.filterOptions.set(type, result);
-
-                // By default all filters are enabled:
-                const newFilters = this.state.filters;
-                if (!this.state.filters.get(type)) newFilters = this.state.filters.set(type, new Set(result));
                 this.setState({
                     filterOptions: newMap,
-                    filters: newFilters,
                 });
             });
         }
@@ -130,7 +140,7 @@ class SearchFilter extends React.Component {
     render() {
         let menuItems = null;
         let menuOptions = (<div className="clearfix">
-            <button onClick={this.props.onCancel} className="float-left">Cancel</button>
+            <button onClick={this.cancelFilter} className="float-left">Back</button>
             <button onClick={this.applyFilter} className="float-right">Apply</button>
         </div>);
         if (this.state.currFilterMenu === null) {
@@ -138,7 +148,9 @@ class SearchFilter extends React.Component {
             menuItems = rootFilterOptions.map(item => {
                 return (<div key={item.title} onClick={() => this.setFilter(item.type)} className="filter-type-chooser">{item.title}</div>);
             });
-            menuOptions = null;
+            menuOptions = (<div className="clearfix">
+                <button onClick={this.props.onCancel} className="float-left">Cancel</button>
+            </div>);
         } else {
             const filterTypes = this.state.filterOptions.get(this.state.currFilterMenu);
             if (!filterTypes) {

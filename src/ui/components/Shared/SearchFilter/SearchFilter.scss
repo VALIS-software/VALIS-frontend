@@ -3,12 +3,13 @@
 .search-filter {
     .filter-menu {
         border-top: 1px solid $valis-grey-dark;
-        height: 200px;
+        height: 175px;
+        box-shadow: inset 0px 11px 8px -10px rgba(0.0, 0.0, 0.0, 0.3), inset 0px -11px 8px -10px rgba(0.0, 0.0, 0.0, 0.3); 
         background-color: lighten($valis-blue-dark, 25%);
         padding: 8px;
         overflow: scroll;
         .filter-type-chooser {
-            background-color: lighten($valis-blue-dark, 25%);
+            background-color: transparent;
             padding: 8px;
             border-radius: 8px;
             color: $valis-white;
