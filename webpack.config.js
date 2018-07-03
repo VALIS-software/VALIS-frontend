@@ -21,7 +21,7 @@ module.exports = (env) => ({
 
 	module: {
 		rules: [
-			// enable importing scss files (and translate to CSS)
+			// Enable importing scss files (and translate to CSS)
 			{
 				test: /\.(scss|css)$/,
 				use: [{
@@ -33,7 +33,7 @@ module.exports = (env) => ({
 				}]
 			},
 
-			// this enables us to copy index.html into dist/
+			// This enables us to copy index.html into dist/
 			{
 				test: /\.html/,
 				type: 'javascript/auto',
@@ -43,7 +43,7 @@ module.exports = (env) => ({
 				}],
 			},
 
-			// copy assets into dist/static/
+			// Copy assets into dist/static/
 			{
 				test: /\.json|\.png|\.bin/,
 				type: 'javascript/auto',
