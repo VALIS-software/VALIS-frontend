@@ -2,7 +2,7 @@
 
 Disambiguation of common terms
 
-### base or basepair
+### base or basePair
 1-indexed position of a nucleobase, used when presenting coordinates to users
 
 ### baseIndex

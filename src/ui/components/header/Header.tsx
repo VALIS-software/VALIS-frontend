@@ -3,7 +3,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import * as React from 'react';
 import AppModel from '../../models/appModel.js';
-import ViewModel from '../../models/viewModel.js';
+import ViewModel from '../../models/ViewModel';
 import DatasetSelector from '../DatasetSelector/DatasetSelector.jsx';
 import TokenBox from '../Shared/TokenBox/TokenBox';
 

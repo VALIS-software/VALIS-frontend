@@ -1,6 +1,5 @@
 - Integrate latest UI
-    - Missing bits from package and webpack config
-        - dev server
+    - Use remote data
     --- PR
     - Anything missing from App.tsx
     - Fill out viewModel.js and appModel.ts functionality
@@ -18,7 +17,8 @@
     - EventCreator -> node.js events
     - Rebuild TrackTooltip
 
-- We only use a teeeny bit of fontawesome, can we save bytes here?
+- Slow down are large zoom-out because there's no limit on tiles
+    - Track request boundaries
 
 - Wrap up dev colors code
     - Maybe make the color dev trick into a separate dev/utils module
@@ -26,15 +26,10 @@
 - Large-scale annotation rendering
     - generate gene tiles, = array of genes with transcript count
 
-- !! What if annotations have state which is lost when creating / deleting as view changes
-
 - Variant visualization
     https://docs.google.com/document/d/1OBykSYS_NWl_BG1ZHlRYRmXa17YDplGZJYdLL-HqO-o/edit#heading=h.ydbtyrks62k1
 
 - Continue on Chrome caching bug
-
-- Track request boundaries
-
 
 # Bugs
 - Right-click, move mouse, escape to dismiss = stuck dragging
@@ -100,6 +95,8 @@
     - Pointer down on any track should contribute to the gesture (not just two touches within the same track)
 
 ---- consider
+
+- We only use a teeeny bit of fontawesome, can we save bytes here?
 
 - Represent ensemble biotypes
     - https://www.ensembl.org/info/genome/genebuild/biotypes.html

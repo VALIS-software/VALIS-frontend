@@ -11,7 +11,6 @@ import TrackViewer from "./ui/TrackViewer";
 import Header from "./ui/components/Header/Header";
 import View from "./ui/View";
 import AppModel, { AppEvent } from "./ui/models/AppModel";
-import ViewModel, { VIEW_EVENT_POP_VIEW, VIEW_EVENT_PUSH_VIEW, VIEW_EVENT_CLOSE_VIEW, VIEW_EVENT_DISPLAY_ENTITY_DETAILS, VIEW_EVENT_DISPLAY_TRACK_RESULTS } from "./ui/models/viewModel";
 import NavigationController from "./ui/components/NavigationController/NavigationController";
 import { MuiThemeProvider } from "material-ui/styles";
 import BasicTheme from "./ui/themes/BasicTheme";
@@ -24,6 +23,7 @@ import { QueryParser, buildQueryParser } from './ui/helpers/queryparser';
 
 // styles
 import "./App.scss";
+import ViewModel, { ViewEvent } from "./ui/models/ViewModel";
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
@@ -57,7 +57,7 @@ type State = {
 	viewerWidth: number;
 	viewerHeight: number;
 
-	canvasContent: Object2D;
+	trackViewer: TrackViewer;
 
 	displayErrors: boolean,
 	errors: Array<any>,
@@ -127,11 +127,14 @@ export class App extends React.Component<Props, State> {
 			headerHeight: this.headerHeight,
 			viewerWidth: window.innerWidth,
 			viewerHeight: this.canvasHeight(),
-			canvasContent: trackViewer,
+			trackViewer: trackViewer,
 			displayErrors: false,
 			errors: [],
 			userProfile: null,
 		};
+
+		// @! tmp
+		this.displayTrackRegion({data:{startBase: 1, endBase: 20}});
 	}
 
 	componentDidMount() {
@@ -157,13 +160,14 @@ export class App extends React.Component<Props, State> {
 		this.appModel.addListener(this.trackMixPanel, AppEvent.TrackMixPanel);
 		// this.appModel.addListener(this.updateLoadingState, AppEvent.LoadingStateChanged);
 
-		this.viewModel.addListener(this.pushView, VIEW_EVENT_PUSH_VIEW);
-		this.viewModel.addListener(this.popView, VIEW_EVENT_POP_VIEW);
-		this.viewModel.addListener(this.closeView, VIEW_EVENT_CLOSE_VIEW);
-		this.viewModel.addListener(this.displayDetails, VIEW_EVENT_DISPLAY_ENTITY_DETAILS);
-		this.viewModel.addListener(this.displayTrackSearchResults, VIEW_EVENT_DISPLAY_TRACK_RESULTS);
-		// this.viewModel.addListener(this.clickTrackElement, VIEW_EVENT_TRACK_ELEMENT_CLICKED);
-		// this.viewModel.addListener(this.showTrackSettings, VIEW_EVENT_EDIT_TRACK_VIEW_SETTINGS);
+		this.viewModel.addListener(this.pushView, ViewEvent.PUSH_VIEW);
+		this.viewModel.addListener(this.popView, ViewEvent.POP_VIEW);
+		this.viewModel.addListener(this.closeView, ViewEvent.CLOSE_VIEW);
+		this.viewModel.addListener(this.displayDetails, ViewEvent.DISPLAY_ENTITY_DETAILS);
+		this.viewModel.addListener(this.displayTrackSearchResults, ViewEvent.DISPLAY_TRACK_RESULTS);
+		this.viewModel.addListener(this.displayTrackRegion, ViewEvent.DISPLAY_TRACK_REGION);
+		// this.viewModel.addListener(this.clickTrackElement, ViewEvent.TRACK_ELEMENT_CLICKED);
+		// this.viewModel.addListener(this.showTrackSettings, ViewEvent.EDIT_TRACK_VIEW_SETTINGS);
 	}
 
 	componentWillUnmount() {
@@ -213,7 +217,7 @@ export class App extends React.Component<Props, State> {
 						ref={(v) => this.appCanvas = v}
 						width={this.state.viewerWidth}
 						height={this.state.viewerHeight} 
-						content={this.state.canvasContent}
+						content={this.state.trackViewer}
 						pixelRatio={App.canvasPixelRatio}
 					/>
 					<NavigationController viewModel={this.viewModel} views={this.state.views} />
@@ -274,6 +278,13 @@ export class App extends React.Component<Props, State> {
 
 	protected closeView = () => {
 		this.setState({ views: [] });
+	}
+
+	protected displayTrackRegion = (event: {data: {startBase: number, endBase: number}}) => {
+		console.log('displayTrackRegion', event.data.startBase, event.data.endBase);
+		let panel0 = this.state.trackViewer.getPanel(0);
+		if (panel0 == null) return;
+		panel0.setRange(event.data.startBase - 1, event.data.endBase);
 	}
 
 	protected displayDetails = (event: {data: any}) => {

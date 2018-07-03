@@ -182,6 +182,18 @@ class TrackViewer extends Object2D {
         }
     }
 
+    getPanel(index: number): null | Panel {
+        let i = 0;
+        for (let panel of this.panels) {
+            if (i === index) {
+                return panel;
+            }
+            i++;
+        }
+
+        return null;
+    }
+
     /**
      * Removes the panel from the scene and cleans up resources
      *

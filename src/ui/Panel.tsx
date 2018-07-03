@@ -141,11 +141,10 @@ export class Panel extends Object2D {
     setRange(x0: number, x1: number) {
         // if range is not a finite number then default to 0 - 1
         x0 = isFinite(x0) ? x0 : 0;
-        x1 = isFinite(x1) ? x1 : 0;
+        x1 = isFinite(x1) ? x1 : 1;
 
         (this.x0 as any) = x0;
         (this.x1 as any) = x1;
-
 
         this.xAxis.setRange(x0, x1);
         

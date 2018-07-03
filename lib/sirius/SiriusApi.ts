@@ -8,6 +8,8 @@ import { TileContent } from './AnnotationTileset';
 
 export class SiriusApi {
 
+    static apiUrl = 'https://valis-tmp-data.firebaseapp.com/';
+
     private static minMaxCache: {
         [path: string]: Promise<{ min: number, max: number }>
     } = {};
@@ -18,7 +20,7 @@ export class SiriusApi {
         startBaseIndex: number,
         span: number,
     ): Promise<TileContent> {
-        let jsonPath = `/data/${sequenceId}/annotation${macro ? '-macro' : ''}/${startBaseIndex},${span}.json`;
+        let jsonPath = `${this.apiUrl}/data/${sequenceId}/annotation${macro ? '-macro' : ''}/${startBaseIndex},${span}.json`;
         return axios.get(jsonPath).then((a) => {
             return a.data;
         });
@@ -37,7 +39,11 @@ export class SiriusApi {
         },
         indicesPerBase: number, 
     }> {
-        let binPath = `/data/${sequenceId}/dna/${lodLevel}.bin`;
+        // @! refactor
+        return Promise.reject('@! todo');
+
+        /*
+        let binPath = `${this.apiUrl}/data/${sequenceId}/dna/${lodLevel}.bin`;
         let minMaxPath = binPath + '.minmax';
 
         // @! data format may change for certain LODs in the future
@@ -63,6 +69,7 @@ export class SiriusApi {
                     indicesPerBase: 4,
                 }
             });
+        */
     }
 
     private static loadArray<T extends keyof ArrayFormatMap>(
