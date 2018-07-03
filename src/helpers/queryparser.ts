@@ -105,7 +105,6 @@ function buildGeneQuery(parsePath: ParsedToken[]): any {
 function buildCellQuery(parsePath: ParsedToken[]): any {
     const cellType = STRIP_QUOTES(parsePath[2].value);
     const annotationType = (parsePath[0].rule == 'PROMOTER') ? "Promoter-like" : "Enhancer-like";
-    const builder = new QueryBuilder();
     builder.newGenomeQuery();
     builder.filterType(annotationType);
     builder.filterBiosample(cellType);
@@ -115,7 +114,6 @@ function buildCellQuery(parsePath: ParsedToken[]): any {
 
 function buildEQTLQuery(parsePath: ParsedToken[]): any {
     const token = parsePath[0];
-    const builder = new QueryBuilder();
     if (token.rule === 'INFLUENCING') {
         const geneName = STRIP_QUOTES(parsePath[1].value);
         builder.newGenomeQuery();
