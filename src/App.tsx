@@ -17,6 +17,10 @@ import NavigationController from "./ui/components/NavigationController/Navigatio
 import { MuiThemeProvider } from "material-ui/styles";
 import BasicTheme from "./ui/themes/BasicTheme";
 import { EntityDetails } from "./ui/components/EntityDetails/EntityDetails";
+import { IconButton, FlatButton, Dialog } from "material-ui";
+import { ContentReport } from "material-ui/svg-icons";
+// styles
+import "./App.scss";
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
@@ -32,6 +36,9 @@ type State = {
 	viewerHeight: number;
 
 	canvasContent: Object2D;
+
+	displayErrors: boolean,
+	errors: Array<any>,
 }
 
 export class App extends React.Component<Props, State> {
@@ -96,7 +103,9 @@ export class App extends React.Component<Props, State> {
 			headerHeight: this.headerHeight,
 			viewerWidth: window.innerWidth,
 			viewerHeight: this.canvasHeight(),
-			canvasContent: trackViewer
+			canvasContent: trackViewer,
+			displayErrors: false,
+			errors: [],
 		};
 	}
 
@@ -131,6 +140,35 @@ export class App extends React.Component<Props, State> {
 
 	render() {
 		// @! refactor
+
+		const errorButton = this.state.errors.length > 0 ? (<div className="error-button"><IconButton onClick={this.displayErrors} tooltip="Clear"><ContentReport /></IconButton></div>) : (<div />);
+
+		let errorDialog = (<div />);
+		if (this.state.errors.length) {
+			let id = 0;
+			const errorList = this.state.errors.map((error: object) => {
+				return (<div key={'error' + (++id)}>{JSON.stringify(error)}<hr /></div>);
+			});
+
+
+			const actions = [<FlatButton
+				label="Cancel"
+				primary={true}
+				onClick={this.hideErrors}
+			/>];
+
+			errorDialog = (<Dialog
+				title="Errors"
+				modal={false}
+				open={this.state.displayErrors}
+				onRequestClose={this.hideErrors}
+				autoScrollBodyContent={true}
+				actions={actions}
+			>
+				{errorList}
+			</Dialog>);
+		}
+		
 		return (
 			<MuiThemeProvider muiTheme={BasicTheme}>
 				<div>
@@ -143,6 +181,8 @@ export class App extends React.Component<Props, State> {
 						pixelRatio={App.canvasPixelRatio}
 					/>
 					<NavigationController viewModel={this.viewModel} views={this.state.views} />
+					{errorButton}
+					{errorDialog}
 				</div>
 			</MuiThemeProvider>
 		);
@@ -210,8 +250,21 @@ export class App extends React.Component<Props, State> {
 		}
 	}
 
+	protected displayErrors = () => {
+		this.setState({displayErrors: true});
+	}
+
+	protected hideErrors = () => {
+		this.setState({ displayErrors: false });
+	}
+
 	protected reportFailure = (evt: any) => {
-		console.error('@! refactor reportFailure', evt);
+		const error: object = evt.data.error;
+		const newErrorList = this.state.errors.slice(0);
+		newErrorList.push(error);
+		this.setState({
+			errors: newErrorList,
+		});
 	}
 
 }

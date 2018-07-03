@@ -1,5 +1,5 @@
 @import url( 'https://fonts.googleapis.com/css?family=Open+Sans:300,400');
-$font-stack: 'Open Sans', 'helvetica', sans-serif;
+@import "./variables.scss";
 
 * {
 	box-sizing: border-box;
