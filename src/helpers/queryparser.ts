@@ -95,11 +95,32 @@ function buildTraitQuery(parsePath: ParsedToken[]): any {
 }
 
 function buildGeneQuery(parsePath: ParsedToken[]): any {
-    const geneName = STRIP_QUOTES(parsePath[0].value);
-    builder.newGenomeQuery();
-    builder.filterName(geneName);
-    builder.setLimit(150);
-    return builder.build();
+    const token = parsePath[0];
+    if (token.rule === 'NAMED') {
+        const geneName = STRIP_QUOTES(parsePath[1].value);
+        builder.newGenomeQuery();
+        builder.filterName(geneName);
+        builder.setLimit(150);
+        return builder.build();
+    } else if (token.rule === 'INFLUENCING') {
+        const traitName = STRIP_QUOTES(parsePath[1].value);
+        builder.newInfoQuery();
+        builder.filterType("trait");
+        builder.searchText(traitName);
+        const traitQuery = builder.build();
+        builder.newEdgeQuery();
+        builder.setToNode(traitQuery);
+        builder.filterMaxPValue(0.05);
+        const edgeQuery = builder.build();
+        builder.newGenomeQuery();
+        builder.addToEdge(edgeQuery);
+        builder.setLimit(1000000);
+        const variantQuery = builder.build();
+        builder.newGenomeQuery();
+        builder.filterType("gene");
+        builder.addArithmeticIntersect(variantQuery);
+        return builder.build();
+    }
 }
 
 function buildCellQuery(parsePath: ParsedToken[]): any {
@@ -341,18 +362,20 @@ export function buildQueryParser(suggestions: Map<Rule, SuggestionResultProvider
     terminals.set('ENHANCER', /enhancers/g);
     terminals.set('CELL_TYPE', /"(.+?)"/g);
     terminals.set('EQTL', /eqtl/g);
-    terminals.set('GENES', /genes/g);
+    terminals.set('NAMED', /named/g);
 
     const expansions = new Map<Rule, Rule>();
     expansions.set('VARIANT_QUERY', [ALL, 'VARIANTS', 'INFLUENCING', 'TRAIT', EOF]);
-    expansions.set('GENE_QUERY', [ALL, 'GENE_T', 'GENE', EOF]);
+    expansions.set('NAMED_OR_INFLUENCEING', [ANY, 'INFLUENCING_TRAIT', 'NAMED_GENE']);
+    expansions.set('INFLUENCING_TRAIT', [ALL, 'INFLUENCING', 'TRAIT']);
+    expansions.set('NAMED_GENE', [ALL, 'NAMED', 'GENE']);
+    expansions.set('GENE_QUERY', [ALL, 'GENE_T', 'NAMED_OR_INFLUENCEING', EOF]);
     expansions.set('ANNOTATION_TYPE', [ANY, 'PROMOTER', 'ENHANCER']);
     expansions.set('CELL_ANNOTATION', [ALL, 'ANNOTATION_TYPE', 'IN', 'CELL_TYPE']);
     expansions.set('ANNOTATION_QUERY', [ALL, 'CELL_ANNOTATION', EOF]);
     expansions.set('TRAIT_QUERY', [ALL, 'TRAIT_T', 'TRAIT', EOF]);
     expansions.set('EQTL_QUERY', [ALL, 'EQTL', 'INFLUENCING', 'GENE', EOF]);
-    expansions.set('GENE_TRAIT_QUERY', [ALL, 'GENES', 'INFLUENCING', 'TRAIT', EOF]);
-    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'TRAIT_QUERY', 'ANNOTATION_QUERY', 'EQTL_QUERY', 'GENE_TRAIT_QUERY']);
+    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'TRAIT_QUERY', 'ANNOTATION_QUERY', 'EQTL_QUERY']);
 
     return new QueryParser(expansions, terminals, suggestions);
 }
