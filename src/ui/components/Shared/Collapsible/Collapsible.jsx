@@ -10,23 +10,15 @@ class Collapsible extends React.Component {
     };
   }
 
-  static getDerivedStateFromProps(nextProps, prevState) {
-    if (!prevState) {
-      prevState = {};
-    }
-    prevState.open = nextProps.open;
-    return prevState;
-  }
+  toggle = () => {
+    if (this.props.disabled) return;
+    this.setState({
+      open: !this.state.open,
+    });
+  };
 
   render() {
-    const toggle = () => {
-      if (this.props.disabled) {
-        return;
-      }
-      this.setState({
-        open: !this.state.open,
-      });
-    };
+
     const title = this.props.title;
     const iconStyle = {
       largeIcon: {
@@ -39,7 +31,7 @@ class Collapsible extends React.Component {
 
     const content = this.state.open ? (<div className="collapsible-content">{this.props.children}</div>) : (<div />);
     return (<div className="collapsible">
-      <div onClick={toggle} className="collapsible-header">
+      <div onClick={this.toggle} className="collapsible-header">
         {title}
         <div className="collapsible-toggle">{toggleIcon}</div>
       </div>

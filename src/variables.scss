@@ -15,8 +15,13 @@ $valis-blue-dark: #446577;
 $valis-grey-light: #EEF3F5;
 $valis-grey-dark: darken($valis-grey-light, 20%);
 $valis-white: #ffffff;
+$valis-black: darken($valis-grey-dark, 50%);
+$valis-shadow: rgba(0, 0, 0, 0.12) 0px 1px 6px, rgba(0, 0, 0, 0.12) 0px 1px 4px;
 
 $link-color: $dark-color;
 
 // Fonts
-$font-stack: 'Open Sans', 'helvetica', sans-serif;
+$font-stack: 'Open Sans', sans-serif;
+$valis-font-size-info-header: 2em;
+$valis-font-size-small-info-header: 1.5em;
+$valis-font-size-info-section-header: 0.75em;

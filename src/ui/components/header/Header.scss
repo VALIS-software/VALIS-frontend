@@ -10,4 +10,14 @@
 		width: 100%;
 		padding-left: 32px;
 	}
+
+	.user-button {
+		background-color: transparent;
+		padding: 0px;
+		color: transparent;
+		&:hover {
+			cursor: null;
+			background-color: transparent;
+		}
+	}
 }

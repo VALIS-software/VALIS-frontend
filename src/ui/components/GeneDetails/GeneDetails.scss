@@ -1,2 +1,16 @@
+@import "../../../variables.scss";
+
 .gene-details {
+    .gene-header {
+        .gene-name {
+          display: inline-block;
+          text-overflow:ellipsis;
+          color: $valis-black;
+          text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        padding: 32px;
+        font-size: $valis-font-size-small-info-header;
+        background-color: $valis-grey-light;
+        border-bottom: 1px solid lighten($valis-blue-dark, 25%);
+    }
 }

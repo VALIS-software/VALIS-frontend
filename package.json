@@ -6,7 +6,10 @@
   "directories": {
     "lib": "lib"
   },
-  "scripts": {},
+  "scripts": {
+    "dev-remote": "webpack --watch --mode=development --env.API_URL=http://35.185.230.75",
+    "test": "jest"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/haxiomic/VALIS-frontend.git"
@@ -19,11 +22,14 @@
   "homepage": "https://github.com/haxiomic/VALIS-frontend#readme",
   "devDependencies": {
     "@types/material-ui": "0.20.x",
-    "@types/mixpanel": "^2.14.0",
+    "@types/mixpanel": "2.14.x",
     "@types/node": "9.6.x",
     "@types/prop-types": "15.5.x",
     "@types/react": "16.1.x",
     "@types/react-dom": "16.0.x",
+    "@types/jest": "22.2.x",
+    "@types/enzyme": "3.1.x",
+    "@types/enzyme-adapter-react-16": "1.0.x",
     "css-loader": "0.28.x",
     "file-loader": "1.1.x",
     "node-sass": "4.9.x",
@@ -33,19 +39,24 @@
     "ts-loader": "4.2.x",
     "typescript": "2.8.x",
     "webpack": "4.4.x",
-    "webpack-cli": "2.0.x"
+    "webpack-cli": "2.0.x",
+    "ts-jest": "22.4.x",
+    "jest": "22.4.x",
+    "enzyme": "3.3.x",
+    "enzyme-adapter-react-16": "1.1.x"
   },
   "dependencies": {
+    "@fortawesome/fontawesome": "1.1.x",
+    "@fortawesome/fontawesome-free-regular": "5.0.x",
+    "@fortawesome/fontawesome-free-solid": "5.0.x",
+    "@fortawesome/react-fontawesome": "0.0.x",
     "axios": "0.18.x",
+    "immutable": "3.8.x",
     "material-ui": "0.20.x",
     "mixpanel-browser": "2.22.x",
     "prop-types": "15.6.x",
     "react": "16.3.x",
     "react-dom": "16.3.x",
-    "react-virtualized": "9.20.x",
-    "@fortawesome/fontawesome": "^1.1.8",
-    "@fortawesome/fontawesome-free-regular": "^5.0.13",
-    "@fortawesome/fontawesome-free-solid": "^5.0.13",
-    "@fortawesome/react-fontawesome": "0.0.19"
+    "react-virtualized": "9.20.x"
   }
 }

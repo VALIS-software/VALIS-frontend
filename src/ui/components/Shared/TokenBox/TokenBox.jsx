@@ -8,14 +8,21 @@ import AutoComplete from 'material-ui/AutoComplete';
 import IconButton from 'material-ui/IconButton';
 import ActionSearch from 'material-ui/svg-icons/action/search';
 import ContentClear from 'material-ui/svg-icons/content/clear';
+import CircularProgress from "material-ui/CircularProgress";
 import SearchResultsView from '../../SearchResultsView/SearchResultsView.jsx';
 import ErrorDetails from "../ErrorDetails/ErrorDetails.jsx";
-
+import buildQueryParser from "../../../helpers/queryparser";
 import './TokenBox.scss';
 
 class TokenBox extends React.Component {
   constructor(props) {
     super(props);
+    this.appModel = props.appModel;
+    this.viewModel = props.viewModel;
+
+    this.queryParser = buildQueryParser(this.getSuggestionHandlers());
+
+
     this.state = {
       tokens: [],
       dataSource: [],
@@ -57,7 +64,7 @@ class TokenBox extends React.Component {
     });
     if (!value) return;
     const match = this.perfectMatch(dataSource, value);
-    if (match) {
+    if (match && (!this.state.quoteInput || params.source === 'click')) {
       // clear the search box:
       this.refs.autoComplete.setState({ searchText: '' });
 
@@ -68,6 +75,7 @@ class TokenBox extends React.Component {
       });
       this.setState({
         tokens: this.state.tokens.slice(0),
+        dataSource: [],
       });
 
       // fetch new suggestions:
@@ -75,18 +83,28 @@ class TokenBox extends React.Component {
       if (this.state.tokens[this.state.tokens.length - 1].quoted && this.state.query) {
         showSuggestions = false;
       }
+
       this.getSuggestions(this.state.tokens, showSuggestions);
     } else {
       // fetch new suggestions:
       const newTokens = this.state.tokens.slice(0);
       newTokens.push({
         value: value,
-        quoted: this.state.quoteInput
+        quoted: this.state.quoteInput,
       });
       this.getSuggestions(newTokens);
     }
   };
 
+  getSuggestionHandlers() {
+    const suggestionMap = new Map();
+    ['TRAIT', 'GENE', 'CELL_TYPE'].forEach(rule => {
+      suggestionMap.set(rule, (searchText, maxResults) => {
+        return this.appModel.api.getSuggestions(rule, searchText, maxResults);
+      });
+    });
+    return suggestionMap;
+  }
 
   buildQueryStringFromTokens(tokens) {
     let pieces = tokens.map(token => {
@@ -97,23 +115,34 @@ class TokenBox extends React.Component {
 
   getSuggestions(tokens, openOnLoad = true) {
     const searchText = this.buildQueryStringFromTokens(tokens);
-    this.props.appModel.api.parseSearchQuery(searchText).then(result => {
-      this.setState({
-        dataSource: result.suggestions.slice(0, 5),
-        open: openOnLoad,
-        quoteInput: result.quoted_suggestion,
-        query: result.query
-      });
 
-      if (!result.query && openOnLoad) {
-        this.refs.autoComplete.refs.searchTextField.input.focus();
-      }
-    }, (err) => {
-      this.props.appModel.error(this, err);
-      this.setState({
-        error: err,
+    const result = this.queryParser.getSuggestions(searchText);
+    const timeOfPromise = window.performance.now();
+    if (timeOfPromise >= this.state.lastResultTime || !this.state.lastResultTime) {
+      this.appModel.pushLoading();
+      result.suggestions.then(results => {
+        this.appModel.popLoading();
+        if (timeOfPromise >= this.state.lastResultTime || !this.state.lastResultTime) {
+          this.setState({
+            lastResultTime: timeOfPromise,
+            dataSource: results,
+          });
+        }
+      }, err => {
+        this.appModel.popLoading();
       });
+    }
+
+    this.setState({
+      query: result.query,
+      quoteInput: result.isQuoted,
+      open: openOnLoad,
     });
+    if (!result.query && openOnLoad) {
+      setTimeout(() => {
+        this.refs.autoComplete.refs.searchTextField.input.focus();
+      }, 100);
+    }
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
@@ -125,14 +154,14 @@ class TokenBox extends React.Component {
 
   runSearch = () => {
     const queryStr = this.buildQueryStringFromTokens(this.state.tokens) + ' ' + this.state.searchString;
-    mixpanel.track("Run search", {'queryStr': queryStr});
+    this.appModel.trackMixPanel("Run search", { 'queryStr': queryStr });
     const query = this.state.query;
-    const view = (<SearchResultsView text={queryStr} query={query} viewModel={this.props.viewModel} appModel={this.props.appModel} />);
-    this.props.viewModel.pushView('Search Results', query, view);
+    const view = (<SearchResultsView text={queryStr} query={query} viewModel={this.viewModel} appModel={this.appModel} />);
+    this.viewModel.pushView('Search Results', query, view);
   }
 
   clearSearch = () => {
-    mixpanel.track("Clear searchbox");
+    this.appModel.trackMixPanel("Clear searchbox");
     this.setState({
       tokens: [],
       searchString: '',
@@ -209,7 +238,9 @@ class TokenBox extends React.Component {
     const tooltip = searchEnabled ? 'Search' : 'Enter a valid search';
     const clearButton = drawClear ? (<IconButton tooltip="Clear" onClick={this.clearSearch}><ContentClear /></IconButton>) : (<div />);
     const searchButton = (<IconButton onClick={this.runSearch} disabled={!searchEnabled} tooltip={tooltip}><ActionSearch /></IconButton>);
+    const progress = this.state.loading ? (<CircularProgress size={80} thickness={5} />) : null;
     const status = (<div style={style}>
+      {progress}
       {clearButton}
       {searchButton}
     </div>);

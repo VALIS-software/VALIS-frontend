@@ -257,7 +257,7 @@ class ENCODESelector extends React.Component {
 
   addQueryTrack = () => {
     const query = this.buildQuery();
-    mixpanel.track('Add ENCODE Track', {'query': query});
+    this.appModel.trackMixPanel("Add ENCODE Track", { "query": query });
     this.appModel.addAnnotationTrack(this.state.title, query);
   }
 

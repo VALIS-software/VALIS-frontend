@@ -68,9 +68,8 @@ class GeneDetails extends React.Component {
 
     const location = (<GenomicLocation contig={details.contig} start={details.start} end={details.end} />);
 
-    const header = (<div className="entity-header">
-      <div className="entity-name">{name}{zoomBtn}</div>
-      <div>{name}</div>
+    const header = (<div className="gene-header">
+      <div className="gene-name">{name}{zoomBtn}</div>
     </div>);
 
 

@@ -1,5 +1,4 @@
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import createTypography from 'material-ui/styles/typography';
 
 
 const blueLight = '#6BBBE6';
@@ -9,6 +8,9 @@ const lightGray = '#EEF3F5';
 
 const BasicTheme = getMuiTheme({
     fontFamily: "'Open Sans', serif",
+    palette: {
+        primary1Color: blueLight,
+    },
     appBar: {
         color: blueDark,
     },

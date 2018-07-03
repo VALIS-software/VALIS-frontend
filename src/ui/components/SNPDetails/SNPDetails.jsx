@@ -128,7 +128,7 @@ class SNPDetails extends React.Component {
     }
 
     let variantFreqChart = (<div> Data not available </div>);
-    if (details.info.variant_ref && details.info.variant_alt) {
+    if (details.info.variant_ref && details.info.variant_alt && details.info.allele_frequencies) {
       // snv : draw an arrow from ref --> alt
       const ref = details.info.variant_ref;
       const alt = details.info.variant_alt;
@@ -138,10 +138,10 @@ class SNPDetails extends React.Component {
         const data = [
           { key: ref, value: ref_percentage },
         ];
-        allele_frequencies.forEach((allele) => {
+        for (const allele in allele_frequencies) {
           data.push({ key: allele, value: allele_frequencies[allele] });
           ref_percentage = ref_percentage - allele_frequencies[allele];
-        });
+        };
         data[0].value = ref_percentage;
         variantFreqChart = (<FrequencyBarChart data={data} />);
       }
@@ -161,9 +161,9 @@ class SNPDetails extends React.Component {
       return (<div key={link[0]} onClick={openLink} className="row">{link[0]}</div>);
     });
 
-
-    const header = (<div className="entity-header">
-      <div className="entity-name">{name}{zoomBtn}</div>
+    const nameShortened = name.length > 13 ? name.slice(0, 12) + "..." : name;
+    const header = (<div className="snp-header">
+      <span className="snp-name">{nameShortened}{zoomBtn}</span>
     </div>);
 
     return (<div className="snp-details">

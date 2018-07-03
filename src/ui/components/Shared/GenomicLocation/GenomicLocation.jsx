@@ -2,30 +2,20 @@ import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import './GenomicLocation.scss';
 
-function CopyableText(props) {
-  const style = {
-    border: 'none',
-  };
-  return (<input style={style} className="copyable" type="text" readOnly={true} value={props.text} />);
-}
-
-CopyableText.propTypes = {
-  text: PropTypes.string,
-};
-
 class GenomicLocation extends React.Component {
   constructor(props) {
     super(props);
   }
 
   render() {
-    let locText = '';
-    if (this.props.start === this.props.end) {
-      locText = `${this.props.contig}:${this.props.start}`;
+    const contig = this.props.contig;
+    const start = this.props.start;
+    const end = this.props.end;
+    if (start === end) {
+      return (<span className="genomic-location"><span className="contig">{contig}</span><span className="range">{start}</span></span>);
     } else {
-      locText = `${this.props.contig}:${this.props.start}-${this.props.end}`;
+      return (<span className="genomic-location"><span className="contig">{contig}</span><span className="range">{start}:{end}</span></span>);
     }
-    return (<div className="genomic-location"><CopyableText text={locText} /></div>);
   }
 }
 

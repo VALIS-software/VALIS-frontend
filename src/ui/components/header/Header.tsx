@@ -6,34 +6,25 @@ import AppModel from '../../models/appModel.js';
 import ViewModel from '../../models/viewModel.js';
 import DatasetSelector from '../DatasetSelector/DatasetSelector.jsx';
 import TokenBox from '../Shared/TokenBox/TokenBox';
-import './Header.scss';
 
-const dataSourceConfig = {
-  text: 'textKey',
-  value: 'valueKey',
-};
+import UserProfileButton from '../Shared/UserProfileButton/UserProfileButton';
+import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
+
+import './Header.scss';
 
 type Props = {
   viewModel: ViewModel,
   model: AppModel,
+  userProfile: any // @! todo type
 }
 
-type State = {
-  dataSource: Array<string>,
-  inputValue: string,
-  searchFilter: number,
-}
+type State = {}
 
 class Header extends React.Component<Props, State> {
 
   constructor(props: Props) {
     super(props);
-
-    this.state = {
-      dataSource: [],
-      inputValue: '',
-      searchFilter: 1,
-    };
+    this.state = {};
   }
 
   addDatasetBrowser = () => {
@@ -43,16 +34,19 @@ class Header extends React.Component<Props, State> {
   }
 
   render() {
-    const addDatasetBrowser = this.addDatasetBrowser;
     return (<div className="header">
       <Toolbar>
-        <ToolbarGroup firstChild={true} style={{ width: '768px' }}>
+        <ToolbarGroup firstChild={true}>
           <div className="search-box">
             <TokenBox appModel={this.props.model} viewModel={this.props.viewModel} />
           </div>
         </ToolbarGroup>
         <ToolbarGroup>
-          <RaisedButton label="Browse Data" primary={true} onClick={addDatasetBrowser} />
+          <RaisedButton label="Browse Data" primary={true} onClick={this.addDatasetBrowser} />
+          <UserFeedBackButton userProfile={this.props.userProfile} />
+          <div className="user-button">
+            <UserProfileButton userProfile={this.props.userProfile} />
+          </div>
         </ToolbarGroup>
       </Toolbar>
     </div>);

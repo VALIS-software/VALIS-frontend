@@ -47,7 +47,7 @@ class NavigationController extends React.Component<Props, State> {
     const view = visible ? curr.view : <div />;
 
     return (
-      <Drawer width={300} openSecondary={true} open={visible}>
+      <Drawer className="navigation-controller" width={300} openSecondary={true} open={visible}>
         <AppBar
           title={title}
           iconElementLeft={navButton}
