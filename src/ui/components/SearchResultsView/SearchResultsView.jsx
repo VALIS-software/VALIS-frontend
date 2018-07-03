@@ -40,7 +40,6 @@ class SearchResultsView extends React.Component {
   }
 
   componentDidMount() {
-    this.loadMore();
     const height = document.getElementById('search-results-view').clientHeight;
     this.setState({ height });
   }
@@ -49,17 +48,21 @@ class SearchResultsView extends React.Component {
     this.props.appModel.addAnnotationTrack(this.props.text, this.state.query, this.state.filters);
   }
 
-  runQuery = () => {
+  runQuery = (loadingIndicatorState = true) => {
     if (!this.state.query) return;
     const cursor = this.state.cursor;
     const filteredQuery = Util.applyFilterToQuery(this.state.query, this.state.filters);
+    this.setState({
+      isLoading: loadingIndicatorState
+    });
+    this.props.appModel.pushLoading();
     this.api.getQueryResults(filteredQuery, true, cursor, cursor + FETCH_SIZE).then(results => {
+      this.props.appModel.popLoading();
       const singleResult = (results.result_start === 0 && results.result_end === 1 && results.reached_end === true);
       if (singleResult) {
         this.viewModel.popView();
         this.resultSelected(results.data[0]);
       } else {
-
         let newResults = this.state.results.slice(0);
         newResults = newResults.concat(results.data);
         this.setState({
@@ -71,7 +74,8 @@ class SearchResultsView extends React.Component {
         });
       }
     }, (err) => {
-      this.appModel.error(this, err);
+      this.props.appModel.error(this, err);
+      this.props.appModel.popLoading();
       this.setState({
         error: err,
         isLoading: false,
@@ -80,10 +84,7 @@ class SearchResultsView extends React.Component {
   }
 
   loadMore = () => {
-    this.setState({
-      isLoading: true,
-    });
-    this.runQuery();
+    this.runQuery(false);
   }
 
   toggleFilters = () => {
@@ -199,10 +200,15 @@ class SearchResultsView extends React.Component {
     if (this.state.needsRefresh) {
       this._cache.clearAll();
       this.runQuery();
+    }
+
+    if (this.state.isLoading) {
       return (<div id="search-results-view" className="search-results-view navigation-controller-loading">
         <CircularProgress size={80} thickness={5} />
       </div>);
     }
+
+
     const loadMoreRows = this.state.isLoading || !this.state.hasMore ? () => { return null; } : this.loadMore
 
     const isRowLoaded = ({ index }) => index < this.state.results.length
