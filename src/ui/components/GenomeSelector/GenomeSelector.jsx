@@ -8,11 +8,7 @@ import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import QueryBuilder from '../../models/query.js';
-<<<<<<< HEAD:src/ui/components/GenomeSelector/GenomeSelector.jsx
 import { CHROMOSOME_NAMES } from '../../helpers/constants';
-=======
-import { CHROMOSOME_NAMES } from '../../helpers/constants.js';
->>>>>>> upstream/master:src/components/GenomeSelector/GenomeSelector.jsx
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 
 // Styles

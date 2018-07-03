@@ -1,9 +1,6 @@
-<<<<<<< HEAD
 /data/
 _built/
 
-=======
->>>>>>> upstream/master
 node_modules
 dist
 npm-debug.log
