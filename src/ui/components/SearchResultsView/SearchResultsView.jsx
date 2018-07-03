@@ -6,7 +6,7 @@ import CircularProgress from "material-ui/CircularProgress";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 import SearchFilter from "../Shared/SearchFilter/SearchFilter.jsx";
 import GenomicLocation from "../Shared/GenomicLocation/GenomicLocation.jsx";
-import { List, InfiniteLoader } from 'react-virtualized';
+import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import Util from "../../helpers/util.js";
 
 const { Map, Set } = require('immutable');
@@ -32,6 +32,10 @@ class SearchResultsView extends React.Component {
       filters: null,
       cursor: 0
     };
+    this._cache = new CellMeasurerCache({
+      fixedWidth: true,
+      minHeight: 80,
+    });
   }
 
   componentDidMount() {
@@ -128,7 +132,7 @@ class SearchResultsView extends React.Component {
     return (<span className="right-info"><div>{location}</div><div>{genomicType} {mutation} </div></span>);
   }
 
-  rowRenderer = ({ index, key, style }) => {
+  rowRenderer = ({ index, key, parent, style }) => {
     if (index === this.state.results.length && this.state.hasMore) {
       return (<div key={key}>Loading...</div>);
     } else if (index === this.state.results.length) {
@@ -137,36 +141,44 @@ class SearchResultsView extends React.Component {
     const result = this.state.results[index];
     let title = "";
     let description = "";
-    const sourceStr = result.source.join("/");
-    if (result.type === "trait") {
-      title = result.name;
-      description = "Source: " + sourceStr;
-    } else {
+    const isGenomeNode = result.type !== "trait";
 
-      const sourcePills = this.renderPills(result.source);
-      const genePills = this.renderPills(result.info.variant_affected_genes);
-      const tagPills = this.renderPills(result.info.variant_tags);
-      const alleles = this.renderRightInfo(result);
-      title = (<div><span>{result.name}</span>{alleles}</div>);
 
-      const tags = result.info.variant_tags && result.info.variant_tags.length ? (<tr><td>Tags</td><td>{tagPills}</td></tr>) : null;
-      const genes = result.info.variant_affected_genes && result.info.variant_affected_genes.length ? (<tr><td>Genes</td><td>{genePills}</td></tr>) : null;
-      description = (<div>
-        <table className="result-info">
-          <tbody>
-            {genes}
-            <tr><td>Sources</td><td>{sourcePills}</td></tr>
-            {tags}
-          </tbody>
-        </table>
-      </div>)
-    }
+    const sourcePills = this.renderPills(result.source);
+    const genePills = this.renderPills(result.info.variant_affected_genes);
+    const tagPills = this.renderPills(result.info.variant_tags);
+    const alleles = isGenomeNode ? this.renderRightInfo(result) : null;
+    title = (<div><span>{isGenomeNode ? result.name : Util.prettyPrint(result.name)}</span>{alleles}</div>);
+
+    const tags = result.info.variant_tags && result.info.variant_tags.length ? (<tr><td>Tags</td><td>{tagPills}</td></tr>) : null;
+    const genes = result.info.variant_affected_genes && result.info.variant_affected_genes.length ? (<tr><td>Genes</td><td>{genePills}</td></tr>) : null;
+    description = (<div>
+      <table className="result-info">
+        <tbody>
+          {genes}
+          <tr><td>Sources</td><td>{sourcePills}</td></tr>
+          {tags}
+        </tbody>
+      </table>
+    </div>);
+
     const openResult = () => {
       this.props.viewModel.displayEntityDetails(result);
     }
-    return (<div className="search-result" onClick={openResult} style={style} key={result.id}>
-      <div className="search-result-inner">{title}{description}</div>
-    </div>);
+    return (<CellMeasurer
+      cache={this._cache}
+      columnIndex={0}
+      key={key}
+      rowIndex={index}
+      parent={parent}>
+      <div className="search-result" onClick={openResult} style={
+        {
+          ...style,
+          height: (isGenomeNode ? 'auto' : 80)
+        }} key={result.id}>
+        <div className="search-result-inner">{title}{description}</div>
+      </div>
+    </CellMeasurer >);
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
@@ -224,13 +236,14 @@ class SearchResultsView extends React.Component {
           loadMoreRows={loadMoreRows}
           rowCount={rowCount}
         >
-          {({ onRowsRendered, registerChild }) => (
+          {({ onRowsRendered, registerChild, getRowHeight }) => (
             <List
               className="search-results-list"
               ref={registerChild}
               height={this.state.height - 48}
               rowCount={rowCount}
-              rowHeight={120}
+              rowHeight={this._cache.rowHeight}
+              deferredMeasurementCache={this._cache}
               width={300}
               query={this.state.query}
               onRowsRendered={onRowsRendered}
