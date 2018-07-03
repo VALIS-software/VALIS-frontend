@@ -6,6 +6,7 @@ import CircularProgress from "material-ui/CircularProgress";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 import SearchFilter from "../Shared/SearchFilter/SearchFilter.jsx";
 import GenomicLocation from "../Shared/GenomicLocation/GenomicLocation.jsx";
+import Pills from "../Shared/Pills/Pills.jsx";
 import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import Util from "../../helpers/util.js";
 
@@ -110,20 +111,10 @@ class SearchResultsView extends React.Component {
     this.viewModel.displayEntityDetails(result);
   }
 
-  renderPills = (pills, style) => {
-    if (!pills) return (<div />);
-    const pillElems = pills.map(item => {
-      return (<span style={style} className="pill">{item}</span>)
-    })
-    return (<span className="pills-container">
-      {pillElems}
-    </span>);
-  }
-
   renderRightInfo = (result) => {
     const ref = result.info.variant_ref;
     const alt = result.info.variant_alt;
-    const genomicType = this.renderPills([result.type], { backgroundColor: 'grey' });
+    const genomicType = (<Pills items={[result.type]} style={{ backgroundColor: 'grey' }} />);
     const location = (<GenomicLocation contig={result.contig} start={result.start} end={result.end} />);
     const mutation = null;
     if (result.type === EntityType.SNP) {
@@ -144,11 +135,11 @@ class SearchResultsView extends React.Component {
     const isGenomeNode = result.type !== "trait";
 
 
-    const sourcePills = this.renderPills(result.source);
-    const genePills = this.renderPills(result.info.variant_affected_genes);
-    const tagPills = this.renderPills(result.info.variant_tags);
+    const sourcePills = (<Pills items={result.source} />);
+    const genePills = (<Pills items={result.info.variant_affected_genes} />);
+    const tagPills = (<Pills items={result.info.variant_tags} />);
     const alleles = isGenomeNode ? this.renderRightInfo(result) : null;
-    title = (<div><span>{isGenomeNode ? result.name : Util.prettyPrint(result.name)}</span>{alleles}</div>);
+    title = (<div><span>{isGenomeNode ? result.name : Util.prettyPrint(result.name, 25)}</span>{alleles}</div>);
 
     const tags = result.info.variant_tags && result.info.variant_tags.length ? (<tr><td>Tags</td><td>{tagPills}</td></tr>) : null;
     const genes = result.info.variant_affected_genes && result.info.variant_affected_genes.length ? (<tr><td>Genes</td><td>{genePills}</td></tr>) : null;
@@ -206,6 +197,7 @@ class SearchResultsView extends React.Component {
 
   render() {
     if (this.state.needsRefresh) {
+      this._cache.clearAll();
       this.runQuery();
       return (<div id="search-results-view" className="search-results-view navigation-controller-loading">
         <CircularProgress size={80} thickness={5} />
