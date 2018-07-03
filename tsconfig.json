@@ -6,7 +6,11 @@
         "target": "es5",
         "jsx": "react",
         "downlevelIteration": true,
-        "lib": ["es2015", "DOM", "ScriptHost"],
+        "lib": [
+            "es2015",
+            "DOM",
+            "ScriptHost"
+        ],
         "noImplicitAny": true,
         "strictNullChecks": false,
         "allowJs": true
