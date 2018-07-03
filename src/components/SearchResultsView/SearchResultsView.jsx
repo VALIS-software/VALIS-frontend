@@ -49,8 +49,8 @@ class SearchResultsView extends React.Component {
     const cursor = this.state.cursor;
     const filteredQuery = Util.applyFilterToQuery(this.state.query, this.state.filters);
     this.api.getQueryResults(filteredQuery, true, cursor, cursor + FETCH_SIZE).then(results => {
-
-      if (results.results_total === 1) {
+      const singleResult = (results.result_start === 0 && results.result_end === 1 && results.reached_end === true);
+      if (singleResult) {
         this.viewModel.popView();
         this.resultSelected(results.data[0]);
       } else {
@@ -199,11 +199,11 @@ class SearchResultsView extends React.Component {
         <CircularProgress size={80} thickness={5} />
       </div>);
     }
-    const loadMoreRows = this.state.isLoading ? () => { return null; } : this.loadMore
+    const loadMoreRows = this.state.isLoading || !this.state.hasMore ? () => { return null; } : this.loadMore
 
     const isRowLoaded = ({ index }) => index < this.state.results.length
 
-    const rowCount = this.state.results.length + 1;
+    const rowCount = this.state.results.length + (this.state.hasMore ? 1 : 0);
 
     let filterMenu = null;
 
