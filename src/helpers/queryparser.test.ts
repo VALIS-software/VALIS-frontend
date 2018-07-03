@@ -38,7 +38,7 @@ test('test_empty_query', () => {
     const result: Suggestion = parseText('');
     const promise = result.suggestions;
     promise.then((results: string[]) => {
-        expect(results.length).toBe(5);
+        expect(results.length).toBe(7);
     });
     return promise;
 });
