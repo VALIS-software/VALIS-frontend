@@ -7,7 +7,10 @@
     "lib": "lib"
   },
   "scripts": {
-    "dev-remote": "webpack --watch --mode=development --env.API_URL=http://35.185.230.75",
+    "dev": "webpack-dev-server --env.dev",
+    "dev-remote": "webpack-dev-server --env.dev --env.API_URL=http://35.185.230.75",
+    "production": "webpack --env.production",
+    "deploy": "webpack --env.deploy --display-error-details",
     "test": "jest"
   },
   "repository": {
@@ -20,29 +23,31 @@
   },
   "homepage": "https://github.com/VALIS-software/VALIS-frontend/issues#readme",
   "devDependencies": {
+    "@types/enzyme": "3.1.x",
+    "@types/enzyme-adapter-react-16": "1.0.x",
+    "@types/jest": "22.2.x",
     "@types/material-ui": "0.20.x",
     "@types/mixpanel": "2.14.x",
     "@types/node": "9.6.x",
     "@types/prop-types": "15.5.x",
     "@types/react": "16.1.x",
     "@types/react-dom": "16.0.x",
-    "@types/jest": "22.2.x",
-    "@types/enzyme": "3.1.x",
-    "@types/enzyme-adapter-react-16": "1.0.x",
     "css-loader": "0.28.x",
+    "enzyme": "3.3.x",
+    "enzyme-adapter-react-16": "1.1.x",
     "file-loader": "1.1.x",
+    "jest": "22.4.x",
     "node-sass": "4.9.x",
     "sass-loader": "6.0.x",
     "source-map-loader": "0.2.x",
     "style-loader": "0.20.x",
+    "ts-jest": "22.4.x",
     "ts-loader": "4.2.x",
     "typescript": "2.8.x",
     "webpack": "4.4.x",
     "webpack-cli": "2.0.x",
-    "ts-jest": "22.4.x",
-    "jest": "22.4.x",
-    "enzyme": "3.3.x",
-    "enzyme-adapter-react-16": "1.1.x"
+    "webpack-dev-server": "3.1.x",
+    "webpack-google-cloud-storage-plugin": "0.8.x"
   },
   "dependencies": {
     "@fortawesome/fontawesome": "1.1.x",
