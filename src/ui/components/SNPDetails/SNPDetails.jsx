@@ -1,16 +1,17 @@
 // Dependencies
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import QueryBuilder from '../../models/query.js';
+import QueryBuilder, { QUERY_TYPE_INFO }  from '../../models/query.js';
+import Pills from '../Shared/Pills/Pills.jsx';
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
 import AssociationList from '../Shared/AssociationList/AssociationList.jsx';
 import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation.jsx';
-import '../Shared/Shared.scss';
 import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton.jsx';
 // Styles
 import './SNPDetails.scss';
+import '../Shared/Shared.scss';
 
 function FrequencyBarChart(props) {
   const sorted = props.data.slice().sort(((a, b) => b.value - a.value));
@@ -166,6 +167,15 @@ class SNPDetails extends React.Component {
       <span className="snp-name">{nameShortened}{zoomBtn}</span>
     </div>);
 
+    const biotypes = details.info.variant_affected_bio_types ? (<div className="section">
+      <div className="section-header"> Affected Bio Types </div>
+      <div><Pills items={details.info.variant_affected_bio_types} /></div>
+    </div>) : null;
+    const tags = details.info.variant_tags ? (<div className="section">
+      <div className="section-header"> Tags </div>
+      <div><Pills items={details.info.variant_tags} /></div>
+    </div>) : null;
+
     return (<div className="snp-details">
       {header}
       <Collapsible title="Basic Info" open={true}>
@@ -181,6 +191,12 @@ class SNPDetails extends React.Component {
           <div className="section">
             <div className="section-header"> Location </div>
             {location}
+          </div>
+          {biotypes}
+          {tags}
+          <div className="section">
+            <div className="section-header"> Sources </div>
+            <div>{details.source}</div>
           </div>
         </div>
       </Collapsible>

@@ -38,20 +38,8 @@ $filter-header-height: 48px;
 				font-weight: bold;
 				color: $valis-grey-dark;
 				td {
+					vertical-align: top;
 					padding: 2px;
-				}
-			}
-			.pills-container {
-				.pill {
-					padding: 4px;
-					padding-top: 2px;
-					padding-bottom: 2px;
-					font-size: 10px;
-					border-radius: 4px;
-					background-color: $valis-blue-medium;
-					color: white;
-					font-weight: bold;
-					margin-right: 2px;
 				}
 			}
 		}

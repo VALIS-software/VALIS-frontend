@@ -58,10 +58,11 @@ class TraitDetails extends React.Component {
 
     const details = this.state.details;
 
-    const name = details.name;
+    const name = Util.prettyPrint(details.name);
 
-    const header = (<div className="entity-header">
-      <div className="entity-name">{name}</div>
+    const header = (<div className="trait-header">
+      <div className="trait-name">{name}</div>
+      <div className="trait-description">{this.state.details.info.description}</div>
     </div>);
 
     const linksData = [];
