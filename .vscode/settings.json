@@ -1,5 +1,11 @@
 {
+<<<<<<< HEAD
   "eslint.enable": false,
   "editor.formatOnSave": false,
   "typescript.tsdk": "node_modules/typescript/lib",
+=======
+  "editor.formatOnSave": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "tslint.configFile": "tslint.json"
+>>>>>>> upstream/master
 }
