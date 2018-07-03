@@ -11,15 +11,14 @@
     "test": "jest"
   },
   "repository": {
-    "type": "git",
-    "url": "git+https://github.com/haxiomic/VALIS-frontend.git"
+    "type": "git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/haxiomic/VALIS-frontend/issues"
+    "url": "https://github.com/VALIS-software/VALIS-frontend/issues"
   },
-  "homepage": "https://github.com/haxiomic/VALIS-frontend#readme",
+  "homepage": "https://github.com/VALIS-software/VALIS-frontend/issues#readme",
   "devDependencies": {
     "@types/material-ui": "0.20.x",
     "@types/mixpanel": "2.14.x",
