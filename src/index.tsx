@@ -1,13 +1,15 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import GPUTextFonts from "./fonts/GPUTextFonts";
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
-import App from "./components/App/App";
-import "./index.scss";
+import App from "./App";
 
-function renderApp() {
-  GPUTextFonts.init();
-  ReactDOM.render(React.createElement(App), document.getElementById("main"));
-}
+import './index.html';
+import './index.scss';
 
-renderApp(); // Renders App on init
+ReactDOM.render(
+	<MuiThemeProvider>
+		<App />
+	</MuiThemeProvider>,
+	document.getElementById('root')
+);

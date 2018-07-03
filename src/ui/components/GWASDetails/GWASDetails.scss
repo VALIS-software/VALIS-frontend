@@ -1,0 +1,40 @@
+@import "../../../variables.scss";
+
+.gwas-details {
+  .entity-header {
+    .entity-name {
+      padding: 8px;
+      font-weight: 200;
+      font-size: 18px;
+    }
+  }
+
+  .section {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+  .section-header {
+    font-size: 10px;
+    font-weight: 100;
+    color: darkgrey;
+  }
+
+  a {
+    color: $link-color;
+    cursor: pointer;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .gwas-info-wrapper {
+    padding: 8px;
+  }
+  .gwas-type-wrapper {
+    font-size: 18px;
+    margin-top: 8px;
+    .gwas-type {
+      font-weight: bold;
+    }
+  }
+}

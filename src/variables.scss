@@ -1,0 +1,27 @@
+// Track headers
+$track-header-width: 200px;
+$axis-width: 30px;
+$margin-width: 8px;
+$header-content-width: calc(100% - #{$axis-width} - #{$margin-width});
+$white-color: #e8e8e8;
+$dark-color: darken(#242321, 5%);
+
+$sidebar-header-height: 64px;
+
+// Colors
+$valis-blue-light: #6BBBE6;
+$valis-blue-medium: #55ACDB;
+$valis-blue-dark: #446577;
+$valis-grey-light: #EEF3F5;
+$valis-grey-dark: darken($valis-grey-light, 20%);
+$valis-white: #ffffff;
+$valis-black: darken($valis-grey-dark, 50%);
+$valis-shadow: rgba(0, 0, 0, 0.12) 0px 1px 6px, rgba(0, 0, 0, 0.12) 0px 1px 4px;
+
+$link-color: $dark-color;
+
+// Fonts
+$font-stack: 'Open Sans', sans-serif;
+$valis-font-size-info-header: 2em;
+$valis-font-size-small-info-header: 1.5em;
+$valis-font-size-info-section-header: 0.75em;

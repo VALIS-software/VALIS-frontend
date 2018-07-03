@@ -1,0 +1,23 @@
+.header {
+	position: relative;
+
+	box-shadow: 0 2px 20px #0000004f;
+	z-index: 1;
+
+	margin-bottom: 20px;
+
+	.search-box {
+		width: 100%;
+		padding-left: 32px;
+	}
+
+	.user-button {
+		background-color: transparent;
+		padding: 0px;
+		color: transparent;
+		&:hover {
+			cursor: null;
+			background-color: transparent;
+		}
+	}
+}
