@@ -66,6 +66,7 @@ module.exports = (env) => ({
 	},
 
 	plugins: [
+		// pass --env to javascript build via process.env
 		new DefinePlugin({ "process.env": JSON.stringify(env) })
 	],
 
