@@ -42,7 +42,6 @@ class Header extends React.Component<Props, State> {
           </div>
         </ToolbarGroup>
         <ToolbarGroup>
-          <RaisedButton label="Browse Data" primary={true} onClick={this.addDatasetBrowser} />
           <UserFeedBackButton userProfile={this.props.userProfile} />
           <div className="user-button">
             <UserProfileButton userProfile={this.props.userProfile} />
