@@ -3,7 +3,10 @@ const DefinePlugin = require("webpack").DefinePlugin;
 
 const outputDirectory = `${__dirname}/dist`;
 
+
 module.exports = (env) => {
+	env = env || {};
+	
 	const config = {
 		context: path.resolve(__dirname, "src"),
 		entry: "./index.tsx",
