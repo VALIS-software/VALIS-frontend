@@ -38,6 +38,7 @@ class SearchFilter extends React.Component {
         this.state = {
             currFilterMenu: null,
             filters: new Map(),
+            originalFilter: new Map(),
             filterOptions: new Map(),
         }
     }
@@ -75,7 +76,7 @@ class SearchFilter extends React.Component {
     cancelFilter = () => {
         this.setState({
             currFilterMenu: null,
-            filters: this.state.previousFilters
+            filters: this.state.originalFilter
         });
     }
 

@@ -50,7 +50,6 @@ class SearchResultsView extends React.Component {
   
   componentDidUpdate(prevProps, prevState) {
     this.query = this.props.query;
-    this.filters = this.props.filters || new Map();
     if (this.currentQuery !== this.queryToFetch()) {
       this.fetch(true);
     }
@@ -218,7 +217,7 @@ class SearchResultsView extends React.Component {
     let filterMenu = null;
 
     if (this.state.showFilters) {
-      filterMenu = (<SearchFilter appModel={this.props.appModel} viewModel={this.props.viewModel} filters={this.state.filters} onFinish={this.updateFilters} onCancel={this.toggleFilters} />);
+      filterMenu = (<SearchFilter key={this.filters.toString()} appModel={this.props.appModel} viewModel={this.props.viewModel} filters={this.filters} onFinish={this.updateFilters} onCancel={this.toggleFilters} />);
     }
     return (
       <div id="search-results-view" className="search-results-view">
