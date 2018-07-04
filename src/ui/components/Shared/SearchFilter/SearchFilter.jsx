@@ -56,7 +56,6 @@ class SearchFilter extends React.Component {
                 filters: newFilters,
             });
         }
-        console.log(this.state.filters);
     }
 
     noneSelected = (filterType) => {
