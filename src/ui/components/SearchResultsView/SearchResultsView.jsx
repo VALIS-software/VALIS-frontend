@@ -25,13 +25,17 @@ class SearchResultsView extends React.Component {
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
     this.api = this.appModel.api;
+    
+    this.currentQuery = null;
+    this.requestedQuery = null;
+    this.cursor = 0;
+    this.query = props.query;
+    this.currentQuery = null;
+    this.filters = props.filters || new Map();
+
     this.state = {
-      query: null,
-      needsRefresh: true,
       isLoading: false,
       results: [],
-      filters: null,
-      cursor: 0
     };
     this._cache = new CellMeasurerCache({
       fixedWidth: true,
@@ -43,20 +47,42 @@ class SearchResultsView extends React.Component {
     const height = document.getElementById('search-results-view').clientHeight;
     this.setState({ height });
   }
+  
+  componentDidUpdate(prevProps, prevState) {
+    this.query = this.props.query;
+    if (this.currentQuery !== this.queryToFetch()) {
+      this.fetch(true);
+    }
+  }
 
   addQueryAsTrack = () => {
     this.props.appModel.addAnnotationTrack(this.props.text, this.state.query, this.state.filters);
   }
 
-  runQuery = (loadingIndicatorState = true) => {
-    if (!this.state.query) return;
-    const cursor = this.state.cursor;
-    const filteredQuery = Util.applyFilterToQuery(this.state.query, this.state.filters);
+  fetch = (clearResults = false) => {
+    const currentQuery = this.queryToFetch();
+
+    // clear the results if needed
+    if (clearResults) {
+      this.cursor = 0;
+      this._cache.clearAll();
+      this.setState({
+        results: [],
+      });
+    }
+
+    // set loading states
     this.setState({
-      isLoading: loadingIndicatorState
+      isLoading: true,
     });
     this.props.appModel.pushLoading();
-    this.api.getQueryResults(filteredQuery, true, cursor, cursor + FETCH_SIZE).then(results => {
+
+    // update the current fetched query
+    this.currentQuery = currentQuery;
+    
+    const cursor = this.cursor;
+
+    this.api.getQueryResults(currentQuery, true, cursor, cursor + FETCH_SIZE).then(results => {
       this.props.appModel.popLoading();
       const singleResult = (results.result_start === 0 && results.result_end === 1 && results.reached_end === true);
       if (singleResult) {
@@ -65,12 +91,11 @@ class SearchResultsView extends React.Component {
       } else {
         let newResults = this.state.results.slice(0);
         newResults = newResults.concat(results.data);
+        this.cursor += results.data.length;
         this.setState({
           results: newResults,
-          needsRefresh: false,
           hasMore: !results.reached_end,
           isLoading: false,
-          cursor: cursor + results.data.length,
         });
       }
     }, (err) => {
@@ -83,29 +108,30 @@ class SearchResultsView extends React.Component {
     });
   }
 
-  loadMore = () => {
-    this.runQuery(false);
-  }
-
   toggleFilters = () => {
     this.setState({
       showFilters: !this.state.showFilters,
     });
   }
 
+  queryToFetch = () => {
+    return Util.applyFilterToQuery(this.query, this.filters);
+  }
+
   updateFilters = (filters) => {
+    this.filters = new Map(filters);
+
     this.setState({
-      filters: new Map(filters),
       showFilters: false,
-      cursor: 0,
-      results: [],
-      needsRefresh: true,
     });
 
     // update the track:
     if (this.props.trackGuid) {
-      this.props.appModel.setTrackFilter(this.props.trackGuid, this.state.filters);
+      this.props.appModel.setTrackFilter(this.props.trackGuid, this.filters);
     }
+
+    // reload the data if needed
+    this.fetch(true);
   }
 
   resultSelected(result) {
@@ -173,43 +199,16 @@ class SearchResultsView extends React.Component {
     </CellMeasurer >);
   }
 
-  static getDerivedStateFromProps(nextProps, prevState) {
-    if (!prevState) {
-      prevState = {};
-    }
-    // if there is a trackViewGuid, load filters and query from the track view!
-    let query = null;
-    let filter = null;
-    if (nextProps.trackGuid) {
-      query = nextProps.appModel.getTrackQuery(nextProps.trackGuid);
-      filter = nextProps.appModel.getTrackFilter(nextProps.trackGuid);
-    } else {
-      query = nextProps.query;
-    }
-
-    prevState.needsRefresh = prevState.query !== query;
-    prevState.results = prevState.needsRefresh ? [] : prevState.results;
-    prevState.cursor = prevState.needsRefresh ? 0 : prevState.cursor;
-    prevState.query = query;
-    prevState.filter = filter;
-    prevState.appModel = nextProps.appModel;
-    return prevState;
-  }
-
   render() {
-    if (this.state.needsRefresh) {
-      this._cache.clearAll();
-      this.runQuery();
-    }
-
-    if (this.state.isLoading) {
+    if (this.state.isLoading && this.state.results.length === 0) {
       return (<div id="search-results-view" className="search-results-view navigation-controller-loading">
         <CircularProgress size={80} thickness={5} />
       </div>);
+    } else if (this.state.results.length === 0) {
+      return (<div id="search-results-view" className="search-results-view"> No results found, try removing the filters </div>);
     }
 
-
-    const loadMoreRows = this.state.isLoading || !this.state.hasMore ? () => { return null; } : this.loadMore
+    const loadMoreRows = this.state.isLoading || !this.state.hasMore ? () => { return null; } : () => this.fetch(false);
 
     const isRowLoaded = ({ index }) => index < this.state.results.length
 
@@ -218,7 +217,7 @@ class SearchResultsView extends React.Component {
     let filterMenu = null;
 
     if (this.state.showFilters) {
-      filterMenu = (<SearchFilter appModel={this.props.appModel} viewModel={this.props.viewModel} filters={this.state.filters} onFinish={this.updateFilters} onCancel={this.toggleFilters} />);
+      filterMenu = (<SearchFilter key={this.filters.toString()} appModel={this.props.appModel} viewModel={this.props.viewModel} filters={this.filters} onFinish={this.updateFilters} onCancel={this.toggleFilters} />);
     }
     return (
       <div id="search-results-view" className="search-results-view">
