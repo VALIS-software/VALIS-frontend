@@ -6,7 +6,6 @@ import SequenceTileStore from "./model/data-store/SequenceTileStore";
 import SharedTileStore from "./model/data-store/SharedTileStores";
 import { TrackModel } from "./model/TrackModel";
 import { AppCanvas } from "./ui/core/AppCanvas";
-import Object2D from "./ui/core/Object2D";
 import TrackViewer from "./ui/TrackViewer";
 import Header from "./ui/components/Header/Header";
 import View from "./ui/View";
@@ -131,10 +130,7 @@ export class App extends React.Component<Props, State> {
 			displayErrors: false,
 			errors: [],
 			userProfile: null,
-		};
-
-		// @! tmp
-		this.displayTrackRegion({data:{startBase: 1, endBase: 20}});
+		};	
 	}
 
 	componentDidMount() {
