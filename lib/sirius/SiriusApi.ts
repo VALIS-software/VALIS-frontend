@@ -8,7 +8,7 @@ import { TileContent } from './AnnotationTileset';
 
 export class SiriusApi {
 
-    static apiUrl = 'https://valis-tmp-data.firebaseapp.com/';
+    public static apiUrl: string = '';
 
     private static minMaxCache: {
         [path: string]: Promise<{ min: number, max: number }>
@@ -37,13 +37,90 @@ export class SiriusApi {
             min: number,
             max: number,
         },
+        indicesPerBase: number,
+    }> {
+        let samplingDensity = (1 << lodLevel);
+        let startBasePair = samplingDensity * lodStartBaseIndex + 1;
+        let span = lodSpan * samplingDensity;
+        let endBasePair = startBasePair + span;
+        let url = `${this.apiUrl}/datatracks/sequence/chr1/${startBasePair}/${endBasePair}?sampling_rate=${samplingDensity}`;
+
+        return axios({
+            method: 'get',
+            url: url,
+            responseType: 'arraybuffer',
+            headers: {},
+        }).then((a) => {
+
+            let arraybuffer: ArrayBuffer = a.data;
+            let byteView = new Uint8Array(arraybuffer);
+
+            // find the start of the payload
+            let nullByteIndex = 0;
+            let jsonHeader = '';
+            for (let i = 0; i < arraybuffer.byteLength; i++) {
+                let byte = byteView[i];
+                if (byte === 0) {
+                    nullByteIndex = i;
+                    break;
+                } else {
+                    jsonHeader += String.fromCharCode(byte);
+                }
+            }
+
+            let payloadBytes = arraybuffer.slice(nullByteIndex + 1);
+            let payloadArray = new Float32Array(payloadBytes);
+            let baseCount = payloadArray.length / 4;
+
+            // build compressed array
+            let compressedArray = new Uint8Array(payloadArray.length);
+            // find min/max
+            let min = Infinity;
+            let max = -Infinity;
+            for (let i = 0; i < payloadArray.length; i++) {
+                let v = payloadArray[i];
+                min = Math.min(min, v);
+                max = Math.max(max, v);
+            }
+
+            // use min/max to compress to bytes
+            let delta = max - min;
+            let scaleFactor = delta === 0 ? 0 : (1/delta);
+            for (let i = 0; i < baseCount; i++) {
+                compressedArray[i * 4 + 0] = Math.round(Math.min((payloadArray[i * 4 + 0] - min) * scaleFactor, 1.) * 0xFF); // A
+                compressedArray[i * 4 + 1] = Math.round(Math.min((payloadArray[i * 4 + 3] - min) * scaleFactor, 1.) * 0xFF); // C
+                compressedArray[i * 4 + 2] = Math.round(Math.min((payloadArray[i * 4 + 2] - min) * scaleFactor, 1.) * 0xFF); // G 
+                compressedArray[i * 4 + 3] = Math.round(Math.min((payloadArray[i * 4 + 1] - min) * scaleFactor, 1.) * 0xFF); // T
+            }
+
+            // console.log(url, jsonHeader, min, max, payloadArray, compressedArray);
+            // @! data is too long by 1 value?
+
+            return {
+                array: compressedArray, //new Uint8Array(0),
+                sequenceMinMax: {
+                    min: min,
+                    max: max,
+                },
+                indicesPerBase: 4,
+            }
+        });
+    }
+
+    static sample_LoadACGTSubSequence(
+        sequenceId: string,
+        lodLevel: number,
+        lodStartBaseIndex: number,
+        lodSpan: number,
+    ): Promise<{
+        array: Uint8Array,
+        sequenceMinMax: {
+            min: number,
+            max: number,
+        },
         indicesPerBase: number, 
     }> {
-        // @! refactor
-        return Promise.reject('@! todo');
-
-        /*
-        let binPath = `${this.apiUrl}/data/${sequenceId}/dna/${lodLevel}.bin`;
+        let binPath = `data/chromosome1/dna/${lodLevel}.bin`;
         let minMaxPath = binPath + '.minmax';
 
         // @! data format may change for certain LODs in the future
@@ -69,7 +146,6 @@ export class SiriusApi {
                     indicesPerBase: 4,
                 }
             });
-        */
     }
 
     private static loadArray<T extends keyof ArrayFormatMap>(
