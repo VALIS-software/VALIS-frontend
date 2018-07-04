@@ -1,5 +1,5 @@
 import EntityType from "../../../../lib/sirius/EntityType";
-import AppModel from "../../models/appModel";
+import AppModel from "../../models/AppModel";
 import ViewModel from "../../models/ViewModel";
 import GeneDetails from "../GeneDetails/GeneDetails";
 import GenericEntityDetails from "../GenericEntityDetails/GenericEntityDetails";
