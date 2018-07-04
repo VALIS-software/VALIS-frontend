@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as PropTypes from 'prop-types';
 
 import Avatar from 'material-ui/Avatar';
-import Popover from 'material-ui/Popover';
+import Popover, {PopoverAnimationVertical} from 'material-ui/Popover';
 import { Card, CardActions, CardHeader, CardMedia, CardTitle, CardText } from 'material-ui/Card';
 import FlatButton from 'material-ui/FlatButton';
 import IconButton from 'material-ui/IconButton';
@@ -48,6 +48,7 @@ class UserProfileButton extends React.Component {
         <Avatar src={userProfile.picture} />
         <Popover
           open={open}
+          animation={PopoverAnimationVertical}
           anchorEl={anchorEl}
           anchorOrigin={{ "horizontal": "right", "vertical": "bottom" }}
           targetOrigin={{ "horizontal": "right", "vertical": "top" }}
