@@ -20,7 +20,7 @@ export class SiriusApi {
         startBaseIndex: number,
         span: number,
     ): Promise<TileContent> {
-        let jsonPath = `${this.apiUrl}/data/${sequenceId}/annotation${macro ? '-macro' : ''}/${startBaseIndex},${span}.json`;
+        let jsonPath = `https://valis-tmp-data.firebaseapp.com/data/${sequenceId}/annotation${macro ? '-macro' : ''}/${startBaseIndex},${span}.json`;
         return axios.get(jsonPath).then((a) => {
             return a.data;
         });
