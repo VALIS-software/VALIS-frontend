@@ -36,6 +36,7 @@ class TrackViewer extends Object2D {
     /** used to collectively position panels and track tiles */
     protected grid: Object2D;
     protected addPanelButton: ReactObject;
+    protected addDataTrackButton: ReactObject;
 
     constructor() {
         super();
@@ -57,11 +58,25 @@ class TrackViewer extends Object2D {
             this.panelHeaderHeight,
             this.panelHeaderHeight
         );
-        this.addPanelButton.x = this.spacing.x * 0.5;
+        this.addPanelButton.x = this.spacing.x * 0.5 ;
         this.addPanelButton.layoutParentX = 1;
         this.addPanelButton.layoutY = -1;
         this.addPanelButton.y = -this.xAxisHeight - this.spacing.x * 0.5;
         this.grid.add(this.addPanelButton);
+
+        this.addDataTrackButton = new ReactObject(
+            <AddDataTrackButton onClick={() => {
+                console.log('hello');
+            }} />,
+            this.panelHeaderHeight,
+            this.panelHeaderHeight
+        );
+        this.addDataTrackButton.x = -this.trackHeaderWidth + this.spacing.x * 0.5;
+        this.addDataTrackButton.layoutParentX = 0;
+        this.addDataTrackButton.layoutY = -1;
+        this.addDataTrackButton.w = this.trackHeaderWidth;
+        this.addDataTrackButton.y = this.spacing.y * 0.5 - this.xAxisHeight - this.spacing.y;
+        this.grid.add(this.addDataTrackButton);
 
         this.layoutGridContainer();
     }
@@ -96,6 +111,10 @@ class TrackViewer extends Object2D {
         trackRow.setResizable(true);
 
         this.positionTrack(trackRow, false);
+    }
+
+    addDatasetBrowser() {
+        // TODO
     }
 
     addPanel(model: PanelModel, animate: boolean) {
@@ -525,6 +544,33 @@ function AddPanelButton(props: {
             <IconButton onClick={props.onClick}>
                 <SvgAdd color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' />
             </IconButton>
+        </div>
+    </div>
+}
+
+function AddDataTrackButton(props: {
+    onClick: () => void
+}) {
+    return <div
+    style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        alignItems: 'center',
+    }}
+    >
+        <div>
+            <button 
+                onClick={props.onClick}
+                style={{
+                    margin: '0 auto',
+                    padding: '8px 16px',
+                    borderRadius: '16px',
+            }}>Add Track</button>
         </div>
     </div>
 }
