@@ -1,5 +1,19 @@
 const LOCAL_API_URL = 'http://127.0.0.1:5000';
 
+let apiBaseUrl = '';
+
+if (process != null && process.env != null) {
+  if (process.env.API_URL != null) {
+    // url override set
+    apiBaseUrl = process.env.API_URL;
+  } else {
+    // use default dev url
+    apiBaseUrl = process.env.dev ? LOCAL_API_URL : '';
+  }
+}
+
+export const API_BASE_URL = apiBaseUrl;
+
 const COLOR1 = [37, 206, 209];
 const COLOR2 = [128, 155, 206];
 const COLOR3 = [255, 138, 91];

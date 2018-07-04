@@ -6,6 +6,11 @@ import App from "./App";
 
 import './index.html';
 import './index.scss';
+import { SiriusApi } from "../lib/sirius/SiriusApi";
+import { API_BASE_URL } from "./ui/helpers/constants";
+
+// set sirius API root
+SiriusApi.apiUrl = API_BASE_URL;
 
 ReactDOM.render(
 	<MuiThemeProvider>

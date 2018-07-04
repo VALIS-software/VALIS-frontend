@@ -1,6 +1,6 @@
 import GenomeAPI from "./api.js";
 import EventCreator from "./eventCreator.js";
-import { LOCAL_API_URL } from "../helpers/constants";
+import { API_BASE_URL } from "../helpers/constants";
 
 export enum AppEvent {
     AddTrack,
@@ -14,21 +14,9 @@ export enum AppEvent {
     TrackMixPanel
 }
 
-let apiBaseUrl = '';
-
-if (process != null && process.env != null) {
-    if (process.env.API_URL != null) {
-        // url override set
-        apiBaseUrl = process.env.API_URL;
-    } else {
-        // use default dev url
-        apiBaseUrl = process.env.dev ? LOCAL_API_URL : '';
-    }
-}
-
 export default class AppModel extends EventCreator {
 
-    api: any = new GenomeAPI(apiBaseUrl);
+    api: any = new GenomeAPI(API_BASE_URL);
 
     private tracks: any[] = [];
     private overlays: any[] = [];
