@@ -18,8 +18,13 @@ export interface Layout {
     y: number,
     w: number,
     h: number,
+
+    layoutX: number,
+    layoutY: number,
+    
     layoutW: number,
     layoutH: number,
+
     layoutParentX: number,
     layoutParentY: number,
 }
