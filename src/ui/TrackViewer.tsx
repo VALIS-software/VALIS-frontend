@@ -65,9 +65,7 @@ class TrackViewer extends Object2D {
         this.grid.add(this.addPanelButton);
 
         this.addDataTrackButton = new ReactObject(
-            <AddDataTrackButton onClick={() => {
-                console.log('hello');
-            }} />,
+            <AddDataTrackButton onClick={this.addDatasetBrowser} />,
             this.panelHeaderHeight,
             this.panelHeaderHeight
         );
@@ -113,7 +111,7 @@ class TrackViewer extends Object2D {
         this.positionTrack(trackRow, false);
     }
 
-    addDatasetBrowser() {
+    addDatasetBrowser = () => {
         // TODO
     }
 
