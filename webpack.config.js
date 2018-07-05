@@ -6,7 +6,7 @@ const outputDirectory = `${__dirname}/dist`;
 
 module.exports = (env) => {
 	env = env || {};
-	
+
 	const config = {
 		context: path.resolve(__dirname, "src"),
 		entry: "./index.tsx",
@@ -96,13 +96,13 @@ module.exports = (env) => {
 		const ZipPlugin = require("zip-webpack-plugin");
 
 		config.plugins = config.plugins.concat([
-			
+
 			// Zip up ./dist/
 			// (source path defaults to webpack output path)
 			new ZipPlugin({ path: outputDirectory, filename: "dist.zip" }),
 
 			new WebpackGoogleCloudStoragePlugin({
-				directory: outputDirectory,
+				directory: "dist",
 				include: ["dist.zip"],
 				exclude: [],
 				storageOptions: {
