@@ -130,19 +130,28 @@ export class InteractionEvent {
 
 }
 
+export enum WheelDeltaMode {
+    Pixel = 0x01,
+    Line = 0x02,
+    Page = 0x03,
+}
+
 export interface WheelInteractionEventInit extends InteractionEventInit {
+    wheelDeltaMode: WheelDeltaMode,
     wheelDeltaX: number;
     wheelDeltaY: number;
     wheelDeltaZ: number;
 }
 
 export class WheelInteractionEvent extends InteractionEvent {
+    readonly wheelDeltaMode: WheelDeltaMode;
     readonly wheelDeltaX: number;
     readonly wheelDeltaY: number;
     readonly wheelDeltaZ: number;
 
     constructor(init: WheelInteractionEventInit, sourceEvent: Event) {
         super(init, sourceEvent);
+        this.wheelDeltaMode = init.wheelDeltaMode;
         this.wheelDeltaX = init.wheelDeltaX;
         this.wheelDeltaY = init.wheelDeltaY;
         this.wheelDeltaZ = init.wheelDeltaZ;
