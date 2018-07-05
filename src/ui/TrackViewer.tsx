@@ -9,6 +9,9 @@ import ReactObject from "./core/ReactObject";
 import Rect from "./core/Rect";
 import Panel from "./Panel";
 import TrackRow from "./TrackRow";
+import NavigationController from "../ui/components/NavigationController/NavigationController";
+import DatasetSelector from "../ui/components/DatasetSelector/DatasetSelector";
+
 import { DEFAULT_SPRING } from "./UIConstants";
 
 class TrackViewer extends Object2D {
@@ -37,6 +40,9 @@ class TrackViewer extends Object2D {
     protected grid: Object2D;
     protected addPanelButton: ReactObject;
     protected addDataTrackButton: ReactObject;
+
+    /** used to interact with the app ui */
+    protected navigationController: NavigationController;
 
     constructor() {
         super();
@@ -111,8 +117,13 @@ class TrackViewer extends Object2D {
         this.positionTrack(trackRow, false);
     }
 
+    setNavigationController = (navigationController: NavigationController) => {
+        this.navigationController = navigationController;
+    }
+
     addDatasetBrowser = () => {
-        // TODO
+        const nav = this.navigationController;
+        nav.pushView((<DatasetSelector ref={nav.bind} />));
     }
 
     addPanel(model: PanelModel, animate: boolean) {

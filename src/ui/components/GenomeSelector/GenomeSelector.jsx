@@ -1,8 +1,7 @@
 // Dependencies
 import * as React from 'react';
-import * as PropTypes from 'prop-types';
+import { NavigationView } from "../NavigationController/NavigationController";
 import TextField from 'material-ui/TextField';
-import AutoComplete from 'material-ui/AutoComplete';
 import Slider from 'material-ui/Slider';
 import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import SelectField from 'material-ui/SelectField';
@@ -27,13 +26,10 @@ function reverse(value) {
 }
 
 
-class GenomeSelector extends React.Component {
+class GenomeSelector extends NavigationView {
   constructor(props) {
     super(props);
-    if (props.appModel) {
-      this.appModel = props.appModel;
-      this.api = this.appModel.api;
-    }
+
     this.state = {
       title: '',
       genomeTypeValue: 0,
@@ -96,10 +92,10 @@ class GenomeSelector extends React.Component {
 
   addQueryTrack() {
     const query = this.buildGenomeQuery();
-    this.appModel.addAnnotationTrack(this.state.title, query);
+    this.app().addAnnotationTrack(this.state.title, query);
   }
 
-  componentDidMount() {
+  componentMountedInNavController(nav) {
     // some pre-defined types
     this.availableTypes = ['gene', 'exon', 'mRNA', 'promoter', 'enhancer', 'SNP'];
     this.genomeTypeItems = [];
@@ -118,7 +114,7 @@ class GenomeSelector extends React.Component {
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
     const genomeQuery = builder.build();
-    this.api.getDistinctValues('type', genomeQuery).then(data => {
+    this.api().getDistinctValues('type', genomeQuery).then(data => {
       this.availableTypes = data;
       this.genomeTypeItems = [];
       for (let i = 0; i < this.availableTypes.length; i++) {
@@ -128,7 +124,7 @@ class GenomeSelector extends React.Component {
         genomeTypeValue: 0,
       });
     }, (err) => {
-      this.appModel.error(this, err);
+      this.app().error(this, err);
       this.setState({
         error: err,
       });
@@ -190,9 +186,5 @@ class GenomeSelector extends React.Component {
     );
   }
 }
-
-GenomeSelector.propTypes = {
-  appModel: PropTypes.object,
-};
 
 export default GenomeSelector;

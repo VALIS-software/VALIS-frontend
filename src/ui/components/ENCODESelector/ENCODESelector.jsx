@@ -2,7 +2,7 @@
 import * as React from "react";
 import * as PropTypes from "prop-types";
 import TextField from "material-ui/TextField";
-import AutoComplete from "material-ui/AutoComplete";
+import { NavigationView } from "../NavigationController/NavigationController";
 import Slider from "material-ui/Slider";
 import RaisedButton from "material-ui/RaisedButton/RaisedButton";
 import SelectField from "material-ui/SelectField";
@@ -36,13 +36,9 @@ function reverse(value) {
   );
 }
 
-class ENCODESelector extends React.Component {
+class ENCODESelector extends NavigationView {
   constructor(props) {
     super(props);
-    if (props.appModel) {
-      this.appModel = props.appModel;
-      this.api = this.appModel.api;
-    }
     this.state = {
       title: "",
       biosampleValue: null,
@@ -85,7 +81,7 @@ class ENCODESelector extends React.Component {
         biosampleValue: newBiosampleValue,
       });
     }, err => {
-      this.appModel.error(this, err);
+      this.app().error(this, err);
       this.setState({
         error: err,
       });
@@ -120,7 +116,7 @@ class ENCODESelector extends React.Component {
         genomeTypeValue: newTypeValue
       });
     }, err => {
-      this.appModel.error(this, err);
+      this.app().error(this, err);
     });
   }
 
@@ -154,7 +150,7 @@ class ENCODESelector extends React.Component {
         checked: newChecked
       });
     }, err => {
-      this.appModel.error(this, err);
+      this.app().error(this, err);
     });
   }
 
@@ -257,11 +253,11 @@ class ENCODESelector extends React.Component {
 
   addQueryTrack = () => {
     const query = this.buildQuery();
-    this.appModel.trackMixPanel("Add ENCODE Track", { "query": query });
-    this.appModel.addAnnotationTrack(this.state.title, query);
+    this.app().trackMixPanel("Add ENCODE Track", { "query": query });
+    this.app().addAnnotationTrack(this.state.title, query);
   }
 
-  componentDidMount() {
+  componentMountedInNavController(nav) {
     this.availableChromoNames = ['Any'].concat(CHROMOSOME_NAMES);
     this.chromoNameItems = [];
     for (let i = 0; i < this.availableChromoNames.length; i++) {
@@ -384,9 +380,5 @@ class ENCODESelector extends React.Component {
     );
   }
 }
-
-ENCODESelector.propTypes = {
-  appModel: PropTypes.object
-};
 
 export default ENCODESelector;

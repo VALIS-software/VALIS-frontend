@@ -73,6 +73,7 @@ export class App extends React.Component<Props, State> {
 	protected appModel: AppModel;
 	protected viewModel: ViewModel;
 	protected appCanvas: AppCanvas;
+	protected navigationController: NavigationController;
 
 	constructor(props: Props) {
 		super(props);
@@ -204,7 +205,11 @@ export class App extends React.Component<Props, State> {
 				{errorList}
 			</Dialog>);
 		}
+
+		const navController = (<NavigationController ref={(v) => this.navigationController = v} appModel={this.appModel} viewModel={this.viewModel} views={this.state.views} />);
 		
+		if (this.navigationController) this.state.trackViewer.setNavigationController(this.navigationController);
+
 		return (
 			<MuiThemeProvider muiTheme={BasicTheme}>
 				<div>
@@ -216,7 +221,7 @@ export class App extends React.Component<Props, State> {
 						content={this.state.trackViewer}
 						pixelRatio={App.canvasPixelRatio}
 					/>
-					<NavigationController viewModel={this.viewModel} views={this.state.views} />
+					{navController}
 					{errorButton}
 					{errorDialog}
 				</div>
