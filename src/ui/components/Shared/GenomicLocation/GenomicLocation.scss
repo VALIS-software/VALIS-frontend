@@ -1,0 +1,17 @@
+@import "../../../../variables.scss";
+
+.genomic-location {
+  font-size: 10px;
+  .contig {
+    background-color: $valis-grey-dark;
+    border-radius: 8px 0px 0px 8px;
+    padding: 2px 2px 2px 6px;
+    border-right: 1px solid $valis-grey-dark;
+    color: $valis-white;
+  }
+  .range {
+    background-color: $valis-grey-light;
+    border-radius: 0px 8px 8px 0px;
+    padding: 2px 6px 2px 2px;
+  }
+}

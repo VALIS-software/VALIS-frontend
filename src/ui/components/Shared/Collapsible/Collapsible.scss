@@ -1,0 +1,58 @@
+@import "../../../../variables.scss";
+.collapsible {
+	.collapsible-header {
+		padding: 16px;
+		cursor: pointer;
+		font-size: $valis-font-size-info-section-header;
+		color: $valis-black;
+		background: linear-gradient(lighten($valis-blue-light, 15%), lighten($valis-blue-light, 10%));
+		border-left: 8px solid $valis-blue-dark;
+		.collapsible-toggle {
+			float: right;
+			font-size: 18px;
+			font-weight: 100;
+			margin-top: -7px;
+		}
+
+
+		&:hover {
+			background-color: lighten($valis-blue-dark, 10%);
+			border-left: 8px solid $valis-blue-dark;
+		}
+	}
+	.collapsible-content {
+		border-top: 1px solid #D5D6D9;
+		.row {
+			cursor: pointer;
+			font-size: $valis-font-size-info-section-header;
+			padding: 16px;
+			border-bottom: 1px solid #D5D6D9;
+			border-left: 8px solid lighten(#D5D6D9, 10%);
+			&:hover {
+				background-color: lighten(#D5D6D9, 10%);
+			}
+		}
+	}
+
+  .section-wrapper {
+	padding: 16px;
+	padding-left: 20px;
+  }
+
+	.section {
+    	padding-top: 4px;
+    	padding-bottom: 4px;
+
+    	p {
+    		font-weight: 100;
+    		font-size: 12px;
+    		padding: 4px 0px 4px 0px;
+    		margin: 0px;
+    	}
+	}
+	.section-header {
+    	font-size: 10px;
+    	font-weight: 100;
+    	color: darkgrey;
+  	}
+}

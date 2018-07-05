@@ -1,0 +1,40 @@
+@import "./variables.scss";
+
+.navigation-controller-loading {
+    margin-top: 50%;
+    margin-left: calc(50% - 40px);
+}
+
+.error-button {
+    position: absolute;
+    bottom: 0px;
+}
+
+.float-left {
+    float: left;
+}
+
+.float-right {
+    float: right;
+}
+
+.clearfix {
+    overflow: auto;
+}
+
+button {
+    &:focus {
+        outline:0;
+    }
+    border:none;
+    border-radius: 8px;
+    background-color: $valis-blue-light;
+    padding: 2px 16px 2px 16px;
+    margin: 14px 8px 8px 8px;
+    color: white;
+    font-size: 14px;
+    &:hover {
+        cursor: pointer;
+        background-color: darken($valis-blue-light, 15%);
+    }
+}

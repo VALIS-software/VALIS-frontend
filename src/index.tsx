@@ -1,13 +1,20 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import GPUTextFonts from "./fonts/GPUTextFonts";
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
-import App from "./components/App/App";
-import "./index.scss";
+import App from "./App";
 
-function renderApp() {
-  GPUTextFonts.init();
-  ReactDOM.render(React.createElement(App), document.getElementById("main"));
-}
+import './index.html';
+import './index.scss';
+import { SiriusApi } from "../lib/sirius/SiriusApi";
+import { API_BASE_URL } from "./ui/helpers/constants";
 
-renderApp(); // Renders App on init
+// set sirius API root
+SiriusApi.apiUrl = API_BASE_URL;
+
+ReactDOM.render(
+	<MuiThemeProvider>
+		<App />
+	</MuiThemeProvider>,
+	document.getElementById('root')
+);
