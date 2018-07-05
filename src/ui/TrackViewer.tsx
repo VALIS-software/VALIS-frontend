@@ -10,6 +10,8 @@ import Rect from "./core/Rect";
 import Panel from "./Panel";
 import TrackRow from "./TrackRow";
 import { DEFAULT_SPRING } from "./UIConstants";
+import AppModel from "../ui/models/AppModel";
+import DatasetSelector from "../ui/components/DatasetSelector/DatasetSelector";
 
 class TrackViewer extends Object2D {
 
@@ -37,6 +39,9 @@ class TrackViewer extends Object2D {
     protected grid: Object2D;
     protected addPanelButton: ReactObject;
     protected addDataTrackButton: ReactObject;
+
+    /** used to interact with app ui */
+    protected appModel: AppModel;
 
     constructor() {
         super();
@@ -79,6 +84,10 @@ class TrackViewer extends Object2D {
         this.layoutGridContainer();
     }
 
+    setAppModel(appModel: AppModel) {
+        this.appModel = appModel;
+    }
+
     // track-viewer state deltas
     addTrackRow(model: TrackModel, heightPx: number = this.defaultTrackHeight) {
         let edges = this.edges.horizontal;
@@ -112,7 +121,7 @@ class TrackViewer extends Object2D {
     }
 
     addDatasetBrowser = () => {
-        // TODO
+        this.appModel.pushView((<DatasetSelector appModel={this.appModel}/>));
     }
 
     addPanel(model: PanelModel, animate: boolean) {
