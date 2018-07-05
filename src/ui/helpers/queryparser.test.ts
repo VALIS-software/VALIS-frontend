@@ -38,13 +38,12 @@ test('test_empty_query', () => {
     const result: Suggestion = parseText('');
     const promise = result.suggestions;
     promise.then((results: string[]) => {
-        expect(results.length).toBe(5);
+        expect(results.length).toBe(6);
     });
     return promise;
 });
 
 test('test_parse_variant_query_incomplete', () => {
-
     /* Test variant search returns correct suggestions */
     const result = parseText('variants');
     const promise = result.suggestions;
@@ -68,31 +67,58 @@ test('test_parse_variant_query_influencing', () => {
     expect(result.query).toBe(null);
 });
 
-test('test_parse_gene_query_complete', () => {
+test('test_parse_gene_query_named_complete', () => {
     /* Test valid search text parses to Query */
-    const result = parseText('gene \"MAOA\"');
+    const result = parseText('gene named \"MAOA\"');
     const promise = result.suggestions;
     promise.then((results: string[]) => {
         expect(results[0]).toBe("MAOA");
         expect(results.length).toBe(1);
     });
     expect(result.tokens[0].rule).toBe('GENE_T');
-    expect(result.tokens.length).toBe(3);
+    expect(result.tokens.length).toBe(4);
     expect(result.query).toBeTruthy();
 });
 
-test('test_parse_gene_query_prefix_quoted', () => {
+test('test_parse_gene_query_named_prefix_quoted', () => {
     /* Test valid search text parses to Query */
-    const result = parseText('gene "MAO"');
+    const result = parseText('gene named "MAO"');
     const promise = result.suggestions;
     promise.then((results: string[]) => {
         expect(results.indexOf("MAOA")).toBeGreaterThan(-1);
         expect(results.indexOf("MAOB")).toBeGreaterThan(-1);
         expect(results.length).toBe(2);
     });
-    expect(result.tokens.length).toBe(3);
+    expect(result.tokens.length).toBe(4);
     expect(result.query).toBeTruthy();
 });
+
+test('test_parse_gene_query_influencing_complete', () => {
+    /* Test valid search text parses to Query */
+    const result = parseText('gene influencing \"Alzheimers\"');
+    const promise = result.suggestions;
+    promise.then((results: string[]) => {
+        expect(results[0]).toBe("Alzheimers");
+        expect(results.length).toBe(1);
+    });
+    expect(result.tokens[0].rule).toBe('GENE_T');
+    expect(result.tokens.length).toBe(4);
+    expect(result.query).toBeTruthy();
+});
+
+test('test_parse_gene_query_influencing_prefix_quoted', () => {
+    /* Test valid search text parses to Query */
+    const result = parseText('gene influencing \"Alzhe\"');
+    const promise = result.suggestions;
+    promise.then((results: string[]) => {
+        expect(results[0]).toBe("Alzheimers");
+        expect(results.length).toBe(1);
+    });
+    expect(result.tokens[0].rule).toBe('GENE_T');
+    expect(result.tokens.length).toBe(4);
+    expect(result.query).toBeTruthy();
+});
+
 test('test_parse_cell_query', () => {
     /* Test enhancer query parses properly */
     const result = parseText('enhancers in "heart cell"');
