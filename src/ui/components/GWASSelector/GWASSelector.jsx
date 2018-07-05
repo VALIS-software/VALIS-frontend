@@ -1,6 +1,5 @@
 // Dependencies
 import * as React from "react";
-import * as PropTypes from "prop-types";
 import TextField from "material-ui/TextField";
 import AutoComplete from "material-ui/AutoComplete";
 import Slider from "material-ui/Slider";
@@ -8,7 +7,8 @@ import RaisedButton from "material-ui/RaisedButton/RaisedButton";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
-import QueryBuilder, { QUERY_TYPE_INFO } from "../../models/query.js";
+import QueryBuilder from "../../models/query.js";
+import { NavigationView } from "../NavigationController/NavigationController";
 import {
   DATA_SOURCE_GWAS,
   DATA_SOURCE_CLINVAR
@@ -33,13 +33,9 @@ function reverse(value) {
   );
 }
 
-class GWASSelector extends React.Component {
+class GWASSelector extends NavigationView {
   constructor(props) {
     super(props);
-    this.appModel = props.appModel;
-    this.viewModel = props.viewModel;
-    this.api = this.appModel.api;
-
     this.state = {
       title: "",
       searchTrait: "",
@@ -60,12 +56,12 @@ class GWASSelector extends React.Component {
     }
     builder.filterType("trait");
     const infoQuery = builder.build();
-    this.api.getDistinctValues("name", infoQuery).then(data => {
+    this.api().getDistinctValues("name", infoQuery).then(data => {
       this.setState({
         traits: data
       });
     }, (err) => {
-      this.appModel.error(this, err);
+      this.app().error(this, err);
       this.setState({
         error: err,
       });
@@ -143,12 +139,12 @@ class GWASSelector extends React.Component {
 
   addQueryTrack() {
     const query = this.buildGWASQuery();
-    this.appModel.trackMixPanel('Add GWAS Track', { 'query': query });
-    this.appModel.addAnnotationTrack(this.state.title, query);
+    this.app().trackMixPanel('Add GWAS Track', { 'query': query });
+    this.app().addAnnotationTrack(this.state.title, query);
   }
 
 
-  componentDidMount() {
+  componentMountedInNavController(nav) {
     this.availableSourceNames = ['Any', 'GWAS', 'ClinVar'];
     this.searchSourceItems = [];
     for (let i = 0; i < this.availableSourceNames.length; i++) {
@@ -226,10 +222,5 @@ class GWASSelector extends React.Component {
     );
   }
 }
-
-GWASSelector.propTypes = {
-  appModel: PropTypes.object,
-  viewModel: PropTypes.object
-};
 
 export default GWASSelector;

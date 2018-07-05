@@ -1,8 +1,7 @@
 // Dependencies
 import * as React from "react";
-import * as PropTypes from "prop-types";
 import TextField from "material-ui/TextField";
-import AutoComplete from "material-ui/AutoComplete";
+import { NavigationView } from "../NavigationController/NavigationController";
 import RaisedButton from "material-ui/RaisedButton/RaisedButton";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
@@ -14,13 +13,9 @@ import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 // Styles
 import "./FunctionalTrackSelector.scss";
 
-class FunctionalTrackSelector extends React.Component {
+class FunctionalTrackSelector extends NavigationView {
   constructor(props) {
     super(props);
-    if (props.appModel) {
-      this.appModel = props.appModel;
-      this.api = this.appModel.api;
-    }
     this.state = {
       title: "",
       outTypeValue: null,
@@ -46,7 +41,7 @@ class FunctionalTrackSelector extends React.Component {
       builder.filterAssay(this.selectedAssay);
     }
     const infoQuery = builder.build();
-    this.api.getDistinctValues("info.outtype", infoQuery).then(data => {
+    this.api().getDistinctValues("info.outtype", infoQuery).then(data => {
       // Keep the current selection of type
       let newTypeValue = null;
       if (this.state.outTypeValue !== null) {
@@ -61,7 +56,7 @@ class FunctionalTrackSelector extends React.Component {
         outTypeValue: newTypeValue
       });
     }, err => {
-      this.appModel.error(this, err);
+      this.app().error(this, err);
     });
   }
 
@@ -77,7 +72,7 @@ class FunctionalTrackSelector extends React.Component {
       builder.filterAssay(this.selectedAssay);
     }
     const infoQuery = builder.build();
-    this.api.getDistinctValues('info.biosample', infoQuery).then(data => {
+    this.api().getDistinctValues('info.biosample', infoQuery).then(data => {
       // Keep the current selection of biosample
       let newBiosampleValue = null;
       if (this.state.biosampleValue !== null) {
@@ -92,7 +87,7 @@ class FunctionalTrackSelector extends React.Component {
         biosampleValue: newBiosampleValue,
       });
     }, err => {
-      this.appModel.error(this, err);
+      this.app().error(this, err);
       this.setState({
         error: err,
       });
@@ -111,7 +106,7 @@ class FunctionalTrackSelector extends React.Component {
       builder.filterOutType(this.selectedType);
     }
     const infoQuery = builder.build();
-    this.api.getDistinctValues("info.assay", infoQuery).then(data => {
+    this.api().getDistinctValues("info.assay", infoQuery).then(data => {
       // Keep the current selection of assay
       let newAssayValue = null;
       if (this.state.assayValue !== null) {
@@ -126,7 +121,7 @@ class FunctionalTrackSelector extends React.Component {
         assayValue: newAssayValue
       });
     }, err => {
-      this.appModel.error(this, err);
+      this.app().error(this, err);
     });
   }
 
@@ -140,7 +135,7 @@ class FunctionalTrackSelector extends React.Component {
     builder.filterAssay(this.selectedAssay);
     builder.setLimit(10);
     const infoQuery = builder.build();
-    this.api.getQueryResults(infoQuery).then(results => {
+    this.api().getQueryResults(infoQuery).then(results => {
       // Keep the current selection of assay
       const availableAccessions = [];
       for (const d of results.data) {
@@ -158,7 +153,7 @@ class FunctionalTrackSelector extends React.Component {
         accessionValue: 0
       });
     }, err => {
-      this.appModel.error(this, err);
+      this.app().error(this, err);
     });
   }
 
@@ -224,11 +219,11 @@ class FunctionalTrackSelector extends React.Component {
   }
 
   addFunctionalTrack = () => {
-    this.appModel.trackMixPanel('Add FunctionalTrack', { 'accession': this.selectedAccession });
-    this.appModel.addDataTrack(this.selectedAccession);
+    this.app().trackMixPanel('Add FunctionalTrack', { 'accession': this.selectedAccession });
+    this.app().addDataTrack(this.selectedAccession);
   }
 
-  componentDidMount() {
+  componentMountedInNavController(nav) {
     // use api to pull all available biosamples
     this.updateAvailableBiosamples();
     this.updateAvailableTypes();
@@ -333,9 +328,5 @@ class FunctionalTrackSelector extends React.Component {
     );
   }
 }
-
-FunctionalTrackSelector.propTypes = {
-  appModel: PropTypes.object
-};
 
 export default FunctionalTrackSelector;

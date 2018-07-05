@@ -1,6 +1,5 @@
 // Dependencies
 import * as React from "react";
-import * as PropTypes from "prop-types";
 import GWASSelector from "../GWASSelector/GWASSelector.jsx";
 import GenomeSelector from "../GenomeSelector/GenomeSelector.jsx";
 import TrackSelector from "../TrackSelector/TrackSelector.jsx";
@@ -9,40 +8,36 @@ import ENCODESelector from "../ENCODESelector/ENCODESelector.jsx";
 import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector.jsx";
 import DataListItem from "../DataListItem/DataListItem.jsx";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import { NavigationView } from "../NavigationController/NavigationController";
+// Styles
+import "./DatasetSelector.scss";
+
 import {
   TRACK_TYPE_SEQUENCE,
   TRACK_TYPE_FUNCTIONAL,
   TRACK_TYPE_GENOME,
   TRACK_TYPE_GWAS,
-  TRACK_TYPE_EQTL,
   TRACK_TYPE_ENCODE,
-  TRACK_TYPE_3D,
   TRACK_TYPE_NETWORK,
   TRACK_TYPE_BOOLEAN
 } from "../../helpers/constants";
 
-// Styles
-import "./DatasetSelector.scss";
-
-class DatasetSelector extends React.Component {
+class DatasetSelector extends NavigationView {
   constructor(props) {
     super(props);
-    this.viewModel = props.viewModel;
-    this.appModel = props.appModel;
-    this.api = this.appModel.api;
 
     this.state = {
       dataInfo: []
     };
   }
 
-  componentDidMount() {
-    this.api.getTrackInfo().then(dataInfo => {
+  componentMountedInNavController(nav) {
+    nav.api().getTrackInfo().then(dataInfo => {
       this.setState({
         dataInfo: dataInfo,
       });
     }, err => {
-      this.appModel.error(this, err);
+      this.app().error(this, err);
       this.setState({
         error: err,
       });
@@ -51,55 +46,19 @@ class DatasetSelector extends React.Component {
 
   dataSetSelected = (trackType) => {
     if (trackType === TRACK_TYPE_GENOME) {
-      this.viewModel.pushView(
-        "Genomic Elements",
-        null,
-        <GenomeSelector appModel={this.appModel} viewModel={this.viewModel} />
-      );
+      this.controller().pushView(<GenomeSelector ref={this.controller().bind} />);
     } else if (trackType === TRACK_TYPE_GWAS) {
-      this.viewModel.pushView(
-        "GWAS Track",
-        null,
-        <GWASSelector appModel={this.appModel} viewModel={this.viewModel} />
-      );
+      this.controller().pushView(<GWASSelector ref={this.controller().bind} />);
     } else if (trackType === TRACK_TYPE_ENCODE) {
-      this.viewModel.pushView(
-        "ENCODE Track",
-        null,
-        <ENCODESelector appModel={this.appModel} viewModel={this.viewModel} />
-      );
+      this.controller().pushView(<ENCODESelector ref={this.controller().bind} />);
     } else if (trackType === TRACK_TYPE_FUNCTIONAL) {
-      this.viewModel.pushView(
-        "Functional Tracks",
-        null,
-        <FunctionalTrackSelector appModel={this.appModel} />
-      );
+      this.controller().pushView(<FunctionalTrackSelector ref={this.controller().bind} />);
     } else if (trackType === TRACK_TYPE_SEQUENCE) {
-      this.viewModel.pushView(
-        "Sequence Tracks",
-        null,
-        <TrackSelector
-          trackType={trackType}
-          appModel={this.appModel}
-          viewModel={this.viewModel}
-        />
-      );
+      this.controller().pushView(<TrackSelector trackType={trackType} ref={this.controller().bind} />);
     } else if (trackType === TRACK_TYPE_NETWORK) {
-      this.viewModel.pushView(
-        "Network Tracks",
-        null,
-        <TrackSelector
-          trackType={trackType}
-          appModel={this.appModel}
-          viewModel={this.viewModel}
-        />
-      );
+      this.controller().pushView(<TrackSelector trackType={trackType} ref={this.controller().bind} />);
     } else if (trackType === TRACK_TYPE_BOOLEAN) {
-      this.viewModel.pushView(
-        "Boolean Tracks",
-        null,
-        <BooleanTrackSelector appModel={this.appModel} />
-      );
+      this.controller().pushView(<BooleanTrackSelector ref={this.controller().bind} />);
     }
   }
 
@@ -126,10 +85,5 @@ class DatasetSelector extends React.Component {
     return <div className="dataset-selector">{dataInfoBlocks}</div>;
   }
 }
-
-DatasetSelector.propTypes = {
-  appModel: PropTypes.object,
-  viewModel: PropTypes.object
-};
 
 export default DatasetSelector;
