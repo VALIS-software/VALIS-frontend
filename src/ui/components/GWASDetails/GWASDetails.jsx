@@ -2,7 +2,7 @@
 import ReactDOM from 'react-dom';
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
-import { ASSOCIATION_TYPE } from '../../helpers/constants';
+import { ASSOCIATION_TYPE, DATA_SOURCE_GWAS } from '../../helpers/constants';
 import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
 import SNPDetails from '../SNPDetails/SNPDetails.jsx';
@@ -57,7 +57,7 @@ class GWASDetails extends React.Component {
       return (<div />);
     }
     // Fall back to GenericEntityDetails since other source like ClinVar don't have detailed information
-    if (this.state.details.source !== "GWAS") {
+    if (this.state.details.source !== DATA_SOURCE_GWAS) {
       return (<GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={this.state.loadedAssocId} />)
     }
 
