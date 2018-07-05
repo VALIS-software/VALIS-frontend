@@ -27,12 +27,6 @@ class Header extends React.Component<Props, State> {
     this.state = {};
   }
 
-  addDatasetBrowser = () => {
-    mixpanel.track("Click BROWSE DATA");
-    const view = (<DatasetSelector viewModel={this.props.viewModel} appModel={this.props.model} />);
-    this.props.viewModel.pushView('Select Dataset', null, view);
-  }
-
   render() {
     return (<div className="header">
       <Toolbar>
@@ -42,7 +36,6 @@ class Header extends React.Component<Props, State> {
           </div>
         </ToolbarGroup>
         <ToolbarGroup>
-          <RaisedButton label="Browse Data" primary={true} onClick={this.addDatasetBrowser} />
           <UserFeedBackButton userProfile={this.props.userProfile} />
           <div className="user-button">
             <UserProfileButton userProfile={this.props.userProfile} />

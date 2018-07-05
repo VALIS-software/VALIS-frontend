@@ -1,10 +1,9 @@
-import { Card, CardActions, CardHeader, CardText } from 'material-ui/Card';
 import FlatButton from 'material-ui/FlatButton';
 import IconButton from 'material-ui/IconButton';
-import Popover from 'material-ui/Popover';
+import Dialog from 'material-ui/Dialog';
 import Snackbar from 'material-ui/Snackbar';
-import { blue500, purple500 } from 'material-ui/styles/colors';
-import BugReport from 'material-ui/svg-icons/action/bug-report';
+import { blue500 } from 'material-ui/styles/colors';
+import HelpIcon from 'material-ui/svg-icons/action/help';
 import TextField from 'material-ui/TextField';
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
@@ -96,24 +95,22 @@ class UserFeedBackButton extends React.Component {
   render() {
     const { subject, description, open, anchorEl, snackOpen } = this.state;
     const userProfile = this.props.userProfile;
-    if (!userProfile) return <div />
+    if (!userProfile) return (<div />);
+    const actions = [
+      <FlatButton label='Cancel' onClick={this.handleRequestClose} />,
+      <FlatButton label='Submit' onClick={this.handleSubmit} disabled={!description} />
+    ];
     return (
       <div>
         <IconButton onClick={this.handleClick}>
-          <BugReport color={purple500} />
-          <Popover
+          <HelpIcon/>
+          <Dialog
+            title="Submit Feedback"
             open={open}
-            anchorEl={anchorEl}
-            anchorOrigin={{ "horizontal": "right", "vertical": "bottom" }}
-            targetOrigin={{ "horizontal": "right", "vertical": "top" }}
+            actions={actions}
             onRequestClose={this.handleRequestClose}
           >
-            <Card style={{ width: 800 }}>
-              <CardHeader
-                title="Submit Feedback"
-                subtitle={userProfile.name}
-              />
-              <CardText style={{ backgroundColor: '#eeeeee' }}>
+
                 <TextField
                   floatingLabelText="Subject"
                   value={subject}
@@ -133,13 +130,7 @@ class UserFeedBackButton extends React.Component {
                   floatingLabelFocusStyle={{ color: blue500 }}
                   fullWidth={true}
                 />
-              </CardText>
-              <CardActions>
-                <FlatButton label='Cancel' onClick={this.handleRequestClose} />
-                <FlatButton label='Submit' onClick={this.handleSubmit} disabled={!description} />
-              </CardActions>
-            </Card>
-          </Popover>
+          </Dialog>
         </IconButton>
         <Snackbar
           open={snackOpen}
