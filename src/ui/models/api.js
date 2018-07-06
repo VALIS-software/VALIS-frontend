@@ -33,24 +33,10 @@ class GenomeAPI {
 		this.baseUrl = baseUrl;
 	}
 
-	getAnnotations() {
-		return axios.get(`${this.baseUrl}/annotations`).then(data => {
-			return data.data;
-		});
-	}
-
 	getGraphs() {
 		return axios.get(`${this.baseUrl}/graphs`).then(data => {
 			return data.data;
 		});
-	}
-
-	getAnnotation(annotationId, query = null) {
-		throw '@! refactor todo';
-	}
-
-	getGraph(graphId, annotationId1, annotationId2) {
-		throw `@! refactor todo`;
 	}
 
 	getGraphData(graphId, annotationId1, annotationId2, startBp, endBp, samplingRate = 1) {
@@ -59,27 +45,10 @@ class GenomeAPI {
 		return axios.get(requestUrl);
 	}
 
-	getAnnotationData(annotationId, contig, startBp, endBp, samplingRate = 1, trackHeightPx = 0, query = {}) {
-		const samplingRateQuery = `?sampling_rate=${samplingRate}&track_height_px=${trackHeightPx}`;
-		const requestUrl = `${this.baseUrl}/annotations/${annotationId}/${contig}/${startBp}/${endBp}${samplingRateQuery}`;
-		return axios.post(requestUrl, query);
-	}
-
 	getTracks() {
 		return axios.get(`${this.baseUrl}/tracks`).then(data => {
 			return data.data;
 		});
-	}
-
-	getTrack(trackId) {
-		throw '@! refactor todo';
-	}
-
-	getData(trackId, contig, startBp, endBp, samplingRate = 1, trackHeightPx = 0, aggregations = []) {
-		const aggregationStr = aggregations.join(',');
-		const query = `?sampling_rate=${samplingRate}&track_height_px=${trackHeightPx}&aggregations=${aggregationStr}`;
-		const requestUrl = `${this.baseUrl}/tracks/${trackId}/${contig}/${startBp}/${endBp}${query}`;
-		return axios.get(requestUrl);
 	}
 
 	getTrackInfo() {

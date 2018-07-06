@@ -55,26 +55,12 @@ export class SiriusApi {
             responseType: 'arraybuffer',
             headers: {},
         }).then((a) => {
-
-            let arraybuffer: ArrayBuffer = a.data;
-            let byteView = new Uint8Array(arraybuffer);
-
-            // find the start of the payload
-            let nullByteIndex = 0;
-            // let jsonHeader = '';
-            for (let i = 0; i < arraybuffer.byteLength; i++) {
-                let byte = byteView[i];
-                if (byte === 0) {
-                    nullByteIndex = i;
-                    break;
-                } else {
-                    // jsonHeader += String.fromCharCode(byte);
-                }
-            }
-
-            let payloadBytes = arraybuffer.slice(nullByteIndex + 1);
-            let payloadArray = new Float32Array(payloadBytes);
+            let payloadArray = new Float32Array(this.parseSiriusBinaryResponse(a.data));
             let baseCount = payloadArray.length / 4;
+
+            if (baseCount > lodSpan) {
+                console.warn(`Payload too large, expected ${lodSpan} units but received ${baseCount} units`);
+            }
 
             // build compressed array
             let compressedArray = new Uint8Array(payloadArray.length);
@@ -117,6 +103,31 @@ export class SiriusApi {
         });
     }
 
+    static loadSignal(
+        sequenceId: string,
+        lodLevel: number,
+        lodStartBaseIndex: number,
+        lodSpan: number
+    ) {
+        let samplingDensity = (1 << lodLevel);
+        let startBasePair = samplingDensity * lodStartBaseIndex + 1;
+        let spanBasePair = lodSpan * samplingDensity;
+        let endBasePair = startBasePair + spanBasePair - 1;
+        let url = `${this.apiUrl}/datatracks/ENCFF918ESR/chr1/${startBasePair}/${endBasePair}?sampling_rate=${samplingDensity}`;
+
+        return axios({
+            method: 'get',
+            url: url,
+            responseType: 'arraybuffer',
+            headers: {},
+        }).then((a) => {
+            let arraybuffer = this.parseSiriusBinaryResponse(a.data);
+            let payloadArray = new Float32Array(arraybuffer);
+            console.log(arraybuffer, payloadArray);
+            return payloadArray;
+        });
+    }
+
     static sample_LoadACGTSubSequence(
         sequenceId: string,
         lodLevel: number,
@@ -156,6 +167,26 @@ export class SiriusApi {
                     indicesPerBase: 4,
                 }
             });
+    }
+
+    private static parseSiriusBinaryResponse(arraybuffer: ArrayBuffer) {
+        let byteView = new Uint8Array(arraybuffer);
+
+        // find the start of the payload
+        let nullByteIndex = 0;
+        // let jsonHeader = '';
+        for (let i = 0; i < arraybuffer.byteLength; i++) {
+            let byte = byteView[i];
+            if (byte === 0) {
+                nullByteIndex = i;
+                break;
+            } else {
+                // jsonHeader += String.fromCharCode(byte);
+            }
+        }
+
+        let payloadBytes = arraybuffer.slice(nullByteIndex + 1);
+        return payloadBytes;
     }
 
     private static loadArray<T extends keyof ArrayFormatMap>(
