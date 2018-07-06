@@ -247,11 +247,12 @@ export class Panel extends Object2D {
         let fractionalAngle = 2 * absAngleY / (Math.PI); // 0 = points along y, 1 = points along x
         
         // use fraction angle to reduce x as angle approaches y-pointing
-        // function should have:
-        // - gradient = 1 at input maximum
-        // - hockey-stick-like crushing at input minimum is approached
-        // could probably be a little tighter curve but it's not too bad with just smooth-step
-        let xReductionFactor = Scalar.smoothstep(0, 1.0, Math.min(fractionalAngle * 2.0, 0.5));
+        // see https://www.desmos.com/calculator/butkwn0xdt for function exploration
+        let edge = 0.75;
+        let xReductionFactor = Math.sin(
+            Math.pow(Math.min(fractionalAngle / edge, 1), 3) * (Math.PI / 2)
+        );
+        console.log(fractionalAngle.toFixed(4), xReductionFactor);
         xScrollDomPx = xScrollDomPx * xReductionFactor;
 
         let zoomFactor = 1;
@@ -261,7 +262,8 @@ export class Panel extends Object2D {
             zoomFactor = 1 + e.wheelDeltaY * 0.01; // I'm assuming mac trackpad outputs change in %, @! needs research
         } else {
             // scroll zoom
-            zoomFactor = 1 + yScrollDomPx * 0.01 * 0.15;
+            let scrollZoomSpeed = 0.3;
+            zoomFactor = 1 + yScrollDomPx * 0.01 * scrollZoomSpeed;
             // console.log(Math.abs(1 - zoomFactor) * 100);
         }
 
