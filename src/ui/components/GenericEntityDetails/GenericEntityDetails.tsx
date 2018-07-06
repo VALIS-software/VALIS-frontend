@@ -96,28 +96,10 @@ class GenericEntityDetails extends React.Component<any, any> {
         return (
             <div className="entity-details">
                 <DetailsHeader details={details} viewModel={viewModel} />
-                <br />
-                <Paper style={{ borderRadius: "10px", overflow: "hidden" }}>
+                <Paper>
                     <DetailsTable details={details} />
                 </Paper>
-                <br />
-                <Card
-                    style={{
-                        borderRadius: "10px",
-                        overflow: "hidden",
-                        backgroundColor: "#EEEEEE"
-                    }}
-                >
-                    <CardHeader
-                        title="More Information"
-                        actAsExpander={true}
-                        showExpandableButton={true}
-                    />
-                    <CardText expandable={true} style={{ padding: "0px" }}>
-                        <AdditionInfoTable info={details.info} />
-                    </CardText>
-                </Card>
-                <br />
+                <AdditionInfoTable info={details.info} />
                 <RelationsSelector
                     relations={relations}
                     onClick={(relation: any) => this.handleClickRelation(relation)}
@@ -147,12 +129,12 @@ function DetailsHeader(props: any) {
     }
 
     return (
-        <div className="entity-header">
-            <div className="entity-name">
+        <div className="sidebar-header">
+            <div className="sidebar-name">
                 {name}
                 {zoomBtn}
             </div>
-            <div className="entity-desc">{description}</div>
+            <div className="sidebar-description">{description}</div>
         </div>
     );
 }
@@ -166,6 +148,7 @@ function DetailsTable(props: any) {
     if (!props.details) {
         return <div />;
     }
+
     const details = props.details;
     const detailItems = [];
     // show available data
@@ -174,16 +157,16 @@ function DetailsTable(props: any) {
         if (details[k]) {
             const valueStr = details[k].toString();
             detailItems.push(
-                <TableRow style={{ backgroundColor: "#FAFAFA" }} key={k}>
+                <TableRow key={k}>
                     <TableRowColumn> {k} </TableRowColumn>
-                    <TableRowColumn> {valueStr} </TableRowColumn>
+                    <TableRowColumn style={{whiteSpace: 'normal'}}> {valueStr} </TableRowColumn>
                 </TableRow>
             );
         }
     }
     return (
         <Table selectable={false}>
-            <TableBody displayRowCheckbox={false} showRowHover={true}>
+            <TableBody displayRowCheckbox={false} showRowHover={false}>
                 {detailItems}
             </TableBody>
         </Table>
@@ -203,15 +186,15 @@ function AdditionInfoTable(props: any) {
     for (const k of Object.keys(info)) {
         const valueStr = info[k].toString();
         infoItems.push(
-            <TableRow style={{ backgroundColor: "#EEEEEE" }} key={k}>
+            <TableRow key={k}>
                 <TableRowColumn> {k} </TableRowColumn>
-                <TableRowColumn> {valueStr} </TableRowColumn>
+                <TableRowColumn style={{whiteSpace: 'normal'}}> {valueStr} </TableRowColumn>
             </TableRow>
         );
     }
     return (
         <Table selectable={false}>
-            <TableBody displayRowCheckbox={false} showRowHover={true}>
+            <TableBody displayRowCheckbox={false} showRowHover={false}>
                 {infoItems}
             </TableBody>
         </Table>

@@ -166,13 +166,6 @@ class GWASSelector extends React.Component {
     }
     return (
       <div className="track-editor">
-        <TextField
-          value={this.state.title}
-          floatingLabelText="Track Title"
-          onChange={this.handleUpdateTitle}
-          errorText={!this.state.title ? "This field is required" : ""}
-        />
-        <br /> <br />
         <AutoComplete
           floatingLabelText="Trait"
           searchText={this.state.searchTrait}
@@ -204,19 +197,8 @@ class GWASSelector extends React.Component {
           onChange={this.handleUpdatePValue}
           disabled={this.state.searchSourceValue === 2}
         />
-        <div>
-          {" "}
-          {"Max Number of Results: "} {this.state.maxnumber}{" "}
-        </div>
-        <Slider
-          min={logmin}
-          max={logmax}
-          step={(logmax - logmin) / 100}
-          value={reverse(this.state.maxnumber)}
-          onChange={this.handleUpdateMaxNumber}
-        />
         <RaisedButton
-          label="Create Track"
+          label="Add Track"
           primary={true}
           onClick={() => this.addQueryTrack()}
           disabled={!(this.state.searchTrait && this.state.title)}
