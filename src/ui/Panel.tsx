@@ -9,6 +9,7 @@ import Rect from "./core/Rect";
 import { OpenSansRegular } from "./font/Fonts";
 import Track, { AxisPointerStyle } from "./tracks/Track";
 import XAxis from "./XAxis";
+import { Scalar } from "../math/Scalar";
 
 export class Panel extends Object2D {
 
@@ -210,7 +211,48 @@ export class Panel extends Object2D {
         e.preventDefault();
         e.stopPropagation();
 
-        console.log('onTileWheel', e.wheelDeltaX, e.wheelDeltaY);
+        let xScrollDomPx = 0;
+        let yScrollDomPx = 0;
+
+        // determine panning delta in dom pixels from horizontal scroll amount
+        switch (e.wheelDeltaMode) {
+            default:
+            case WheelDeltaMode.Pixel: {
+                xScrollDomPx = e.wheelDeltaX;
+                yScrollDomPx = e.wheelDeltaY;
+                break;
+            }
+            case WheelDeltaMode.Line: {
+                // assume a line is roughly 12px (needs experimentation)
+                xScrollDomPx = e.wheelDeltaX * 12;
+                yScrollDomPx = e.wheelDeltaY * 12;
+                break;
+            }
+            case WheelDeltaMode.Page: {
+                // assume a page is roughly 1000px (needs experimentation)
+                xScrollDomPx = e.wheelDeltaX * 1000;
+                yScrollDomPx = e.wheelDeltaY * 1000;
+                break;
+            }
+        }
+
+
+        // normalize
+        let scrollVectorLength = Math.sqrt(xScrollDomPx * xScrollDomPx + yScrollDomPx * yScrollDomPx);
+        let normScrollVectorX = xScrollDomPx / scrollVectorLength;
+        let normScrollVectorY = yScrollDomPx / scrollVectorLength;
+        // as normScrollVectorY approaches 1, we should scale xScrollDomPx to
+        let cosAngleY = normScrollVectorY;
+        let absAngleY = Math.acos(Math.abs(cosAngleY));
+        let fractionalAngle = 2 * absAngleY / (Math.PI); // 0 = points along y, 1 = points along x
+        
+        // use fraction angle to reduce x as angle approaches y-pointing
+        // function should have:
+        // - gradient = 1 at input maximum
+        // - hockey-stick-like crushing at input minimum is approached
+        // could probably be a little tighter curve but it's not too bad with just smooth-step
+        let xReductionFactor = Scalar.smoothstep(0, 1.0, Math.min(fractionalAngle * 2.0, 0.5));
+        xScrollDomPx = xScrollDomPx * xReductionFactor;
 
         let zoomFactor = 1;
 
@@ -219,27 +261,9 @@ export class Panel extends Object2D {
             zoomFactor = 1 + e.wheelDeltaY * 0.01; // I'm assuming mac trackpad outputs change in %, @! needs research
         } else {
             // scroll zoom
-            // zoomFactor = 1 + e.wheelDeltaY * 0.01 * 0.15;
+            zoomFactor = 1 + yScrollDomPx * 0.01 * 0.15;
+            // console.log(Math.abs(1 - zoomFactor) * 100);
         }
-
-
-        let xScrollDomPx = 0;
-        switch (e.wheelDeltaMode) {
-            default:
-            case WheelDeltaMode.Pixel: {
-                xScrollDomPx = e.wheelDeltaX;
-                break;
-            }
-            case WheelDeltaMode.Line: {
-                xScrollDomPx = e.wheelDeltaX * 20;
-                break;
-            }
-            case WheelDeltaMode.Page: {
-                xScrollDomPx = e.wheelDeltaX * this.getComputedWidth();
-                break;
-            }
-        }
-
 
         let x0 = this.x0;
         let x1 = this.x1;
