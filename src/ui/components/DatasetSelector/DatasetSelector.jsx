@@ -14,9 +14,7 @@ import {
   TRACK_TYPE_FUNCTIONAL,
   TRACK_TYPE_GENOME,
   TRACK_TYPE_GWAS,
-  TRACK_TYPE_EQTL,
   TRACK_TYPE_ENCODE,
-  TRACK_TYPE_3D,
   TRACK_TYPE_NETWORK,
   TRACK_TYPE_BOOLEAN
 } from "../../helpers/constants";
@@ -27,8 +25,8 @@ import "./DatasetSelector.scss";
 class DatasetSelector extends React.Component {
   constructor(props) {
     super(props);
-    this.viewModel = props.viewModel;
     this.appModel = props.appModel;
+    this.viewModel = this.appModel.viewModel;
     this.api = this.appModel.api;
 
     this.state = {
@@ -129,7 +127,6 @@ class DatasetSelector extends React.Component {
 
 DatasetSelector.propTypes = {
   appModel: PropTypes.object,
-  viewModel: PropTypes.object
 };
 
 export default DatasetSelector;

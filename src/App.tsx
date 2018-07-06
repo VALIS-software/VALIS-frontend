@@ -83,9 +83,11 @@ export class App extends React.Component<Props, State> {
 		// initialize app model
 		this.appModel = new AppModel();
 		this.viewModel = new ViewModel();
+		this.appModel.setViewModel(this.viewModel);
 
 		// initialize UI
 		let trackViewer = new TrackViewer();
+		trackViewer.setAppModel(this.appModel);
 
 		// @! temporary create tile stores
 		SharedTileStore['sequence']['chromosome1'] = new SequenceTileStore('chromosome1');
