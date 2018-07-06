@@ -1,4 +1,4 @@
-import React = require("react");
+import * as React from "react";
 import IconButton from "material-ui/IconButton";
 import SvgClose from "material-ui/svg-icons/navigation/close";
 import PanelModel from "../model/PanelModel";
