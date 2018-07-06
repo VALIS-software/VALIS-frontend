@@ -2,7 +2,7 @@ import React = require("react");
 import IconButton from "material-ui/IconButton";
 import SvgClose from "material-ui/svg-icons/navigation/close";
 import PanelModel from "../model/PanelModel";
-import { InteractionEvent, WheelInteractionEvent } from "./core/InteractionEvent";
+import { InteractionEvent, WheelInteractionEvent, WheelDeltaMode } from "./core/InteractionEvent";
 import Object2D from "./core/Object2D";
 import ReactObject from "./core/ReactObject";
 import Rect from "./core/Rect";
@@ -210,18 +210,46 @@ export class Panel extends Object2D {
         e.preventDefault();
         e.stopPropagation();
 
+        console.log('onTileWheel', e.wheelDeltaX, e.wheelDeltaY);
+
         let zoomFactor = 1;
 
-        // pinch zoom
         if (e.ctrlKey) {
+            // pinch zoom
             zoomFactor = 1 + e.wheelDeltaY * 0.01; // I'm assuming mac trackpad outputs change in %, @! needs research
         } else {
-            zoomFactor = 1 + e.wheelDeltaY * 0.01 * 0.15;
+            // scroll zoom
+            // zoomFactor = 1 + e.wheelDeltaY * 0.01 * 0.15;
         }
 
-        let zoomCenterF = e.fractionX;
 
-        let span = this.x1 - this.x0;
+        let xScrollDomPx = 0;
+        switch (e.wheelDeltaMode) {
+            default:
+            case WheelDeltaMode.Pixel: {
+                xScrollDomPx = e.wheelDeltaX;
+                break;
+            }
+            case WheelDeltaMode.Line: {
+                xScrollDomPx = e.wheelDeltaX * 20;
+                break;
+            }
+            case WheelDeltaMode.Page: {
+                xScrollDomPx = e.wheelDeltaX * this.getComputedWidth();
+                break;
+            }
+        }
+
+
+        let x0 = this.x0;
+        let x1 = this.x1;
+        let span = x1 - x0;
+        
+        let basePairsPerPixel = span / this.getComputedWidth();
+        let xScrollBasePairs = basePairsPerPixel * xScrollDomPx;
+        
+        // apply scale change
+        let zoomCenterF = e.fractionX;
 
         // clamp zoomFactor to range limits
         if (span * zoomFactor > this.maxRange) {
@@ -233,10 +261,14 @@ export class Panel extends Object2D {
 
         let d0 = span * zoomCenterF;
         let d1 = span * (1 - zoomCenterF);
-        let p = d0 + this.x0;
+        let p = d0 + x0;
 
-        let x0 = p - d0 * zoomFactor;
-        let x1 = p + d1 * zoomFactor;
+        x0 = p - d0 * zoomFactor;
+        x1 = p + d1 * zoomFactor;
+
+        // offset by x-scroll
+        x0 = x0 + xScrollBasePairs;
+        x1 = x1 + xScrollBasePairs;
 
         this.setRange(x0, x1);
     }
