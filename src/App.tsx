@@ -210,7 +210,7 @@ export class App extends React.Component<Props, State> {
 		return (
 			<MuiThemeProvider muiTheme={BasicTheme}>
 				<div>
-					<Header viewModel={this.viewModel} model={this.appModel} userProfile={this.state.userProfile} />
+					<Header viewModel={this.viewModel} appModel={this.appModel} userProfile={this.state.userProfile} />
 					<AppCanvas
 						ref={(v) => this.appCanvas = v}
 						width={this.state.viewerWidth}
