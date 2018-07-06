@@ -155,6 +155,7 @@ function buildPatientQuery(parsePath: ParsedToken[]): any {
     if (token.rule === 'WITH_TUMOR') {
         const tumorSite = STRIP_QUOTES(parsePath[1].value);
         builder.newInfoQuery();
+        builder.filterType('patient');
         builder.filterTumorSite(tumorSite);
         builder.setLimit(1000000);
         return builder.build();
