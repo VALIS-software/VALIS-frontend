@@ -1,12 +1,11 @@
 // Dependencies
 import * as React from "react";
 import * as PropTypes from "prop-types";
-import DataListItem from "../DataListItem/DataListItem.jsx";
 import CircularProgress from "material-ui/CircularProgress";
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 import SearchFilter from "../Shared/SearchFilter/SearchFilter.jsx";
 import GenomicLocation from "../Shared/GenomicLocation/GenomicLocation.jsx";
 import Pills from "../Shared/Pills/Pills.jsx";
+import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import Util from "../../helpers/util.js";
 
@@ -205,7 +204,21 @@ class SearchResultsView extends React.Component {
         <CircularProgress size={80} thickness={5} />
       </div>);
     } else if (this.state.results.length === 0) {
-      return (<div id="search-results-view" className="search-results-view"> No results found, try removing the filters </div>);
+      const style = {
+        height: (this.state.height) + 'px',
+      };
+      const feedbackButton = (<button style={{width: '120px'}}>Send us a request</button>);
+      return (<div id="search-results-view" className="search-results-view">
+          <div style={style} className="search-results-list">
+              <div className="search-results-empty">
+                <h3>No results found.</h3>
+                <div>
+                   Think we should have this data?
+                   <UserFeedBackButton label="Submit Request"/>
+                </div>
+              </div>
+          </div>
+       </div>);
     }
 
     const loadMoreRows = this.state.isLoading || !this.state.hasMore ? () => { return null; } : () => this.fetch(false);

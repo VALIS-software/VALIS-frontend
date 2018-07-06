@@ -18,6 +18,9 @@ import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 // Styles
 import "./GenericEntityDetails.scss";
 
+const prettyPrint = (str: string) => {
+    return str.split(",").join(" ");
+}
 class GenericEntityDetails extends React.Component<any, any> {
 
     static propTypes = {
@@ -159,7 +162,7 @@ function DetailsTable(props: any) {
             detailItems.push(
                 <TableRow key={k}>
                     <TableRowColumn> {k} </TableRowColumn>
-                    <TableRowColumn style={{whiteSpace: 'normal'}}> {valueStr} </TableRowColumn>
+                    <TableRowColumn style={{whiteSpace: 'normal'}}> {prettyPrint(valueStr)} </TableRowColumn>
                 </TableRow>
             );
         }
@@ -188,7 +191,7 @@ function AdditionInfoTable(props: any) {
         infoItems.push(
             <TableRow key={k}>
                 <TableRowColumn> {k} </TableRowColumn>
-                <TableRowColumn style={{whiteSpace: 'normal'}}> {valueStr} </TableRowColumn>
+                <TableRowColumn style={{whiteSpace: 'normal'}}> {prettyPrint(valueStr)} </TableRowColumn>
             </TableRow>
         );
     }
