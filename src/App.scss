@@ -26,6 +26,7 @@ button {
     &:focus {
         outline:0;
     }
+    font-family : inherit;
     border:none;
     border-radius: 8px;
     background-color: $valis-blue-light;

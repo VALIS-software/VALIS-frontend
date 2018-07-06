@@ -9,6 +9,10 @@ $filter-header-height: 48px;
 		border-bottom: 1px solid $valis-grey-dark;
 	}
 
+	.search-results-empty {
+		padding: 16px;
+	}
+
 	height:calc(100% - #{$sidebar-header-height});
 	user-select: none;
 	.search-results-list {
