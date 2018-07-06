@@ -31,7 +31,7 @@ export class AnnotationTrack extends Track<'annotation'> {
     readonly macroLodThresholdHigh = this.macroLodThresholdLow + this.macroLodBlendRange;
 
     readonly namesLodBlendRange = 2;
-    readonly namesLodThresholdLow = 8;
+    readonly namesLodThresholdLow = 9;
     readonly namesLodThresholdHigh = this.namesLodThresholdLow + this.namesLodBlendRange;
 
     protected annotationStore: AnnotationTileStore;
