@@ -252,7 +252,6 @@ export class Panel extends Object2D {
         let xReductionFactor = Math.sin(
             Math.pow(Math.min(fractionalAngle / edge, 1), 3) * (Math.PI / 2)
         );
-        console.log(fractionalAngle.toFixed(4), xReductionFactor);
         xScrollDomPx = xScrollDomPx * xReductionFactor;
 
         let zoomFactor = 1;
