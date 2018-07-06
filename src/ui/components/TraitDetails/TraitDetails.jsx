@@ -1,20 +1,20 @@
 // Dependencies
-import ReactDOM from 'react-dom';
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
-import { ASSOCIATION_TYPE } from '../../helpers/constants';
 import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
 import AssociationList from '../Shared/AssociationList/AssociationList.jsx';
-import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
-import SNPDetails from '../SNPDetails/SNPDetails.jsx';
-import Util from '../../helpers/util.js';
-import FontAwesomeIcon from '@fortawesome/react-fontawesome';
-import faExternalLinkSquareAlt from '@fortawesome/fontawesome-free-solid/faExternalLinkSquareAlt';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 
 // Styles
 import './TraitDetails.scss';
 import '../Shared/Shared.scss';
+
+const prettyPrint = (string) => {
+  if (string.toUpperCase() === string) {
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();  
+  }
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
 
 class TraitDetails extends React.Component {
   constructor(props) {
@@ -58,11 +58,11 @@ class TraitDetails extends React.Component {
 
     const details = this.state.details;
 
-    const name = Util.prettyPrint(details.name);
+    const name = prettyPrint(details.name);
 
-    const header = (<div className="trait-header">
-      <div className="trait-name">{name}</div>
-      <div className="trait-description">{this.state.details.info.description}</div>
+    const header = (<div className="sidebar-header">
+      <div className="sidebar-name">{name}</div>
+      <div className="sidebar-description">{this.state.details.info.description}</div>
     </div>);
 
     const linksData = [];

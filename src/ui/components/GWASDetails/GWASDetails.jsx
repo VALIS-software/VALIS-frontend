@@ -76,8 +76,8 @@ class GWASDetails extends React.Component {
 
     return (<div className="gwas-details">
 
-      <div className="entity-header">
-        <div className="entity-name">{info['DISEASE/TRAIT']}</div>
+      <div className="sidebar-header">
+        <div className="sidebar-name">{info['DISEASE/TRAIT']}</div>
       </div>
       <Collapsible title="Study Info" open={true}>
         <div className="gwas-info-wrapper">

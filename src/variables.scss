@@ -13,11 +13,12 @@ $valis-blue-light: #6BBBE6;
 $valis-blue-medium: #55ACDB;
 $valis-blue-dark: #446577;
 $valis-grey-light: #EEF3F5;
+$valis-blue-lightest: lighten($valis-blue-light, 30%);
 $valis-grey-dark: darken($valis-grey-light, 20%);
 $valis-white: #ffffff;
 $valis-black: darken($valis-grey-dark, 50%);
 $valis-shadow: rgba(0, 0, 0, 0.12) 0px 1px 6px, rgba(0, 0, 0, 0.12) 0px 1px 4px;
-
+$valis-scroll-shadow: inset 0px 11px 8px -10px rgba(0.0, 0.0, 0.0, 0.3), inset 0px -11px 8px -10px rgba(0.0, 0.0, 0.0, 0.3);
 $link-color: $dark-color;
 
 // Fonts

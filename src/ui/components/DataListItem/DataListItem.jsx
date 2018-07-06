@@ -9,14 +9,14 @@ class DataListItem extends React.Component {
   render() {
     const { title, description, onClick } = this.props;
     return (
-      <button className="data-list-item" onClick={onClick}>
+      <div className="data-list-item" onClick={onClick}>
         <div className="option-title">
           {title}
         </div>
         <div className="option-description">
           {description}
         </div>
-      </button>
+      </div>
     );
   }
 }
