@@ -1,3 +1,5 @@
+import QueryBuilder from "../models/query.js";
+
 class ParsedToken {
     public rule: Rule;
     public value: string;
@@ -62,64 +64,112 @@ function mergeResults(promises: Promise<Array<string>>[]): Promise<Array<string>
     });
 }
 
+const builder = new QueryBuilder();
+
 function buildVariantQuery(parsePath: ParsedToken[]): any {
     const token = parsePath[0];
     if (token.rule === 'INFLUENCING') {
         const traitName = STRIP_QUOTES(parsePath[1].value);
-        return {
-            "type": "GenomeNode",
-            "filters": {
-
-            },
-            "toEdges": [
-                {
-                    "type": "EdgeNode",
-                    "filters": {
-                        "info.p-value": {
-                            "<": 0.05
-                        }
-                    },
-                    "toNode": {
-                        "type": "InfoNode",
-                        "filters": {
-                            "type": "trait",
-                            "$text": traitName,
-                        },
-                        "toEdges": [
-
-                        ]
-                    }
-                }
-            ],
-            "limit": 10000000
-        }
+        builder.newInfoQuery();
+        builder.filterType("trait");
+        builder.searchText(traitName);
+        const traitQuery = builder.build();
+        builder.newEdgeQuery();
+        builder.setToNode(traitQuery);
+        builder.filterMaxPValue(0.05);
+        const edgeQuery = builder.build();
+        builder.newGenomeQuery();
+        builder.addToEdge(edgeQuery);
+        builder.setLimit(1000000);
+        return builder.build();
     }
 }
 
-
 function buildTraitQuery(parsePath: ParsedToken[]): any {
     const traitName = STRIP_QUOTES(parsePath[0].value);
-    return { "type": "InfoNode", "filters": { "type": "trait", "$text": traitName }, "toEdges": [], "limit": 150 }
+    builder.newInfoQuery();
+    builder.filterType("trait");
+    builder.searchText(traitName);
+    builder.setLimit(150);
+    return builder.build();
 }
 
 function buildGeneQuery(parsePath: ParsedToken[]): any {
-    const geneName = STRIP_QUOTES(parsePath[0].value);
-    return { "type": "GenomeNode", "filters": { "type": "gene", "name": geneName }, "toEdges": [], "limit": 150 }
+    const token = parsePath[0];
+    if (token.rule === 'NAMED') {
+        const geneName = STRIP_QUOTES(parsePath[1].value);
+        builder.newGenomeQuery();
+        builder.filterName(geneName);
+        builder.setLimit(150);
+        return builder.build();
+    } else if (token.rule === 'INFLUENCING') {
+        const traitName = STRIP_QUOTES(parsePath[1].value);
+        builder.newInfoQuery();
+        builder.filterType("trait");
+        builder.searchText(traitName);
+        const traitQuery = builder.build();
+        builder.newEdgeQuery();
+        builder.setToNode(traitQuery);
+        builder.filterMaxPValue(0.05);
+        const edgeQuery = builder.build();
+        builder.newGenomeQuery();
+        builder.addToEdge(edgeQuery);
+        builder.setLimit(1000000);
+        const variantQuery = builder.build();
+        builder.newGenomeQuery();
+        builder.filterType("gene");
+        builder.addArithmeticIntersect(variantQuery);
+        return builder.build();
+    }
 }
 
 function buildCellQuery(parsePath: ParsedToken[]): any {
     const cellType = STRIP_QUOTES(parsePath[2].value);
-
     const annotationType = (parsePath[0].rule == 'PROMOTER') ? "Promoter-like" : "Enhancer-like";
-    return {
-        "type": "GenomeNode",
-        "filters": {
-            "type": annotationType,
-            "info.biosample": cellType
-        },
-        "toEdges": [],
-        "arithmetics": [],
-        "limit": 2000000
+    builder.newGenomeQuery();
+    builder.filterType(annotationType);
+    builder.filterBiosample(cellType);
+    builder.setLimit(2000000);
+    return builder.build();
+}
+
+function buildEQTLQuery(parsePath: ParsedToken[]): any {
+    const token = parsePath[0];
+    if (token.rule === 'INFLUENCING') {
+        const geneName = STRIP_QUOTES(parsePath[1].value);
+        builder.newGenomeQuery();
+        builder.filterName(geneName);
+        const geneQuery = builder.build()
+        builder.newEdgeQuery();
+        builder.setToNode(geneQuery);
+        const edgeQuery = builder.build();
+        builder.newGenomeQuery();
+        builder.addToEdge(edgeQuery);
+        builder.setLimit(1000000);
+        return builder.build();
+    }
+}
+
+function buildGeneTraitQuery(parsePath: ParsedToken[]): any {
+    const token = parsePath[0];
+    if (token.rule === 'INFLUENCING') {
+        const traitName = STRIP_QUOTES(parsePath[1].value);
+        builder.newInfoQuery();
+        builder.filterType("trait");
+        builder.searchText(traitName);
+        const traitQuery = builder.build();
+        builder.newEdgeQuery();
+        builder.setToNode(traitQuery);
+        builder.filterMaxPValue(0.05);
+        const edgeQuery = builder.build();
+        builder.newGenomeQuery();
+        builder.addToEdge(edgeQuery);
+        builder.setLimit(1000000);
+        const variantQuery = builder.build();
+        builder.newGenomeQuery();
+        builder.filterType("gene");
+        builder.addArithmeticIntersect(variantQuery);
+        return builder.build();
     }
 }
 
@@ -133,12 +183,16 @@ function buildQuery(parsePath: ParsedToken[]): any {
         return buildTraitQuery(parsePath.slice(1));
     } else if (token.rule === 'PROMOTER' || token.rule === 'ENHANCER') {
         return buildCellQuery(parsePath);
+    } else if (token.rule === 'EQTL') {
+        return buildEQTLQuery(parsePath.slice(1));
+    } else if (token.rule === 'GENES') {
+        return buildGeneTraitQuery(parsePath.slice(1));
     }
 }
 
 
 export class QueryParser {
-    // grammar elements are expansions 
+    // grammar elements are expansions
     private grammar: Expansions;
     private terminals: Map<Rule, TerminalRule>;
     private suggestions: Map<Rule, SuggestionResultProvider>;
@@ -307,15 +361,21 @@ export function buildQueryParser(suggestions: Map<Rule, SuggestionResultProvider
     terminals.set('PROMOTER', /promoters/g);
     terminals.set('ENHANCER', /enhancers/g);
     terminals.set('CELL_TYPE', /"(.+?)"/g);
+    terminals.set('EQTL', /eqtl/g);
+    terminals.set('NAMED', /named/g);
 
     const expansions = new Map<Rule, Rule>();
     expansions.set('VARIANT_QUERY', [ALL, 'VARIANTS', 'INFLUENCING', 'TRAIT', EOF]);
-    expansions.set('GENE_QUERY', [ALL, 'GENE_T', 'GENE', EOF]);
+    expansions.set('NAMED_OR_INFLUENCEING', [ANY, 'INFLUENCING_TRAIT', 'NAMED_GENE']);
+    expansions.set('INFLUENCING_TRAIT', [ALL, 'INFLUENCING', 'TRAIT']);
+    expansions.set('NAMED_GENE', [ALL, 'NAMED', 'GENE']);
+    expansions.set('GENE_QUERY', [ALL, 'GENE_T', 'NAMED_OR_INFLUENCEING', EOF]);
     expansions.set('ANNOTATION_TYPE', [ANY, 'PROMOTER', 'ENHANCER']);
     expansions.set('CELL_ANNOTATION', [ALL, 'ANNOTATION_TYPE', 'IN', 'CELL_TYPE']);
     expansions.set('ANNOTATION_QUERY', [ALL, 'CELL_ANNOTATION', EOF]);
     expansions.set('TRAIT_QUERY', [ALL, 'TRAIT_T', 'TRAIT', EOF]);
-    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'TRAIT_QUERY', 'ANNOTATION_QUERY']);
+    expansions.set('EQTL_QUERY', [ALL, 'EQTL', 'INFLUENCING', 'GENE', EOF]);
+    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'TRAIT_QUERY', 'ANNOTATION_QUERY', 'EQTL_QUERY']);
 
     return new QueryParser(expansions, terminals, suggestions);
 }
