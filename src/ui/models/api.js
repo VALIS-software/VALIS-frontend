@@ -1,5 +1,3 @@
-import { resolve } from 'dns';
-
 const CHAOS_ENABLED = false;
 
 const chaos = (_axios, probabilityOfFailure) => {
