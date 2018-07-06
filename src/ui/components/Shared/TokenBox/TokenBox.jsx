@@ -222,7 +222,7 @@ class TokenBox extends React.Component {
       onKeyDown={this.onChange}
       openOnFocus={true}
       open={this.state.open}
-      filter={this.filter}
+      filter={AutoComplete.fuzzyFilter}
       hintText=""
       menuCloseDelay={Infinity}
       dataSource={this.state.dataSource}
