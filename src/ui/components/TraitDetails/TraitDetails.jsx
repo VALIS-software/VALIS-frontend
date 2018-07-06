@@ -9,7 +9,7 @@ import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 import './TraitDetails.scss';
 import '../Shared/Shared.scss';
 
-const prettyPrint = (string) => {
+export const prettyPrint = (string) => {
   if (string.toUpperCase() === string) {
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();  
   }
