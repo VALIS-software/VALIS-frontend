@@ -435,7 +435,7 @@ export class GPUDevice {
 	}
 
 	deleteProgram(handle: GPUProgram) {
-		this.gl.deleteProgram(handle);
+		this.gl.deleteProgram(handle.native);
 		this.vertexShaderCache.release(handle.vertexCode);
 		this.fragmentShaderCache.release(handle.fragmentCode);
 		this.programIds.release(handle.id);
