@@ -1,8 +1,7 @@
 const path = require('path');
-const DefinePlugin = require("webpack").DefinePlugin;
+const webpack = require("webpack");
 
 const outputDirectory = `${__dirname}/dist`;
-
 
 module.exports = (env) => {
 	env = env || {};
@@ -14,7 +13,7 @@ module.exports = (env) => {
 		mode: (env.production || env.deploy) ? "production" : "development",
 
 		output: {
-			filename: "bundle.js",
+			filename: "static/bundle.js",
 			path: outputDirectory
 		},
 
@@ -75,17 +74,8 @@ module.exports = (env) => {
 
 		plugins: [
 			// pass --env to javascript build via process.env
-			new DefinePlugin({ "process.env": JSON.stringify(env) })
-		],
-
-		// When importing a module whose path matches one of the following, just
-		// assume a corresponding global variable exists and use that instead.
-		// This is important because it allows us to avoid bundling all of our
-		// dependencies, which allows browsers to cache those libraries between builds.
-		externals: {
-			"react": "React",
-			"react-dom": "ReactDOM"
-		},
+			new webpack.DefinePlugin({ "process.env": JSON.stringify(env) }),
+		]
 	}
 
 	// if in deploy mode, add deployment plugins
