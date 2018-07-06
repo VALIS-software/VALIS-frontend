@@ -251,10 +251,11 @@ export class Panel extends Object2D {
         let xReductionFactor = Math.sin(
             Math.pow(Math.min(fractionalAngle / edge, 1), 3) * (Math.PI / 2)
         );
+
         xScrollDomPx = xScrollDomPx * xReductionFactor;
 
+        // compute zoom multiplier from wheel y
         let zoomFactor = 1;
-
         if (e.ctrlKey) {
             // pinch zoom
             zoomFactor = 1 + e.wheelDeltaY * 0.01; // I'm assuming mac trackpad outputs change in %, @! needs research
@@ -262,15 +263,11 @@ export class Panel extends Object2D {
             // scroll zoom
             let scrollZoomSpeed = 0.3;
             zoomFactor = 1 + yScrollDomPx * 0.01 * scrollZoomSpeed;
-            // console.log(Math.abs(1 - zoomFactor) * 100);
         }
 
         let x0 = this.x0;
         let x1 = this.x1;
         let span = x1 - x0;
-        
-        let basePairsPerPixel = span / this.getComputedWidth();
-        let xScrollBasePairs = basePairsPerPixel * xScrollDomPx;
         
         // apply scale change
         let zoomCenterF = e.fractionX;
@@ -290,7 +287,12 @@ export class Panel extends Object2D {
         x0 = p - d0 * zoomFactor;
         x1 = p + d1 * zoomFactor;
 
+        let newSpan = x1 - x0;
+        let midSpan = (newSpan + span) * 0.5;
+
         // offset by x-scroll
+        let basePairsPerPixel = midSpan / this.getComputedWidth();
+        let xScrollBasePairs = basePairsPerPixel * xScrollDomPx;
         x0 = x0 + xScrollBasePairs;
         x1 = x1 + xScrollBasePairs;
 
