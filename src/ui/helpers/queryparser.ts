@@ -150,25 +150,13 @@ function buildEQTLQuery(parsePath: ParsedToken[]): any {
     }
 }
 
-function buildGeneTraitQuery(parsePath: ParsedToken[]): any {
+function buildPatientQuery(parsePath: ParsedToken[]): any {
     const token = parsePath[0];
-    if (token.rule === 'INFLUENCING') {
-        const traitName = STRIP_QUOTES(parsePath[1].value);
+    if (token.rule === 'WITH_TUMOR') {
+        const tumorSite = STRIP_QUOTES(parsePath[1].value);
         builder.newInfoQuery();
-        builder.filterType("trait");
-        builder.searchText(traitName);
-        const traitQuery = builder.build();
-        builder.newEdgeQuery();
-        builder.setToNode(traitQuery);
-        builder.filterMaxPValue(0.05);
-        const edgeQuery = builder.build();
-        builder.newGenomeQuery();
-        builder.addToEdge(edgeQuery);
+        builder.filterTumorSite(tumorSite);
         builder.setLimit(1000000);
-        const variantQuery = builder.build();
-        builder.newGenomeQuery();
-        builder.filterType("gene");
-        builder.addArithmeticIntersect(variantQuery);
         return builder.build();
     }
 }
@@ -185,8 +173,8 @@ function buildQuery(parsePath: ParsedToken[]): any {
         return buildCellQuery(parsePath);
     } else if (token.rule === 'EQTL') {
         return buildEQTLQuery(parsePath.slice(1));
-    } else if (token.rule === 'GENES') {
-        return buildGeneTraitQuery(parsePath.slice(1));
+    } else if (token.rule === 'PATIENT_T') {
+        return buildPatientQuery(parsePath.slice(1));
     }
 }
 
@@ -363,6 +351,9 @@ export function buildQueryParser(suggestions: Map<Rule, SuggestionResultProvider
     terminals.set('CELL_TYPE', /"(.+?)"/g);
     terminals.set('EQTL', /eqtl/g);
     terminals.set('NAMED', /named/g);
+    terminals.set('TUMOR_SITE', /"(.+?)"/g);
+    terminals.set('PATIENT_T', /patient/g);
+    terminals.set('WITH_TUMOR', /with tumor/g);
 
     const expansions = new Map<Rule, Rule>();
     expansions.set('VARIANT_QUERY', [ALL, 'VARIANTS', 'INFLUENCING', 'TRAIT', EOF]);
@@ -375,7 +366,8 @@ export function buildQueryParser(suggestions: Map<Rule, SuggestionResultProvider
     expansions.set('ANNOTATION_QUERY', [ALL, 'CELL_ANNOTATION', EOF]);
     expansions.set('TRAIT_QUERY', [ALL, 'TRAIT_T', 'TRAIT', EOF]);
     expansions.set('EQTL_QUERY', [ALL, 'EQTL', 'INFLUENCING', 'GENE', EOF]);
-    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'TRAIT_QUERY', 'ANNOTATION_QUERY', 'EQTL_QUERY']);
+    expansions.set('PATIENT_QUERY', [ALL, 'PATIENT_T', 'WITH_TUMOR', 'TUMOR_SITE', EOF]);
+    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'TRAIT_QUERY', 'ANNOTATION_QUERY', 'EQTL_QUERY', 'PATIENT_QUERY']);
 
     return new QueryParser(expansions, terminals, suggestions);
 }
