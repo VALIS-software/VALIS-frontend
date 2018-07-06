@@ -29,6 +29,7 @@ class TokenBox extends React.Component {
       open: false,
       searchString: '',
       query: null,
+      hintText: '',
     };
   }
 
@@ -137,6 +138,7 @@ class TokenBox extends React.Component {
       query: result.query,
       quoteInput: result.isQuoted,
       open: openOnLoad,
+      hintText: result.hintText,
     });
     if (!result.query && openOnLoad) {
       setTimeout(() => {
@@ -223,7 +225,7 @@ class TokenBox extends React.Component {
       openOnFocus={true}
       open={this.state.open}
       filter={AutoComplete.fuzzyFilter}
-      hintText=""
+      hintText={this.state.hintText}
       menuCloseDelay={Infinity}
       dataSource={this.state.dataSource}
       onUpdateInput={this.handleUpdateInput}

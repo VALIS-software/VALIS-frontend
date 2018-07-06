@@ -33,7 +33,8 @@ export type Suggestion = {
     tokens: ParsedToken[],
     suggestions: Promise<string[]>,
     query: any,
-    isQuoted: boolean
+    isQuoted: boolean,
+    hintText: string
 };
 
 const EOF: TokenType = 'EOF';
@@ -162,6 +163,16 @@ function buildPatientQuery(parsePath: ParsedToken[]): any {
     }
 }
 
+function buildSNPrsQuery(parsePath: ParsedToken[]): any {
+    let token = parsePath[0];
+    if (token.rule === 'NUMBER') {
+        let rsNumber = token.value;
+        builder.newGenomeQuery();
+        builder.filterID('Gsnp_rs' + rsNumber);
+        return builder.build();
+    }
+}
+
 function buildQuery(parsePath: ParsedToken[]): any {
     const token: ParsedToken = parsePath[0];
     if (token.rule === 'VARIANTS') {
@@ -176,6 +187,8 @@ function buildQuery(parsePath: ParsedToken[]): any {
         return buildEQTLQuery(parsePath.slice(1));
     } else if (token.rule === 'PATIENT_T') {
         return buildPatientQuery(parsePath.slice(1));
+    } else if (token.rule === 'RS_T') {
+        return buildSNPrsQuery(parsePath.slice(1));
     }
 }
 
@@ -293,6 +306,7 @@ export class QueryParser {
         const maxDepth: number = maxParse.path.length;
         const finalSuggestions: SuggestionResultPromise[] = [];
         let quoteSuggestion: boolean = false;
+        let hintText = '';
         results.filter(x => x.path.length === maxDepth).forEach(subPath => {
             let rule: Rule = subPath.rule;
             let tokenText: string = subPath.value;
@@ -302,6 +316,11 @@ export class QueryParser {
                 //set the token text to the text with '"' characters removed
                 const val: string = subPath.path[subPath.path.length - 2].value;
                 tokenText = val.slice(1, val.length - 1);
+            }
+            // special rule for number to skip suggestion and give a hint
+            if (rule === 'NUMBER') {
+                hintText = 'enter a number'
+                return;
             }
 
             if (this.suggestions.get(rule)) {
@@ -325,7 +344,8 @@ export class QueryParser {
             tokens: maxParse.path,
             suggestions: mergeResults(finalSuggestions),
             query: query,
-            isQuoted: quoteSuggestion
+            isQuoted: quoteSuggestion,
+            hintText: hintText,
         }
     }
 
@@ -355,6 +375,8 @@ export function buildQueryParser(suggestions: Map<Rule, SuggestionResultProvider
     terminals.set('TUMOR_SITE', /"(.+?)"/g);
     terminals.set('PATIENT_T', /patient/g);
     terminals.set('WITH_TUMOR', /with tumor/g);
+    terminals.set('RS_T', /snp rs/g);
+    terminals.set('NUMBER', /^\d+$/g);
 
     const expansions = new Map<Rule, Rule>();
     expansions.set('VARIANT_QUERY', [ALL, 'VARIANTS', 'INFLUENCING', 'TRAIT', EOF]);
@@ -368,7 +390,8 @@ export function buildQueryParser(suggestions: Map<Rule, SuggestionResultProvider
     expansions.set('TRAIT_QUERY', [ALL, 'TRAIT_T', 'TRAIT', EOF]);
     expansions.set('EQTL_QUERY', [ALL, 'EQTL', 'INFLUENCING', 'GENE', EOF]);
     expansions.set('PATIENT_QUERY', [ALL, 'PATIENT_T', 'WITH_TUMOR', 'TUMOR_SITE', EOF]);
-    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'TRAIT_QUERY', 'ANNOTATION_QUERY', 'EQTL_QUERY', 'PATIENT_QUERY']);
+    expansions.set('SNP_RS_QUERY', [ALL, 'RS_T', 'NUMBER', EOF]);
+    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'TRAIT_QUERY', 'ANNOTATION_QUERY', 'EQTL_QUERY', 'PATIENT_QUERY', 'SNP_RS_QUERY']);
 
     return new QueryParser(expansions, terminals, suggestions);
 }
