@@ -236,13 +236,12 @@ export class Panel extends Object2D {
             }
         }
 
-
-        // normalize
+        // gesture disambiguation; when dominantly zooming we want to reduce panning speed
+        // normalize scroll vector
         let scrollVectorLength = Math.sqrt(xScrollDomPx * xScrollDomPx + yScrollDomPx * yScrollDomPx);
-        let normScrollVectorX = xScrollDomPx / scrollVectorLength;
-        let normScrollVectorY = yScrollDomPx / scrollVectorLength;
+        let normScrollY = yScrollDomPx / scrollVectorLength;
         // as normScrollVectorY approaches 1, we should scale xScrollDomPx to
-        let cosAngleY = normScrollVectorY;
+        let cosAngleY = normScrollY;
         let absAngleY = Math.acos(Math.abs(cosAngleY));
         let fractionalAngle = 2 * absAngleY / (Math.PI); // 0 = points along y, 1 = points along x
         
