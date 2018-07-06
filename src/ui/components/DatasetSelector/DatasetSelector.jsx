@@ -1,6 +1,7 @@
 // Dependencies
 import * as React from "react";
 import * as PropTypes from "prop-types";
+import UpgradeDialog from "../Shared/UpgradeDialog/UpgradeDialog";
 import GWASSelector from "../GWASSelector/GWASSelector.jsx";
 import GenomeSelector from "../GenomeSelector/GenomeSelector.jsx";
 import TrackSelector from "../TrackSelector/TrackSelector.jsx";
@@ -47,9 +48,9 @@ const fixedTrackData = [
     "track_type": TRACK_TYPE_EQTL, 
     "title": "ExAC Variants", 
     "description": "Search labeled variants of over 60k exomes from the Exome Aggregation Consortium."
-  },
+  }, 
   {
-    "track_type": "track_type_custom", 
+    "track_type": "premium", 
     "title": "Custom Track", 
     "description": "Securely visualize your own VCF, BAM, GFF, BED or bigwig files."
   }
@@ -112,6 +113,10 @@ class DatasetSelector extends React.Component {
         null,
         <BooleanTrackSelector appModel={this.appModel} />
       );
+    } else if (trackType === 'premium') {
+      this.setState({
+        showUpgrade: true,
+      });
     }
   }
 
@@ -135,7 +140,8 @@ class DatasetSelector extends React.Component {
         />
       );
     }
-    return <div className="dataset-selector">{dataInfoBlocks}</div>;
+    const dialog = this.state.showUpgrade ? (<UpgradeDialog open={true}/>) : (<span/>);
+    return <div className="dataset-selector">{dialog}{dataInfoBlocks}</div>;
   }
 }
 

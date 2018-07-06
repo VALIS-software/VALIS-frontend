@@ -1,22 +1,12 @@
 // Dependencies
 import * as React from "react";
 import * as PropTypes from "prop-types";
-import GWASSelector from "../GWASSelector/GWASSelector.jsx";
-import GenomeSelector from "../GenomeSelector/GenomeSelector.jsx";
-import TrackSelector from "../TrackSelector/TrackSelector.jsx";
-import FunctionalTrackSelector from "../FunctionalTrackSelector/FunctionalTrackSelector.jsx";
-import ENCODESelector from "../ENCODESelector/ENCODESelector.jsx";
+import UpgradeDialog from "../Shared/UpgradeDialog/UpgradeDialog";
 import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector.jsx";
 import DataListItem from "../DataListItem/DataListItem.jsx";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 import {
-  TRACK_TYPE_SEQUENCE,
-  TRACK_TYPE_FUNCTIONAL,
-  TRACK_TYPE_GENOME,
-  TRACK_TYPE_GWAS,
-  TRACK_TYPE_ENCODE,
   TRACK_TYPE_BOOLEAN,
-  TRACK_TYPE_EQTL,
 } from "../../helpers/constants";
 
 // Styles
@@ -26,7 +16,7 @@ const fixedAnalysisData = [
   {
     "track_type": TRACK_TYPE_BOOLEAN, 
     "title": "∩ Intersect Tracks", 
-    "description": "Find elements within a certain base pair range of another track."
+    "description": "Filter track elements to those near another tracks elements."
   },
   {
     "track_type": TRACK_TYPE_BOOLEAN, 
@@ -34,19 +24,19 @@ const fixedAnalysisData = [
     "description": "Union the contents of two different tracks into a single track."
   },
   {
-    "track_type": TRACK_TYPE_BOOLEAN, 
+    "track_type": 'premium', 
     "title": "Correlate Regulatory Elements", 
-    "description": "Correlate sets of variants to regulatory annotations across a broad set of cell-types."
+    "description": "Correlate sets of variants to regulatory annotations across cell-types."
   },
   {
-    "track_type": TRACK_TYPE_BOOLEAN, 
+    "track_type": 'premium', 
     "title": "Correlate Samples", 
-    "description": "Choose sets of variants and correlate them against cohorts of patient variants."
+    "description": "Correlate sets of variants to cohorts of patient VCFs."
   },
   {
-    "track_type": TRACK_TYPE_BOOLEAN, 
-    "title": "Predict Regulatory Effect", 
-    "description": "Predict the effect of non-coding variants on gene expression."
+    "track_type": 'premium', 
+    "title": "Predict Functional Effects", 
+    "description": "Predict the effect of non-coding variants on expression, methylation or chromatin accessibility."
   },
 ];
 
@@ -58,7 +48,8 @@ class AnalysisSelector extends React.Component {
     this.api = this.appModel.api;
 
     this.state = {
-      dataInfo: fixedAnalysisData
+      dataInfo: fixedAnalysisData,
+      showUpgrade: false,
     };
   }
 
@@ -73,6 +64,11 @@ class AnalysisSelector extends React.Component {
     }
   }
 
+  handleOpen = () => {
+    this.setState({
+      showUpgrade: true,
+    });
+  }
   render() {
     if (!this.state.dataInfo) {
       return <div />;
@@ -80,20 +76,21 @@ class AnalysisSelector extends React.Component {
     if (this.state.error) {
       return (<ErrorDetails error={this.state.error} />);
     }
-    const dataSetSelected = this.dataSetSelected;
     const dataInfo = this.state.dataInfo;
     const dataInfoBlocks = [];
     for (const di of dataInfo) {
+      const fn = (di.track_type === 'premium') ? this.handleOpen : () => this.dataSetSelected(di.track_type);
       dataInfoBlocks.push(
         <DataListItem
           title={di.title}
           description={di.description}
-          onClick={() => this.dataSetSelected(di.track_type)}
+          onClick={fn}
           key={di.title}
         />
       );
     }
-    return <div className="dataset-selector">{dataInfoBlocks}</div>;
+    const dialog = this.state.showUpgrade ? (<UpgradeDialog open={true}/>) : (<span/>);
+    return (<div className="dataset-selector">{dialog}{dataInfoBlocks}</div>);
   }
 }
 
