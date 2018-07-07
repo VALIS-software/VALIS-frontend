@@ -89,6 +89,27 @@ class QueryBuilder {
     this.query.filters['info.outtype'] = outType;
   }
 
+  filterStartBp(start) {
+    if (this.query.type !== QUERY_TYPE_GENOME) {
+      throw new Error('filterRange is only available for an Genome Query.');
+    }
+    this.query.filters.start = start;
+  }
+
+  filterEdgeFromID(id) {
+    if (this.query.type === QUERY_TYPE_EDGE) {
+      throw new Error('filterEdgeFromID is only available for an Edge Query.');
+    }
+    this.query.filters.from_id = id;
+  }
+
+  filterEdgeToID(id) {
+    if (this.query.type === QUERY_TYPE_EDGE) {
+      throw new Error('filterEdgeToID is only available for an Edge Query.');
+    }
+    this.query.filters.to_id = id;
+  }
+
   searchText(text) {
     this.query.filters.$text = text;
   }
@@ -104,11 +125,12 @@ class QueryBuilder {
     this.query.toEdges.push(edgeQuery);
   }
 
-  setToNode(nodeQuery) {
+  setToNode(nodeQuery, reverse=false) {
     if (this.query.type !== QUERY_TYPE_EDGE) {
       throw new Error('toNode is only available for an Edge Query.');
     }
     this.query.toNode = nodeQuery;
+    this.query.reverse = reverse;
   }
 
   addArithmeticIntersect(genomeQuery) {
