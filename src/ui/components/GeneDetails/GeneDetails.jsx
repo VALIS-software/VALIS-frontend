@@ -53,18 +53,15 @@ class GeneDetails extends React.Component {
   }
 
   loadIntersectSNPs() {
-    if (!this.state.details) {
-      return;
-    }
-    const startBp = this.state.details.start;
-    const endBp = this.state.details.end;
-    if ((typeof startBp !== 'number' || typeof endBp !== 'number')) {
+    const details = this.state.details;
+    if (!details || !details.contig || !details.start || !details.end) {
       return;
     }
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
     builder.filterType('SNP');
-    builder.filterStartBp({'>=': startBp, '<=': endBp});
+    builder.filterContig(details.contig);
+    builder.filterStartBp({'>=': details.start, '<=': details.end});
     this.intersectSNPquery = builder.build();
     // For gene like SOX5, there are more than 100k results, here we show the first 50
     this.api.getQueryResults(this.intersectSNPquery, false, 0, 50).then(results => {
