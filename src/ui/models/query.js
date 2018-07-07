@@ -96,20 +96,6 @@ class QueryBuilder {
     this.query.filters.start = start;
   }
 
-  filterEdgeFromID(id) {
-    if (this.query.type === QUERY_TYPE_EDGE) {
-      throw new Error('filterEdgeFromID is only available for an Edge Query.');
-    }
-    this.query.filters.from_id = id;
-  }
-
-  filterEdgeToID(id) {
-    if (this.query.type === QUERY_TYPE_EDGE) {
-      throw new Error('filterEdgeToID is only available for an Edge Query.');
-    }
-    this.query.filters.to_id = id;
-  }
-
   searchText(text) {
     this.query.filters.$text = text;
   }

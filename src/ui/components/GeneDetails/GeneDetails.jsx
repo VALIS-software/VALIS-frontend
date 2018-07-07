@@ -16,7 +16,6 @@ import QueryBuilder from "../../models/query.js";
 // Styles
 import './GeneDetails.scss';
 import '../Shared/Shared.scss';
-import QueryBuilder from '../../models/query';
 
 class GeneDetails extends React.Component {
   constructor(props) {
@@ -43,6 +42,7 @@ class GeneDetails extends React.Component {
       });
       this.loadIntersectSNPs();
       this.loadIntersectSNPGWAS();
+      this.loadIntersectSNPGWASTraits();
     }, (err) => {
       this.appModel.error(err);
       this.setState({
@@ -66,9 +66,8 @@ class GeneDetails extends React.Component {
     builder.filterType('SNP');
     builder.filterStartBp({'>=': startBp, '<=': endBp});
     this.intersectSNPquery = builder.build();
-    // there might be thousands of results, we limit to 50 here
-    // TODO: Use infinite scrolling or pages?
-    this.api.getQueryResults(this.intersectSNPquery, false, 0,  50).then(results => {
+    // For gene like SOX5, there are more than 100k results, here we show the first 50
+    this.api.getQueryResults(this.intersectSNPquery, false, 0, 50).then(results => {
       const intersectSNPs = [];
       for (const d of results.data) {
         intersectSNPs.push({
@@ -99,7 +98,7 @@ class GeneDetails extends React.Component {
     builder.filterType(EntityType.GWAS);
     builder.setToNode(snpQuery, true);
     this.intersectSNPGWASquery = builder.build();
-    this.api.getQueryResults(this.intersectSNPGWASquery, false, 0,  50).then(results => {
+    this.api.getQueryResults(this.intersectSNPGWASquery, false, 0, 50).then(results => {
       const intersectSNPGWASs = [];
       for (const d of results.data) {
         intersectSNPGWASs.push({
@@ -118,6 +117,60 @@ class GeneDetails extends React.Component {
         error: err,
       });
     });
+  }
+
+  loadIntersectSNPGWASTraits() {
+    if (!this.intersectSNPGWASquery) {
+      return;
+    }
+    const gwasQuery = this.intersectSNPGWASquery;
+    const builder = new QueryBuilder();
+    builder.newInfoQuery();
+    builder.addToEdge(gwasQuery);
+    this.intersectSNPGWASTraitquery = builder.build();
+    this.api.getQueryResults(this.intersectSNPGWASTraitquery, false, 0, 50).then(results => {
+      const intersectSNPGWASTraits = [];
+      for (const d of results.data) {
+        intersectSNPGWASTraits.push({
+          title: d.name,
+          description: d.info.description,
+          id: d.id,
+          type: d.type,
+        })
+      }
+      this.setState({
+        intersectSNPGWASTraits: intersectSNPGWASTraits,
+      })
+    }, (err) => {
+      this.appModel.error(err);
+      this.setState({
+        error: err,
+      });
+    });
+  }
+
+  renderCollapsible(title, dataList) {
+    if (!dataList || dataList.length === 0) {
+      const noTitle = 'No ' + title;
+      return (<Collapsible title={noTitle} disabled={true}/>);
+    }
+    const dataItems = [];
+    const titleWithNumber = title + ` (${dataList.length})`;
+    const dataItems = dataList.map(r => {
+      return (
+        <DataListItem
+          title={r.title}
+          description={r.description}
+          onClick={() => this.viewModel.displayEntityDetails(r)}
+          key={r.id}
+        />
+      );
+    });
+    return (
+      <Collapsible title={titleWithNumber} open={false}>
+        {dataItems}
+      </Collapsible>
+    );
   }
 
   render() {
@@ -170,56 +223,17 @@ class GeneDetails extends React.Component {
     });
 
     // prepare eQTL SNP items
-    let eqtlItems = "No results found";
-    if (relations && relations.length > 0) {
-      eqtlItems = [];
-      for (const r of relations) {
-        if (r.type === EntityType.EQTL) {
-          eqtlItems.push(
-            <DataListItem
-              title={r.title}
-              description={r.description}
-              onClick={(r) => this.viewModel.displayEntityDetails(r)}
-              key={r.id}
-            />
-          )
-        }
-      }
-    }
+    const eqtlRelations = relations.filter(r => r.type === EntityType.EQTL);
+    const eqtlList = this.renderCollapsible('Quantitative Trait Loci', eqtlRelations);
 
     // prepare intersecting SNP items
-    const intersectSNPs = this.state.intersectSNPs;
-    let intersectSNPItems = "No results found";
-    if (intersectSNPs && intersectSNPs.length > 0) {
-      intersectSNPItems = [];
-      for (const r of intersectSNPs) {
-        intersectSNPItems.push(
-          <DataListItem
-            title={r.title}
-            description={r.description}
-            onClick={(r) => this.viewModel.displayEntityDetails(r)}
-            key={r.id}
-          />
-        )
-      }
-    }
+    const intersectSNPList = this.renderCollapsible('Intersect SNPs', this.state.intersectSNPs);
 
     // prepare GWAS items from intersecting SNPs
-    const intersectSNPGWASs = this.state.intersectSNPGWASs;
-    let gwasItems = "No results found";
-    if (intersectSNPGWASs && intersectSNPGWASs.length > 0) {
-      gwasItems = [];
-      for (const r of intersectSNPGWASs) {
-        gwasItems.push(
-          <DataListItem
-            title={r.title}
-            description={r.description}
-            onClick={(r) => this.viewModel.displayEntityDetails(r)}
-            key={r.id}
-          />
-        )
-      }
-    }
+    const gwasList = this.renderCollapsible('GWAS relations', this.state.intersectSNPGWASs);
+
+    // prepare all traits from GWAS items from intersecting SNPs
+    const traitList = this.renderCollapsible('Phenotype relations', this.state.intersectSNPGWASTraits);
 
     return (<div className="gene-details">
       {header}
@@ -246,18 +260,10 @@ class GeneDetails extends React.Component {
       <Collapsible title="External References" open={false}>
         {links}
       </Collapsible>
-      <Collapsible title="Phenotype relations" open={false}>
-        TODO
-      </Collapsible>
-      <Collapsible title="GWAS relations" open={false}>
-        {gwasItems}
-      </Collapsible>
-      <Collapsible title="SNPs" open={false}>
-        {intersectSNPItems}
-      </Collapsible>
-      <Collapsible title="eQTLs" open={false}>
-        {eqtlItems}
-      </Collapsible>
+      {traitList}
+      {gwasList}
+      {intersectSNPList}
+      {eqtlList}
     </div>);
   }
 }
