@@ -89,6 +89,10 @@ class QueryBuilder {
     this.query.filters['info.outtype'] = outType;
   }
 
+  filterTumorSite(tumorSite) {
+    this.query.filters['info.tumor_tissue_site'] = tumorSite;
+  }
+
   searchText(text) {
     this.query.filters.$text = text;
   }

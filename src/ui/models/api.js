@@ -27,6 +27,8 @@ if (CHAOS_ENABLED) {
 	axios = chaos(axios, 0.5);
 }
 
+const SUGGESTIONS_CACHE = {};
+
 class GenomeAPI {
 
 	constructor(baseUrl) {
@@ -91,13 +93,19 @@ class GenomeAPI {
 	}
 
 	getSuggestions(termType, searchText, maxResults = 100) {
-		return axios.post(`${this.baseUrl}/suggestions`, {
-			term_type: termType,
-			search_text: searchText,
-			max_results: Math.round(maxResults),
-		}).then(data => {
-			return data.data.results;
-		});
+		const cacheKey = termType + searchText + maxResults.toString();
+		if (SUGGESTIONS_CACHE[cacheKey]) {
+			return SUGGESTIONS_CACHE[cacheKey];
+		} else {
+			return axios.post(`${this.baseUrl}/suggestions`, {
+				term_type: termType,
+				search_text: searchText,
+				max_results: Math.round(maxResults),
+			}).then(data => {
+				SUGGESTIONS_CACHE[cacheKey] = data.data.results;
+				return data.data.results;
+			});
+		}
 	}
 
 	getUserProfile() {
