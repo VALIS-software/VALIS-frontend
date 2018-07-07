@@ -91,9 +91,16 @@ class QueryBuilder {
 
   filterStartBp(start) {
     if (this.query.type !== QUERY_TYPE_GENOME) {
-      throw new Error('filterRange is only available for an Genome Query.');
+      throw new Error('filterStartBp is only available for an Genome Query.');
     }
     this.query.filters.start = start;
+  }
+
+  filterEndBp(end) {
+    if (this.query.type !== QUERY_TYPE_GENOME) {
+      throw new Error('filterEndBp is only available for an Genome Query.');
+    }
+    this.query.filters.end = end;
   }
 
   filterTumorSite(tumorSite) {
