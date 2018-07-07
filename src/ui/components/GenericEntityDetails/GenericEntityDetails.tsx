@@ -187,7 +187,7 @@ function AdditionInfoTable(props: any) {
     const info = props.info;
     const infoItems = [];
     for (const k of Object.keys(info)) {
-        const valueStr = info[k].toString();
+        const valueStr = info[k] ? info[k].toString() : '';
         infoItems.push(
             <TableRow key={k}>
                 <TableRowColumn> {k} </TableRowColumn>
