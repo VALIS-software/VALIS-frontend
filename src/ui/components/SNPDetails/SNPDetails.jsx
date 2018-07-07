@@ -163,8 +163,8 @@ class SNPDetails extends React.Component {
     });
 
     const nameShortened = name.length > 13 ? name.slice(0, 12) + "..." : name;
-    const header = (<div className="snp-header">
-      <span className="snp-name">{nameShortened}{zoomBtn}</span>
+    const header = (<div className="sidebar-header">
+      <span className="sidebar-name">{nameShortened}{zoomBtn}</span>
     </div>);
 
     const biotypes = details.info.variant_affected_bio_types ? (<div className="section">

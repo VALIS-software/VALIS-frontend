@@ -5,6 +5,13 @@ export class Scalar {
     }
 
     /**
+     * Linearly interpolate from `a` to `b` using `t`, where return is `a` for `t = 0` and `b` for `t = 1`
+     */
+    static lerp(a: number, b: number, t: number) {
+        return a * (1 - t) + b * t;
+    }
+
+    /**
      * Return 0 at x <= edge0, return 1 for x >= edge1 and linearly interpolate in-between
      */
     static linstep(edge0: number, edge1: number, x: number) {

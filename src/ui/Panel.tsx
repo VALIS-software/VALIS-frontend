@@ -1,14 +1,15 @@
-import React = require("react");
+import * as React from "react";
 import IconButton from "material-ui/IconButton";
 import SvgClose from "material-ui/svg-icons/navigation/close";
 import PanelModel from "../model/PanelModel";
-import { InteractionEvent, WheelInteractionEvent } from "./core/InteractionEvent";
+import { InteractionEvent, WheelInteractionEvent, WheelDeltaMode } from "./core/InteractionEvent";
 import Object2D from "./core/Object2D";
 import ReactObject from "./core/ReactObject";
 import Rect from "./core/Rect";
 import { OpenSansRegular } from "./font/Fonts";
 import Track, { AxisPointerStyle } from "./tracks/Track";
 import XAxis from "./XAxis";
+import { Scalar } from "../math/Scalar";
 
 export class Panel extends Object2D {
 
@@ -210,18 +211,66 @@ export class Panel extends Object2D {
         e.preventDefault();
         e.stopPropagation();
 
-        let zoomFactor = 1;
+        let xScrollDomPx = 0;
+        let yScrollDomPx = 0;
 
-        // pinch zoom
-        if (e.ctrlKey) {
-            zoomFactor = 1 + e.wheelDeltaY * 0.01; // I'm assuming mac trackpad outputs change in %, @! needs research
-        } else {
-            zoomFactor = 1 + e.wheelDeltaY * 0.01 * 0.15;
+        // determine panning delta in dom pixels from horizontal scroll amount
+        switch (e.wheelDeltaMode) {
+            default:
+            case WheelDeltaMode.Pixel: {
+                xScrollDomPx = e.wheelDeltaX;
+                yScrollDomPx = e.wheelDeltaY;
+                break;
+            }
+            case WheelDeltaMode.Line: {
+                // assume a line is roughly 12px (needs experimentation)
+                xScrollDomPx = e.wheelDeltaX * 12;
+                yScrollDomPx = e.wheelDeltaY * 12;
+                break;
+            }
+            case WheelDeltaMode.Page: {
+                // assume a page is roughly 1000px (needs experimentation)
+                xScrollDomPx = e.wheelDeltaX * 1000;
+                yScrollDomPx = e.wheelDeltaY * 1000;
+                break;
+            }
         }
 
-        let zoomCenterF = e.fractionX;
+        // gesture disambiguation; when dominantly zooming we want to reduce panning speed
+        // normalize scroll vector
+        let scrollVectorLength = Math.sqrt(xScrollDomPx * xScrollDomPx + yScrollDomPx * yScrollDomPx);
+        let normScrollY = yScrollDomPx / scrollVectorLength;
+        // as normScrollVectorY approaches 1, we should scale xScrollDomPx to
+        let cosAngleY = normScrollY;
+        let absAngleY = Math.acos(Math.abs(cosAngleY));
+        let fractionalAngle = 2 * absAngleY / (Math.PI); // 0 = points along y, 1 = points along x
+        
+        // use fraction angle to reduce x as angle approaches y-pointing
+        // see https://www.desmos.com/calculator/butkwn0xdt for function exploration
+        let edge = 0.75;
+        let xReductionFactor = Math.sin(
+            Math.pow(Math.min(fractionalAngle / edge, 1), 3) * (Math.PI / 2)
+        );
 
-        let span = this.x1 - this.x0;
+        xScrollDomPx = xScrollDomPx * xReductionFactor;
+
+        // compute zoom multiplier from wheel y
+        let zoomFactor = 1;
+        if (e.ctrlKey) {
+            // pinch zoom
+            zoomFactor = 1 + e.wheelDeltaY * 0.01; // I'm assuming mac trackpad outputs change in %, @! needs research
+        } else {
+            // scroll zoom
+            let scrollZoomSpeed = 0.3;
+            zoomFactor = 1 + yScrollDomPx * 0.01 * scrollZoomSpeed;
+        }
+
+        let x0 = this.x0;
+        let x1 = this.x1;
+        let span = x1 - x0;
+        
+        // apply scale change
+        let zoomCenterF = e.fractionX;
 
         // clamp zoomFactor to range limits
         if (span * zoomFactor > this.maxRange) {
@@ -233,10 +282,19 @@ export class Panel extends Object2D {
 
         let d0 = span * zoomCenterF;
         let d1 = span * (1 - zoomCenterF);
-        let p = d0 + this.x0;
+        let p = d0 + x0;
 
-        let x0 = p - d0 * zoomFactor;
-        let x1 = p + d1 * zoomFactor;
+        x0 = p - d0 * zoomFactor;
+        x1 = p + d1 * zoomFactor;
+
+        let newSpan = x1 - x0;
+        let midSpan = (newSpan + span) * 0.5;
+
+        // offset by x-scroll
+        let basePairsPerPixel = midSpan / this.getComputedWidth();
+        let xScrollBasePairs = basePairsPerPixel * xScrollDomPx;
+        x0 = x0 + xScrollBasePairs;
+        x1 = x1 + xScrollBasePairs;
 
         this.setRange(x0, x1);
     }

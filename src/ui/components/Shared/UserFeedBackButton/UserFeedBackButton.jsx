@@ -95,43 +95,52 @@ class UserFeedBackButton extends React.Component {
   render() {
     const { subject, description, open, anchorEl, snackOpen } = this.state;
     const userProfile = this.props.userProfile;
-    if (!userProfile) return (<div />);
+    if (!userProfile) userProfile = {
+      'name': 'unknown',
+    }
     const actions = [
       <FlatButton label='Cancel' onClick={this.handleRequestClose} />,
       <FlatButton label='Submit' onClick={this.handleSubmit} disabled={!description} />
     ];
+
+    const dialog = (<Dialog
+      title="Submit Feedback"
+      open={open}
+      actions={actions}
+      onRequestClose={this.handleRequestClose}
+    >
+
+          <TextField
+            floatingLabelText="Subject"
+            value={subject}
+            onChange={this.handleChangeSubject}
+            fullWidth={true}
+            floatingLabelStyle={{ color: '#222222' }}
+            floatingLabelFocusStyle={{ color: blue500 }}
+          />
+          <TextField
+            floatingLabelText="Description"
+            multiLine={true}
+            value={description}
+            errorText={description ? '' : 'Please enter description here'}
+            rows={4}
+            onChange={this.handleChangeDescription}
+            floatingLabelStyle={{ color: '#222222' }}
+            floatingLabelFocusStyle={{ color: blue500 }}
+            fullWidth={true}
+          />
+    </Dialog>);
+
+    let button = null;
+    if (this.props.label) {
+      button = (<FlatButton icon={<HelpIcon/>} onClick={this.handleClick} label={this.props.label} labelPosition="after"></FlatButton>);
+    }else {
+      button = (<IconButton onClick={this.handleClick} ><HelpIcon/></IconButton>);
+    }
     return (
       <div>
-        <IconButton onClick={this.handleClick}>
-          <HelpIcon/>
-          <Dialog
-            title="Submit Feedback"
-            open={open}
-            actions={actions}
-            onRequestClose={this.handleRequestClose}
-          >
-
-                <TextField
-                  floatingLabelText="Subject"
-                  value={subject}
-                  onChange={this.handleChangeSubject}
-                  fullWidth={true}
-                  floatingLabelStyle={{ color: '#222222' }}
-                  floatingLabelFocusStyle={{ color: blue500 }}
-                />
-                <TextField
-                  floatingLabelText="Description"
-                  multiLine={true}
-                  value={description}
-                  errorText={description ? '' : 'Please enter description here'}
-                  rows={4}
-                  onChange={this.handleChangeDescription}
-                  floatingLabelStyle={{ color: '#222222' }}
-                  floatingLabelFocusStyle={{ color: blue500 }}
-                  fullWidth={true}
-                />
-          </Dialog>
-        </IconButton>
+        {button}
+        {dialog}
         <Snackbar
           open={snackOpen}
           message="Feedback submitted, thank you!"

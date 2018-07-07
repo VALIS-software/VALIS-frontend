@@ -562,6 +562,7 @@ export class AppCanvas extends React.Component<Props, State> {
             (init) => {
                 return new WheelInteractionEvent({
                     ...init,
+                    wheelDeltaMode: e.deltaMode,
                     wheelDeltaX: e.deltaX,
                     wheelDeltaY: e.deltaY,
                     wheelDeltaZ: e.deltaZ,

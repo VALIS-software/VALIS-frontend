@@ -9,10 +9,15 @@ $filter-header-height: 48px;
 		border-bottom: 1px solid $valis-grey-dark;
 	}
 
+	.search-results-empty {
+		padding: 16px;
+	}
+
 	height:calc(100% - #{$sidebar-header-height});
 	user-select: none;
 	.search-results-list {
-		background-color: lighten($valis-blue-light, 30%);
+		background-color: $valis-blue-lightest;
+		box-shadow: $valis-scroll-shadow;
 		user-select: none;
 		outline-style:none;
 		.search-result-inner {

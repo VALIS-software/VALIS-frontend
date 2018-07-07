@@ -2,10 +2,11 @@
 import ReactDOM from 'react-dom';
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
-import { ASSOCIATION_TYPE } from '../../helpers/constants';
+import { ASSOCIATION_TYPE, DATA_SOURCE_GWAS } from '../../helpers/constants';
 import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
 import SNPDetails from '../SNPDetails/SNPDetails.jsx';
+import GenericEntityDetails from "../GenericEntityDetails/GenericEntityDetails";
 import Util from '../../helpers/util.js';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import faExternalLinkSquareAlt from '@fortawesome/fontawesome-free-solid/faExternalLinkSquareAlt';
@@ -14,6 +15,7 @@ import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 // Styles
 import './GWASDetails.scss';
 import '../Shared/Shared.scss';
+import GenericEntityDetails from '../GenericEntityDetails/GenericEntityDetails';
 
 class GWASDetails extends React.Component {
   constructor(props) {
@@ -54,6 +56,10 @@ class GWASDetails extends React.Component {
       this.loadGwasDetails();
       return (<div />);
     }
+    // Fall back to GenericEntityDetails since other source like ClinVar don't have detailed information
+    if (this.state.details.source !== DATA_SOURCE_GWAS) {
+      return (<GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={this.state.loadedAssocId} />)
+    }
 
     const name = this.state.details.name;
     const info = this.state.details.info;
@@ -70,8 +76,8 @@ class GWASDetails extends React.Component {
 
     return (<div className="gwas-details">
 
-      <div className="entity-header">
-        <div className="entity-name">{info['DISEASE/TRAIT']}</div>
+      <div className="sidebar-header">
+        <div className="sidebar-name">{info['DISEASE/TRAIT']}</div>
       </div>
       <Collapsible title="Study Info" open={true}>
         <div className="gwas-info-wrapper">

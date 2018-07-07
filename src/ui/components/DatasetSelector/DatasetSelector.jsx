@@ -1,6 +1,7 @@
 // Dependencies
 import * as React from "react";
 import * as PropTypes from "prop-types";
+import UpgradeDialog from "../Shared/UpgradeDialog/UpgradeDialog";
 import GWASSelector from "../GWASSelector/GWASSelector.jsx";
 import GenomeSelector from "../GenomeSelector/GenomeSelector.jsx";
 import TrackSelector from "../TrackSelector/TrackSelector.jsx";
@@ -14,39 +15,61 @@ import {
   TRACK_TYPE_FUNCTIONAL,
   TRACK_TYPE_GENOME,
   TRACK_TYPE_GWAS,
-  TRACK_TYPE_EQTL,
   TRACK_TYPE_ENCODE,
-  TRACK_TYPE_3D,
-  TRACK_TYPE_NETWORK,
-  TRACK_TYPE_BOOLEAN
+  TRACK_TYPE_BOOLEAN,
+  TRACK_TYPE_EQTL,
 } from "../../helpers/constants";
 
 // Styles
 import "./DatasetSelector.scss";
 
+const fixedTrackData = [
+  {
+    "track_type": TRACK_TYPE_GWAS, 
+    "title": "Genome Wide Associations", 
+    "description": "Add variants related to traits or diseases from the EMBL-EBI GWAS database."
+  }, 
+  {
+    "track_type": TRACK_TYPE_ENCODE, 
+    "title": "ENCODE DNA Elements", 
+    "description": "Comprehensive parts list of functional elements in the human genome."
+  }, 
+  {
+    "track_type": TRACK_TYPE_EQTL, 
+    "title": "GTeX eQTLs", 
+    "description": "Quantitative trait loci from 53 human tissues curated from the Genotype-Tissue Expression project."
+  },  
+  {
+    "track_type": TRACK_TYPE_EQTL, 
+    "title": "TCGA Variants", 
+    "description": "Search germline and somatic mutations from The Cancer Genome Atlas."
+  },  
+  {
+    "track_type": TRACK_TYPE_EQTL, 
+    "title": "ExAC Variants", 
+    "description": "Search labeled variants of over 60k exomes from the Exome Aggregation Consortium."
+  }, 
+  {
+    "track_type": "premium", 
+    "title": "Custom Track", 
+    "description": "Securely visualize your own VCF, BAM, GFF, BED or bigwig files."
+  }
+];
+
 class DatasetSelector extends React.Component {
   constructor(props) {
     super(props);
-    this.viewModel = props.viewModel;
     this.appModel = props.appModel;
+    this.viewModel = this.appModel.viewModel;
     this.api = this.appModel.api;
 
     this.state = {
-      dataInfo: []
+      dataInfo: fixedTrackData
     };
   }
 
   componentDidMount() {
-    this.api.getTrackInfo().then(dataInfo => {
-      this.setState({
-        dataInfo: dataInfo,
-      });
-    }, err => {
-      this.appModel.error(this, err);
-      this.setState({
-        error: err,
-      });
-    });
+
   }
 
   dataSetSelected = (trackType) => {
@@ -84,22 +107,16 @@ class DatasetSelector extends React.Component {
           viewModel={this.viewModel}
         />
       );
-    } else if (trackType === TRACK_TYPE_NETWORK) {
-      this.viewModel.pushView(
-        "Network Tracks",
-        null,
-        <TrackSelector
-          trackType={trackType}
-          appModel={this.appModel}
-          viewModel={this.viewModel}
-        />
-      );
     } else if (trackType === TRACK_TYPE_BOOLEAN) {
       this.viewModel.pushView(
         "Boolean Tracks",
         null,
         <BooleanTrackSelector appModel={this.appModel} />
       );
+    } else if (trackType === 'premium') {
+      this.setState({
+        showUpgrade: true,
+      });
     }
   }
 
@@ -123,13 +140,13 @@ class DatasetSelector extends React.Component {
         />
       );
     }
-    return <div className="dataset-selector">{dataInfoBlocks}</div>;
+    const dialog = this.state.showUpgrade ? (<UpgradeDialog open={true}/>) : (<span/>);
+    return <div className="dataset-selector">{dialog}{dataInfoBlocks}</div>;
   }
 }
 
 DatasetSelector.propTypes = {
   appModel: PropTypes.object,
-  viewModel: PropTypes.object
 };
 
 export default DatasetSelector;

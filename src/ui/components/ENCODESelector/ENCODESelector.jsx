@@ -308,13 +308,6 @@ class ENCODESelector extends React.Component {
     }
     return (
       <div className="track-editor">
-        <TextField
-          value={this.state.title}
-          floatingLabelText="Track Title"
-          onChange={this.handleUpdateTitle}
-          errorText={!this.state.title ? "This field is required" : ""}
-        />{" "}
-        <br />
         <SelectField
           value={this.state.biosampleValue}
           floatingLabelText="Biosample"
@@ -335,46 +328,15 @@ class ENCODESelector extends React.Component {
           {genomeTypeItems}
         </SelectField>{" "}
         <br /> <br />
-        {targetCheckboxes && (
+        {targetCheckboxes.length > 0 && (
           <div>
             <div className="item-header"> Target </div>
             <Divider />
             <div className="target-selections">{targetCheckboxes}</div>
           </div>
         )}
-        <SelectField
-          value={this.state.chromoNameValue}
-          floatingLabelText="Chromosome"
-          onChange={this.handleUpdateChromName}
-          maxHeight={200}
-        >
-          {this.chromoNameItems}
-        </SelectField>
-        <br /> <br />
-        <div className="item-header">
-          {" "}
-          {"Length > "} {this.state.minLength}{" "}
-        </div>
-        <Slider
-          min={0}
-          max={100}
-          step={1}
-          value={this.state.minLength}
-          onChange={this.handleUpdateMinLength}
-        />
-        <div className="item-header">
-          {" "}
-          {"Max Number of Results: "} {this.state.maxnumber}{" "}
-        </div>
-        <Slider
-          min={logmin}
-          max={logmax}
-          step={(logmax - logmin) / 100}
-          value={reverse(this.state.maxnumber)}
-          onChange={this.handleUpdateMaxNumber}
-        />
         <RaisedButton
-          label="Create Track"
+          label="Add Track"
           primary={true}
           onClick={() => this.addQueryTrack()}
           disabled={!this.state.title}

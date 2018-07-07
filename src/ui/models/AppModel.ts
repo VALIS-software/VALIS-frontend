@@ -1,5 +1,6 @@
 import GenomeAPI from "./api.js";
 import EventCreator from "./eventCreator.js";
+import ViewModel from "./ViewModel";
 import { API_BASE_URL } from "../helpers/constants";
 
 export enum AppEvent {
@@ -21,6 +22,23 @@ export default class AppModel extends EventCreator {
     private tracks: any[] = [];
     private overlays: any[] = [];
     private tracksLoading: number = 0;
+    private viewModel: ViewModel = null;
+
+    public setViewModel = (viewModel: ViewModel) => {
+        this.viewModel = viewModel;
+    }
+
+    public getViewModel = () => {
+        return this.viewModel;
+    }
+
+    public pushView = (view: React.ReactNode) => {
+        this.viewModel.pushView('', '', view);
+    }
+
+    public popView = () => {
+        this.viewModel.popView();
+    }
 
     public getTracks = () => {
         return this.tracks;

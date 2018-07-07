@@ -39,10 +39,14 @@ export class SiriusApi {
         },
         indicesPerBase: number,
     }> {
+        if (sequenceId === '__SAMPLE__') {
+            return this.sample_LoadACGTSubSequence(sequenceId, lodLevel, lodStartBaseIndex, lodSpan);
+        }
+
         let samplingDensity = (1 << lodLevel);
         let startBasePair = samplingDensity * lodStartBaseIndex + 1;
-        let span = lodSpan * samplingDensity;
-        let endBasePair = startBasePair + span;
+        let spanBasePair = lodSpan * samplingDensity;
+        let endBasePair = startBasePair + spanBasePair - 1;
         let url = `${this.apiUrl}/datatracks/sequence/chr1/${startBasePair}/${endBasePair}?sampling_rate=${samplingDensity}`;
 
         return axios({
@@ -51,39 +55,34 @@ export class SiriusApi {
             responseType: 'arraybuffer',
             headers: {},
         }).then((a) => {
-
-            let arraybuffer: ArrayBuffer = a.data;
-            let byteView = new Uint8Array(arraybuffer);
-
-            // find the start of the payload
-            let nullByteIndex = 0;
-            let jsonHeader = '';
-            for (let i = 0; i < arraybuffer.byteLength; i++) {
-                let byte = byteView[i];
-                if (byte === 0) {
-                    nullByteIndex = i;
-                    break;
-                } else {
-                    jsonHeader += String.fromCharCode(byte);
-                }
-            }
-
-            let payloadBytes = arraybuffer.slice(nullByteIndex + 1);
-            let payloadArray = new Float32Array(payloadBytes);
+            let payloadArray = new Float32Array(this.parseSiriusBinaryResponse(a.data));
             let baseCount = payloadArray.length / 4;
+
+            if (baseCount > lodSpan) {
+                console.warn(`Payload too large, expected ${lodSpan} units but received ${baseCount} units`);
+            }
 
             // build compressed array
             let compressedArray = new Uint8Array(payloadArray.length);
             // find min/max
             let min = Infinity;
             let max = -Infinity;
-            for (let i = 0; i < payloadArray.length; i++) {
-                let v = payloadArray[i];
-                min = Math.min(min, v);
-                max = Math.max(max, v);
+            for (let i = 0; i < baseCount; i++) {
+                let v0 = payloadArray[i * 4 + 0];
+                let v1 = payloadArray[i * 4 + 1];
+                let v2 = payloadArray[i * 4 + 2];
+                let v3 = payloadArray[i * 4 + 3];
+                min = Math.min(min, v0);
+                min = Math.min(min, v1);
+                min = Math.min(min, v2);
+                min = Math.min(min, v3);
+                max = Math.max(max, v0);
+                max = Math.max(max, v1);
+                max = Math.max(max, v2);
+                max = Math.max(max, v3);
             }
 
-            // use min/max to compress to bytes
+            // use min/max to compress floats to bytes
             let delta = max - min;
             let scaleFactor = delta === 0 ? 0 : (1/delta);
             for (let i = 0; i < baseCount; i++) {
@@ -93,17 +92,39 @@ export class SiriusApi {
                 compressedArray[i * 4 + 3] = Math.round(Math.min((payloadArray[i * 4 + 1] - min) * scaleFactor, 1.) * 0xFF); // T
             }
 
-            // console.log(url, jsonHeader, min, max, payloadArray, compressedArray);
-            // @! data is too long by 1 value?
-
             return {
-                array: compressedArray, //new Uint8Array(0),
+                array: compressedArray,
                 sequenceMinMax: {
                     min: min,
                     max: max,
                 },
                 indicesPerBase: 4,
             }
+        });
+    }
+
+    static loadSignal(
+        sequenceId: string,
+        lodLevel: number,
+        lodStartBaseIndex: number,
+        lodSpan: number
+    ) {
+        let samplingDensity = (1 << lodLevel);
+        let startBasePair = samplingDensity * lodStartBaseIndex + 1;
+        let spanBasePair = lodSpan * samplingDensity;
+        let endBasePair = startBasePair + spanBasePair - 1;
+        let url = `${this.apiUrl}/datatracks/ENCFF918ESR/chr1/${startBasePair}/${endBasePair}?sampling_rate=${samplingDensity}`;
+
+        return axios({
+            method: 'get',
+            url: url,
+            responseType: 'arraybuffer',
+            headers: {},
+        }).then((a) => {
+            let arraybuffer = this.parseSiriusBinaryResponse(a.data);
+            let payloadArray = new Float32Array(arraybuffer);
+            console.log(arraybuffer, payloadArray);
+            return payloadArray;
         });
     }
 
@@ -146,6 +167,26 @@ export class SiriusApi {
                     indicesPerBase: 4,
                 }
             });
+    }
+
+    private static parseSiriusBinaryResponse(arraybuffer: ArrayBuffer) {
+        let byteView = new Uint8Array(arraybuffer);
+
+        // find the start of the payload
+        let nullByteIndex = 0;
+        // let jsonHeader = '';
+        for (let i = 0; i < arraybuffer.byteLength; i++) {
+            let byte = byteView[i];
+            if (byte === 0) {
+                nullByteIndex = i;
+                break;
+            } else {
+                // jsonHeader += String.fromCharCode(byte);
+            }
+        }
+
+        let payloadBytes = arraybuffer.slice(nullByteIndex + 1);
+        return payloadBytes;
     }
 
     private static loadArray<T extends keyof ArrayFormatMap>(

@@ -4,7 +4,7 @@
     .filter-menu {
         border-top: 1px solid $valis-grey-dark;
         height: 175px;
-        box-shadow: inset 0px 11px 8px -10px rgba(0.0, 0.0, 0.0, 0.3), inset 0px -11px 8px -10px rgba(0.0, 0.0, 0.0, 0.3); 
+        box-shadow: $valis-scroll-shadow; 
         background-color: lighten($valis-blue-dark, 25%);
         padding: 8px;
         overflow: scroll;

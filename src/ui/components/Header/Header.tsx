@@ -1,20 +1,20 @@
 // Dependencies
-import RaisedButton from 'material-ui/RaisedButton';
+import FlatButton from 'material-ui/FlatButton';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import * as React from 'react';
 import AppModel from '../../models/AppModel';
 import ViewModel from '../../models/ViewModel';
-import DatasetSelector from '../DatasetSelector/DatasetSelector.jsx';
 import TokenBox from '../Shared/TokenBox/TokenBox';
-
+import ShowChart from 'material-ui/svg-icons/editor/show-chart';
 import UserProfileButton from '../Shared/UserProfileButton/UserProfileButton';
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
+import AnalysisSelector from '../AnalysisSelector/AnalysisSelector';
 
 import './Header.scss';
 
 type Props = {
   viewModel: ViewModel,
-  model: AppModel,
+  appModel: AppModel,
   userProfile: any // @! todo type
 }
 
@@ -27,15 +27,21 @@ class Header extends React.Component<Props, State> {
     this.state = {};
   }
 
+  openAnalysis = () => {
+    this.props.viewModel.pushView('Analysis', '', (<AnalysisSelector appModel={this.props.appModel} />));
+  }
+
   render() {
+  const analyzeButton = (<FlatButton onClick={this.openAnalysis} label="Analysis" icon={(<ShowChart/>)}></FlatButton>);
     return (<div className="header">
       <Toolbar>
         <ToolbarGroup firstChild={true}>
           <div className="search-box">
-            <TokenBox appModel={this.props.model} viewModel={this.props.viewModel} />
+            <TokenBox appModel={this.props.appModel} viewModel={this.props.viewModel} />
           </div>
         </ToolbarGroup>
         <ToolbarGroup>
+          {analyzeButton}
           <UserFeedBackButton userProfile={this.props.userProfile} />
           <div className="user-button">
             <UserProfileButton userProfile={this.props.userProfile} />
