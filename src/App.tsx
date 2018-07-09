@@ -23,29 +23,11 @@ import { QueryParser, buildQueryParser } from './ui/helpers/queryparser';
 // styles
 import "./App.scss";
 import ViewModel, { ViewEvent } from "./ui/models/ViewModel";
+import EntityType from "../lib/sirius/EntityType";
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
-(window as any).mixpanel = require('mixpanel-browser')
-
-function parseText(text: string): any {
-	const geneSuggestions = (text: string, maxResults: number) => {
-		return new Promise((resolve, reject) => {
-			resolve(['MAOA', 'MAOB', 'PCSK9', 'NF2']);
-		})
-	};
-	const traitSuggestions = (text: string, maxResults: number) => {
-		return new Promise((resolve, reject) => {
-			resolve(['Cancer', 'Alzheimers', 'Depression']);
-		})
-	}
-
-	const suggestions = new Map();
-	suggestions.set('GENE', geneSuggestions);
-	suggestions.set('TRAIT', traitSuggestions);
-	const parser: QueryParser = buildQueryParser(suggestions);
-	return parser.getSuggestions(text);
-}
+(window as any).mixpanel = require('mixpanel-browser');
 
 type Props = {}
 
@@ -65,7 +47,6 @@ type State = {
 }
 
 export class App extends React.Component<Props, State> {
-	static readonly canvasPixelRatio = window.devicePixelRatio || 1;
 
 	readonly headerHeight: number = 50;
 	readonly headerMargin: number = 30;
@@ -132,7 +113,13 @@ export class App extends React.Component<Props, State> {
 			displayErrors: false,
 			errors: [],
 			userProfile: null,
-		};	
+		};
+
+		if (App.appInstance != null) {
+			console.error('Multiple instances of App are not allowed');
+		}
+
+		App.appInstance = this;
 	}
 
 	componentDidMount() {
@@ -161,9 +148,18 @@ export class App extends React.Component<Props, State> {
 		this.viewModel.addListener(this.pushView, ViewEvent.PUSH_VIEW);
 		this.viewModel.addListener(this.popView, ViewEvent.POP_VIEW);
 		this.viewModel.addListener(this.closeView, ViewEvent.CLOSE_VIEW);
-		this.viewModel.addListener(this.displayDetails, ViewEvent.DISPLAY_ENTITY_DETAILS);
-		this.viewModel.addListener(this.displayTrackSearchResults, ViewEvent.DISPLAY_TRACK_RESULTS);
-		this.viewModel.addListener(this.displayTrackRegion, ViewEvent.DISPLAY_TRACK_REGION);
+		this.viewModel.addListener(
+			(e: { data: { id: string, type: EntityType } }) => {
+				if (e.data != null) this.displayDetails(e.data);
+			},
+			ViewEvent.DISPLAY_ENTITY_DETAILS
+		);
+		this.viewModel.addListener(
+			(e: { data: string }) => {
+				if (e.data !== null) this.displayTrackSearchResults(e.data);
+			},
+			ViewEvent.DISPLAY_TRACK_RESULTS
+		);
 		// this.viewModel.addListener(this.clickTrackElement, ViewEvent.TRACK_ELEMENT_CLICKED);
 		// this.viewModel.addListener(this.showTrackSettings, ViewEvent.EDIT_TRACK_VIEW_SETTINGS);
 	}
@@ -278,30 +274,31 @@ export class App extends React.Component<Props, State> {
 		this.setState({ views: [] });
 	}
 
-	protected displayTrackRegion = (event: {data: {startBase: number, endBase: number}}) => {
-		console.log('displayTrackRegion', event.data.startBase, event.data.endBase);
+	protected displayRegion(contig: string, startBase: number, endBase: number) {
+		if (contig !== 'chr1') {
+			console.warn(`displayRegion contig not yet supported for contig "${contig}"`)
+		}
+
+		let startIndex = startBase - 1;
+		let endIndex = endBase;
+
 		let panel0 = this.state.trackViewer.getPanel(0);
 		if (panel0 == null) return;
-		panel0.setRange(event.data.startBase - 1, event.data.endBase);
+		panel0.setRange(startIndex, endIndex);
 	}
 
-	protected displayDetails = (event: {data: any}) => {
-		if (event.data != null) {
-			this.viewModel.pushView(
-				'',
-				event.data.id,
-				<EntityDetails entity={event.data} appModel={this.appModel} viewModel={this.viewModel} />
-			);
-		}
+	protected displayDetails(entity: { id: string, type: EntityType }) {
+		this.viewModel.pushView(
+			'',
+			entity.id,
+			<EntityDetails entity={entity} appModel={this.appModel} viewModel={this.viewModel} />
+		);
 	}
 
-   protected displayTrackSearchResults = (event: any) => {
-     if (event.data !== null) {
-       const trackGuid: string = event.data;
-       const view = (<SearchResultsView trackGuid={trackGuid} viewModel={this.viewModel} appModel={this.appModel} />);
-       this.viewModel.pushView('Search Results', trackGuid, view);
-     }
-   }
+	protected displayTrackSearchResults = (trackGuid: string) => {
+		const view = (<SearchResultsView trackGuid={trackGuid} viewModel={this.viewModel} appModel={this.appModel} />);
+		this.viewModel.pushView('Search Results', trackGuid, view);
+	}
 
 	protected displayErrors = () => {
 		this.setState({displayErrors: true});
@@ -320,7 +317,7 @@ export class App extends React.Component<Props, State> {
 		});
 	}
 
-	trackMixPanel = (event: any) => {
+	protected trackMixPanel = (event: any) => {
 		if (event.data !== null) {
 			const msg: string = event.data.msg;
 			const details: any = event.data.details;
@@ -328,6 +325,16 @@ export class App extends React.Component<Props, State> {
 			mixpanel.track(msg, details);
 		}
 	}
+
+	// global app methods, assumes a single instance of App
+	static readonly canvasPixelRatio = window.devicePixelRatio || 1;
+
+	private static appInstance: App;
+
+	static displayRegion(contig: string, startBase: number, endBase: number) {
+		App.appInstance.displayRegion(contig, startBase, endBase);
+	}
+
 
 }
 
