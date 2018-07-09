@@ -117,21 +117,27 @@ export class Renderer {
 					nodeInternal.gpuResourcesNeedAllocate = false;
 				}
 
-				// store most important state in 32-bit key
-				nodeInternal._renderStateKey = this.encodeRenderState(
-					nodeInternal.gpuProgram.id,
-					nodeInternal.gpuVertexState.id,
-					node.blendMode
-				);
-
-				// transparent nodes are rendered from furthest to nearest
-
 				// if node.transparent is not defined then use opacity to determine if transparency pass is required
 				let useTransparentPass = node.transparent;
 				if (useTransparentPass === undefined) {
 					useTransparentPass = node.opacity < 1 ? true : false;
 				}
 
+				// when blend mode is not specified, assume it's alpha-blending when it's in the transparency pass
+				let blendMode = node.blendMode;
+				if (blendMode === undefined) {
+					blendMode = useTransparentPass ? BlendMode.PREMULTIPLIED_ALPHA : BlendMode.NONE;
+				}
+
+				// store most important state in 32-bit key
+				nodeInternal._renderStateKey = this.encodeRenderState(
+					nodeInternal.gpuProgram.id,
+					nodeInternal.gpuVertexState.id,
+					blendMode
+				);
+
+				// add node into pass bucket
+				// transparent nodes are rendered from furthest to nearest
 				if (useTransparentPass) {
 					transparent[transparentIndex++] = node;
 				} else {
@@ -169,7 +175,13 @@ export class Renderer {
 			let ai = a as any as RenderableInternal;
 			let bi = b as any as RenderableInternal;
 			// back to front z-ordering
-			return bi.renderOrderZ - ai.renderOrderZ;
+			let delta = bi.renderOrderZ - ai.renderOrderZ;
+			if (delta === 0) {
+				// when elements have the same z-index, use render-state to sort
+				return ai._renderStateKey - bi._renderStateKey;
+			} else {
+				return delta;
+			}
 		});
 
 		// begin rendering
@@ -279,12 +291,8 @@ export class Renderer {
 
 			let internal = renderable as any as RenderableInternal;
 
-			let blendMode = renderable.blendMode;
-
-			// default blend mode when unspecified
-			if (blendMode === undefined) {
-				blendMode = renderable.opacity < 1 ? BlendMode.PREMULTIPLIED_ALPHA : BlendMode.NONE;
-			}
+			// extract blend mode from render state (because it may not explicitly specified on the object)
+			let blendMode = this.decodeRenderStateBlendMode(internal._renderStateKey);
 
 			// set state for renderable
 			this.setProgram(internal);
@@ -447,6 +455,10 @@ export class Renderer {
 		}
 	}
 
+	protected decodeRenderStateBlendMode(bits: number) {
+		return (bits & this.stateMMask) >>> this.stateMOffset;
+	}
+
 }
 
 export type DrawContextInternal = {
@@ -497,37 +509,133 @@ export class DrawContext {
 		this.gl.uniform1iv(this.program.uniformLocation[name], v);
 	}
 	uniform2f(name: string, x: GLfloat, y: GLfloat) {
-		this.gl.uniform2f(this.program.uniformLocation[name], x, y);
+		const stateCache = (this.program as any as GPUProgramInternal).stateCache;
+		let cacheValue = stateCache[name];
+
+		if (cacheValue === undefined) { // allocate cache entry
+			cacheValue = stateCache[name] = new Array(2);
+		}
+		
+		if (
+			(cacheValue[0] !== x) ||
+			(cacheValue[1] !== y)
+		) {
+			this.gl.uniform2f(this.program.uniformLocation[name], x, y);
+			cacheValue[0] = x;
+			cacheValue[1] = y;
+		}
 	}
 	uniform2fv(name: string, v: Float32Array) {
 		this.gl.uniform2fv(this.program.uniformLocation[name], v);
 	}
 	uniform2i(name: string, x: GLint, y: GLint) {
-		this.gl.uniform2i(this.program.uniformLocation[name], x, y);
+		const stateCache = (this.program as any as GPUProgramInternal).stateCache;
+		let cacheValue = stateCache[name];
+
+		if (cacheValue === undefined) { // allocate cache entry
+			cacheValue = stateCache[name] = new Array(2);
+		}
+
+		if (
+			(cacheValue[0] !== x) ||
+			(cacheValue[1] !== y)
+		) {
+			this.gl.uniform2i(this.program.uniformLocation[name], x, y);
+			cacheValue[0] = x;
+			cacheValue[1] = y;
+		}
 	}
 	uniform2iv(name: string, v: Int32Array) {
 		this.gl.uniform2iv(this.program.uniformLocation[name], v);
 	}
 	uniform3f(name: string, x: GLfloat, y: GLfloat, z: GLfloat) {
-		this.gl.uniform3f(this.program.uniformLocation[name], x, y, z);
+		const stateCache = (this.program as any as GPUProgramInternal).stateCache;
+		let cacheValue = stateCache[name];
+
+		if (cacheValue === undefined) { // allocate cache entry
+			cacheValue = stateCache[name] = new Array(3);
+		}
+
+		if (
+			(cacheValue[0] !== x) ||
+			(cacheValue[1] !== y) ||
+			(cacheValue[2] !== z)
+		) {
+			this.gl.uniform3f(this.program.uniformLocation[name], x, y, z);
+			cacheValue[0] = x;
+			cacheValue[1] = y;
+			cacheValue[2] = z;
+		}
 	}
 	uniform3fv(name: string, v: Float32Array) {
 		this.gl.uniform3fv(this.program.uniformLocation[name], v);
 	}
 	uniform3i(name: string, x: GLint, y: GLint, z: GLint) {
-		this.gl.uniform3i(this.program.uniformLocation[name], x, y, z);
+		const stateCache = (this.program as any as GPUProgramInternal).stateCache;
+		let cacheValue = stateCache[name];
+
+		if (cacheValue === undefined) { // allocate cache entry
+			cacheValue = stateCache[name] = new Array(3);
+		}
+
+		if (
+			(cacheValue[0] !== x) ||
+			(cacheValue[1] !== y) ||
+			(cacheValue[2] !== z)
+		) {
+			this.gl.uniform3i(this.program.uniformLocation[name], x, y, z);
+			cacheValue[0] = x;
+			cacheValue[1] = y;
+			cacheValue[2] = z;
+		}
 	}
 	uniform3iv(name: string, v: Int32Array) {
 		this.gl.uniform3iv(this.program.uniformLocation[name], v);
 	}
 	uniform4f(name: string, x: GLfloat, y: GLfloat, z: GLfloat, w: GLfloat) {
-		this.gl.uniform4f(this.program.uniformLocation[name], x, y, z, w);
+		const stateCache = (this.program as any as GPUProgramInternal).stateCache;
+		let cacheValue = stateCache[name];
+
+		if (cacheValue === undefined) { // allocate cache entry
+			cacheValue = stateCache[name] = new Array(4);
+		}
+
+		if (
+			(cacheValue[0] !== x) ||
+			(cacheValue[1] !== y) ||
+			(cacheValue[2] !== z) ||
+			(cacheValue[3] !== w)
+		) {
+			this.gl.uniform4f(this.program.uniformLocation[name], x, y, z, w);
+			cacheValue[0] = x;
+			cacheValue[1] = y;
+			cacheValue[2] = z;
+			cacheValue[3] = w;
+		}
 	}
 	uniform4fv(name: string, v: Float32Array) {
 		this.gl.uniform4fv(this.program.uniformLocation[name], v);
 	}
 	uniform4i(name: string, x: GLint, y: GLint, z: GLint, w: GLint) {
-		this.gl.uniform4i(this.program.uniformLocation[name], x, y, z, w);
+		const stateCache = (this.program as any as GPUProgramInternal).stateCache;
+		let cacheValue = stateCache[name];
+
+		if (cacheValue === undefined) { // allocate cache entry
+			cacheValue = stateCache[name] = new Array(4);
+		}
+
+		if (
+			(cacheValue[0] !== x) ||
+			(cacheValue[1] !== y) ||
+			(cacheValue[2] !== z) ||
+			(cacheValue[3] !== w)
+		) {
+			this.gl.uniform4i(this.program.uniformLocation[name], x, y, z, w);
+			cacheValue[0] = x;
+			cacheValue[1] = y;
+			cacheValue[2] = z;
+			cacheValue[3] = w;
+		}
 	}
 	uniform4iv(name: string, v: Int32Array) {
 		this.gl.uniform4iv(this.program.uniformLocation[name], v);
@@ -543,7 +651,6 @@ export class DrawContext {
 	}
 
 	uniformTexture2D(name: string, texture: GPUTexture) {
-		const gl = this.gl;
 		const deviceInternal = this.device as any as GPUDeviceInternal;
 		const textureInternal = texture as any as GPUTextureInternal;
 
