@@ -151,9 +151,9 @@ class SearchResultsView extends React.Component {
 
   rowRenderer = ({ index, key, parent, style }) => {
     if (index === this.state.results.length && this.state.hasMore) {
-      return (<div key={key}>Loading...</div>);
+      return (<div key={key} style={{}}>Loading...</div>);
     } else if (index === this.state.results.length) {
-      return (<div key={key}> End of results </div>);
+      return (<div key={key} style={{}}> End of results </div>);
     }
     const result = this.state.results[index];
     let title = "";
