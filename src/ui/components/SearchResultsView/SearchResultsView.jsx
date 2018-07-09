@@ -60,7 +60,7 @@ class SearchResultsView extends React.Component {
 
   fetch = (clearResults = false) => {
     const currentQuery = this.queryToFetch();
-
+    console.log(JSON.stringify(currentQuery));
     // clear the results if needed
     if (clearResults) {
       this.cursor = 0;
@@ -119,7 +119,6 @@ class SearchResultsView extends React.Component {
 
   updateFilters = (filters) => {
     this.filters = new Map(filters);
-
     this.setState({
       showFilters: false,
     });

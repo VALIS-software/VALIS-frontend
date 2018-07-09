@@ -50,6 +50,15 @@ class Util {
         query.filters['info.variant_tags'] = { "$in": tags };
       }
     }
+
+    if (filter.get(FILTER_TYPES.CHROMOSOME)) {
+      const contigs = filter.get(FILTER_TYPES.CHROMOSOME).toArray();
+      if (contigs.length === 1) {
+        query.filters.contig = contigs[0];
+      } else {
+        query.filters.contig = { "$in": contigs };
+      }
+    }
     /*
     if (filter.get(FILTER_TYPES.P_VALUE)) {
       // if a p-value filter exists, remove it and add this one

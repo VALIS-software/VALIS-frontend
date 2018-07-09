@@ -14,6 +14,16 @@ if (process != null && process.env != null) {
 
 export const API_BASE_URL = apiBaseUrl;
 
+const FILTER_TYPES = {
+  DATASET: 'dataset',
+  TYPE: 'type',
+  VARIANT_TAG: 'variant_tag',
+  ALLELE_FREQUENCY: 'allele_frequency',
+  P_VALUE: 'p_value',
+  CHROMOSOME: 'chromosome',
+};
+
+
 const COLOR1 = [37, 206, 209];
 const COLOR2 = [128, 155, 206];
 const COLOR3 = [255, 138, 91];
@@ -103,14 +113,6 @@ const DATA_SOURCES = [
   DATA_SOURCE_ENSEMBL,
   DATA_SOURCE_GTEX
 ];
-
-const FILTER_TYPES = {
-  DATASET: 'dataset',
-  TYPE: 'type',
-  VARIANT_TAG: 'variant_tag',
-  ALLELE_FREQUENCY: 'allele_frequency',
-  P_VALUE: 'p_value',
-};
 
 export {
   GENOME_LENGTH,

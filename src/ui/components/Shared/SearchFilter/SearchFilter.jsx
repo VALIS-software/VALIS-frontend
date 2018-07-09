@@ -1,16 +1,19 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
-import { DATA_SOURCES, VARIANT_TAGS, FILTER_TYPES } from '../../../helpers/constants.ts';
+import { DATA_SOURCES, VARIANT_TAGS, CHROMOSOME_NAMES, FILTER_TYPES } from '../../../helpers/constants.ts';
 import QueryBuilder from '../../../models/query.js';
 
 const { Map, Set } = require('immutable');
 import './SearchFilter.scss';
 
 
+
+
 const rootFilterOptions = [
     { title: 'By Dataset', type: FILTER_TYPES.DATASET },
     { title: 'By Type', type: FILTER_TYPES.TYPE },
     { title: 'By Variant Effect', type: FILTER_TYPES.VARIANT_TAG },
+    { title: 'By Chromosome', type: FILTER_TYPES.CHROMOSOME },
     // { title: 'By Allele Frequency', type: FILTER_TYPES.ALLELE_FREQUENCY },
     // { title: 'By p-value', type: FILTER_TYPES.P_VALUE }
 ];
@@ -101,6 +104,10 @@ class SearchFilter extends React.Component {
                 builder.newGenomeQuery();
                 const genomeQuery = builder.build();
                 promise = this.props.appModel.api.getDistinctValues('type', genomeQuery)
+            } else if (type === FILTER_TYPES.CHROMOSOME) {
+                promise = new Promise(((resolve, reject) => {
+                    resolve(CHROMOSOME_NAMES);
+                }));
             }
 
             this.filterOptionsLoading[type] = promise.then(result => {
