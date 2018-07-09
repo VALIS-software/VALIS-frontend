@@ -9,6 +9,9 @@ import Util from '../../helpers/util.js';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import faExternalLinkSquareAlt from '@fortawesome/fontawesome-free-solid/faExternalLinkSquareAlt';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import EntityType from "../../../../lib/sirius/EntityType";
+import DataListItem from "../DataListItem/DataListItem.jsx";
+import QueryBuilder from "../../models/query.js";
 
 // Styles
 import './GeneDetails.scss';
@@ -37,12 +40,153 @@ class GeneDetails extends React.Component {
         details: detailsData.details,
         relations: detailsData.relations,
       });
+      this.loadIntersectSNPs();
+      this.loadIntersectSNPGWAS();
+      this.loadIntersectSNPGWASTraits();
     }, (err) => {
       this.appModel.error(err);
       this.setState({
         error: err,
       });
     });
+  }
+
+  buildIntersectSNPQuery() {
+    const details = this.state.details;
+    if (!details || !details.contig || !details.start || !details.end) {
+      return;
+    }
+    const builder = new QueryBuilder();
+    builder.newGenomeQuery();
+    builder.filterType('SNP');
+    builder.filterContig(details.contig);
+    builder.filterStartBp({'>=': details.start, '<=': details.end});
+    return builder.build();
+  }
+
+  buildIntersectSNPGWASQuery() {
+    const intersectSNPquery = this.buildIntersectSNPQuery();
+    if (!intersectSNPquery) {
+      return;
+    }
+    const builder = new QueryBuilder();
+    builder.newEdgeQuery();
+    builder.filterType(EntityType.GWAS);
+    builder.setToNode(intersectSNPquery, true);
+    return builder.build();
+  }
+
+  buildIntersectSNPGWASTraitQuery() {
+    const intersectSNPGWASQuery = this.buildIntersectSNPGWASQuery();
+    if (!intersectSNPGWASQuery) {
+      return;
+    }
+    const builder = new QueryBuilder();
+    builder.newInfoQuery();
+    builder.addToEdge(intersectSNPGWASQuery);
+    return builder.build();
+  }
+
+  loadIntersectSNPs() {
+    const intersectSNPquery = this.buildIntersectSNPQuery();
+    if (!intersectSNPquery) {
+      return;
+    }
+    // For gene like SOX5, there are more than 100k results, here we show the first 50
+    this.api.getQueryResults(intersectSNPquery, false, 0, 50).then(results => {
+      const intersectSNPs = [];
+      for (const d of results.data) {
+        intersectSNPs.push({
+          title: d.name,
+          description: d.info.description,
+          id: d.id,
+          type: d.type,
+        })
+      }
+      this.setState({
+        intersectSNPs: intersectSNPs,
+      })
+    }, (err) => {
+      this.appModel.error(err);
+      this.setState({
+        error: err,
+      });
+    });
+  }
+
+  loadIntersectSNPGWAS() {
+    const intersectSNPGWASQuery = this.buildIntersectSNPGWASQuery();
+    if (!intersectSNPGWASQuery) {
+      return;
+    }
+    this.api.getQueryResults(intersectSNPGWASQuery, false, 0, 50).then(results => {
+      const intersectSNPGWASs = [];
+      for (const d of results.data) {
+        intersectSNPGWASs.push({
+          title: d.name,
+          description: d.info.description,
+          id: d.id,
+          type: d.type,
+        })
+      }
+      this.setState({
+        intersectSNPGWASs: intersectSNPGWASs,
+      })
+    }, (err) => {
+      this.appModel.error(err);
+      this.setState({
+        error: err,
+      });
+    });
+  }
+
+  loadIntersectSNPGWASTraits() {
+    const intersectSNPGWASTraitQuery = this.buildIntersectSNPGWASTraitQuery();
+    if (!intersectSNPGWASTraitQuery) {
+      return;
+    }
+    this.api.getQueryResults(intersectSNPGWASTraitQuery, false, 0, 50).then(results => {
+      const intersectSNPGWASTraits = [];
+      for (const d of results.data) {
+        intersectSNPGWASTraits.push({
+          title: d.name,
+          description: d.info.description,
+          id: d.id,
+          type: d.type,
+        })
+      }
+      this.setState({
+        intersectSNPGWASTraits: intersectSNPGWASTraits,
+      })
+    }, (err) => {
+      this.appModel.error(err);
+      this.setState({
+        error: err,
+      });
+    });
+  }
+
+  renderCollapsible(title, dataList) {
+    if (!dataList || dataList.length === 0) {
+      const noTitle = 'No ' + title;
+      return (<Collapsible title={noTitle} disabled={true}/>);
+    }
+    const titleWithNumber = title + ` (${dataList.length})`;
+    const dataItems = dataList.map(r => {
+      return (
+        <DataListItem
+          title={r.title}
+          description={r.description}
+          onClick={() => this.viewModel.displayEntityDetails(r)}
+          key={r.id}
+        />
+      );
+    });
+    return (
+      <Collapsible title={titleWithNumber} open={false}>
+        {dataItems}
+      </Collapsible>
+    );
   }
 
   render() {
@@ -55,6 +199,7 @@ class GeneDetails extends React.Component {
     }
 
     const details = this.state.details;
+    const relations = this.state.relations;
     const info = details.info;
     const name = details.name;
 
@@ -93,6 +238,19 @@ class GeneDetails extends React.Component {
       return (<div key={link[0]} onClick={openLink} className="row">{link[0]}</div>);
     });
 
+    // prepare eQTL SNP items
+    const eqtlRelations = relations.filter(r => r.type === EntityType.EQTL);
+    const eqtlList = this.renderCollapsible('Quantitative Trait Loci', eqtlRelations);
+
+    // prepare intersecting SNP items
+    const intersectSNPList = this.renderCollapsible('Intersect SNPs', this.state.intersectSNPs);
+
+    // prepare GWAS items from intersecting SNPs
+    const gwasList = this.renderCollapsible('GWAS relations', this.state.intersectSNPGWASs);
+
+    // prepare all traits from GWAS items from intersecting SNPs
+    const traitList = this.renderCollapsible('Phenotype relations', this.state.intersectSNPGWASTraits);
+
     return (<div className="gene-details">
       {header}
       <Collapsible title="Basic Info" open={true}>
@@ -118,18 +276,10 @@ class GeneDetails extends React.Component {
       <Collapsible title="External References" open={false}>
         {links}
       </Collapsible>
-      <Collapsible title="Phenotype relations" open={false}>
-        TODO
-      </Collapsible>
-      <Collapsible title="GWAS relations" open={false}>
-        TODO
-      </Collapsible>
-      <Collapsible title="SNPs" open={false}>
-        TODO
-      </Collapsible>
-      <Collapsible title="eQTLs" open={false}>
-        TODO
-      </Collapsible>
+      {traitList}
+      {gwasList}
+      {intersectSNPList}
+      {eqtlList}
     </div>);
   }
 }

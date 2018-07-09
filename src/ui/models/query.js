@@ -89,6 +89,20 @@ class QueryBuilder {
     this.query.filters['info.outtype'] = outType;
   }
 
+  filterStartBp(start) {
+    if (this.query.type !== QUERY_TYPE_GENOME) {
+      throw new Error('filterStartBp is only available for an Genome Query.');
+    }
+    this.query.filters.start = start;
+  }
+
+  filterEndBp(end) {
+    if (this.query.type !== QUERY_TYPE_GENOME) {
+      throw new Error('filterEndBp is only available for an Genome Query.');
+    }
+    this.query.filters.end = end;
+  }
+
   filterTumorSite(tumorSite) {
     this.query.filters['info.tumor_tissue_site'] = tumorSite;
   }
@@ -108,11 +122,12 @@ class QueryBuilder {
     this.query.toEdges.push(edgeQuery);
   }
 
-  setToNode(nodeQuery) {
+  setToNode(nodeQuery, reverse=false) {
     if (this.query.type !== QUERY_TYPE_EDGE) {
       throw new Error('toNode is only available for an Edge Query.');
     }
     this.query.toNode = nodeQuery;
+    this.query.reverse = reverse;
   }
 
   addArithmeticIntersect(genomeQuery) {
