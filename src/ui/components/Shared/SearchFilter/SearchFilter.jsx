@@ -15,22 +15,6 @@ const rootFilterOptions = [
     // { title: 'By p-value', type: FILTER_TYPES.P_VALUE }
 ];
 
-const ALLELE_FREQUENCY_BUCKETS = [
-    '< 1/10,000',
-    '< 1/1,000',
-    '< 1%',
-    '< 5%',
-    '< 50%',
-    '> 50%',
-];
-
-const P_VALUE_BUCKETS = [
-    '<1e-8',
-    '<1e-5',
-    '<1e-4',
-    '<1e-3',
-];
-
 class SearchFilter extends React.Component {
     constructor(props) {
         super(props);
@@ -111,14 +95,6 @@ class SearchFilter extends React.Component {
             } else if (type === FILTER_TYPES.VARIANT_TAG) {
                 promise = new Promise(((resolve, reject) => {
                     resolve(VARIANT_TAGS);
-                }));
-            } else if (type === FILTER_TYPES.ALLELE_FREQUENCY) {
-                promise = new Promise(((resolve, reject) => {
-                    resolve(ALLELE_FREQUENCY_BUCKETS);
-                }));
-            } else if (type === FILTER_TYPES.P_VALUE) {
-                promise = new Promise(((resolve, reject) => {
-                    resolve(P_VALUE_BUCKETS);
                 }));
             } else if (type === 'type') {
                 const builder = new QueryBuilder();

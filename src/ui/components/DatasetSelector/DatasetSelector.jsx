@@ -7,18 +7,22 @@ import GenomeSelector from "../GenomeSelector/GenomeSelector.jsx";
 import TrackSelector from "../TrackSelector/TrackSelector.jsx";
 import FunctionalTrackSelector from "../FunctionalTrackSelector/FunctionalTrackSelector.jsx";
 import ENCODESelector from "../ENCODESelector/ENCODESelector.jsx";
+import GTEXSelector from "../GTEXSelector/GTEXSelector.jsx";
+import ExACSelector from "../ExACSelector/ExACSelector.jsx";
+import TCGASelector from "../TCGASelector/TCGASelector.jsx";
 import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector.jsx";
 import DataListItem from "../DataListItem/DataListItem.jsx";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
-import {
-  TRACK_TYPE_SEQUENCE,
-  TRACK_TYPE_FUNCTIONAL,
-  TRACK_TYPE_GENOME,
-  TRACK_TYPE_GWAS,
-  TRACK_TYPE_ENCODE,
-  TRACK_TYPE_BOOLEAN,
-  TRACK_TYPE_EQTL,
-} from "../../helpers/constants";
+
+const TRACK_TYPE_SEQUENCE = 'track_type_sequence';
+const TRACK_TYPE_FUNCTIONAL = 'track_type_functional';
+const TRACK_TYPE_GENOME = 'track_type_genome';
+const TRACK_TYPE_GWAS = 'track_type_gwas';
+const TRACK_TYPE_TCGA = 'track_type_tcga';
+const TRACK_TYPE_EQTL = 'track_type_eqtl';
+const TRACK_TYPE_EXAC = 'track_type_exac';
+const TRACK_TYPE_ENCODE = 'track_type_encode';
+const TRACK_TYPE_BOOLEAN = 'track_type_boolean';
 
 // Styles
 import "./DatasetSelector.scss";
@@ -40,19 +44,19 @@ const fixedTrackData = [
     "description": "Quantitative trait loci from 53 human tissues curated from the Genotype-Tissue Expression project."
   },  
   {
-    "track_type": TRACK_TYPE_EQTL, 
+    "track_type": TRACK_TYPE_TCGA, 
     "title": "TCGA Variants", 
     "description": "Search germline and somatic mutations from The Cancer Genome Atlas."
   },  
   {
-    "track_type": TRACK_TYPE_EQTL, 
+    "track_type": TRACK_TYPE_EXAC, 
     "title": "ExAC Variants", 
     "description": "Search labeled variants of over 60k exomes from the Exome Aggregation Consortium."
   }, 
   {
     "track_type": "premium", 
     "title": "Custom Track", 
-    "description": "Securely visualize your own VCF, BAM, GFF, BED or bigwig files."
+    "description": "Import and analyze your own VCF, BAM, GFF, BED or bigwig files."
   }
 ];
 
@@ -97,7 +101,25 @@ class DatasetSelector extends React.Component {
         null,
         <FunctionalTrackSelector appModel={this.appModel} />
       );
-    } else if (trackType === TRACK_TYPE_SEQUENCE) {
+    } else if (trackType === TRACK_TYPE_EQTL) {
+      this.viewModel.pushView(
+        "GTEx eQTL's",
+        null,
+        <GTEXSelector appModel={this.appModel} />
+      );
+    }else if (trackType === TRACK_TYPE_TCGA) {
+      this.viewModel.pushView(
+        "TCGA Variants",
+        null,
+        <TCGASelector appModel={this.appModel} />
+      );
+    }else if (trackType === TRACK_TYPE_EXAC) {
+      this.viewModel.pushView(
+        "ExAC Variants",
+        null,
+        <ExACSelector appModel={this.appModel} />
+      );
+    }else if (trackType === TRACK_TYPE_SEQUENCE) {
       this.viewModel.pushView(
         "Sequence Tracks",
         null,

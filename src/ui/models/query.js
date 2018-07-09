@@ -107,6 +107,16 @@ class QueryBuilder {
     this.query.filters['info.tumor_tissue_site'] = tumorSite;
   }
 
+  filterAffectedGene(gene) {
+    const previous = this.query.filters['variant_affected_genes'] || [];
+    this.query.filters['variant_affected_genes'] = { $all: previous.concat([gene]) };
+  }
+
+  filterVariantTag(tag) {
+    const previous = this.query.filters['variant_tags'] || [];
+    this.query.filters['variant_tags'] = { $all: previous.concat([tag]) };
+  }
+
   searchText(text) {
     this.query.filters.$text = text;
   }

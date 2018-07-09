@@ -1,8 +1,5 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
-import Paper from 'material-ui/Paper';
-import Menu from 'material-ui/Menu';
-import MenuItem from 'material-ui/MenuItem';
 import Chip from 'material-ui/Chip';
 import AutoComplete from 'material-ui/AutoComplete';
 import IconButton from 'material-ui/IconButton';

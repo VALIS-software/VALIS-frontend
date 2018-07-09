@@ -38,6 +38,11 @@ const fixedAnalysisData = [
     "title": "Predict Functional Effects", 
     "description": "Predict the effect of non-coding variants on expression, methylation or chromatin accessibility."
   },
+  {
+    "track_type": 'premium', 
+    "title": "Custom Analysis", 
+    "description": "Write your own analysis function in R, Python or via REST API."
+  },
 ];
 
 class AnalysisSelector extends React.Component {

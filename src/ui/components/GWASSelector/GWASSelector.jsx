@@ -1,7 +1,6 @@
 // Dependencies
 import * as React from "react";
 import * as PropTypes from "prop-types";
-import TextField from "material-ui/TextField";
 import AutoComplete from "material-ui/AutoComplete";
 import Slider from "material-ui/Slider";
 import RaisedButton from "material-ui/RaisedButton/RaisedButton";
