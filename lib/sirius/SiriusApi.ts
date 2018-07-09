@@ -260,9 +260,6 @@ export class SiriusApi {
         });
     }
 
-    private static log2(x: number) {
-        return Math.log(x) / Math.LN2;
-    }
 }
 
 enum ArrayFormat {
