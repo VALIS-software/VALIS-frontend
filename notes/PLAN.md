@@ -1,10 +1,15 @@
+- Variants:
+    - Review data sources
+    - Can have all manner of variant, how should we render?
+        - What is common amongs all variants?
+            - Start site and end site
+
 - Integrate latest UI
-    - Use remote data
     --- PR
     - Anything missing from App.tsx
     - Fill out viewModel.js and appModel.ts functionality
         - Connect up TrackViewSettings
-    - api.js
+    - api.js, merge into sirus lib
     - Migrate constants to src/Constants.ts
     - Clear out as much as possible from Constants
     - There's not a clear distinction of responsibilities between view and app models
@@ -17,7 +22,13 @@
     - EventCreator -> node.js events
     - Rebuild TrackTooltip
 
-- Slow down are large zoom-out because there's no limit on tiles
+- Tracks should never have pan-y
+    - Should adaptively display
+
+- Search box should be like code editor command, can also do things like [goto] or @ to go to specific regions
+    - Needs to be super fast
+
+- Slow down at large zoom-out because there's no limit on tiles
     - Track request boundaries
 
 - Wrap up dev colors code
@@ -96,7 +107,7 @@
 
 ---- consider
 
-- We only use a teeeny bit of fontawesome, can we save bytes here?
+- Material ui is > 50% of bundle, can we do anything about this?
 
 - Represent ensemble biotypes
     - https://www.ensembl.org/info/genome/genebuild/biotypes.html
