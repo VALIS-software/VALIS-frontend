@@ -11,8 +11,12 @@ class Pills extends React.Component {
         const pills = this.props.items;
         const style = this.props.style;
         if (!pills) return (<div />);
+
         const pillElems = pills.map(item => {
-            return (<span style={style} className="pill">{item}</span>)
+            // an item is fully identified by the item string
+            // if more data is added to item, be sure to update the key to include it
+            let key = item;
+            return (<span style={style} className="pill" key={key}>{item}</span>)
         })
         return (<span className="pills-container">
             {pillElems}
