@@ -49,10 +49,9 @@ class GeneDetails extends React.Component {
         error: err,
       });
     });
-
   }
 
-  loadIntersectSNPs() {
+  buildIntersectSNPQuery() {
     const details = this.state.details;
     if (!details || !details.contig || !details.start || !details.end) {
       return;
@@ -62,9 +61,39 @@ class GeneDetails extends React.Component {
     builder.filterType('SNP');
     builder.filterContig(details.contig);
     builder.filterStartBp({'>=': details.start, '<=': details.end});
-    this.intersectSNPquery = builder.build();
+    return builder.build();
+  }
+
+  buildIntersectSNPGWASQuery() {
+    const intersectSNPquery = this.buildIntersectSNPQuery();
+    if (!intersectSNPquery) {
+      return;
+    }
+    const builder = new QueryBuilder();
+    builder.newEdgeQuery();
+    builder.filterType(EntityType.GWAS);
+    builder.setToNode(intersectSNPquery, true);
+    return builder.build();
+  }
+
+  buildIntersectSNPGWASTraitQuery() {
+    const intersectSNPGWASQuery = this.buildIntersectSNPGWASQuery();
+    if (!intersectSNPGWASQuery) {
+      return;
+    }
+    const builder = new QueryBuilder();
+    builder.newInfoQuery();
+    builder.addToEdge(intersectSNPGWASQuery);
+    return builder.build();
+  }
+
+  loadIntersectSNPs() {
+    const intersectSNPquery = this.buildIntersectSNPQuery();
+    if (!intersectSNPquery) {
+      return;
+    }
     // For gene like SOX5, there are more than 100k results, here we show the first 50
-    this.api.getQueryResults(this.intersectSNPquery, false, 0, 50).then(results => {
+    this.api.getQueryResults(intersectSNPquery, false, 0, 50).then(results => {
       const intersectSNPs = [];
       for (const d of results.data) {
         intersectSNPs.push({
@@ -86,16 +115,11 @@ class GeneDetails extends React.Component {
   }
 
   loadIntersectSNPGWAS() {
-    if (!this.intersectSNPquery) {
+    const intersectSNPGWASQuery = this.buildIntersectSNPGWASQuery();
+    if (!intersectSNPGWASQuery) {
       return;
     }
-    const snpQuery = this.intersectSNPquery;
-    const builder = new QueryBuilder();
-    builder.newEdgeQuery();
-    builder.filterType(EntityType.GWAS);
-    builder.setToNode(snpQuery, true);
-    this.intersectSNPGWASquery = builder.build();
-    this.api.getQueryResults(this.intersectSNPGWASquery, false, 0, 50).then(results => {
+    this.api.getQueryResults(intersectSNPGWASQuery, false, 0, 50).then(results => {
       const intersectSNPGWASs = [];
       for (const d of results.data) {
         intersectSNPGWASs.push({
@@ -117,15 +141,11 @@ class GeneDetails extends React.Component {
   }
 
   loadIntersectSNPGWASTraits() {
-    if (!this.intersectSNPGWASquery) {
+    const intersectSNPGWASTraitQuery = this.buildIntersectSNPGWASTraitQuery();
+    if (!intersectSNPGWASTraitQuery) {
       return;
     }
-    const gwasQuery = this.intersectSNPGWASquery;
-    const builder = new QueryBuilder();
-    builder.newInfoQuery();
-    builder.addToEdge(gwasQuery);
-    this.intersectSNPGWASTraitquery = builder.build();
-    this.api.getQueryResults(this.intersectSNPGWASTraitquery, false, 0, 50).then(results => {
+    this.api.getQueryResults(intersectSNPGWASTraitQuery, false, 0, 50).then(results => {
       const intersectSNPGWASTraits = [];
       for (const d of results.data) {
         intersectSNPGWASTraits.push({
@@ -151,7 +171,6 @@ class GeneDetails extends React.Component {
       const noTitle = 'No ' + title;
       return (<Collapsible title={noTitle} disabled={true}/>);
     }
-    const dataItems = [];
     const titleWithNumber = title + ` (${dataList.length})`;
     const dataItems = dataList.map(r => {
       return (
