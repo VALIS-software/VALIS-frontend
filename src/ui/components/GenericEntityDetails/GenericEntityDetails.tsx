@@ -11,7 +11,7 @@ import Paper from "material-ui/Paper";
 import { Card, CardHeader, CardText } from "material-ui/Card";
 import CircularProgress from "material-ui/CircularProgress";
 import DataListItem from "../DataListItem/DataListItem.jsx";
-import ZoomToButton from "../Shared/ZoomToButton/ZoomToButton.jsx";
+import ZoomToButton from "../Shared/ZoomToButton/ZoomToButton";
 import Util from "../../helpers/util.js";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 
@@ -128,7 +128,7 @@ function DetailsHeader(props: any) {
     if (details.contig) {
         const absoluteStart = Util.chromosomeRelativeToUniversalBasePair(details.contig, details.start);
         const absoluteEnd = Util.chromosomeRelativeToUniversalBasePair(details.contig, details.end);
-        zoomBtn = (<ZoomToButton viewModel={props.viewModel} start={absoluteStart} end={absoluteEnd} padding={0.2} />);
+        zoomBtn = (<ZoomToButton contig={details.contig} start={absoluteStart} end={absoluteEnd} padding={0.2} />);
     }
 
     return (

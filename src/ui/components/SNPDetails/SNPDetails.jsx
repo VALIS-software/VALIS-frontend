@@ -7,8 +7,8 @@ import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
 import AssociationList from '../Shared/AssociationList/AssociationList.jsx';
 import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
-import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation.jsx';
-import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton.jsx';
+import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
+import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
 // Styles
 import './SNPDetails.scss';
 import '../Shared/Shared.scss';
@@ -110,7 +110,7 @@ class SNPDetails extends React.Component {
     if (details.contig) {
       const absoluteStart = details.start;
       const absoluteEnd = details.end;
-      zoomBtn = (<ZoomToButton viewModel={this.props.viewModel} start={absoluteStart} end={absoluteEnd} padding={0.2} />);
+      zoomBtn = (<ZoomToButton contig={details.contig} start={absoluteStart} end={absoluteEnd} padding={0.2} />);
     }
 
     let location = (<GenomicLocation contig={details.contig} start={details.start} end={details.end} />);

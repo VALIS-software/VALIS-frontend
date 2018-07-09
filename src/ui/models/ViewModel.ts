@@ -13,7 +13,6 @@ export enum ViewEvent {
     CLOSE_VIEW,
     DISPLAY_ENTITY_DETAILS,
     DISPLAY_TRACK_RESULTS,
-    DISPLAY_TRACK_REGION,
 }
 
 export class ViewModel extends EventCreator {
@@ -52,13 +51,6 @@ export class ViewModel extends EventCreator {
 
     displayEntityDetails(entity: any) {
         this.notifyListeners(ViewEvent.DISPLAY_ENTITY_DETAILS, entity);
-    }
-
-    setViewRegionUsingRange(startBase: number, endBase: number) {
-        this.notifyListeners(ViewEvent.DISPLAY_TRACK_REGION, {
-            startBase: startBase,
-            endBase: endBase
-        });
     }
 
 }

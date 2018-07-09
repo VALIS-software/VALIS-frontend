@@ -3,8 +3,8 @@ import ReactDOM from 'react-dom';
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
-import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation.jsx';
-import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton.jsx';
+import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
+import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
 import Util from '../../helpers/util.js';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import faExternalLinkSquareAlt from '@fortawesome/fontawesome-free-solid/faExternalLinkSquareAlt';
@@ -208,7 +208,7 @@ class GeneDetails extends React.Component {
     if (details.contig) {
       const absoluteStart = details.start;
       const absoluteEnd = details.end;
-      zoomBtn = (<ZoomToButton viewModel={this.props.viewModel} start={absoluteStart} end={absoluteEnd} padding={0.2} />);
+      zoomBtn = (<ZoomToButton contig={details.contig} start={absoluteStart} end={absoluteEnd} padding={0.2} />);
     }
 
     const location = (<GenomicLocation contig={details.contig} start={details.start} end={details.end} />);
