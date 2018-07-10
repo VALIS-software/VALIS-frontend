@@ -41,7 +41,7 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
             if (!withinBounds) return;
             // create axis pointer
             axisPointer = new AxisPointer(style, this.activeAxisPointerColor, this.secondaryAxisPointerColor);
-            axisPointer.z = 1;
+            axisPointer.z = 2;
             this.add(axisPointer);
             this.axisPointers[id] = axisPointer;
         }
