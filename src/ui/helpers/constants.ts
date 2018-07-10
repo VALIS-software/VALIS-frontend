@@ -7,21 +7,6 @@ const FILTER_TYPES = {
   CHROMOSOME: 'chromosome',
 };
 
-const COLOR1 = [37, 206, 209];
-const COLOR2 = [128, 155, 206];
-const COLOR3 = [255, 138, 91];
-const COLOR4 = [232, 82, 111];
-const COLOR5 = [250, 192, 94];
-const COLOR6 = [89, 205, 144];
-const COLOR7 = [25, 147, 251];
-const COLOR8 = [209, 17, 73];
-const SIGNAL_COLORS = [COLOR1, COLOR2, COLOR3, COLOR4];
-const BASE_PAIR_COLORS = [COLOR5, COLOR6, COLOR7, COLOR8];
-const MAX_BASE_PAIR_WIDTH = 32.0;
-const TRACK_DATA_TYPE_BASE_PAIRS = 'basepairs';
-const TRACK_DATA_TYPE_GBANDS = 'gbands';
-const TRACK_DATA_TYPE_SIGNAL = 'signal';
-
 // These const strings should be consistent with backend sirius.realdata.constants
 const DATA_SOURCE_GENOME = 'GRCh38_gff';
 const DATA_SOURCE_GWAS = 'GWAS';
@@ -70,8 +55,6 @@ for (let i = 0; i < CHROMOSOME_SIZES.length; i++) {
   CHROMOSOME_START_BASE_PAIRS.push(currSize);
 }
 
-const GENOME_LENGTH = CHROMOSOME_START_BASE_PAIRS[CHROMOSOME_START_BASE_PAIRS.length - 1];
-
 const CHROMOSOME_NAMES = [];
 for (let i = 1; i < 23; i++) {
   CHROMOSOME_NAMES.push(`chr${i}`);
@@ -98,22 +81,6 @@ const DATA_SOURCES = [
 ];
 
 export {
-  GENOME_LENGTH,
-  TRACK_DATA_TYPE_SIGNAL,
-  TRACK_DATA_TYPE_GBANDS,
-  TRACK_DATA_TYPE_BASE_PAIRS,
-  COLOR1,
-  COLOR2,
-  COLOR3,
-  COLOR4,
-  COLOR5,
-  COLOR6,
-  COLOR7,
-  COLOR8,
-  MAX_BASE_PAIR_WIDTH,
-  SIGNAL_COLORS,
-  BASE_PAIR_COLORS,
-  CHROMOSOME_SIZES,
   CHROMOSOME_START_BASE_PAIRS,
   CHROMOSOME_NAMES,
   DATA_SOURCE_GENOME,
