@@ -12,7 +12,7 @@ import { Track } from "./Track";
 /**
  * TileTrack provides a base class for Tracks that use TileStore
  */
-export class TileTrack<TilePayload, BlockPayload> extends Track {
+export class ShaderTrack<TilePayload, BlockPayload> extends Track {
 
     protected densityMultiplier = 1.0;
 
@@ -211,4 +211,4 @@ export class TileNode<TilePayload> extends Object2D {
 
 }
 
-export default TileTrack;
+export default ShaderTrack;
