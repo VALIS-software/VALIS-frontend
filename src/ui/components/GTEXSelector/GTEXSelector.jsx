@@ -30,24 +30,13 @@ class GTEXSelector extends React.Component {
   updateAvailableBiosamples = () => {
     if (this.selectedBiosample) return;
     const builder = new QueryBuilder();
-    builder.newEdgeQuery();
+    builder.newInfoQuery();
     builder.filterSource(DATA_SOURCE_GTEX);
-    builder.filterMaxPValue(this.state.pvalue);
     const infoQuery = builder.build();
     this.api.getDistinctValues('info.biosample', infoQuery).then(data => {
-      // Keep the current selection of biosample
-      let newBiosampleValue = null;
-      if (this.state.biosampleValue !== null) {
-        const currentBiosample = this.state.availableBiosamples[this.state.biosampleValue];
-        newBiosampleValue = data.indexOf(currentBiosample);
-        if (newBiosampleValue < 0) {
-          newBiosampleValue = null;
-        }
-      }
       this.setState({
         availableBiosamples: data,
         loading: false,
-        biosampleValue: newBiosampleValue,
       });
     }, err => {
       this.appModel.error(this, err);
@@ -90,6 +79,7 @@ class GTEXSelector extends React.Component {
   addQueryTrack = () => {
     const query = this.buildQuery();
     this.appModel.trackMixPanel("Add GTEX Track", { "query": query });
+    // QYD: The results of this query is "Edges" instead of GenomeNodes, we might need a new method for displaying
     this.appModel.addAnnotationTrack(this.state.title, query);
   }
 
