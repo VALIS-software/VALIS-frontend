@@ -17,7 +17,7 @@ const fixedAnalysisData = [
     "track_type": TRACK_TYPE_BOOLEAN, 
     "title": "∩ Intersect Tracks", 
     "description": "Filter track elements to those near another tracks elements."
-  },
+  }, 
   {
     "track_type": TRACK_TYPE_BOOLEAN, 
     "title": "∪ Union Tracks", 
@@ -31,7 +31,7 @@ const fixedAnalysisData = [
   {
     "track_type": 'premium', 
     "title": "Correlate Samples", 
-    "description": "Correlate sets of variants to cohorts of patient VCFs."
+    "description": "Correlate sets of variants to patients VCFs."
   },
   {
     "track_type": 'premium', 

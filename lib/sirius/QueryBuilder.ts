@@ -106,10 +106,6 @@ export class QueryBuilder {
     this.query.filters.end = end;
   }
 
-  filterTumorSite(tumorSite: string) {
-    this.query.filters['info.tumor_tissue_site'] = tumorSite;
-  }
-
   filterAffectedGene(gene: string) {
     const previous = this.query.filters['variant_affected_genes'] || [];
     this.query.filters['variant_affected_genes'] = { $all: previous.concat([gene]) };

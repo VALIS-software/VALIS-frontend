@@ -27,11 +27,14 @@ type TerminalRule = RegExp;
 type Rule = TokenType | TokenType[];
 type Expansions = Map<Rule, Rule>;
 type Terminals = Map<Rule, TerminalRule>;
-type SuggestionResultPromise = Promise<string[]>;
-type SuggestionResultProvider = (text: string, numResults: number) => SuggestionResultPromise
+
+export type SuggestionResultPromise = Promise<SingleSuggestion[]>;
+export type SuggestionResultProvider = (text: string, numResults: number) => SuggestionResultPromise
+export type SingleSuggestion = { rule: TokenType, value: string };
 export type Suggestion = {
     tokens: ParsedToken[],
-    suggestions: Promise<string[]>,
+    suggestions: Promise<SingleSuggestion[]>,
+    additionalSuggestions: Promise<SingleSuggestion[]>,
     query: any,
     isQuoted: boolean,
     hintText: string
@@ -55,10 +58,15 @@ const REGEX_TO_STRING = (x: RegExp): string => {
     return str.slice(1, str.length - 2);
 }
 
-function mergeResults(promises: Promise<Array<string>>[]): Promise<Array<string>> {
-    return Promise.all(promises).then((results: Array<string[]>) => {
-        let allResults: string[] = [];
-        results.forEach((result: string[]) => {
+const REGEX_HAS_QUOTES = (x: RegExp): boolean => {
+    const a = REGEX_TO_STRING(x);
+    return a[0] === "\"" && a[a.length - 1] ===  "\"";
+}
+
+function mergeResults(promises: Promise<Array<SingleSuggestion>>[]): Promise<Array<SingleSuggestion>> {
+    return Promise.all(promises).then((results: Array<SingleSuggestion[]>) => {
+        let allResults: SingleSuggestion[] = [];
+        results.forEach((result: SingleSuggestion[]) => {
             allResults = allResults.concat(result);
         });
         return allResults;
@@ -157,20 +165,28 @@ function buildPatientQuery(parsePath: ParsedToken[]): any {
         const tumorSite = STRIP_QUOTES(parsePath[1].value);
         builder.newInfoQuery();
         builder.filterType('patient');
-        builder.filterTumorSite(tumorSite);
+        builder.filterBiosample(tumorSite);
         builder.setLimit(1000000);
         return builder.build();
     }
 }
 
 function buildSNPrsQuery(parsePath: ParsedToken[]): any {
-    let token = parsePath[0];
-    if (token.rule === 'NUMBER') {
-        let rsNumber = token.value;
+    builder.newGenomeQuery();
+    builder.filterID('Gsnp_' + TRIM(parsePath[0].value));
+    return builder.build();
+}
+
+function buildFullTextQuery(inputText: string) : any {
+    if (inputText.length > 5) {
+        builder.newInfoQuery();
+        builder.filterType('trait');
+    } else {
         builder.newGenomeQuery();
-        builder.filterID('Gsnp_rs' + rsNumber);
-        return builder.build();
+        builder.filterType('gene');
     }
+    builder.filterName(inputText);
+    return builder.build();
 }
 
 function buildQuery(parsePath: ParsedToken[]): any {
@@ -188,16 +204,16 @@ function buildQuery(parsePath: ParsedToken[]): any {
     } else if (token.rule === 'PATIENT_T') {
         return buildPatientQuery(parsePath.slice(1));
     } else if (token.rule === 'RS_T') {
-        return buildSNPrsQuery(parsePath.slice(1));
+        return buildSNPrsQuery(parsePath);
     }
 }
 
 
 export class QueryParser {
     // grammar elements are expansions
-    private grammar: Expansions;
     private terminals: Map<Rule, TerminalRule>;
     private suggestions: Map<Rule, SuggestionResultProvider>;
+    private grammar: Expansions;
     constructor(grammar: Expansions, terminals: Terminals, suggestions: Map<Rule, SuggestionResultProvider>) {
         this.grammar = grammar;
         this.terminals = terminals;
@@ -301,7 +317,7 @@ export class QueryParser {
         return [];
     }
 
-    buildSuggestionsFromParse(results: ParsePath[], maxSuggestions = 15): Suggestion {
+    buildSuggestionsFromParse(inputText: string, results: ParsePath[], maxSuggestions = 15): Suggestion {
         const maxParse: ParsePath = results.reduce((a, b) => a.path.length > b.path.length ? a : b);
         const maxDepth: number = maxParse.path.length;
         const finalSuggestions: SuggestionResultPromise[] = [];
@@ -317,32 +333,33 @@ export class QueryParser {
                 const val: string = subPath.path[subPath.path.length - 2].value;
                 tokenText = val.slice(1, val.length - 1);
             }
-            // special rule for number to skip suggestion and give a hint
-            if (rule === 'NUMBER') {
-                hintText = 'enter a number'
-                return;
-            }
-
+            if (this.terminals.has(rule) && REGEX_HAS_QUOTES(this.terminals.get(rule))) quoteSuggestion = true;
             if (this.suggestions.get(rule)) {
                 tokenText = TRIM(tokenText).toLowerCase();
-                quoteSuggestion = true;
                 finalSuggestions.push(this.suggestions.get(rule)(tokenText, maxSuggestions / 2));
             } else {
-                quoteSuggestion = false;
                 finalSuggestions.push(new Promise((resolve, reject) => {
                     resolve([
-                        REGEX_TO_STRING(this.terminals.get(rule))
+                        { rule: rule as TokenType, value: REGEX_TO_STRING(this.terminals.get(rule)) }
                     ]);
                 }));
             }
         });
         let query: any = null;
+        let additionalSuggestions: Promise<Array<SingleSuggestion>> = null;
         if (maxParse.rule === EOF) {
             query = buildQuery(maxParse.path);
+        } else if (maxParse.path.length === 0) {
+            // if no prefixes match, then we just want to return raw query completions!
+            query = buildFullTextQuery(inputText);
+            const geneSuggestions = this.suggestions.get('GENE')(inputText, maxSuggestions/2);
+            const traitSuggestions = this.suggestions.get('TRAIT')(inputText, maxSuggestions/2);
+            additionalSuggestions = mergeResults([geneSuggestions, traitSuggestions]);
         }
         return {
             tokens: maxParse.path,
             suggestions: mergeResults(finalSuggestions),
+            additionalSuggestions: additionalSuggestions,
             query: query,
             isQuoted: quoteSuggestion,
             hintText: hintText,
@@ -352,7 +369,7 @@ export class QueryParser {
     public getSuggestions(inputText: string, maxSuggestions: number = 15): Suggestion {
         const results = this.parse(inputText, this.grammar.get(ROOT));
         if (results.length === 0) return null;
-        return this.buildSuggestionsFromParse(results, maxSuggestions);
+        return this.buildSuggestionsFromParse(inputText, results, maxSuggestions);
     }
 }
 
@@ -375,7 +392,7 @@ export function buildQueryParser(suggestions: Map<Rule, SuggestionResultProvider
     terminals.set('TUMOR_SITE', /"(.+?)"/g);
     terminals.set('PATIENT_T', /patient/g);
     terminals.set('WITH_TUMOR', /with tumor/g);
-    terminals.set('RS_T', /snp rs/g);
+    terminals.set('RS_T', /rs(.*)/g);
     terminals.set('NUMBER', /^\d+$/g);
 
     const expansions = new Map<Rule, Rule>();
@@ -390,9 +407,11 @@ export function buildQueryParser(suggestions: Map<Rule, SuggestionResultProvider
     expansions.set('TRAIT_QUERY', [ALL, 'TRAIT_T', 'TRAIT', EOF]);
     expansions.set('EQTL_QUERY', [ALL, 'EQTL', 'INFLUENCING', 'GENE', EOF]);
     expansions.set('PATIENT_QUERY', [ALL, 'PATIENT_T', 'WITH_TUMOR', 'TUMOR_SITE', EOF]);
-    expansions.set('SNP_RS_QUERY', [ALL, 'RS_T', 'NUMBER', EOF]);
+    expansions.set('SNP_RS_QUERY', [ALL, 'RS_T', EOF]);
     expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'TRAIT_QUERY', 'ANNOTATION_QUERY', 'EQTL_QUERY', 'PATIENT_QUERY', 'SNP_RS_QUERY']);
 
+    // return empty result for rs prefix queries
+    suggestions.set('RS_T', (q: string, num: number) => new Promise((resolve, reject) => resolve([])));
     return new QueryParser(expansions, terminals, suggestions);
 }
 

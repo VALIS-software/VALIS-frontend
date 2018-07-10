@@ -36,7 +36,7 @@ class TokenBox extends React.Component {
 
   perfectMatch(dataSource, value) {
     const lowered = dataSource.map(d => {
-      return d.toLowerCase();
+      return d.value.toLowerCase();
     });
 
     const query = value.toLowerCase().trim();
@@ -46,12 +46,10 @@ class TokenBox extends React.Component {
     if (idx < 0) return null;
 
     // make sure value matches only one suggestion in the dropdown:
-    const singleMatch = dataSource.filter(d => {
-      return this.filter(query, d);
-    }).length <= 1;
+    const singleMatch = this.singleResult(dataSource, query);
 
     if (!singleMatch) return null;
-
+    if (dataSource[idx].rule === 'GENE' || dataSource[idx].rule === 'TRAIT') return null;
     return dataSource[idx];
 
   }
@@ -60,15 +58,16 @@ class TokenBox extends React.Component {
     this.setState({
       searchString: value,
     });
-    if (!value) return;
+
     const match = this.perfectMatch(dataSource, value);
+
     if (match && (!this.state.quoteInput || params.source === 'click')) {
       // clear the search box:
       this.refs.autoComplete.setState({ searchText: '' });
 
       // update the current tokens list:
       this.state.tokens.push({
-        value: match,
+        value: match.value,
         quoted: this.state.quoteInput
       });
       this.setState({
@@ -98,7 +97,9 @@ class TokenBox extends React.Component {
     const suggestionMap = new Map();
     ['TRAIT', 'GENE', 'CELL_TYPE', 'TUMOR_SITE'].forEach(rule => {
       suggestionMap.set(rule, (searchText, maxResults) => {
-        return this.appModel.api.getSuggestions(rule, searchText, maxResults);
+        return this.appModel.api.getSuggestions(rule, searchText, maxResults).then(results => {
+          return results.map(value => { return { rule: rule, value: value}; });
+        });
       });
     });
     return suggestionMap;
@@ -111,25 +112,43 @@ class TokenBox extends React.Component {
     return pieces.join(' ');
   }
 
+  singleResult = (results, searchText) => {
+    return results.filter(result => AutoComplete.fuzzyFilter(searchText, result.value)).length > 0;
+  }
+
   getSuggestions(tokens, openOnLoad = true) {
     const searchText = this.buildQueryStringFromTokens(tokens);
-
+    this.searchText = searchText;
     const result = this.queryParser.getSuggestions(searchText);
-    const timeOfPromise = window.performance.now();
-    if (timeOfPromise >= this.state.lastResultTime || !this.state.lastResultTime) {
-      this.appModel.pushLoading();
-      result.suggestions.then(results => {
-        this.appModel.popLoading();
-        if (timeOfPromise >= this.state.lastResultTime || !this.state.lastResultTime) {
-          this.setState({
-            lastResultTime: timeOfPromise,
-            dataSource: results,
-          });
+    
+    this.appModel.pushLoading();
+    result.suggestions.then(results => {
+      if (this.searchText !== searchText) return;
+      this.appModel.popLoading();
+      
+      // if a fuzzy match exists or no additional suggestions, just show the suggestion
+      const fuzzyMatchExists = this.singleResult(results, searchText);
+      const showCurrentResults = fuzzyMatchExists || !result.additionalSuggestions || searchText.length === 0;
+          if (showCurrentResults) {
+            this.setState({
+              dataSource: results,
+            });
+          } else if (result.additionalSuggestions){
+            // if we have additional suggestions (full text search)
+            // fire them iff they are newer than any other promise
+            this.appModel.pushLoading();
+            result.additionalSuggestions.then(additionalResults => {
+              this.appModel.popLoading();
+                this.setState({
+                  dataSource: additionalResults,
+                });
+            }, err => {
+              this.appModel.popLoading();
+            });
         }
       }, err => {
-        this.appModel.popLoading();
-      });
-    }
+      this.appModel.popLoading();
+    });
 
     this.setState({
       query: result.query,
@@ -199,7 +218,7 @@ class TokenBox extends React.Component {
   }
 
   filter = (searchText, key) => {
-    return key.toLowerCase().indexOf(searchText.toLowerCase()) !== -1 || searchText === '';
+    return key.value.toLowerCase().indexOf(searchText.toLowerCase()) !== -1 || searchText === '';
   }
 
   render() {
@@ -225,6 +244,7 @@ class TokenBox extends React.Component {
       hintText={this.state.hintText}
       menuCloseDelay={Infinity}
       dataSource={this.state.dataSource}
+      dataSourceConfig={{text: 'value', value: 'value'}}
       onUpdateInput={this.handleUpdateInput}
     />);
     const style = {
