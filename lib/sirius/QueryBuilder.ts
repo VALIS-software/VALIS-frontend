@@ -1,16 +1,19 @@
+export enum QueryType {
+  GENOME = 'GenomeNode',
+  INFO = 'InfoNode',
+  EDGE = 'EdgeNode',
+}
 
-const QUERY_TYPE_GENOME = 'GenomeNode';
-const QUERY_TYPE_INFO = 'InfoNode';
-const QUERY_TYPE_EDGE = 'EdgeNode';
+export class QueryBuilder {
+  query: any;
 
-class QueryBuilder {
   constructor(query = {}) {
     this.query = query;
   }
 
   newGenomeQuery() {
     this.query = {
-      type: QUERY_TYPE_GENOME,
+      type: QueryType.GENOME,
       filters: {},
       toEdges: [],
       arithmetics: [],
@@ -19,7 +22,7 @@ class QueryBuilder {
 
   newInfoQuery() {
     this.query = {
-      type: QUERY_TYPE_INFO,
+      type: QueryType.INFO,
       filters: {},
       toEdges: [],
     };
@@ -27,121 +30,121 @@ class QueryBuilder {
 
   newEdgeQuery() {
     this.query = {
-      type: QUERY_TYPE_EDGE,
+      type: QueryType.EDGE,
       filters: {},
       toNode: {},
     };
   }
 
-  filterID(id) {
+  filterID(id: string) {
     this.query.filters._id = id;
   }
 
-  filterType(type) {
+  filterType(type: string) {
     this.query.filters.type = type;
   }
 
-  filterSource(source) {
+  filterSource(source: string) {
     this.query.filters.source = source;
   }
 
-  filterContig(contig) {
-    if (this.query.type !== QUERY_TYPE_GENOME) {
+  filterContig(contig: string) {
+    if (this.query.type !== QueryType.GENOME) {
       throw new Error('filter contig only available for GenomeNodes');
     }
     this.query.filters.contig = contig;
   }
 
-  filterLength(length) {
-    if (this.query.type !== QUERY_TYPE_GENOME) {
+  filterLength(length: string) {
+    if (this.query.type !== QueryType.GENOME) {
       throw new Error('Length only available for GenomeNodes');
     }
     this.query.filters.length = length;
   }
 
-  filterName(name) {
+  filterName(name: string) {
     this.query.filters.name = name;
   }
 
-  filterMaxPValue(pvalue) {
+  filterMaxPValue(pvalue: number) {
     this.query.filters['info.p-value'] = { '<': pvalue };
   }
 
-  filterBiosample(biosample) {
+  filterBiosample(biosample: string) {
     this.query.filters['info.biosample'] = biosample;
   }
 
-  filterTargets(targets) {
+  filterTargets(targets: Array<any>) {
     if (targets.length > 0) {
       this.query.filters['info.targets'] = { $all: targets };
     }
   }
 
-  filterInfotypes(type) {
+  filterInfotypes(type: any) {
     this.query.filters['info.types'] = type;
   }
 
-  filterAssay(assay) {
+  filterAssay(assay: any) {
     this.query.filters['info.assay'] = assay;
   }
 
-  filterOutType(outType) {
+  filterOutType(outType: any) {
     this.query.filters['info.outtype'] = outType;
   }
 
-  filterStartBp(start) {
-    if (this.query.type !== QUERY_TYPE_GENOME) {
+  filterStartBp(start: number) {
+    if (this.query.type !== QueryType.GENOME) {
       throw new Error('filterStartBp is only available for an Genome Query.');
     }
     this.query.filters.start = start;
   }
 
-  filterEndBp(end) {
-    if (this.query.type !== QUERY_TYPE_GENOME) {
+  filterEndBp(end: number) {
+    if (this.query.type !== QueryType.GENOME) {
       throw new Error('filterEndBp is only available for an Genome Query.');
     }
     this.query.filters.end = end;
   }
 
-  filterTumorSite(tumorSite) {
+  filterTumorSite(tumorSite: string) {
     this.query.filters['info.tumor_tissue_site'] = tumorSite;
   }
 
-  filterAffectedGene(gene) {
+  filterAffectedGene(gene: string) {
     const previous = this.query.filters['variant_affected_genes'] || [];
     this.query.filters['variant_affected_genes'] = { $all: previous.concat([gene]) };
   }
 
-  filterVariantTag(tag) {
+  filterVariantTag(tag: string) {
     const previous = this.query.filters['variant_tags'] || [];
     this.query.filters['variant_tags'] = { $all: previous.concat([tag]) };
   }
 
-  searchText(text) {
+  searchText(text: string) {
     this.query.filters.$text = text;
   }
 
-  setLimit(limit) {
+  setLimit(limit: number) {
     this.query.limit = limit;
   }
 
-  addToEdge(edgeQuery) {
-    if (this.query.type === QUERY_TYPE_EDGE) {
+  addToEdge(edgeQuery: any) {
+    if (this.query.type === QueryType.EDGE) {
       throw new Error('Edge can not be connect to another edge.');
     }
     this.query.toEdges.push(edgeQuery);
   }
 
-  setToNode(nodeQuery, reverse=false) {
-    if (this.query.type !== QUERY_TYPE_EDGE) {
+  setToNode(nodeQuery: any, reverse=false) {
+    if (this.query.type !== QueryType.EDGE) {
       throw new Error('toNode is only available for an Edge Query.');
     }
     this.query.toNode = nodeQuery;
     this.query.reverse = reverse;
   }
 
-  addArithmeticIntersect(genomeQuery) {
-    if (this.query.type !== QUERY_TYPE_GENOME) {
+  addArithmeticIntersect(genomeQuery: any) {
+    if (this.query.type !== QueryType.GENOME) {
       throw new Error('Arithmetic is only available for an Genome Query.');
     }
     const ar = {
@@ -151,8 +154,8 @@ class QueryBuilder {
     this.query.arithmetics.push(ar);
   }
 
-  addArithmeticWindow(genomeQuery, windowSize = 1000) {
-    if (this.query.type !== QUERY_TYPE_GENOME) {
+  addArithmeticWindow(genomeQuery: any, windowSize = 1000) {
+    if (this.query.type !== QueryType.GENOME) {
       throw new Error('Arithmetic is only available for an Genome Query.');
     }
     const ar = {
@@ -163,8 +166,8 @@ class QueryBuilder {
     this.query.arithmetics.push(ar);
   }
 
-  addArithmeticUnion(genomeQuery) {
-    if (this.query.type !== QUERY_TYPE_GENOME) {
+  addArithmeticUnion(genomeQuery: any) {
+    if (this.query.type !== QueryType.GENOME) {
       throw new Error('Arithmetic is only available for an Genome Query.');
     }
     const ar = {
@@ -179,6 +182,4 @@ class QueryBuilder {
   }
 }
 
-
 export default QueryBuilder;
-export { QUERY_TYPE_GENOME, QUERY_TYPE_INFO, QUERY_TYPE_EDGE };

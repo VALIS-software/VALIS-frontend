@@ -7,7 +7,7 @@ import RaisedButton from "material-ui/RaisedButton/RaisedButton";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
-import QueryBuilder, { QUERY_TYPE_INFO } from "../../models/query.js";
+import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
 import {
   DATA_SOURCE_GWAS,
   DATA_SOURCE_CLINVAR

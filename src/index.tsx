@@ -7,14 +7,26 @@ import App from "./App";
 import './index.html';
 import './index.scss';
 import { SiriusApi } from "../lib/sirius/SiriusApi";
-import { API_BASE_URL } from "./ui/helpers/constants";
+
+// determine API url from environment
+const LOCAL_API_URL = 'http://127.0.0.1:5000';
+let apiBaseUrl = '';
+if (process != null && process.env != null) {
+	if (process.env.API_URL != null) {
+		// url override set
+		apiBaseUrl = process.env.API_URL;
+	} else {
+		// use default dev url
+		apiBaseUrl = process.env.dev ? LOCAL_API_URL : '';
+	}
+}
 
 // set sirius API root
-SiriusApi.apiUrl = API_BASE_URL;
+SiriusApi.apiUrl = apiBaseUrl;
 
 ReactDOM.render(
 	<MuiThemeProvider>
-		<App />
+		<App apiBaseUrl={apiBaseUrl}/>
 	</MuiThemeProvider>,
 	document.getElementById('root')
 );

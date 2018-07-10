@@ -1,7 +1,7 @@
 // Dependencies
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import QueryBuilder, { QUERY_TYPE_INFO }  from '../../models/query.js';
+import QueryBuilder  from '../../../../lib/sirius/QueryBuilder';
 import Pills from '../Shared/Pills/Pills.jsx';
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
 import AssociationList from '../Shared/AssociationList/AssociationList.jsx';

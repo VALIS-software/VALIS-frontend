@@ -5,7 +5,7 @@ import RaisedButton from "material-ui/RaisedButton/RaisedButton";
 import AutoComplete from "material-ui/AutoComplete";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
-import QueryBuilder from "../../models/query.js";
+import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 
 import { VARIANT_TAGS, DATA_SOURCE_ExAC } from "../../../ui/helpers/constants";

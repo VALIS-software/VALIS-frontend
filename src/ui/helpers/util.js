@@ -1,5 +1,5 @@
-import { QUERY_TYPE_GENOME } from '../models/query.js';
-import { CHROMOSOME_START_BASE_PAIRS, FILTER_TYPES } from './constants.ts';
+import { QueryType } from "../../../lib/sirius/QueryBuilder";
+import { CHROMOSOME_START_BASE_PAIRS, FILTER_TYPES } from "./constants";
 
 class Util {
 
@@ -32,7 +32,7 @@ class Util {
     }
     if (filter.get(FILTER_TYPES.TYPE)) {
       //  only apply this filter to the top level query if it is a genome query
-      if (query.type === QUERY_TYPE_GENOME) {
+      if (query.type === QueryType.GENOME) {
         const types = filter.get(FILTER_TYPES.TYPE).toArray();
         if (types.length === 1) {
           query.filters['type'] = types[0];
@@ -68,7 +68,7 @@ class Util {
     }
     if (filter.get(FILTER_TYPES.ALLELE_FREQUENCY)) {
       // only apply this filter to the top level query if it is a genome query
-      if (query.type === QUERY_TYPE_GENOME) {
+      if (query.type === QueryType.GENOME) {
         // TODO
       }
     }

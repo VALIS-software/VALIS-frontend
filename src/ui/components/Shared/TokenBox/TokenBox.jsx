@@ -8,7 +8,7 @@ import ContentClear from 'material-ui/svg-icons/content/clear';
 import CircularProgress from "material-ui/CircularProgress";
 import SearchResultsView from '../../SearchResultsView/SearchResultsView.jsx';
 import ErrorDetails from "../ErrorDetails/ErrorDetails.jsx";
-import buildQueryParser from "../../../helpers/queryparser";
+import buildQueryParser from "../../../../../lib/sirius/queryparser";
 import './TokenBox.scss';
 
 class TokenBox extends React.Component {

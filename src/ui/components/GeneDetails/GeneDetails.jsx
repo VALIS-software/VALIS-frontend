@@ -11,7 +11,7 @@ import faExternalLinkSquareAlt from '@fortawesome/fontawesome-free-solid/faExter
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 import EntityType from "../../../../lib/sirius/EntityType";
 import DataListItem from "../DataListItem/DataListItem.jsx";
-import QueryBuilder from "../../models/query.js";
+import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
 
 // Styles
 import './GeneDetails.scss';

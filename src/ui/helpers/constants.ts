@@ -1,19 +1,3 @@
-const LOCAL_API_URL = 'http://127.0.0.1:5000';
-
-let apiBaseUrl = '';
-
-if (process != null && process.env != null) {
-  if (process.env.API_URL != null) {
-    // url override set
-    apiBaseUrl = process.env.API_URL;
-  } else {
-    // use default dev url
-    apiBaseUrl = process.env.dev ? LOCAL_API_URL : '';
-  }
-}
-
-export const API_BASE_URL = apiBaseUrl;
-
 const FILTER_TYPES = {
   DATASET: 'dataset',
   TYPE: 'type',
@@ -22,7 +6,6 @@ const FILTER_TYPES = {
   P_VALUE: 'p_value',
   CHROMOSOME: 'chromosome',
 };
-
 
 const COLOR1 = [37, 206, 209];
 const COLOR2 = [128, 155, 206];
@@ -116,7 +99,6 @@ const DATA_SOURCES = [
 
 export {
   GENOME_LENGTH,
-  LOCAL_API_URL,
   TRACK_DATA_TYPE_SIGNAL,
   TRACK_DATA_TYPE_GBANDS,
   TRACK_DATA_TYPE_BASE_PAIRS,

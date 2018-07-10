@@ -16,20 +16,21 @@ import BasicTheme from "./ui/themes/BasicTheme";
 import { EntityDetails } from "./ui/components/EntityDetails/EntityDetails";
 import { IconButton, FlatButton, Dialog } from "material-ui";
 import { ContentReport } from "material-ui/svg-icons";
-
 import SearchResultsView from "./ui/components/SearchResultsView/SearchResultsView";
-import { QueryParser, buildQueryParser } from './ui/helpers/queryparser';
 
 // styles
 import "./App.scss";
 import ViewModel, { ViewEvent } from "./ui/models/ViewModel";
 import EntityType from "../lib/sirius/EntityType";
+import { VariantTileStore } from "./model/data-store/VariantTileStore";
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
 (window as any).mixpanel = require('mixpanel-browser');
 
-type Props = {}
+type Props = {
+	apiBaseUrl: string
+}
 
 type State = {
 	views: Array<View>,
@@ -62,7 +63,7 @@ export class App extends React.Component<Props, State> {
 		mixpanel.init("641d46068eb631cfc8ba590288fe4679");
 
 		// initialize app model
-		this.appModel = new AppModel();
+		this.appModel = new AppModel(this.props.apiBaseUrl);
 		this.viewModel = new ViewModel();
 		this.appModel.setViewModel(this.viewModel);
 
@@ -74,6 +75,7 @@ export class App extends React.Component<Props, State> {
 		SharedTileStore['sequence']['chromosome1'] = new SequenceTileStore('chromosome1');
 		SharedTileStore['annotation']['chromosome1'] = new AnnotationTileStore('chromosome1');
 		SharedTileStore['macroAnnotation']['chromosome1'] = new MacroAnnotationTileStore('chromosome1');
+		SharedTileStore['variant']['chromosome1'] = new VariantTileStore('chromosome1');
 
 		// @! temporary preload lods
 		SharedTileStore['sequence']['chromosome1'].getTiles(0.9, 1.1e6, 1 << 12, true, () => {});
@@ -83,16 +85,19 @@ export class App extends React.Component<Props, State> {
 		// initialize with some dummy data
 		let tracks: Array<TrackModel> = [
 			{ sequenceId: 'chromosome1', name: '→ Sequence', type: 'sequence' },
+			{ sequenceId: 'chromosome1', name: 'Variants', type: 'variant' },
 			{ sequenceId: 'chromosome1', name: '→ Strand Genes', type: 'annotation', strand: Strand.Positive },
 			{ sequenceId: 'chromosome1', name: '← Strand Genes', type: 'annotation', strand: Strand.Negative },
 		];
 		let i = 0;
 		for (let model of tracks) {
-			let h = undefined;
 			// @! quick hack some initial layout
-			if (i === 0) h = 100;
-			if (i === 1) h = Math.max((this.canvasHeight() - 200) * 0.5, 0);
-			if (i === 2) h = Math.max((this.canvasHeight() - 200) * 0.5, 0);
+			let h = [
+				50,
+				100,
+				200,
+				200,
+			][i];
 			trackViewer.addTrackRow(model, h);
 			i++;
 		}

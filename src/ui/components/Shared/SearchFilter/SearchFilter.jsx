@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import { DATA_SOURCES, VARIANT_TAGS, CHROMOSOME_NAMES, FILTER_TYPES } from '../../../helpers/constants.ts';
-import QueryBuilder from '../../../models/query.js';
+import QueryBuilder from '../../../../../lib/sirius/QueryBuilder';
 
 const { Map, Set } = require('immutable');
 import './SearchFilter.scss';
