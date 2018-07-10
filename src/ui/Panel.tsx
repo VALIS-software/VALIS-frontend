@@ -144,6 +144,15 @@ export class Panel extends Object2D {
         x0 = isFinite(x0) ? x0 : 0;
         x1 = isFinite(x1) ? x1 : 1;
 
+        // if range is below allowed minimum, override without changing center
+        let span = x1 - x0;
+        if (span < this.minRange) {
+            let midIndex = (x0 + x1) * 0.5;
+            x0 = midIndex - this.minRange * 0.5;
+            x1 = midIndex + this.minRange * 0.5;
+            span = this.minRange;
+        }
+
         (this.x0 as any) = x0;
         (this.x1 as any) = x1;
 
@@ -151,7 +160,6 @@ export class Panel extends Object2D {
         
         // control axis text length by number of visible base pairs
         // when viewing a small number of bases the exact span is likely required
-        let span = x1 - x0;
         if (span < 150) {
             this.xAxis.maxTextLength = Infinity;
         } else if (span < 1e5) {

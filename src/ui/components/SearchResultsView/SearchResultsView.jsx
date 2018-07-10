@@ -3,7 +3,7 @@ import * as React from "react";
 import * as PropTypes from "prop-types";
 import CircularProgress from "material-ui/CircularProgress";
 import SearchFilter from "../Shared/SearchFilter/SearchFilter.jsx";
-import GenomicLocation from "../Shared/GenomicLocation/GenomicLocation.jsx";
+import GenomicLocation from "../Shared/GenomicLocation/GenomicLocation";
 import Pills from "../Shared/Pills/Pills.jsx";
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
