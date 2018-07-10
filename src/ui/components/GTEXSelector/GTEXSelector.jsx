@@ -11,6 +11,8 @@ import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
 
 import { DATA_SOURCE_GTEX } from "../../../ui/helpers/constants";
 
+let biosamplesCached = null;
+
 class GTEXSelector extends React.Component {
   constructor(props) {
     super(props);
@@ -29,33 +31,33 @@ class GTEXSelector extends React.Component {
 
   updateAvailableBiosamples = () => {
     if (this.selectedBiosample) return;
-    const builder = new QueryBuilder();
-    builder.newEdgeQuery();
-    builder.filterSource(DATA_SOURCE_GTEX);
-    builder.filterMaxPValue(this.state.pvalue);
-    const infoQuery = builder.build();
-    this.api.getDistinctValues('info.biosample', infoQuery).then(data => {
-      // Keep the current selection of biosample
-      let newBiosampleValue = null;
-      if (this.state.biosampleValue !== null) {
-        const currentBiosample = this.state.availableBiosamples[this.state.biosampleValue];
-        newBiosampleValue = data.indexOf(currentBiosample);
-        if (newBiosampleValue < 0) {
-          newBiosampleValue = null;
-        }
-      }
+    if (biosamplesCached) {
       this.setState({
-        availableBiosamples: data,
+        availableBiosamples: biosamplesCached,
         loading: false,
-        biosampleValue: newBiosampleValue,
+        biosampleValue: null,
       });
-    }, err => {
-      this.appModel.error(this, err);
-      this.setState({
-        error: err,
-        loading: false,
+    } else {
+      const builder = new QueryBuilder();
+      builder.newEdgeQuery();
+      builder.filterSource(DATA_SOURCE_GTEX);
+      builder.filterMaxPValue(this.state.pvalue);
+      const infoQuery = builder.build();
+      this.api.getDistinctValues('info.biosample', infoQuery).then(data => {
+        biosamplesCached = data;
+        this.setState({
+          availableBiosamples: data,
+          loading: false,
+          biosampleValue: null,
+        });
+      }, err => {
+        this.appModel.error(this, err);
+        this.setState({
+          error: err,
+          loading: false,
+        });
       });
-    });
+    }
   }
 
   handleUpdatePValue = (event, value) => {

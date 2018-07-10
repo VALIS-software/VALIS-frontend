@@ -43,11 +43,11 @@ const fixedTrackData = [
     "title": "GTeX eQTLs", 
     "description": "Quantitative trait loci from 53 human tissues curated from the Genotype-Tissue Expression project."
   },  
-  {
-    "track_type": TRACK_TYPE_TCGA, 
-    "title": "TCGA Variants", 
-    "description": "Search germline and somatic mutations from The Cancer Genome Atlas."
-  },  
+  // {
+  //   "track_type": TRACK_TYPE_TCGA, 
+  //   "title": "TCGA Variants", 
+  //   "description": "Search germline and somatic mutations from The Cancer Genome Atlas."
+  // },  
   {
     "track_type": TRACK_TYPE_EXAC, 
     "title": "ExAC Variants", 
