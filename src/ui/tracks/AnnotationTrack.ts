@@ -91,12 +91,14 @@ export class AnnotationTrack extends Track<'annotation'> {
         
         this.addInteractionListener('dragstart', (e) => {
             if (!e.isPrimary) return;
+            if (e.buttonState !== 1) return;
             pointerY0 = e.localY;
             scrollY0 = this.yScrollNode.y;
         });
 
         this.addInteractionListener('dragmove', (e) => {
             if (!e.isPrimary) return;
+            if (e.buttonState !== 1) return;
             let dy = pointerY0 - e.localY;
             this.yScrollNode.y = Math.min(scrollY0 - dy, 0);
         });
