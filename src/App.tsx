@@ -85,7 +85,7 @@ export class App extends React.Component<Props, State> {
 		// initialize with some dummy data
 		let tracks: Array<TrackModel> = [
 			{ sequenceId: 'chromosome1', name: '→ Sequence', type: 'sequence' },
-			{ sequenceId: 'chromosome1', name: 'Variants', type: 'variant' },
+			// { sequenceId: 'chromosome1', name: 'Variants', type: 'variant' },
 			{ sequenceId: 'chromosome1', name: '→ Strand Genes', type: 'annotation', strand: Strand.Positive },
 			{ sequenceId: 'chromosome1', name: '← Strand Genes', type: 'annotation', strand: Strand.Negative },
 		];
@@ -94,7 +94,7 @@ export class App extends React.Component<Props, State> {
 			// @! quick hack some initial layout
 			let h = [
 				50,
-				100,
+				200,
 				200,
 				200,
 			][i];
