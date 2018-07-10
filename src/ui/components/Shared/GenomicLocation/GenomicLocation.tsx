@@ -6,6 +6,7 @@ type Props = {
   contig: string,
   start: number,
   end: number,
+  interactive: boolean
 }
 
 class GenomicLocation extends React.Component<Props> {
@@ -18,11 +19,18 @@ class GenomicLocation extends React.Component<Props> {
     const contig = this.props.contig;
     const start = this.props.start;
     const end = this.props.end;
-    if (start === end) {
-      return (<span className="genomic-location" onClick={this.onClick}><span className="contig">{contig}</span><span className="range">{start}</span></span>);
-    } else {
-      return (<span className="genomic-location" onClick={this.onClick}><span className="contig">{contig}</span><span className="range">{start}:{end}</span></span>);
-    }
+    return (
+      <span 
+        className="genomic-location"
+        onClick={this.props.interactive ? this.onClick : undefined}
+        style={{
+          cursor: this.props.interactive ? 'pointer' : undefined
+        }}
+      >
+        <span className="contig">{contig}</span>
+        <span className="range">{start === end ? start : (start + ':' + end)}</span>
+      </span>
+    );
   }
 
   onClick = () => {

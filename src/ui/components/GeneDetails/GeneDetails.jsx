@@ -207,7 +207,7 @@ class GeneDetails extends React.Component {
       zoomBtn = (<ZoomToButton contig={details.contig} start={absoluteStart} end={absoluteEnd} padding={0.2} />);
     }
 
-    const location = (<GenomicLocation contig={details.contig} start={details.start} end={details.end} />);
+    const location = (<GenomicLocation interactive={true} contig={details.contig} start={details.start} end={details.end} />);
 
     const header = (<div className="sidebar-header">
       <div className="sidebar-name">{name}{zoomBtn}</div>

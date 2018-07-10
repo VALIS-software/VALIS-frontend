@@ -113,7 +113,7 @@ class SNPDetails extends React.Component {
       zoomBtn = (<ZoomToButton contig={details.contig} start={absoluteStart} end={absoluteEnd} padding={0.2} />);
     }
 
-    let location = (<GenomicLocation contig={details.contig} start={details.start} end={details.end} />);
+    let location = (<GenomicLocation interactive={true} contig={details.contig} start={details.start} end={details.end} />);
 
     let variantType = (<div className="snp-type snp-type-non-coding">Non-coding Variant</div>);
 
