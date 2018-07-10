@@ -37,9 +37,6 @@ export class AnnotationTrack extends Track<'annotation'> {
     protected annotationStore: AnnotationTileStore;
     protected macroAnnotationStore: AnnotationTileStore;
     protected yScrollNode: Object2D;
-    protected annotationsNeedUpdate: boolean = true;
-
-    protected loadingIndicator: LoadingIndicator;
 
     constructor(model: TrackModel<'annotation'>) {
         super(model);
@@ -55,33 +52,6 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.color.set([0.1, 0.1, 0.1, 1]);
 
         this.initializeYDrag();
-
-        this.loadingIndicator = new LoadingIndicator();
-        this.loadingIndicator.cursorStyle = 'pointer';
-        this.loadingIndicator.layoutY = -1;
-        this.loadingIndicator.layoutParentY = 1;
-        this.loadingIndicator.x = 10;
-        this.loadingIndicator.y = -10;
-        // @! depth-box, should be at top, maybe layoutParentZ = 1
-        // - be careful to avoid conflict with cursor
-        this.toggleLoadingIndicator(false, false);
-        this.add(this.loadingIndicator);
-    }
-
-    setRange(x0: number, x1: number) {
-        super.setRange(x0, x1);
-        this.annotationsNeedUpdate = true;
-    }
-
-    private _lastComputedWidth: number;
-    applyTransformToSubNodes(root?: boolean) {
-        // update tiles if we need to
-        if ((this._lastComputedWidth !== this.getComputedWidth()) || this.annotationsNeedUpdate) {
-            this.updateAnnotations();
-            this._lastComputedWidth = this.getComputedWidth();
-        }
-
-        super.applyTransformToSubNodes(root);
     }
 
     protected initializeYDrag() {
@@ -104,27 +74,10 @@ export class AnnotationTrack extends Track<'annotation'> {
         });
     }
 
-    /**
-     * Show or hide the loading indicator via animation
-     * This function can be safely called repeatedly without accounting for the current state of the indicator
-     */
-    protected toggleLoadingIndicator(visible: boolean, animate: boolean) {
-        // we want a little bit of delay before the animation, for this we use a negative opacity when invisible
-        let targetOpacity = visible ? 1 : -0.1;
-
-        if (animate) {
-            Animator.springTo(this.loadingIndicator, { 'opacity': targetOpacity }, 50);
-        } else {
-            Animator.stop(this.loadingIndicator, ['opacity']);
-            this.loadingIndicator.opacity = targetOpacity;
-        }
-    }
-
     protected _macroTileCache = new UsageCache<MacroGeneInstances>();
     protected _annotationCache = new UsageCache<Object2D>();
     protected _onStageAnnotations = new UsageCache<Object2D>();
-    protected _pendingTiles = new UsageCache<Tile<any>>();
-    protected updateAnnotations() {
+    protected updateDisplay() {
         this._pendingTiles.markAllUnused();
         this._onStageAnnotations.markAllUnused();
 
@@ -198,9 +151,9 @@ export class AnnotationTrack extends Track<'annotation'> {
 
         this._pendingTiles.removeUnused(this.deleteTileLoadingDependency);
         this._onStageAnnotations.removeUnused(this.removeAnnotation);
-        this.annotationsNeedUpdate = false;
 
         this.toggleLoadingIndicator(this._pendingTiles.count > 0, true);
+        this.displayNeedUpdate = false;
     }
 
     protected updateMicroAnnotations(x0: number, x1: number, span: number, samplingDensity: number, continuousLodLevel: number,  opacity: number) {
@@ -277,21 +230,7 @@ export class AnnotationTrack extends Track<'annotation'> {
         length: number,
     }) => {
         return feature.soClass + '\x1F' + feature.name + '\x1F' + feature.startIndex + '\x1F' + feature.length;
-    }
-
-    // when we're waiting on data from a tile we add a complete listener to update the annotation when the data arrives
-    protected createTileLoadingDependency = (tile: Tile<any>) => {
-        tile.addEventListener('complete', this.onDependentTileComplete);
-        return tile;
-    }
-
-    protected deleteTileLoadingDependency = (tile: Tile<any>) => {
-        tile.removeEventListener('complete', this.onDependentTileComplete);
-    }
-
-    protected onDependentTileComplete = () => {
-        this.updateAnnotations();
-    }
+    }    
 
 }
 
