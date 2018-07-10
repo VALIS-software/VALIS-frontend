@@ -14,7 +14,7 @@ export type Transcript = TranscriptInfo & {
     other: Array<TranscriptComponentInfo>
 }
 
-export type TilePayload = Array<Gene>
+export type TilePayload = Array<Gene>;
 
 export class AnnotationTileStore extends TileStore<TilePayload, void> {
 

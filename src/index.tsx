@@ -3,10 +3,10 @@ import * as ReactDOM from "react-dom";
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
 import App from "./App";
+import { SiriusApi } from "../lib/sirius/SiriusApi";
 
 import './index.html';
 import './index.scss';
-import { SiriusApi } from "../lib/sirius/SiriusApi";
 
 // determine API url from environment
 const LOCAL_API_URL = 'http://127.0.0.1:5000';
@@ -24,6 +24,7 @@ if (process != null && process.env != null) {
 // set sirius API root
 SiriusApi.apiUrl = apiBaseUrl;
 
+// render app
 ReactDOM.render(
 	<MuiThemeProvider>
 		<App apiBaseUrl={apiBaseUrl}/>
