@@ -157,7 +157,7 @@ function buildPatientQuery(parsePath: ParsedToken[]): any {
         const tumorSite = STRIP_QUOTES(parsePath[1].value);
         builder.newInfoQuery();
         builder.filterType('patient');
-        builder.filterTumorSite(tumorSite);
+        builder.filterBiosample(tumorSite);
         builder.setLimit(1000000);
         return builder.build();
     }
