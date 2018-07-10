@@ -466,16 +466,51 @@ class PanelHeader extends React.Component<PanelProps,{}> {
 
     render() {
         let headerContents = null;
+        
+        const headerContainerStyle : React.CSSProperties= {
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center'
+        };
+
+        const headerStyle : React.CSSProperties = {
+            marginTop: 8, 
+            marginLeft: 8
+        }
+
+        const iconColor = 'rgb(171, 171, 171)';
+        const iconHoverColor = 'rgb(255, 255, 255)';
+        const iconViewBoxSize = '0 0 32 32';
+        
         if (this.props.isEditing) {
-            headerContents = (<div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}} >
+            headerContents = (<div style={headerContainerStyle} >
                 <span><input onChange={(e) => this.rangeSpecifier = e.target.value } type="text" defaultValue={this.props.panel.getRangeSpecifier()}></input></span>
-                <span style={{marginTop: 8, marginLeft: 8}}><SvgCancel onClick={() => this.props.onEditCancel()} viewBox='0 0 32 32' color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' /></span>
-                <span style={{marginTop: 8, marginLeft: 8}}><SvgCheck onClick={() => this.props.onEditSave(this.rangeSpecifier)} viewBox='0 0 32 32' color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' /></span>
+                <span style={headerStyle}>
+                    <SvgCancel 
+                        onClick={() => this.props.onEditCancel()} 
+                        viewBox={iconViewBoxSize}
+                        color={iconColor}
+                        hoverColor={iconHoverColor} 
+                    />
+                </span>
+                <span style={headerStyle}>
+                    <SvgCheck 
+                        onClick={() => this.props.onEditSave(this.rangeSpecifier)} 
+                        viewBox={iconViewBoxSize}color={iconColor}
+                        hoverColor={iconHoverColor} 
+                    />
+                </span>
             </div>);
         } else {
-            headerContents = (<div style={{display: 'flex', alignItems: 'center', justifyContent: 'center'}} onClick={() => this.props.onEditStart()}>
+            headerContents = (<div style={headerContainerStyle} onClick={() => this.props.onEditStart()}>
                 <span><b>{this.props.panel.formattedContig()}</b> {this.props.panel.formattedRange()}</span>
-                <span style={{marginTop: 8, marginLeft: 8}}><SvgEdit viewBox='0 0 32 32' color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' /></span>
+                <span style={headerStyle}>
+                    <SvgEdit 
+                        viewBox={iconViewBoxSize}
+                        color={iconColor}
+                        hoverColor={iconHoverColor} 
+                    />
+                </span>
             </div>);
         }
 
