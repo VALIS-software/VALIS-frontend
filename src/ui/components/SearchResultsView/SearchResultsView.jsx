@@ -139,7 +139,7 @@ class SearchResultsView extends React.Component {
     const ref = result.info.variant_ref;
     const alt = result.info.variant_alt;
     const genomicType = (<Pills items={[result.type]} style={{ backgroundColor: 'grey' }} />);
-    const location = (<GenomicLocation contig={result.contig} start={result.start} end={result.end} />);
+    const location = (<GenomicLocation interactive={true} contig={result.contig} start={result.start} end={result.end} />);
     const mutation = null;
     if (result.type === EntityType.SNP) {
       mutation = (<span>{alt} <span className="allele-arrow">⟶</span> {ref}</span>);
