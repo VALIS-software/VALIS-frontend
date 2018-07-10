@@ -1,3 +1,5 @@
+import { resolve } from 'path';
+
 const CHAOS_ENABLED = false;
 
 const chaos = (_axios, probabilityOfFailure) => {
@@ -93,19 +95,24 @@ class GenomeAPI {
 	}
 
 	getSuggestions(termType, searchText, maxResults = 100) {
-		const cacheKey = termType + searchText + maxResults.toString();
+		maxResults = Math.round(maxResults);
+		const cacheKey = `${termType}|${searchText}|${maxResults}`;
+		let ret = null;
 		if (SUGGESTIONS_CACHE[cacheKey]) {
-			return SUGGESTIONS_CACHE[cacheKey];
+			ret = new Promise((resolve, reject) => {
+				resolve(SUGGESTIONS_CACHE[cacheKey]);
+			})
 		} else {
-			return axios.post(`${this.baseUrl}/suggestions`, {
+			ret = axios.post(`${this.baseUrl}/suggestions`, {
 				term_type: termType,
 				search_text: searchText,
-				max_results: Math.round(maxResults),
+				max_results: maxResults,
 			}).then(data => {
-				SUGGESTIONS_CACHE[cacheKey] = data.data.results;
+				SUGGESTIONS_CACHE[cacheKey] = data.data.results.slice(0);
 				return data.data.results;
 			});
 		}
+		return ret;
 	}
 
 	getUserProfile() {
