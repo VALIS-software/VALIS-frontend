@@ -26,13 +26,13 @@ import Track from "./Track";
  */
 export class AnnotationTrack extends Track<'annotation'> {
 
-    readonly macroLodBlendRange = 2;
-    readonly macroLodThresholdLow = 10;
-    readonly macroLodThresholdHigh = this.macroLodThresholdLow + this.macroLodBlendRange;
+    protected readonly macroLodBlendRange = 2;
+    protected readonly macroLodThresholdLow = 10;
+    protected readonly macroLodThresholdHigh = this.macroLodThresholdLow + this.macroLodBlendRange;
 
-    readonly namesLodBlendRange = 2;
-    readonly namesLodThresholdLow = 9;
-    readonly namesLodThresholdHigh = this.namesLodThresholdLow + this.namesLodBlendRange;
+    protected readonly namesLodBlendRange = 2;
+    protected readonly namesLodThresholdLow = 9;
+    protected readonly namesLodThresholdHigh = this.namesLodThresholdLow + this.namesLodBlendRange;
 
     protected annotationStore: AnnotationTileStore;
     protected macroAnnotationStore: AnnotationTileStore;
