@@ -1,8 +1,43 @@
 import { Tile, TileStore } from "./TileStore";
+import { QueryBuilder } from "../../../lib/sirius/QueryBuilder";
+import axios from "../../../node_modules/axios";
 
 // Tile payload is a list of genes extended with nesting
+type VariantGenomeNode = {
+    contig: string,
+    type: string,
+    start: number,
+    end: number,
+    source: Array<string>,
+    name: string,
+    info: VariantInfo,
+    id: string
+};
 
-export type TilePayload = {};
+type VariantInfo = {
+    flags: Array<string>,
+    RSPOS: number,
+    dbSNPBuildID: number,
+    SSR: number,
+    SAO: number,
+    VP: string,
+    WGT: number,
+    VC: string,
+    TOPMED: string,
+    variant_ref: string,
+    variant_alt: string,
+    filter: string,
+    qual: string,
+    allele_frequencies: {
+        AC: number
+    },
+    variant_tags: Array<string>,
+    variant_affected_genes: Array<string>
+}
+
+export type TilePayload = Array<{
+    baseIndex: number
+}>;
 
 export class VariantTileStore extends TileStore<TilePayload, void> {
 
@@ -16,7 +51,29 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
 
     protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
         console.log('Request', tile);
-        return null;
+        let startBase = tile.x + 1;
+        let endBase = startBase + tile.span;
+        return axios.post(
+            'http://35.185.230.75/query/full',
+            {
+                "type": "GenomeNode",
+                "filters": {
+                    "contig": "chr1", // @! should be source id / real contig
+                    "type": "SNP",
+                    // "source": "ExAC",
+                    "start": { "$gte": startBase, "$lte": endBase }
+                },
+                "toEdges": [],
+                "arithmetics": [],
+                "limit": 30000
+            }
+        ).then((r) => {
+            let variants: Array<VariantGenomeNode> = r.data.data;
+            console.log(variants[0]);
+            return variants.map((v) => { return {
+                baseIndex: v.start - 1,
+            } });
+        });
     }
 
 }
