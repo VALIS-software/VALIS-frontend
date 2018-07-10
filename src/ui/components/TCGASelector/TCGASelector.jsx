@@ -5,9 +5,9 @@ import RaisedButton from "material-ui/RaisedButton/RaisedButton";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
 import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
-import { DATA_SOURCE_TCGA } from "../../../ui/helpers/constants";
+import { DATA_SOURCE_TCGA } from "../../helpers/constants";
 
 // Styles
 import "./TCGASelector.scss";

@@ -6,8 +6,8 @@ import IconButton from 'material-ui/IconButton';
 import ActionSearch from 'material-ui/svg-icons/action/search';
 import ContentClear from 'material-ui/svg-icons/content/clear';
 import CircularProgress from "material-ui/CircularProgress";
-import SearchResultsView from '../../SearchResultsView/SearchResultsView.jsx';
-import ErrorDetails from "../ErrorDetails/ErrorDetails.jsx";
+import SearchResultsView from '../../SearchResultsView/SearchResultsView';
+import ErrorDetails from "../ErrorDetails/ErrorDetails";
 import buildQueryParser from "../../../../../lib/sirius/queryparser";
 import './TokenBox.scss';
 

@@ -1,21 +1,17 @@
 // Dependencies
-import ReactDOM from 'react-dom';
-import * as React from 'react';
 import * as PropTypes from 'prop-types';
-import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
-import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
-import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
-import Util from '../../helpers/util.js';
-import FontAwesomeIcon from '@fortawesome/react-fontawesome';
-import faExternalLinkSquareAlt from '@fortawesome/fontawesome-free-solid/faExternalLinkSquareAlt';
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import * as React from 'react';
 import EntityType from "../../../../lib/sirius/EntityType";
-import DataListItem from "../DataListItem/DataListItem.jsx";
 import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
-
+import DataListItem from "../DataListItem/DataListItem";
+import Collapsible from '../Shared/Collapsible/Collapsible';
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
+import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
+import '../Shared/Shared.scss';
+import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
 // Styles
 import './GeneDetails.scss';
-import '../Shared/Shared.scss';
+
 
 class GeneDetails extends React.Component {
   constructor(props) {

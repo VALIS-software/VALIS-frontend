@@ -1,21 +1,17 @@
 // Dependencies
-import ReactDOM from 'react-dom';
-import * as React from 'react';
-import * as PropTypes from 'prop-types';
-import { ASSOCIATION_TYPE, DATA_SOURCE_GWAS } from '../../helpers/constants';
-import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
-import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
-import SNPDetails from '../SNPDetails/SNPDetails.jsx';
-import GenericEntityDetails from "../GenericEntityDetails/GenericEntityDetails";
-import Util from '../../helpers/util.js';
-import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import faExternalLinkSquareAlt from '@fortawesome/fontawesome-free-solid/faExternalLinkSquareAlt';
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
-
+import FontAwesomeIcon from '@fortawesome/react-fontawesome';
+import * as PropTypes from 'prop-types';
+import * as React from 'react';
+import { DATA_SOURCE_GWAS } from '../../helpers/constants';
+import GenericEntityDetails from "../GenericEntityDetails/GenericEntityDetails";
+import Collapsible from '../Shared/Collapsible/Collapsible';
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
+import '../Shared/Shared.scss';
+import SNPDetails from '../SNPDetails/SNPDetails';
 // Styles
 import './GWASDetails.scss';
-import '../Shared/Shared.scss';
-import GenericEntityDetails from '../GenericEntityDetails/GenericEntityDetails';
+
 
 class GWASDetails extends React.Component {
   constructor(props) {

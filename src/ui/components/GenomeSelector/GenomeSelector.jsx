@@ -9,7 +9,7 @@ import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import QueryBuilder from '../../../../lib/sirius/QueryBuilder';
 import { CHROMOSOME_NAMES } from '../../helpers/constants';
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
 // Styles
 import './GenomeSelector.scss';

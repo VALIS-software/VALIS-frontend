@@ -1,9 +1,9 @@
 // Dependencies
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
-import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
-import AssociationList from '../Shared/AssociationList/AssociationList.jsx';
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import Collapsible from '../Shared/Collapsible/Collapsible';
+import AssociationList from '../Shared/AssociationList/AssociationList';
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
 // Styles
 import './TraitDetails.scss';

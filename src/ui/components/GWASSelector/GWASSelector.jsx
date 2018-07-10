@@ -6,7 +6,7 @@ import Slider from "material-ui/Slider";
 import RaisedButton from "material-ui/RaisedButton/RaisedButton";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
 import {
   DATA_SOURCE_GWAS,

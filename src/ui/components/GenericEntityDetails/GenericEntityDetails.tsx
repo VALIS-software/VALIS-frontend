@@ -10,10 +10,10 @@ import {
 import Paper from "material-ui/Paper";
 import { Card, CardHeader, CardText } from "material-ui/Card";
 import CircularProgress from "material-ui/CircularProgress";
-import DataListItem from "../DataListItem/DataListItem.jsx";
+import DataListItem from "../DataListItem/DataListItem";
 import ZoomToButton from "../Shared/ZoomToButton/ZoomToButton";
 import Util from "../../helpers/util.js";
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
 // Styles
 import "./GenericEntityDetails.scss";

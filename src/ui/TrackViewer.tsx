@@ -10,8 +10,8 @@ import Rect from "./core/Rect";
 import Panel from "./Panel";
 import TrackRow from "./TrackRow";
 import { DEFAULT_SPRING } from "./UIConstants";
-import AppModel from "../ui/models/AppModel";
-import DatasetSelector from "../ui/components/DatasetSelector/DatasetSelector";
+import AppModel from "./models/AppModel";
+import DatasetSelector from "./components/DatasetSelector/DatasetSelector";
 
 class TrackViewer extends Object2D {
 

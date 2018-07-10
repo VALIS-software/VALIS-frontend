@@ -2,9 +2,9 @@
 import * as React from "react";
 import * as PropTypes from "prop-types";
 import UpgradeDialog from "../Shared/UpgradeDialog/UpgradeDialog";
-import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector.jsx";
-import DataListItem from "../DataListItem/DataListItem.jsx";
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector";
+import DataListItem from "../DataListItem/DataListItem";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import {
   TRACK_TYPE_BOOLEAN,
 } from "../../helpers/constants";

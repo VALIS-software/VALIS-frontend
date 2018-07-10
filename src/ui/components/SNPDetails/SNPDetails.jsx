@@ -2,11 +2,11 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import QueryBuilder  from '../../../../lib/sirius/QueryBuilder';
-import Pills from '../Shared/Pills/Pills.jsx';
-import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
-import AssociationList from '../Shared/AssociationList/AssociationList.jsx';
-import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import Pills from '../Shared/Pills/Pills';
+import SearchResultsView from '../SearchResultsView/SearchResultsView';
+import AssociationList from '../Shared/AssociationList/AssociationList';
+import Collapsible from '../Shared/Collapsible/Collapsible';
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
 import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
 // Styles

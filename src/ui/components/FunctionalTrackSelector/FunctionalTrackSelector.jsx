@@ -9,7 +9,7 @@ import MenuItem from "material-ui/MenuItem";
 import Divider from "material-ui/Divider";
 import { RadioButton, RadioButtonGroup } from 'material-ui/RadioButton';
 import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
 // Styles
 import "./FunctionalTrackSelector.scss";

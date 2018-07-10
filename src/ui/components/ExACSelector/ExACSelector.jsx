@@ -6,9 +6,9 @@ import AutoComplete from "material-ui/AutoComplete";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
 import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
-import { VARIANT_TAGS, DATA_SOURCE_ExAC } from "../../../ui/helpers/constants";
+import { VARIANT_TAGS, DATA_SOURCE_ExAC } from "../../helpers/constants";
 
 class ExACSelector extends React.Component {
   constructor(props) {

@@ -7,9 +7,9 @@ import Slider from "material-ui/Slider";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
 import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
-import { DATA_SOURCE_GTEX } from "../../../ui/helpers/constants";
+import { DATA_SOURCE_GTEX } from "../../helpers/constants";
 
 class GTEXSelector extends React.Component {
   constructor(props) {

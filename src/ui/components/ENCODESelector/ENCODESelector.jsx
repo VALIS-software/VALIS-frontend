@@ -10,7 +10,7 @@ import MenuItem from "material-ui/MenuItem";
 import Checkbox from "material-ui/Checkbox";
 import Divider from "material-ui/Divider";
 import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
 import {
   CHROMOSOME_NAMES,
