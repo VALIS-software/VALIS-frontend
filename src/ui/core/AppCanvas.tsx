@@ -353,6 +353,7 @@ export class AppCanvas extends React.Component<Props, State> {
     private _lastActivePointers: AppCanvas['activePointers'];
 
     protected handlePointerChanges() {
+        // fire pointerleave for any pointers that are no longer active in this frame
         for (let pointerId in this._lastActivePointers) {
             let inactivePointer = this._lastActivePointers[pointerId];
             if (this.activePointers[pointerId] === undefined) {
@@ -487,29 +488,31 @@ export class AppCanvas extends React.Component<Props, State> {
     protected onPointerDown = (e: MouseEvent | PointerEvent) => {
         this.resetCursor();
 
-        let eventName: keyof InteractionEventMap = 'pointerdown';
-        let interactionData = this.interactionDataFromEvent(e);
+        if (e.target === this.canvas) {
+            let eventName: keyof InteractionEventMap = 'pointerdown';
+            let interactionData = this.interactionDataFromEvent(e);
 
-        // initialize drag data entry
-        let dragData = this.dragData[interactionData.pointerId] = {
-            activeNodes: new Array<Object2D>(),
-            inactiveNodes: new Array<Object2D>(),
-            button: e.button,
-        };
+            // initialize drag data entry
+            let dragData = this.dragData[interactionData.pointerId] = {
+                activeNodes: new Array<Object2D>(),
+                inactiveNodes: new Array<Object2D>(),
+                button: e.button,
+            };
 
-        // we need collect drag event nodes as well as pointerdown receiver to make sure drag events are emitted
-        let hitNodes = this.hitTestNodesForInteraction([eventName, 'dragstart', 'dragmove', 'dragend'], interactionData.worldX, interactionData.worldY).slice();
-        this.executePointerInteraction(
-            hitNodes,
-            eventName,
-            interactionData,
-            (init) => {
-                if (dragData.inactiveNodes.indexOf(init.target) === -1) {
-                    dragData.inactiveNodes.push(init.target);
+            // we need collect drag event nodes as well as pointerdown receiver to make sure drag events are emitted
+            let hitNodes = this.hitTestNodesForInteraction([eventName, 'dragstart', 'dragmove', 'dragend'], interactionData.worldX, interactionData.worldY).slice();
+            this.executePointerInteraction(
+                hitNodes,
+                eventName,
+                interactionData,
+                (init) => {
+                    if (dragData.inactiveNodes.indexOf(init.target) === -1) {
+                        dragData.inactiveNodes.push(init.target);
+                    }
+                    return new InteractionEvent(init, e);
                 }
-                return new InteractionEvent(init, e);
-            }
-        );
+            );
+        }
 
         this.applyCursor();
     }
@@ -528,47 +531,55 @@ export class AppCanvas extends React.Component<Props, State> {
             defaultPrevented = this.executePointerInteraction(dragData.activeNodes, 'dragend', interactionData, (init) => new InteractionEvent(init, e), false);
         }
 
-        if (!defaultPrevented){
-            let eventName: keyof InteractionEventMap = 'pointerup';
-            let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
-            this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
+        if (e.target === this.canvas) {
+            if (!defaultPrevented){
+                let eventName: keyof InteractionEventMap = 'pointerup';
+                let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
+                this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
+            }
         }
 
         this.applyCursor();
     }
 
     protected onClick = (e: MouseEvent) => {
-        let eventName: keyof InteractionEventMap = 'click';
-        let interactionData = this.interactionDataFromEvent(e);
-        let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
-        this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
+        if (e.target === this.canvas) {
+            let eventName: keyof InteractionEventMap = 'click';
+            let interactionData = this.interactionDataFromEvent(e);
+            let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
+            this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
+        }
     }
 
     protected onDoubleClick = (e: MouseEvent) => {
-        let eventName: keyof InteractionEventMap = 'dblclick';
-        let interactionData = this.interactionDataFromEvent(e);
-        let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
-        this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
+        if (e.target === this.canvas) {    
+            let eventName: keyof InteractionEventMap = 'dblclick';
+            let interactionData = this.interactionDataFromEvent(e);
+            let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
+            this.executePointerInteraction(hitNodes, eventName, interactionData, (init) => new InteractionEvent(init, e));
+        }
     }
 
     protected onWheel = (e: WheelEvent) => {
-        let eventName: keyof InteractionEventMap = 'wheel';
-        let interactionData = this.interactionDataFromEvent(e);
-        let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
-        this.executePointerInteraction(
-            hitNodes,
-            eventName,
-            interactionData,
-            (init) => {
-                return new WheelInteractionEvent({
-                    ...init,
-                    wheelDeltaMode: e.deltaMode,
-                    wheelDeltaX: e.deltaX,
-                    wheelDeltaY: e.deltaY,
-                    wheelDeltaZ: e.deltaZ,
-                }, e);
-            }
-        );
+        if (e.target === this.canvas) {
+            let eventName: keyof InteractionEventMap = 'wheel';
+            let interactionData = this.interactionDataFromEvent(e);
+            let hitNodes = this.hitTestNodesForInteraction([eventName], interactionData.worldX, interactionData.worldY);
+            this.executePointerInteraction(
+                hitNodes,
+                eventName,
+                interactionData,
+                (init) => {
+                    return new WheelInteractionEvent({
+                        ...init,
+                        wheelDeltaMode: e.deltaMode,
+                        wheelDeltaX: e.deltaX,
+                        wheelDeltaY: e.deltaY,
+                        wheelDeltaZ: e.deltaZ,
+                    }, e);
+                }
+            );
+        }
     }
 
     private _hitNodes = new Array<Object2D>(); // micro-optimization: reuse array between events to prevent re-allocation
