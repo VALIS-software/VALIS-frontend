@@ -55,7 +55,7 @@ export class QueryBuilder {
     this.query.filters.contig = contig;
   }
 
-  filterLength(length: string) {
+  filterLength(length: number) {
     if (this.query.type !== QueryType.GENOME) {
       throw new Error('Length only available for GenomeNodes');
     }
@@ -70,7 +70,7 @@ export class QueryBuilder {
     this.query.filters['info.p-value'] = { '<': pvalue };
   }
 
-  filterBiosample(biosample: string) {
+  filterBiosample(biosample: any) {
     this.query.filters['info.biosample'] = biosample;
   }
 
@@ -106,12 +106,12 @@ export class QueryBuilder {
     this.query.filters.end = end;
   }
 
-  filterAffectedGene(gene: string) {
+  filterAffectedGene(gene: any) {
     const previous = this.query.filters['variant_affected_genes'] || [];
     this.query.filters['variant_affected_genes'] = { $all: previous.concat([gene]) };
   }
 
-  filterVariantTag(tag: string) {
+  filterVariantTag(tag: any) {
     const previous = this.query.filters['variant_tags'] || [];
     this.query.filters['variant_tags'] = { $all: previous.concat([tag]) };
   }
