@@ -2,7 +2,7 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import DataListItem from '../DataListItem/DataListItem';
-
+import SiriusApi from "../../../../lib/sirius/SiriusApi";
 import {
   TRACK_TYPE_NETWORK,
 } from '../../helpers/constants';
@@ -23,13 +23,13 @@ class TrackSelector extends React.Component {
 
   componentDidMount() {
     if (this.props.trackType !== TRACK_TYPE_NETWORK) {
-      this.api.getTracks().then(result => {
+      SiriusApi.getTracks().then(result => {
         this.setState({
           tracks: result,
         });
       });
     } else {
-      this.api.getGraphs().then(result => {
+      SiriusApi.getGraphs().then(result => {
         this.setState({
           tracks: result,
         });

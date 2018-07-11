@@ -10,6 +10,7 @@ import SearchResultsView from '../../SearchResultsView/SearchResultsView';
 import ErrorDetails from "../ErrorDetails/ErrorDetails";
 import buildQueryParser from "../../../../../lib/sirius/queryparser";
 import './TokenBox.scss';
+import { SiriusApi } from '../../../../../lib/sirius/SiriusApi';
 
 class TokenBox extends React.Component {
   constructor(props) {
@@ -97,7 +98,7 @@ class TokenBox extends React.Component {
     const suggestionMap = new Map();
     ['TRAIT', 'GENE', 'CELL_TYPE', 'TUMOR_SITE'].forEach(rule => {
       suggestionMap.set(rule, (searchText, maxResults) => {
-        return this.appModel.api.getSuggestions(rule, searchText, maxResults).then(results => {
+        return SiriusApi.getSuggestions(rule, searchText, maxResults).then(results => {
           return results.map(value => { return { rule: rule, value: value}; });
         });
       });

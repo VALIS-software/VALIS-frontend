@@ -9,6 +9,7 @@ import Collapsible from '../Shared/Collapsible/Collapsible';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import '../Shared/Shared.scss';
 import SNPDetails from '../SNPDetails/SNPDetails';
+import SiriusApi from "../../../../lib/sirius/SiriusApi";
 // Styles
 import './GWASDetails.scss';
 
@@ -30,7 +31,7 @@ class GWASDetails extends React.Component {
 
   loadGwasDetails() {
     const assocId = this.state.currentAssocId;
-    this.api.getDetails(this.state.currentAssocId).then(detailsData => {
+    SiriusApi.getDetails(this.state.currentAssocId).then(detailsData => {
       this.setState({
         loadedAssocId: assocId,
         details: detailsData.details,

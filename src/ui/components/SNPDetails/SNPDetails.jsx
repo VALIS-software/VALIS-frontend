@@ -9,6 +9,7 @@ import Collapsible from '../Shared/Collapsible/Collapsible';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
 import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
+import SiriusApi from "../../../../lib/sirius/SiriusApi";
 // Styles
 import './SNPDetails.scss';
 import '../Shared/Shared.scss';
@@ -84,7 +85,7 @@ class SNPDetails extends React.Component {
 
   loadSnpDetails() {
     const snpId = this.state.currentSnpId;
-    this.api.getDetails(this.state.currentSnpId).then(detailsData => {
+    SiriusApi.getDetails(this.state.currentSnpId).then(detailsData => {
       this.setState({
         loadedSnpId: snpId,
         details: detailsData.details,

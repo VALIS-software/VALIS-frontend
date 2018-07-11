@@ -9,6 +9,7 @@ import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
 import { VARIANT_TAGS, DATA_SOURCE_ExAC } from "../../helpers/constants";
+import { SiriusApi } from "../../../../lib/sirius/SiriusApi";
 
 class ExACSelector extends React.Component {
   constructor(props) {
@@ -36,7 +37,7 @@ class ExACSelector extends React.Component {
       searchGene: searchText
     });
     if (params.source === "click") return;
-    this.appModel.api.getSuggestions('GENE', searchText, 10).then(results => {
+    SiriusApi.getSuggestions('GENE', searchText, 10).then(results => {
       this.setState({
         genes: results,
       });

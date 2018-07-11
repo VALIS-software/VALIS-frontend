@@ -5,6 +5,7 @@ import QueryBuilder from '../../../../../lib/sirius/QueryBuilder';
 
 const { Map, Set } = require('immutable');
 import './SearchFilter.scss';
+import { SiriusApi } from '../../../../../lib/sirius/SiriusApi';
 
 
 
@@ -103,7 +104,7 @@ class SearchFilter extends React.Component {
                 const builder = new QueryBuilder();
                 builder.newGenomeQuery();
                 const genomeQuery = builder.build();
-                promise = this.props.appModel.api.getDistinctValues('type', genomeQuery)
+                promise = SiriusApi.getDistinctValues('type', genomeQuery)
             } else if (type === FILTER_TYPES.CHROMOSOME) {
                 promise = new Promise(((resolve, reject) => {
                     resolve(CHROMOSOME_NAMES);

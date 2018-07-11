@@ -9,6 +9,7 @@ import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton'
 import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import Util from "../../helpers/util";
 import { prettyPrint } from "../TraitDetails/TraitDetails";
+import SiriusApi from "../../../../lib/sirius/SiriusApi";
 const { Map, Set } = require('immutable');
 
 // Styles
@@ -80,7 +81,7 @@ class SearchResultsView extends React.Component {
     
     const cursor = this.cursor;
 
-    this.api.getQueryResults(currentQuery, true, cursor, cursor + FETCH_SIZE).then(results => {
+    SiriusApi.getQueryResults(currentQuery, true, cursor, cursor + FETCH_SIZE).then(results => {
       this.props.appModel.popLoading();
       const singleResult = (results.result_start === 0 && results.result_end === 1 && results.reached_end === true);
       if (singleResult) {

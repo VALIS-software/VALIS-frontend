@@ -12,6 +12,7 @@ import {
   DATA_SOURCE_GWAS,
   DATA_SOURCE_CLINVAR
 } from "../../helpers/constants";
+import SiriusApi from "../../../../lib/sirius/SiriusApi";
 
 // Styles
 import "./GWASSelector.scss";
@@ -59,7 +60,7 @@ class GWASSelector extends React.Component {
     }
     builder.filterType("trait");
     const infoQuery = builder.build();
-    this.api.getDistinctValues("name", infoQuery).then(data => {
+    SiriusApi.getDistinctValues("name", infoQuery).then(data => {
       this.setState({
         traits: data
       });

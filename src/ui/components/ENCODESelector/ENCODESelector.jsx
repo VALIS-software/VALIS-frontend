@@ -11,6 +11,7 @@ import Checkbox from "material-ui/Checkbox";
 import Divider from "material-ui/Divider";
 import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
+import SiriusApi from "../../../../lib/sirius/SiriusApi";
 
 import {
   CHROMOSOME_NAMES,
@@ -70,7 +71,7 @@ class ENCODESelector extends React.Component {
       builder.filterTargets(this.selectedTargets);
     }
     const infoQuery = builder.build();
-    this.api.getDistinctValues('info.biosample', infoQuery).then(data => {
+    SiriusApi.getDistinctValues('info.biosample', infoQuery).then(data => {
       // Keep the current selection of biosample
       let newBiosampleValue = null;
       if (this.state.biosampleValue !== null) {
@@ -105,7 +106,7 @@ class ENCODESelector extends React.Component {
       builder.filterTargets(this.selectedTargets);
     }
     const infoQuery = builder.build();
-    this.api.getDistinctValues("info.types", infoQuery).then(data => {
+    SiriusApi.getDistinctValues("info.types", infoQuery).then(data => {
       // Keep the current selection of type
       let newTypeValue = null;
       if (this.state.genomeTypeValue !== null) {
@@ -137,7 +138,7 @@ class ENCODESelector extends React.Component {
       builder.filterInfotypes(this.selectedType);
     }
     const infoQuery = builder.build();
-    this.api.getDistinctValues("info.targets", infoQuery).then(data => {
+    SiriusApi.getDistinctValues("info.targets", infoQuery).then(data => {
       // Keep the current selection of targets
       const newChecked = new Array(data.length).fill(false);
       for (let i = 0; i < this.state.checked.length; i++) {

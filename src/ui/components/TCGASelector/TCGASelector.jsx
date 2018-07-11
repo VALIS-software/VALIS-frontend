@@ -6,7 +6,7 @@ import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
 import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-
+import SiriusApi from "../../../../lib/sirius/SiriusApi";
 import { DATA_SOURCE_TCGA } from "../../helpers/constants";
 
 // Styles
@@ -35,7 +35,7 @@ class TCGASelector extends React.Component {
     builder.filterSource(DATA_SOURCE_TCGA);
     
     const distinctQuery = builder.build();
-    this.api.getDistinctValues('info.tumor_tissue_sites', distinctQuery).then(data => {
+    SiriusApi.getDistinctValues('info.tumor_tissue_sites', distinctQuery).then(data => {
       // Keep the current selection of biosample
       let newBiosampleValue = null;
       if (this.state.biosampleValue !== null) {

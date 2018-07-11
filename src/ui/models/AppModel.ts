@@ -1,4 +1,3 @@
-import GenomeAPI from "./api.js";
 import EventCreator from "./eventCreator.js";
 import ViewModel from "./ViewModel";
 
@@ -16,15 +15,11 @@ export enum AppEvent {
 
 export default class AppModel extends EventCreator {
 
-    api: GenomeAPI;
-
-    constructor(apiBaseUrl: string) {
+    constructor() {
         super();
-        this.api = new GenomeAPI(apiBaseUrl);
     }
 
     private tracks: any[] = [];
-    private overlays: any[] = [];
     private tracksLoading: number = 0;
     private viewModel: ViewModel = null;
 

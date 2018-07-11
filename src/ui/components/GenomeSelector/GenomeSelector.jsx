@@ -10,6 +10,7 @@ import MenuItem from 'material-ui/MenuItem';
 import QueryBuilder from '../../../../lib/sirius/QueryBuilder';
 import { CHROMOSOME_NAMES } from '../../helpers/constants';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
+import SiriusApi from "../../../../lib/sirius/SiriusApi";
 
 // Styles
 import './GenomeSelector.scss';
@@ -118,7 +119,7 @@ class GenomeSelector extends React.Component {
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
     const genomeQuery = builder.build();
-    this.api.getDistinctValues('type', genomeQuery).then(data => {
+    SiriusApi.getDistinctValues('type', genomeQuery).then(data => {
       this.availableTypes = data;
       this.genomeTypeItems = [];
       for (let i = 0; i < this.availableTypes.length; i++) {

@@ -13,6 +13,9 @@ export class SiriusApi {
     private static minMaxCache: {
         [path: string]: Promise<{ min: number, max: number }>
     } = {};
+    private static suggestionsCache: {
+        [key: string]: Array<any>
+    } = {};
 
     static loadAnnotations(
         sequenceId: string,
@@ -121,6 +124,90 @@ export class SiriusApi {
             let payloadArray = new Float32Array(arraybuffer);
             console.log(arraybuffer, payloadArray);
             return payloadArray;
+        });
+    }
+
+    static getGraphs() {
+        return axios.get(`${this.apiUrl}/graphs`).then(data => {
+            return data.data;
+        });
+    }
+
+    static getGraphData(graphId: string, annotationId1: string, annotationId2: string, startBp: number, endBp: number, samplingRate = 1) {
+        const samplingRateQuery = `?sampling_rate=${samplingRate}`;
+        const requestUrl = `${this.apiUrl}/graphs/${graphId}/${annotationId1}/${annotationId2}/${startBp}/${endBp}${samplingRateQuery}`;
+        return axios.get(requestUrl);
+    }
+
+    static getTracks() {
+        return axios.get(`${this.apiUrl}/tracks`).then(data => {
+            return data.data;
+        });
+    }
+
+    static getTrackInfo() {
+        return axios.get(`${this.apiUrl}/track_info`).then(data => {
+            return data.data;
+        });
+    }
+
+    static getDistinctValues(index: number, query: any) {
+        const requestUrl = `${this.apiUrl}/distinct_values/${index}`;
+        return axios.post(requestUrl, query).then(data => {
+            return data.data;
+        });
+    }
+
+    static getDetails(dataID: string) {
+        return axios.get(`${this.apiUrl}/details/${dataID}`).then(data => {
+            return data.data;
+        });
+    }
+
+    static getQueryResults(query: any, full = false, startIdx: number = null, endIdx: number = null) {
+        let requestUrl = `${this.apiUrl}/query/basic`;
+        if (full) {
+            requestUrl = `${this.apiUrl}/query/full`;
+        }
+        const options = [];
+        if (startIdx !== null) {
+            options.push(`result_start=${startIdx}`);
+        }
+        if (endIdx !== null) {
+            options.push(`result_end=${endIdx}`);
+        }
+        if (options.length > 0) {
+            requestUrl = `${requestUrl}?` + options.join('&');
+        }
+        return axios.post(requestUrl, query).then(data => {
+            return data.data;
+        });
+    }
+
+    static getSuggestions(termType: string, searchText: string, maxResults = 100) {
+        maxResults = Math.round(maxResults);
+        const cacheKey = `${termType}|${searchText}|${maxResults}`;
+        let ret = null;
+        if (this.suggestionsCache[cacheKey]) {
+            ret = new Promise((resolve, reject) => {
+                resolve(this.suggestionsCache[cacheKey]);
+            })
+        } else {
+            ret = axios.post(`${this.apiUrl}/suggestions`, {
+                term_type: termType,
+                search_text: searchText,
+                max_results: maxResults,
+            }).then(data => {
+                this.suggestionsCache[cacheKey] = data.data.results.slice(0);
+                return data.data.results;
+            });
+        }
+        return ret;
+    }
+
+    static getUserProfile() {
+        return axios.get(`${this.apiUrl}/user_profile`).then(data => {
+            return data.data;
         });
     }
 

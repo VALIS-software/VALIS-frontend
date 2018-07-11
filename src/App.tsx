@@ -23,6 +23,7 @@ import "./App.scss";
 import ViewModel, { ViewEvent } from "./ui/models/ViewModel";
 import EntityType from "../lib/sirius/EntityType";
 import { VariantTileStore } from "./model/data-store/VariantTileStore";
+import { SiriusApi } from "../lib/sirius/SiriusApi";
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
@@ -63,7 +64,7 @@ export class App extends React.Component<Props, State> {
 		mixpanel.init("641d46068eb631cfc8ba590288fe4679");
 
 		// initialize app model
-		this.appModel = new AppModel(this.props.apiBaseUrl);
+		this.appModel = new AppModel();
 		this.viewModel = new ViewModel();
 		this.appModel.setViewModel(this.viewModel);
 
@@ -131,7 +132,7 @@ export class App extends React.Component<Props, State> {
 		this.startFrameLoop();
 
 		// Get User Profile, redirect if not logged in
-		this.appModel.api.getUserProfile().then((userProfile: any) => {
+		SiriusApi.getUserProfile().then((userProfile: any) => {
 			if (!userProfile.name) {
 				window.location.href = '/login';
 			}
