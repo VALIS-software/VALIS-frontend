@@ -75,7 +75,7 @@ class TraitDetails extends React.Component {
       return (<div key={link[0]} onClick={openLink} className="row">{link[0]}</div>);
     });
 
-    const associations = (<AssociationList associations={this.state.relations} appModel={this.props.appModel} viewModel={this.props.viewModel} />);
+    const associations = (<AssociationList associations={this.state.relations} disableEqtl={true} appModel={this.props.appModel} viewModel={this.props.viewModel} />);
 
     return (<div className="trait-details">
       {header}
@@ -89,9 +89,6 @@ class TraitDetails extends React.Component {
       </Collapsible>
       <Collapsible title="External References" open={false}>
         {links}
-      </Collapsible>
-      <Collapsible title="Related Genes" open={false}>
-        Hello
       </Collapsible>
       {associations}
     </div>);

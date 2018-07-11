@@ -13,6 +13,9 @@ const BasicTheme = getMuiTheme({
     },
     appBar: {
         color: blueDark,
+        title: {
+            fontSize: 18
+        }
     },
     toolbar: {
         backgroundColor: lightGray,

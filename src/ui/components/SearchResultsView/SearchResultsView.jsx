@@ -140,7 +140,9 @@ class SearchResultsView extends React.Component {
     const ref = result.info.variant_ref;
     const alt = result.info.variant_alt;
     const genomicType = (<Pills items={[result.type]} style={{ backgroundColor: 'grey' }} />);
-    const location = (<GenomicLocation interactive={true} contig={result.contig} start={result.start} end={result.end} />);
+
+    const location = result.contig ? (<GenomicLocation interactive={true} contig={result.contig} start={result.start} end={result.end} />) : (<div/>);
+
     const mutation = null;
     if (result.type === EntityType.SNP) {
       mutation = (<span>{alt} <span className="allele-arrow">⟶</span> {ref}</span>);
@@ -212,7 +214,7 @@ class SearchResultsView extends React.Component {
               <div className="search-results-empty">
                 <h3>No results found.</h3>
                 <div>
-                   Think we should have this data?
+                   Think we are missing this data?
                    <UserFeedBackButton label="Submit Request"/>
                 </div>
               </div>
@@ -253,7 +255,7 @@ class SearchResultsView extends React.Component {
               rowCount={rowCount}
               rowHeight={this._cache.rowHeight}
               deferredMeasurementCache={this._cache}
-              width={300}
+              width={400}
               query={this.state.query}
               onRowsRendered={onRowsRendered}
               rowRenderer={this.rowRenderer}

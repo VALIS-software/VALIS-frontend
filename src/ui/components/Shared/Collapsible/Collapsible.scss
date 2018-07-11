@@ -16,7 +16,7 @@
 
 
 		&:hover {
-			background-color: lighten($valis-blue-dark, 10%);
+			background: linear-gradient(lighten($valis-blue-light, 5%), lighten($valis-blue-light, 0%));
 			border-left: 8px solid $valis-blue-dark;
 		}
 	}

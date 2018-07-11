@@ -35,17 +35,21 @@ class AssociationList extends React.Component {
     }
 
     let eqtlList = (<Collapsible disabled={true} title="No Quantitative Trait Loci" />);
-
-    if (eqtlAssociations.length > 0) {
-      const eqtls = eqtlAssociations.map(r => {
-        const openEqtl = () => {
-          this.props.viewModel.displayEntityDetails(r);
-        };
-        return (<div key={r.id} onClick={openEqtl} className="row">{r.title}</div>);
-      });
-      const title = `Quantitative Trait Loci (${eqtls.length})`;
-      eqtlList = (<Collapsible title={title} open={false}>{eqtls}</Collapsible>);
+    if (this.props.disableEqtl) {
+      eqtlList = null;
+    } else {
+      if (eqtlAssociations.length > 0) {
+        const eqtls = eqtlAssociations.map(r => {
+          const openEqtl = () => {
+            this.props.viewModel.displayEntityDetails(r);
+          };
+          return (<div key={r.id} onClick={openEqtl} className="row">{r.title}</div>);
+        });
+        const title = `Quantitative Trait Loci (${eqtls.length})`;
+        eqtlList = (<Collapsible title={title} open={false}>{eqtls}</Collapsible>);
+      }
     }
+    
 
     return (<div>
       {gwasList}
@@ -55,6 +59,7 @@ class AssociationList extends React.Component {
 }
 
 AssociationList.propTypes = {
+  disableEqtl: PropTypes.bool,
   associations: PropTypes.arrayOf(PropTypes.object),
   appModel: PropTypes.object,
   viewModel: PropTypes.object,

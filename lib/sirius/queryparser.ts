@@ -89,7 +89,6 @@ function buildVariantQuery(parsePath: ParsedToken[]): any {
         const edgeQuery = builder.build();
         builder.newGenomeQuery();
         builder.addToEdge(edgeQuery);
-        builder.setLimit(1000000);
         return builder.build();
     }
 }
@@ -99,7 +98,6 @@ function buildTraitQuery(parsePath: ParsedToken[]): any {
     builder.newInfoQuery();
     builder.filterType("trait");
     builder.searchText(traitName);
-    builder.setLimit(150);
     return builder.build();
 }
 
@@ -108,8 +106,7 @@ function buildGeneQuery(parsePath: ParsedToken[]): any {
     if (token.rule === 'NAMED') {
         const geneName = STRIP_QUOTES(parsePath[1].value);
         builder.newGenomeQuery();
-        builder.filterName(geneName);
-        builder.setLimit(150);
+        builder.filterName(geneName.toUpperCase());
         return builder.build();
     } else if (token.rule === 'INFLUENCING') {
         const traitName = STRIP_QUOTES(parsePath[1].value);
@@ -147,7 +144,7 @@ function buildEQTLQuery(parsePath: ParsedToken[]): any {
     if (token.rule === 'INFLUENCING') {
         const geneName = STRIP_QUOTES(parsePath[1].value);
         builder.newGenomeQuery();
-        builder.filterName(geneName);
+        builder.filterName(geneName.toUpperCase());
         const geneQuery = builder.build()
         builder.newEdgeQuery();
         builder.setToNode(geneQuery);
@@ -181,11 +178,13 @@ function buildFullTextQuery(inputText: string) : any {
     if (inputText.length > 5) {
         builder.newInfoQuery();
         builder.filterType('trait');
+        builder.searchText(inputText);
     } else {
         builder.newGenomeQuery();
         builder.filterType('gene');
+        builder.filterName(inputText.toUpperCase());
     }
-    builder.filterName(inputText);
+    
     return builder.build();
 }
 
@@ -355,6 +354,7 @@ export class QueryParser {
             const geneSuggestions = this.suggestions.get('GENE')(inputText, maxSuggestions/2);
             const traitSuggestions = this.suggestions.get('TRAIT')(inputText, maxSuggestions/2);
             additionalSuggestions = mergeResults([geneSuggestions, traitSuggestions]);
+            hintText = 'gene, trait or rs#'
         }
         return {
             tokens: maxParse.path,
@@ -408,7 +408,7 @@ export function buildQueryParser(suggestions: Map<Rule, SuggestionResultProvider
     expansions.set('EQTL_QUERY', [ALL, 'EQTL', 'INFLUENCING', 'GENE', EOF]);
     expansions.set('PATIENT_QUERY', [ALL, 'PATIENT_T', 'WITH_TUMOR', 'TUMOR_SITE', EOF]);
     expansions.set('SNP_RS_QUERY', [ALL, 'RS_T', EOF]);
-    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'TRAIT_QUERY', 'ANNOTATION_QUERY', 'EQTL_QUERY', 'PATIENT_QUERY', 'SNP_RS_QUERY']);
+    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'TRAIT_QUERY', 'EQTL_QUERY', 'SNP_RS_QUERY']);
 
     // return empty result for rs prefix queries
     suggestions.set('RS_T', (q: string, num: number) => new Promise((resolve, reject) => resolve([])));

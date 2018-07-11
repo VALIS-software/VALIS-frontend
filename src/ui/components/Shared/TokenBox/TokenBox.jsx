@@ -50,9 +50,7 @@ class TokenBox extends React.Component {
     const singleMatch = this.singleResult(dataSource, query);
 
     if (!singleMatch) return null;
-    if (dataSource[idx].rule === 'GENE' || dataSource[idx].rule === 'TRAIT') return null;
     return dataSource[idx];
-
   }
 
   handleUpdateInput = (value, dataSource, params) => {
@@ -61,8 +59,9 @@ class TokenBox extends React.Component {
     });
 
     const match = this.perfectMatch(dataSource, value);
+    const isGeneOrTrait = match && (match.rule === 'GENE' || match.rule === 'TRAIT');
 
-    if (match && (!this.state.quoteInput || params.source === 'click')) {
+    if (match && !isGeneOrTrait && (!this.state.quoteInput || params.source === 'click')) {
       // clear the search box:
       this.refs.autoComplete.setState({ searchText: '' });
 
@@ -157,6 +156,7 @@ class TokenBox extends React.Component {
       open: openOnLoad,
       hintText: result.hintText,
     });
+
     if (!result.query && openOnLoad) {
       setTimeout(() => {
         this.refs.autoComplete.refs.searchTextField.input.focus();

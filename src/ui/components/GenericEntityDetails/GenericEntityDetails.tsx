@@ -8,7 +8,7 @@ import {
     TableRowColumn,
 } from "material-ui/Table";
 import Paper from "material-ui/Paper";
-import { Card, CardHeader, CardText } from "material-ui/Card";
+
 import CircularProgress from "material-ui/CircularProgress";
 import DataListItem from "../DataListItem/DataListItem";
 import ZoomToButton from "../Shared/ZoomToButton/ZoomToButton";
@@ -51,13 +51,15 @@ class GenericEntityDetails extends React.Component<any, any> {
             this.api = this.appModel.api;
         }
         this.state = {
-            dataID: props.dataID
         };
+    }
+
+    componentDidMount() {
         this.loadDetailsData();
     }
 
     componentDidUpdate(prevProps: any, prevState: any) {
-        if (prevState.dataID !== this.state.dataID) {
+        if (this.state.dataID !== prevState.dataID) {
             this.loadDetailsData();
         }
     }
@@ -66,7 +68,8 @@ class GenericEntityDetails extends React.Component<any, any> {
         SiriusApi.getDetails(this.state.dataID).then((detailsData: any) => {
             this.setState({
                 details: detailsData.details,
-                relations: detailsData.relations
+                relations: detailsData.relations,
+                needsRefresh: true,
             });
         }, (err: object) => {
             this.appModel.error(this, err);
