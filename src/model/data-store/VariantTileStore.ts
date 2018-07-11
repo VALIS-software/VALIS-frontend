@@ -27,20 +27,20 @@ type VariantInfo = {
     variant_alt: string,
     filter: string,
     qual: string,
-    allele_frequencies: {
-        AC: number
-    },
+    allele_frequencies: { [key: string]: number },
     variant_tags: Array<string>,
     variant_affected_genes: Array<string>
 }
 
 export type TilePayload = Array<{
-    baseIndex: number
+    baseIndex: number,
+    refSequence: string,
+    alts: { [sequence: string]: number }
 }>;
 
 export class VariantTileStore extends TileStore<TilePayload, void> {
 
-    constructor(protected sourceId: string, tileSize: number = 1 << 20, protected macro: boolean = false) {
+    constructor(protected sourceId: string, tileSize: number = 1 << 15, protected macro: boolean = false) {
         super(tileSize, 1);
     }
 
@@ -50,6 +50,7 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
 
     protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
         console.log('Request', tile);
+
         let startBase = tile.x + 1;
         let endBase = startBase + tile.span;
         return axios.post(
@@ -68,9 +69,10 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
             }
         ).then((r) => {
             let variants: Array<VariantGenomeNode> = r.data.data;
-            console.log(variants[0]);
             return variants.map((v) => { return {
                 baseIndex: v.start - 1,
+                refSequence: v.info.variant_ref,
+                alts: v.info.allele_frequencies,
             } });
         });
     }

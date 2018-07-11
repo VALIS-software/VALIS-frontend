@@ -44,7 +44,7 @@ export class ShaderTrack<TilePayload, BlockPayload> extends Track {
             let lodLevel = Math.floor(displayLodLevel);
 
             this.tileStore.getTiles(x0, x1, samplingDensity, true, (tile) => {
-                let tileNode = this._tileNodeCache.use(tile.key, this.createTileNode);
+                let tileNode = this._tileNodeCache.get(tile.key, this.createTileNode);
                 this.updateTileNode(tileNode, tile, x0, span, displayLodLevel);
 
                 // main tiles are positioned front-most so they appear above any fallback tiles
@@ -80,7 +80,7 @@ export class ShaderTrack<TilePayload, BlockPayload> extends Track {
                                 loadingTilesAllowed--;
                             }
 
-                            let fallbackNode = this._tileNodeCache.use(fallbackTile.key, this.createTileNode);
+                            let fallbackNode = this._tileNodeCache.get(fallbackTile.key, this.createTileNode);
                             this.updateTileNode(fallbackNode, fallbackTile, x0, span, displayLodLevel);
 
                             // @! improve this
