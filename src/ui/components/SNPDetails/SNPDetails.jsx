@@ -1,14 +1,15 @@
 // Dependencies
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import QueryBuilder, { QUERY_TYPE_INFO }  from '../../models/query.js';
-import Pills from '../Shared/Pills/Pills.jsx';
-import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
-import AssociationList from '../Shared/AssociationList/AssociationList.jsx';
-import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import QueryBuilder  from "sirius/QueryBuilder";
+import Pills from '../Shared/Pills/Pills';
+import SearchResultsView from '../SearchResultsView/SearchResultsView';
+import AssociationList from '../Shared/AssociationList/AssociationList';
+import Collapsible from '../Shared/Collapsible/Collapsible';
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
 import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
+import SiriusApi from "sirius/SiriusApi";
 // Styles
 import './SNPDetails.scss';
 import '../Shared/Shared.scss';
@@ -84,7 +85,7 @@ class SNPDetails extends React.Component {
 
   loadSnpDetails() {
     const snpId = this.state.currentSnpId;
-    this.api.getDetails(this.state.currentSnpId).then(detailsData => {
+    SiriusApi.getDetails(this.state.currentSnpId).then(detailsData => {
       this.setState({
         loadedSnpId: snpId,
         details: detailsData.details,
@@ -113,7 +114,7 @@ class SNPDetails extends React.Component {
       zoomBtn = (<ZoomToButton contig={details.contig} start={absoluteStart} end={absoluteEnd} padding={0.2} />);
     }
 
-    let location = (<GenomicLocation contig={details.contig} start={details.start} end={details.end} />);
+    let location = (<GenomicLocation interactive={true} contig={details.contig} start={details.start} end={details.end} />);
 
     let variantType = (<div className="snp-type snp-type-non-coding">Non-coding Variant</div>);
 

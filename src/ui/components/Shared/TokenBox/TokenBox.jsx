@@ -6,10 +6,11 @@ import IconButton from 'material-ui/IconButton';
 import ActionSearch from 'material-ui/svg-icons/action/search';
 import ContentClear from 'material-ui/svg-icons/content/clear';
 import CircularProgress from "material-ui/CircularProgress";
-import SearchResultsView from '../../SearchResultsView/SearchResultsView.jsx';
-import ErrorDetails from "../ErrorDetails/ErrorDetails.jsx";
-import buildQueryParser from "../../../helpers/queryparser";
+import SearchResultsView from '../../SearchResultsView/SearchResultsView';
+import ErrorDetails from "../ErrorDetails/ErrorDetails";
+import buildQueryParser from "sirius/queryparser";
 import './TokenBox.scss';
+import SiriusApi from "sirius/SiriusApi";
 
 class TokenBox extends React.Component {
   constructor(props) {
@@ -97,7 +98,7 @@ class TokenBox extends React.Component {
     const suggestionMap = new Map();
     ['TRAIT', 'GENE', 'CELL_TYPE', 'TUMOR_SITE'].forEach(rule => {
       suggestionMap.set(rule, (searchText, maxResults) => {
-        return this.appModel.api.getSuggestions(rule, searchText, maxResults).then(results => {
+        return SiriusApi.getSuggestions(rule, searchText, maxResults).then(results => {
           return results.map(value => { return { rule: rule, value: value}; });
         });
       });

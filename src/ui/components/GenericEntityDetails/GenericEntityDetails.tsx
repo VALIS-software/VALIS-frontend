@@ -10,10 +10,11 @@ import {
 import Paper from "material-ui/Paper";
 import { Card, CardHeader, CardText } from "material-ui/Card";
 import CircularProgress from "material-ui/CircularProgress";
-import DataListItem from "../DataListItem/DataListItem.jsx";
+import DataListItem from "../DataListItem/DataListItem";
 import ZoomToButton from "../Shared/ZoomToButton/ZoomToButton";
 import Util from "../../helpers/util.js";
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
+import SiriusApi from "sirius/SiriusApi";
 
 // Styles
 import "./GenericEntityDetails.scss";
@@ -62,7 +63,7 @@ class GenericEntityDetails extends React.Component<any, any> {
     }
 
     loadDetailsData() {
-        this.api.getDetails(this.state.dataID).then((detailsData: any) => {
+        SiriusApi.getDetails(this.state.dataID).then((detailsData: any) => {
             this.setState({
                 details: detailsData.details,
                 relations: detailsData.relations

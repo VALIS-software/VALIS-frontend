@@ -1,4 +1,4 @@
-import QueryBuilder from "../models/query.js";
+import QueryBuilder from "./QueryBuilder";
 
 class ParsedToken {
     public rule: Rule;

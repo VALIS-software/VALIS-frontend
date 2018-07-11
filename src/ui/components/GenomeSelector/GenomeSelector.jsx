@@ -7,9 +7,10 @@ import Slider from 'material-ui/Slider';
 import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
-import QueryBuilder from '../../models/query.js';
+import QueryBuilder from "sirius/QueryBuilder";
 import { CHROMOSOME_NAMES } from '../../helpers/constants';
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
+import SiriusApi from "sirius/SiriusApi";
 
 // Styles
 import './GenomeSelector.scss';
@@ -118,7 +119,7 @@ class GenomeSelector extends React.Component {
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
     const genomeQuery = builder.build();
-    this.api.getDistinctValues('type', genomeQuery).then(data => {
+    SiriusApi.getDistinctValues('type', genomeQuery).then(data => {
       this.availableTypes = data;
       this.genomeTypeItems = [];
       for (let i = 0; i < this.availableTypes.length; i++) {

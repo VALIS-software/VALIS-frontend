@@ -1,10 +1,11 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import { DATA_SOURCES, VARIANT_TAGS, CHROMOSOME_NAMES, FILTER_TYPES } from '../../../helpers/constants.ts';
-import QueryBuilder from '../../../models/query.js';
+import QueryBuilder from "sirius/QueryBuilder";
 
 const { Map, Set } = require('immutable');
 import './SearchFilter.scss';
+import SiriusApi from "sirius/SiriusApi";
 
 
 
@@ -103,7 +104,7 @@ class SearchFilter extends React.Component {
                 const builder = new QueryBuilder();
                 builder.newGenomeQuery();
                 const genomeQuery = builder.build();
-                promise = this.props.appModel.api.getDistinctValues('type', genomeQuery)
+                promise = SiriusApi.getDistinctValues('type', genomeQuery)
             } else if (type === FILTER_TYPES.CHROMOSOME) {
                 promise = new Promise(((resolve, reject) => {
                     resolve(CHROMOSOME_NAMES);

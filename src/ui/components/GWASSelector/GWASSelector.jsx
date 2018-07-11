@@ -6,12 +6,13 @@ import Slider from "material-ui/Slider";
 import RaisedButton from "material-ui/RaisedButton/RaisedButton";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
-import QueryBuilder, { QUERY_TYPE_INFO } from "../../models/query.js";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
+import QueryBuilder from "sirius/QueryBuilder";
 import {
   DATA_SOURCE_GWAS,
   DATA_SOURCE_CLINVAR
 } from "../../helpers/constants";
+import SiriusApi from "sirius/SiriusApi";
 
 // Styles
 import "./GWASSelector.scss";
@@ -59,7 +60,7 @@ class GWASSelector extends React.Component {
     }
     builder.filterType("trait");
     const infoQuery = builder.build();
-    this.api.getDistinctValues("name", infoQuery).then(data => {
+    SiriusApi.getDistinctValues("name", infoQuery).then(data => {
       this.setState({
         traits: data
       });

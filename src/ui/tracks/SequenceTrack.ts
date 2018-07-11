@@ -10,10 +10,9 @@ import Object2D, { Object2DInternal } from "../core/Object2D";
 import SharedResources from "../core/SharedResources";
 import { Text } from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
-import { TileNode, TileTrack } from "./TileTrack";
+import { TileNode, ShaderTrack } from "./ShaderTrack";
 
-
-export class SequenceTrack extends TileTrack<TilePayload, BlockPayload> {
+export class SequenceTrack extends ShaderTrack<TilePayload, BlockPayload> {
 
     protected densityMultiplier = 2.0;
  

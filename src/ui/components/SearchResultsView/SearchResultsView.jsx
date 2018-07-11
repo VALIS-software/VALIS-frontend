@@ -2,19 +2,20 @@
 import * as React from "react";
 import * as PropTypes from "prop-types";
 import CircularProgress from "material-ui/CircularProgress";
-import SearchFilter from "../Shared/SearchFilter/SearchFilter.jsx";
+import SearchFilter from "../Shared/SearchFilter/SearchFilter";
 import GenomicLocation from "../Shared/GenomicLocation/GenomicLocation";
-import Pills from "../Shared/Pills/Pills.jsx";
+import Pills from "../Shared/Pills/Pills";
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
-import Util from "../../helpers/util.js";
+import Util from "../../helpers/util";
 import { prettyPrint } from "../TraitDetails/TraitDetails";
+import SiriusApi from "sirius/SiriusApi";
 const { Map, Set } = require('immutable');
 
 // Styles
 import "./SearchResultsView.scss";
 import 'react-virtualized/styles.css'
-import { EntityType } from "../../../../lib/sirius/EntityType";
+import { EntityType } from "sirius/EntityType";
 
 const FETCH_SIZE = 30;
 
@@ -60,7 +61,6 @@ class SearchResultsView extends React.Component {
 
   fetch = (clearResults = false) => {
     const currentQuery = this.queryToFetch();
-
     // clear the results if needed
     if (clearResults) {
       this.cursor = 0;
@@ -81,7 +81,7 @@ class SearchResultsView extends React.Component {
     
     const cursor = this.cursor;
 
-    this.api.getQueryResults(currentQuery, true, cursor, cursor + FETCH_SIZE).then(results => {
+    SiriusApi.getQueryResults(currentQuery, true, cursor, cursor + FETCH_SIZE).then(results => {
       this.props.appModel.popLoading();
       const singleResult = (results.result_start === 0 && results.result_end === 1 && results.reached_end === true);
       if (singleResult) {
@@ -140,7 +140,7 @@ class SearchResultsView extends React.Component {
     const ref = result.info.variant_ref;
     const alt = result.info.variant_alt;
     const genomicType = (<Pills items={[result.type]} style={{ backgroundColor: 'grey' }} />);
-    const location = (<GenomicLocation contig={result.contig} start={result.start} end={result.end} />);
+    const location = (<GenomicLocation interactive={true} contig={result.contig} start={result.start} end={result.end} />);
     const mutation = null;
     if (result.type === EntityType.SNP) {
       mutation = (<span>{alt} <span className="allele-arrow">⟶</span> {ref}</span>);

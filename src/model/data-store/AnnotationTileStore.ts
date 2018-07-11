@@ -1,5 +1,5 @@
-import { TileContent, GeneInfo, TranscriptInfo, TranscriptComponentInfo, GenomeFeatureType, TranscriptClass, TranscriptComponentClass } from "../../../lib/sirius/AnnotationTileset";
-import SiriusApi from "../../../lib/sirius/SiriusApi";
+import { GeneInfo, GenomeFeatureType, TranscriptComponentClass, TranscriptComponentInfo, TranscriptInfo } from "sirius/AnnotationTileset";
+import SiriusApi from "sirius/SiriusApi";
 import { Tile, TileStore } from "./TileStore";
 
 // Tile payload is a list of genes extended with nesting
@@ -14,7 +14,7 @@ export type Transcript = TranscriptInfo & {
     other: Array<TranscriptComponentInfo>
 }
 
-export type TilePayload = Array<Gene>
+export type TilePayload = Array<Gene>;
 
 export class AnnotationTileStore extends TileStore<TilePayload, void> {
 

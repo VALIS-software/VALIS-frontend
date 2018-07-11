@@ -8,8 +8,9 @@ import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
 import Divider from "material-ui/Divider";
 import { RadioButton, RadioButtonGroup } from 'material-ui/RadioButton';
-import QueryBuilder from "../../models/query.js";
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import QueryBuilder from "sirius/QueryBuilder";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
+import SiriusApi from "sirius/SiriusApi";
 
 // Styles
 import "./FunctionalTrackSelector.scss";
@@ -46,7 +47,7 @@ class FunctionalTrackSelector extends React.Component {
       builder.filterAssay(this.selectedAssay);
     }
     const infoQuery = builder.build();
-    this.api.getDistinctValues("info.outtype", infoQuery).then(data => {
+    SiriusApi.getDistinctValues("info.outtype", infoQuery).then(data => {
       // Keep the current selection of type
       let newTypeValue = null;
       if (this.state.outTypeValue !== null) {
@@ -77,7 +78,7 @@ class FunctionalTrackSelector extends React.Component {
       builder.filterAssay(this.selectedAssay);
     }
     const infoQuery = builder.build();
-    this.api.getDistinctValues('info.biosample', infoQuery).then(data => {
+    SiriusApi.getDistinctValues('info.biosample', infoQuery).then(data => {
       // Keep the current selection of biosample
       let newBiosampleValue = null;
       if (this.state.biosampleValue !== null) {
@@ -111,7 +112,7 @@ class FunctionalTrackSelector extends React.Component {
       builder.filterOutType(this.selectedType);
     }
     const infoQuery = builder.build();
-    this.api.getDistinctValues("info.assay", infoQuery).then(data => {
+    SiriusApi.getDistinctValues("info.assay", infoQuery).then(data => {
       // Keep the current selection of assay
       let newAssayValue = null;
       if (this.state.assayValue !== null) {
@@ -140,7 +141,7 @@ class FunctionalTrackSelector extends React.Component {
     builder.filterAssay(this.selectedAssay);
     builder.setLimit(10);
     const infoQuery = builder.build();
-    this.api.getQueryResults(infoQuery).then(results => {
+    SiriusApi.getQueryResults(infoQuery).then(results => {
       // Keep the current selection of assay
       const availableAccessions = [];
       for (const d of results.data) {

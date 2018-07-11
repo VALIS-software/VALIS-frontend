@@ -13,6 +13,9 @@ export class SiriusApi {
     private static minMaxCache: {
         [path: string]: Promise<{ min: number, max: number }>
     } = {};
+    private static suggestionsCache: {
+        [key: string]: Array<any>
+    } = {};
 
     static loadAnnotations(
         sequenceId: string,
@@ -39,10 +42,6 @@ export class SiriusApi {
         },
         indicesPerBase: number,
     }> {
-        if (sequenceId === '__SAMPLE__') {
-            return this.sample_LoadACGTSubSequence(sequenceId, lodLevel, lodStartBaseIndex, lodSpan);
-        }
-
         let samplingDensity = (1 << lodLevel);
         let startBasePair = samplingDensity * lodStartBaseIndex + 1;
         let spanBasePair = lodSpan * samplingDensity;
@@ -128,45 +127,88 @@ export class SiriusApi {
         });
     }
 
-    static sample_LoadACGTSubSequence(
-        sequenceId: string,
-        lodLevel: number,
-        lodStartBaseIndex: number,
-        lodSpan: number,
-    ): Promise<{
-        array: Uint8Array,
-        sequenceMinMax: {
-            min: number,
-            max: number,
-        },
-        indicesPerBase: number, 
-    }> {
-        let binPath = `data/chromosome1/dna/${lodLevel}.bin`;
-        let minMaxPath = binPath + '.minmax';
+    static getGraphs() {
+        return axios.get(`${this.apiUrl}/graphs`).then(data => {
+            return data.data;
+        });
+    }
 
-        // @! data format may change for certain LODs in the future
-        let elementSize_bits = 8;
+    static getGraphData(graphId: string, annotationId1: string, annotationId2: string, startBp: number, endBp: number, samplingRate = 1) {
+        const samplingRateQuery = `?sampling_rate=${samplingRate}`;
+        const requestUrl = `${this.apiUrl}/graphs/${graphId}/${annotationId1}/${annotationId2}/${startBp}/${endBp}${samplingRateQuery}`;
+        return axios.get(requestUrl);
+    }
 
-        let dataPromise = SiriusApi.loadArray(binPath, elementSize_bits, lodStartBaseIndex * 4, lodSpan * 4, ArrayFormat.UInt8);
+    static getTracks() {
+        return axios.get(`${this.apiUrl}/tracks`).then(data => {
+            return data.data;
+        });
+    }
 
-        let minMaxPromise = SiriusApi.minMaxCache[minMaxPath];
-        
-        if (minMaxPromise === undefined) {
-            minMaxPromise = axios.get(minMaxPath, { responseType: 'json' }).then((a) => {
-                let minMax: { min: number, max: number } = a.data;
-                return minMax;
-            });
-            SiriusApi.minMaxCache[minMaxPath] = minMaxPromise;            
+    static getTrackInfo() {
+        return axios.get(`${this.apiUrl}/track_info`).then(data => {
+            return data.data;
+        });
+    }
+
+    static getDistinctValues(index: number, query: any) {
+        const requestUrl = `${this.apiUrl}/distinct_values/${index}`;
+        return axios.post(requestUrl, query).then(data => {
+            return data.data;
+        });
+    }
+
+    static getDetails(dataID: string) {
+        return axios.get(`${this.apiUrl}/details/${dataID}`).then(data => {
+            return data.data;
+        });
+    }
+
+    static getQueryResults(query: any, full = false, startIdx: number = null, endIdx: number = null) {
+        let requestUrl = `${this.apiUrl}/query/basic`;
+        if (full) {
+            requestUrl = `${this.apiUrl}/query/full`;
         }
-        
-        return Promise.all([dataPromise, minMaxPromise])
-            .then((a) => {
-                return {
-                    array: a[0],
-                    sequenceMinMax: a[1],
-                    indicesPerBase: 4,
-                }
+        const options = [];
+        if (startIdx !== null) {
+            options.push(`result_start=${startIdx}`);
+        }
+        if (endIdx !== null) {
+            options.push(`result_end=${endIdx}`);
+        }
+        if (options.length > 0) {
+            requestUrl = `${requestUrl}?` + options.join('&');
+        }
+        return axios.post(requestUrl, query).then(data => {
+            return data.data;
+        });
+    }
+
+    static getSuggestions(termType: string, searchText: string, maxResults = 100) {
+        maxResults = Math.round(maxResults);
+        const cacheKey = `${termType}|${searchText}|${maxResults}`;
+        let ret = null;
+        if (this.suggestionsCache[cacheKey]) {
+            ret = new Promise((resolve, reject) => {
+                resolve(this.suggestionsCache[cacheKey]);
+            })
+        } else {
+            ret = axios.post(`${this.apiUrl}/suggestions`, {
+                term_type: termType,
+                search_text: searchText,
+                max_results: maxResults,
+            }).then(data => {
+                this.suggestionsCache[cacheKey] = data.data.results.slice(0);
+                return data.data.results;
             });
+        }
+        return ret;
+    }
+
+    static getUserProfile() {
+        return axios.get(`${this.apiUrl}/user_profile`).then(data => {
+            return data.data;
+        });
     }
 
     private static parseSiriusBinaryResponse(arraybuffer: ArrayBuffer) {
@@ -187,77 +229,6 @@ export class SiriusApi {
 
         let payloadBytes = arraybuffer.slice(nullByteIndex + 1);
         return payloadBytes;
-    }
-
-    private static loadArray<T extends keyof ArrayFormatMap>(
-        path: string,
-        elementSize_bits: number,
-        elementIndex: number,
-        nElements: number,
-        targetFormat: T,
-        cancelToken?: CancelToken,
-    ): Promise<ArrayFormatMap[T]> {
-        let element0_bits = elementIndex * elementSize_bits;
-        let byte0 = Math.floor(element0_bits / 8);
-        let nBytes = Math.ceil(nElements * elementSize_bits / 8);
-        let offset_bits = element0_bits % 8;
-
-        // determine byte range from dataFormat
-        let byteRange = {
-            start: byte0,
-            end: byte0 + nBytes - 1,
-        };
-
-        return axios({
-            method: 'get',
-            url: path,
-            responseType: 'arraybuffer',
-            headers: {
-                'Range': `bytes=${byteRange.start.toFixed(0)}-${byteRange.end.toFixed(0)}`,
-                'Cache-Control': 'no-cache', // @! work around chrome bug
-            },
-            cancelToken: cancelToken
-        }).then((a) => {
-            let unpackingRequired = !((targetFormat === ArrayFormat.UInt8) && (elementSize_bits === 8));
-
-            if (unpackingRequired) {
-
-                let bytes: Uint8Array = new Uint8Array(a.data);
-
-                // allocate output
-                let outputArray: ArrayFormatMap[T];
-
-                switch (targetFormat) {
-                    case ArrayFormat.Float32:
-                        outputArray = new Float32Array(nElements);
-                        break;
-                    case ArrayFormat.UInt8:
-                        outputArray = new Uint8Array(nElements);
-                        break;
-                }
-
-                for (let element = 0; element < nElements; element++) {
-                    let bitIndex0 = element * elementSize_bits + offset_bits;
-                    let bitOffset = bitIndex0 % 8;
-                    let byteIndex0 = Math.floor(bitIndex0 / 8);
-                    /*
-                    let uint32 = composeUInt32(
-                        bytes[byteIndex0 + 0],
-                        bytes[byteIndex0 + 1],
-                        bytes[byteIndex0 + 2],
-                        bytes[byteIndex0 + 3]
-                    );
-
-                    outputArray[element] = uint32 & mask32(offset, length) <bit shift>;
-                    */
-                }
-
-                throw `Unpacking data not yet supported`;
-
-            } else {
-                return new Uint8Array(a.data);
-            }
-        });
     }
 
 }

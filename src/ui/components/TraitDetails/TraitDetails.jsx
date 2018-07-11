@@ -1,10 +1,10 @@
 // Dependencies
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
-import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
-import AssociationList from '../Shared/AssociationList/AssociationList.jsx';
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
-
+import Collapsible from '../Shared/Collapsible/Collapsible';
+import AssociationList from '../Shared/AssociationList/AssociationList';
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
+import SiriusApi from "sirius/SiriusApi";
 // Styles
 import './TraitDetails.scss';
 import '../Shared/Shared.scss';
@@ -33,7 +33,7 @@ class TraitDetails extends React.Component {
 
   loadTraitDetails() {
     const traitId = this.state.currentTraitId;
-    this.api.getDetails(this.state.currentTraitId).then(detailsData => {
+    SiriusApi.getDetails(this.state.currentTraitId).then(detailsData => {
       this.setState({
         loadedTraitId: traitId,
         details: detailsData.details,

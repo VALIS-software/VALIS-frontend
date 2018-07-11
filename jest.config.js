@@ -1,6 +1,7 @@
 module.exports = {
     'roots': [
         './src',
+        './lib',
     ],
 
     'transform': {

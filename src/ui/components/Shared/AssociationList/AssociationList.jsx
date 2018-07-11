@@ -1,8 +1,8 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
-import Collapsible from '../Collapsible/Collapsible.jsx';
+import Collapsible from '../Collapsible/Collapsible';
 import './AssociationList.scss';
-import EntityType from "../../../../../lib/sirius/EntityType";
+import EntityType from "sirius/EntityType";
 
 
 class AssociationList extends React.Component {

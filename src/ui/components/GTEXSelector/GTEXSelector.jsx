@@ -6,10 +6,11 @@ import CircularProgress from "material-ui/CircularProgress";
 import Slider from "material-ui/Slider";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
-import QueryBuilder from "../../models/query.js";
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import QueryBuilder from "sirius/QueryBuilder";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
+import SiriusApi from "sirius/SiriusApi";
 
-import { DATA_SOURCE_GTEX } from "../../../ui/helpers/constants";
+import { DATA_SOURCE_GTEX } from "../../helpers/constants";
 
 let biosamplesCached = null;
 
@@ -42,7 +43,7 @@ class GTEXSelector extends React.Component {
       builder.newInfoQuery();
       builder.filterSource(DATA_SOURCE_GTEX);
       const infoQuery = builder.build();
-      this.api.getDistinctValues('info.biosample', infoQuery).then(data => {
+      SiriusApi.getDistinctValues('info.biosample', infoQuery).then(data => {
         biosamplesCached = data;
         this.setState({
           availableBiosamples: data,

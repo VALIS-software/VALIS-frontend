@@ -2,17 +2,17 @@
 import * as React from "react";
 import * as PropTypes from "prop-types";
 import UpgradeDialog from "../Shared/UpgradeDialog/UpgradeDialog";
-import GWASSelector from "../GWASSelector/GWASSelector.jsx";
-import GenomeSelector from "../GenomeSelector/GenomeSelector.jsx";
-import TrackSelector from "../TrackSelector/TrackSelector.jsx";
-import FunctionalTrackSelector from "../FunctionalTrackSelector/FunctionalTrackSelector.jsx";
-import ENCODESelector from "../ENCODESelector/ENCODESelector.jsx";
-import GTEXSelector from "../GTEXSelector/GTEXSelector.jsx";
-import ExACSelector from "../ExACSelector/ExACSelector.jsx";
-import TCGASelector from "../TCGASelector/TCGASelector.jsx";
-import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector.jsx";
-import DataListItem from "../DataListItem/DataListItem.jsx";
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
+import GWASSelector from "../GWASSelector/GWASSelector";
+import GenomeSelector from "../GenomeSelector/GenomeSelector";
+import TrackSelector from "../TrackSelector/TrackSelector";
+import FunctionalTrackSelector from "../FunctionalTrackSelector/FunctionalTrackSelector";
+import ENCODESelector from "../ENCODESelector/ENCODESelector";
+import GTEXSelector from "../GTEXSelector/GTEXSelector";
+import ExACSelector from "../ExACSelector/ExACSelector";
+import TCGASelector from "../TCGASelector/TCGASelector";
+import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector";
+import DataListItem from "../DataListItem/DataListItem";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
 const TRACK_TYPE_SEQUENCE = 'track_type_sequence';
 const TRACK_TYPE_FUNCTIONAL = 'track_type_functional';

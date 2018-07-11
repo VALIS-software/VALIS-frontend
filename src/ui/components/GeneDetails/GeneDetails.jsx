@@ -1,21 +1,18 @@
 // Dependencies
-import ReactDOM from 'react-dom';
-import * as React from 'react';
 import * as PropTypes from 'prop-types';
-import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
+import * as React from 'react';
+import EntityType from "sirius/EntityType";
+import QueryBuilder from "sirius/QueryBuilder";
+import DataListItem from "../DataListItem/DataListItem";
+import Collapsible from '../Shared/Collapsible/Collapsible';
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
+import '../Shared/Shared.scss';
 import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
-import Util from '../../helpers/util.js';
-import FontAwesomeIcon from '@fortawesome/react-fontawesome';
-import faExternalLinkSquareAlt from '@fortawesome/fontawesome-free-solid/faExternalLinkSquareAlt';
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails.jsx";
-import EntityType from "../../../../lib/sirius/EntityType";
-import DataListItem from "../DataListItem/DataListItem.jsx";
-import QueryBuilder from "../../models/query.js";
-
+import SiriusApi from "sirius/SiriusApi";
 // Styles
 import './GeneDetails.scss';
-import '../Shared/Shared.scss';
+
 
 class GeneDetails extends React.Component {
   constructor(props) {
@@ -34,7 +31,7 @@ class GeneDetails extends React.Component {
 
   loadGeneDetails() {
     const geneId = this.state.currentGeneId;
-    this.api.getDetails(this.state.currentGeneId).then(detailsData => {
+    SiriusApi.getDetails(this.state.currentGeneId).then(detailsData => {
       this.setState({
         loadedGeneId: geneId,
         details: detailsData.details,
@@ -93,7 +90,7 @@ class GeneDetails extends React.Component {
       return;
     }
     // For gene like SOX5, there are more than 100k results, here we show the first 50
-    this.api.getQueryResults(intersectSNPquery, false, 0, 50).then(results => {
+    SiriusApi.getQueryResults(intersectSNPquery, false, 0, 50).then(results => {
       const intersectSNPs = [];
       for (const d of results.data) {
         intersectSNPs.push({
@@ -119,7 +116,7 @@ class GeneDetails extends React.Component {
     if (!intersectSNPGWASQuery) {
       return;
     }
-    this.api.getQueryResults(intersectSNPGWASQuery, false, 0, 50).then(results => {
+    SiriusApi.getQueryResults(intersectSNPGWASQuery, false, 0, 50).then(results => {
       const intersectSNPGWASs = [];
       for (const d of results.data) {
         intersectSNPGWASs.push({
@@ -145,7 +142,7 @@ class GeneDetails extends React.Component {
     if (!intersectSNPGWASTraitQuery) {
       return;
     }
-    this.api.getQueryResults(intersectSNPGWASTraitQuery, false, 0, 50).then(results => {
+    SiriusApi.getQueryResults(intersectSNPGWASTraitQuery, false, 0, 50).then(results => {
       const intersectSNPGWASTraits = [];
       for (const d of results.data) {
         intersectSNPGWASTraits.push({
@@ -211,7 +208,7 @@ class GeneDetails extends React.Component {
       zoomBtn = (<ZoomToButton contig={details.contig} start={absoluteStart} end={absoluteEnd} padding={0.2} />);
     }
 
-    const location = (<GenomicLocation contig={details.contig} start={details.start} end={details.end} />);
+    const location = (<GenomicLocation interactive={true} contig={details.contig} start={details.start} end={details.end} />);
 
     const header = (<div className="sidebar-header">
       <div className="sidebar-name">{name}{zoomBtn}</div>

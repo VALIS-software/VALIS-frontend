@@ -1,7 +1,5 @@
-import GenomeAPI from "./api.js";
 import EventCreator from "./eventCreator.js";
 import ViewModel from "./ViewModel";
-import { API_BASE_URL } from "../helpers/constants";
 
 export enum AppEvent {
     AddTrack,
@@ -17,10 +15,11 @@ export enum AppEvent {
 
 export default class AppModel extends EventCreator {
 
-    api: any = new GenomeAPI(API_BASE_URL);
+    constructor() {
+        super();
+    }
 
     private tracks: any[] = [];
-    private overlays: any[] = [];
     private tracksLoading: number = 0;
     private viewModel: ViewModel = null;
 
