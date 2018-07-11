@@ -93,7 +93,7 @@ export class App extends React.Component<Props, State> {
 			if (i === 0) h = 100;
 			if (i === 1) h = Math.max((this.canvasHeight() - 200) * 0.5, 0);
 			if (i === 2) h = Math.max((this.canvasHeight() - 200) * 0.5, 0);
-			trackViewer.addTrackRow(model, h);
+			trackViewer.addTrackRow(model, h, false);
 			i++;
 		}
 
