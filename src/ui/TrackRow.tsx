@@ -5,7 +5,6 @@ import ReactObject from "./core/ReactObject";
 import Rect from "./core/Rect";
 import Track from "./tracks/Track";
 import ConstructTrack from "./tracks/ConstructTrack";
-import IconButton from "material-ui/IconButton";
 import SvgExpandMore from "material-ui/svg-icons/navigation/expand-more";
 import SvgExpandLess from "material-ui/svg-icons/navigation/expand-less";
 
@@ -22,14 +21,12 @@ export class TrackRow {
     set h(v: number) {
         this._h = v;
         this.layoutY();
-        this.updateHeader();
     }
 
     protected _y: number;
     protected _h: number;
 
-    public static readonly expandedTrackHeight = 200;
-    public static readonly collapsedTrackHeight = 50;
+    protected _headerIsExpandedState: boolean | undefined = undefined;
 
     constructor(
         readonly model: TrackModel,
@@ -38,21 +35,14 @@ export class TrackRow {
         protected readonly getHeight: (row: TrackRow) => number
     ) {
         this.header = new ReactObject();
-        this.updateHeader();
 
         this.resizeHandle = new Rect(0, 0, [1, 0, 0, 1]);
         this.resizeHandle.h = this.spacing.y;
         this.resizeHandle.z = 1;
         this.resizeHandle.render = false;
         this.setResizable(false);
-    }
 
-    updateHeader() {
-        this.header.content = (<TrackHeader 
-            track={ this} 
-            isExpanded={ () => this.isExpanded() } 
-            setExpanded={ (val: boolean) => this.setExpanded(val) }
-        />);
+        this.updateHeader();
     }
 
     setResizable(v: boolean) {
@@ -72,7 +62,6 @@ export class TrackRow {
         return this.tracks.delete(track);
     }
 
-
     /**
      * A TrackRow isn't an Object2D so we manually layout track elements with the track row's y and height
      */
@@ -91,24 +80,37 @@ export class TrackRow {
             track.y = this.y + this.spacing.y * 0.5;
             track.h = this.h - this.spacing.y;
         }
+
+        // update header if expand / collapse-toggle is out of sync with height
+        if (this._headerIsExpandedState !== this.isExpanded()) {
+            this.updateHeader();
+        }
     }
 
-    isExpanded() : boolean {
+    protected updateHeader() {
+        this._headerIsExpandedState = this.isExpanded();
+        this.header.content = (<TrackHeader
+            track={this}
+            isExpanded={this._headerIsExpandedState}
+            setExpanded={(toggle: boolean) => {
+                this.setHeight(this, toggle ? TrackRow.expandedTrackHeight : TrackRow.collapsedTrackHeight);
+            }}
+        />);
+    }
+
+    protected isExpanded = () => {
         return this.getHeight(this) >= TrackRow.expandedTrackHeight;
     }
 
-    setExpanded(expanded: boolean) {
-        this.setHeight(this, expanded ? TrackRow.expandedTrackHeight : TrackRow.collapsedTrackHeight);
-        this.updateHeader();
-    }
+    public static readonly expandedTrackHeight = 200;
+    public static readonly collapsedTrackHeight = 50;
 }
 
 function TrackHeader(props: {
     track: TrackRow,
     setExpanded?: (state: boolean) => void,
-    isExpanded?: () => boolean,
+    isExpanded: boolean,
 }) {
-
     const iconColor = 'rgb(171, 171, 171)';
     const iconHoverColor = 'rgb(255, 255, 255)';
     const iconViewBoxSize = '0 0 32 32';
@@ -122,7 +124,7 @@ function TrackHeader(props: {
         justifyContent: 'flex-start'
     };
     
-    const ArrowElem = props.isExpanded() ? SvgExpandLess : SvgExpandMore;
+    const ArrowElem = props.isExpanded ? SvgExpandLess : SvgExpandMore;
     
     const expandArrow = (<ArrowElem
         style={style}
@@ -151,7 +153,7 @@ function TrackHeader(props: {
             transform: 'translate(0, -50%)',
         }}>
             <div onClick={()=> {
-                props.setExpanded(!props.isExpanded());
+                props.setExpanded(!props.isExpanded);
             }} style={headerContainerStyle}>
                 {expandArrow}
                 {props.track.model.name}
