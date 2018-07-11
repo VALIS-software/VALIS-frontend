@@ -16,6 +16,7 @@ import SharedResources from "../core/SharedResources";
 import Text from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
 import Track from "./Track";
+import TrackRow from "../TrackRow";
 
 /**
  * WIP Annotation tracks:
@@ -37,6 +38,7 @@ export class AnnotationTrack extends Track<'annotation'> {
     protected annotationStore: AnnotationTileStore;
     protected macroAnnotationStore: AnnotationTileStore;
     protected yScrollNode: Object2D;
+    protected dragEnabled: boolean;
 
     constructor(model: TrackModel<'annotation'>) {
         super(model);
@@ -54,6 +56,17 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.initializeYDrag();
     }
 
+
+    private _lastComputedHeight: number;
+    applyTransformToSubNodes(root?: boolean) {
+        const h = this.getComputedHeight();
+        if (h !== this._lastComputedHeight) {
+            this.dragEnabled = (h >= (TrackRow.expandedTrackHeight - 10));
+            if (!this.dragEnabled) this.yScrollNode.y = 0;
+        }
+        super.applyTransformToSubNodes(root);
+    }
+
     protected initializeYDrag() {
         // scroll follows the primary pointer only
         let pointerY0 = 0;
@@ -61,6 +74,7 @@ export class AnnotationTrack extends Track<'annotation'> {
         
         this.addInteractionListener('dragstart', (e) => {
             if (!e.isPrimary) return;
+            if (!this.dragEnabled) return;
             if (e.buttonState !== 1) return;
             pointerY0 = e.localY;
             scrollY0 = this.yScrollNode.y;
@@ -69,6 +83,7 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.addInteractionListener('dragmove', (e) => {
             if (!e.isPrimary) return;
             if (e.buttonState !== 1) return;
+            if (!this.dragEnabled) return;
             let dy = pointerY0 - e.localY;
             this.yScrollNode.y = Math.min(scrollY0 - dy, 0);
         });
@@ -130,7 +145,7 @@ export class AnnotationTrack extends Track<'annotation'> {
                         }
                         
                         let geneInstances = new MacroGeneInstances(instanceData);
-                        geneInstances.y = 10;
+                        geneInstances.y = 0;
                         geneInstances.z = 0.75;
                         geneInstances.mask = this;
                         return geneInstances;

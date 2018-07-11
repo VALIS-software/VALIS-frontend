@@ -92,15 +92,7 @@ export class App extends React.Component<Props, State> {
 		];
 		let i = 0;
 		for (let model of tracks) {
-			// @! quick hack some initial layout
-			let h = [
-				50,
-				200,
-				200,
-				200,
-			][i];
-			trackViewer.addTrackRow(model, h, false);
-			i++;
+			trackViewer.addTrackRow(model);
 		}
 
 		for (let panel of [

@@ -12,9 +12,10 @@ import Paper from "material-ui/Paper";
 import CircularProgress from "material-ui/CircularProgress";
 import DataListItem from "../DataListItem/DataListItem";
 import ZoomToButton from "../Shared/ZoomToButton/ZoomToButton";
-import Util from "../../helpers/util.js";
+
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import SiriusApi from "sirius/SiriusApi";
+
 
 // Styles
 import "./GenericEntityDetails.scss";
@@ -130,9 +131,7 @@ function DetailsHeader(props: any) {
     let zoomBtn = <div />;
 
     if (details.contig) {
-        const absoluteStart = Util.chromosomeRelativeToUniversalBasePair(details.contig, details.start);
-        const absoluteEnd = Util.chromosomeRelativeToUniversalBasePair(details.contig, details.end);
-        zoomBtn = (<ZoomToButton contig={details.contig} start={absoluteStart} end={absoluteEnd} padding={0.2} />);
+        zoomBtn = (<ZoomToButton contig={details.contig} start={details.start} end={details.end} padding={0.2} />);
     }
 
     return (
@@ -191,7 +190,7 @@ function AdditionInfoTable(props: any) {
     const info = props.info;
     const infoItems = [];
     for (const k of Object.keys(info)) {
-        const valueStr = info[k] ? info[k].toString() : '';
+        const valueStr = info[k].toString();
         infoItems.push(
             <TableRow key={k}>
                 <TableRowColumn> {k} </TableRowColumn>
