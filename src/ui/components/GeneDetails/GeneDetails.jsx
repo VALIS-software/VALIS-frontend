@@ -145,6 +145,8 @@ class GeneDetails extends React.Component {
     const linksData = [];
     const mim = info.MIM;
     const geneId = info.GeneID;
+    const ensemblID = info.gene_id;
+    linksData.push(['ENSEMBL', `https://www.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=${ensemblID}`]);
     linksData.push(['OMIM', `https://omim.org/entry/${mim}`]);
     linksData.push(['GeneCards', `http://www.genecards.org/cgi-bin/carddisp.pl?gene=${name}`]);
     linksData.push(['Gene Ontology', `http://amigo.geneontology.org/amigo/search/annotation?q=${name}`]);
