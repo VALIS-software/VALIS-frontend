@@ -13,7 +13,16 @@
         ],
         "noImplicitAny": true,
         "strictNullChecks": false,
-        "allowJs": true
+        "allowJs": true,
+
+        // module resolution paths
+        "baseUrl": ".",
+        "paths": {
+            "*": [
+                "*",
+                "lib/*"
+            ]
+        }
     },
     "include": [
         "./src/**/*"
