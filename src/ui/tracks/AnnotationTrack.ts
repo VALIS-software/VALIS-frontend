@@ -207,12 +207,10 @@ export class AnnotationTrack extends Track<'annotation'> {
     }
 
     protected addAnnotation = (annotation: Object2D) => {
-        // mask to this object
         this.yScrollNode.add(annotation);
     }
 
     protected removeAnnotation = (annotation: Object2D) => {
-        // mask to this object
         this.yScrollNode.remove(annotation);
     }
 
