@@ -24,6 +24,9 @@ export class TrackRow {
     protected _y: number;
     protected _h: number;
 
+    public static readonly expandedTrackHeight = 200;
+    public static readonly collapsedTrackHeight = 50;
+
     constructor(
         readonly model: TrackModel,
         protected readonly spacing: { x: number, y: number },
@@ -87,14 +90,11 @@ export class TrackRow {
     }
 
     isExpanded() : boolean {
-        return this.getHeight(this) === 200;
+        return this.getHeight(this) >= TrackRow.expandedTrackHeight;
     }
 
     setExpanded(expanded: boolean) {
-        this.setHeight(this, expanded ? 200 : 50);
-        this.tracks.forEach(track => {
-            track.setYDragState(expanded);
-        });
+        this.setHeight(this, expanded ? TrackRow.expandedTrackHeight : TrackRow.collapsedTrackHeight);
         this.updateHeader();
     }
 }

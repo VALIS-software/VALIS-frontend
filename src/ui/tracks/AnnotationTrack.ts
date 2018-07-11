@@ -16,6 +16,7 @@ import SharedResources from "../core/SharedResources";
 import Text from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
 import Track from "./Track";
+import TrackRow from "../TrackRow";
 
 /**
  * WIP Annotation tracks:
@@ -54,6 +55,10 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.initializeYDrag();
     }
 
+    protected allowDrag() {
+        return this.getComputedHeight() >= TrackRow.expandedTrackHeight - 10;
+    }
+
     protected initializeYDrag() {
         // scroll follows the primary pointer only
         let pointerY0 = 0;
@@ -61,7 +66,7 @@ export class AnnotationTrack extends Track<'annotation'> {
         
         this.addInteractionListener('dragstart', (e) => {
             if (!e.isPrimary) return;
-            if (!this.yDragEnabled) return;
+            if (!this.allowDrag()) return;
             if (e.buttonState !== 1) return;
             pointerY0 = e.localY;
             scrollY0 = this.yScrollNode.y;
@@ -70,7 +75,7 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.addInteractionListener('dragmove', (e) => {
             if (!e.isPrimary) return;
             if (e.buttonState !== 1) return;
-            if (!this.yDragEnabled) return;
+            if (!this.allowDrag()) return;
             let dy = pointerY0 - e.localY;
             this.yScrollNode.y = Math.min(scrollY0 - dy, 0);
         });

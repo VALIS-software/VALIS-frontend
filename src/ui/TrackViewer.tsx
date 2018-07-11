@@ -25,7 +25,7 @@ class TrackViewer extends Object2D {
     // layout settings
     readonly trackHeaderWidth: number = 180;
     readonly panelHeaderHeight: number = 50;
-    readonly defaultTrackHeight: number = 200;
+    readonly defaultTrackHeight: number = 50;
     readonly spacing = {
         x: 5,
         y: 5
@@ -109,7 +109,7 @@ class TrackViewer extends Object2D {
     }
 
     // track-viewer state deltas
-    addTrackRow(model: TrackModel, heightPx: number = this.defaultTrackHeight, animate: boolean) {
+    addTrackRow(model: TrackModel, heightPx: number = this.defaultTrackHeight, animate: boolean = false) {
         // create a tack and add the header element to the grid
 
         const rowHeightSetter = (row: TrackRow, h:number) => { this.setRowHeight(row, h)};

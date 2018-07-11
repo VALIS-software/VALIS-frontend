@@ -24,7 +24,6 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
     protected loadingIndicator: LoadingIndicator;
 
     protected displayNeedUpdate = true;
-    protected yDragEnabled: boolean;
 
     constructor(protected model: TrackModel<ModelType>) {
         super(0, 0, [0, 0, 0, 1]);
@@ -77,10 +76,6 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
         if (axisPointer.style !== style) {
             axisPointer.setStyle(style);
         }
-    }
-
-    setYDragState(enabled: boolean) {
-        this.yDragEnabled = enabled;
     }
 
     removeAxisPointer(id: string) {
