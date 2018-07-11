@@ -8,8 +8,6 @@ import ConstructTrack from "./tracks/ConstructTrack";
 
 export class TrackRow {
 
-    row: number;
-
     readonly tracks = new Set<Track>();
     readonly header: Object2D;
     readonly resizeHandle: Rect;
@@ -17,19 +15,16 @@ export class TrackRow {
     get y(): number { return this._y; }
     get h(): number { return this._h; }
 
-    set y(v: number) { this._y = v; this.onLayoutChanged(this); }
-    set h(v: number) { this._h = v; this.onLayoutChanged(this); }
+    set y(v: number) { this._y = v; this.layoutY(); }
+    set h(v: number) { this._h = v; this.layoutY(); }
 
     protected _y: number;
     protected _h: number;
 
     constructor(
         readonly model: TrackModel,
-        row: number,
-        public onLayoutChanged: (t: TrackRow) => void = () => { },
         protected readonly spacing: { x: number, y: number }
     ) {
-        this.row = row;
         this.header = new ReactObject(<TrackHeader track={ this} />);
         this.resizeHandle = new Rect(0, 0, [1, 0, 0, 1]);
         this.resizeHandle.h = this.spacing.y;
@@ -46,12 +41,33 @@ export class TrackRow {
     createTrack() {
         let track: Track = ConstructTrack(this.model);
         this.tracks.add(track);
+        this.layoutY();
         return track;
     }
 
     deleteTrack(track: Track) {
         track.releaseGPUResources();
         return this.tracks.delete(track);
+    }
+
+    /**
+     * A TrackRow isn't an Object2D so we manually layout track elements with the track row's y and height
+     */
+    protected layoutY() {
+        // handle
+        let handle = this.resizeHandle;
+        handle.layoutY = -0.5;
+        handle.y = this.y + this.h;
+
+        // header
+        this.header.y = this.y + this.spacing.y * 0.5;
+        this.header.h = this.h - this.spacing.y;
+
+        // tiles
+        for (let track of this.tracks) {
+            track.y = this.y + this.spacing.y * 0.5;
+            track.h = this.h - this.spacing.y;
+        }
     }
 
 }
