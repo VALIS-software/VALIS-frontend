@@ -101,12 +101,12 @@ export class AnnotationTrack extends Track<'annotation'> {
                 this.macroAnnotationStore.getTiles(x0, x1, basePairsPerDOMPixel, true, (tile) => {
                     if (tile.state !== TileState.Complete) {
                         // if the tile is incomplete then wait until complete and call updateAnnotations() again
-                        this._pendingTiles.use(tile.key, () => this.createTileLoadingDependency(tile));
+                        this._pendingTiles.get(tile.key, () => this.createTileLoadingDependency(tile));
                         return;
                     }
 
                     /** Instance Rendering */
-                    let tileObject = this._macroTileCache.use(tile.key, () => {
+                    let tileObject = this._macroTileCache.get(tile.key, () => {
                         // initialize macro gene instances
                         // create array of gene annotation data
                         let instanceData = new Array<MacroGeneInstance>();
@@ -140,7 +140,7 @@ export class AnnotationTrack extends Track<'annotation'> {
                     tileObject.layoutW = tile.span / span;
                     tileObject.opacity = macroOpacity;
 
-                    this._onStageAnnotations.use('macro-gene-tile:' + tile.key, () => {
+                    this._onStageAnnotations.get('macro-gene-tile:' + tile.key, () => {
                         this.addAnnotation(tileObject);
                         return tileObject;
                     });
@@ -163,7 +163,7 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.annotationStore.getTiles(x0, x1, samplingDensity, true, (tile) => {
             if (tile.state !== TileState.Complete) {
                 // if the tile is incomplete then wait until complete and call updateAnnotations() again
-                this._pendingTiles.use(tile.key, () => this.createTileLoadingDependency(tile));
+                this._pendingTiles.get(tile.key, () => this.createTileLoadingDependency(tile));
                 return;
             }
         
@@ -177,7 +177,7 @@ export class AnnotationTrack extends Track<'annotation'> {
 
                 let annotationKey = this.annotationKey(gene);
 
-                let annotation = this._annotationCache.use(annotationKey, () => {
+                let annotation = this._annotationCache.get(annotationKey, () => {
                     // create
                     let object = new GeneAnnotation(gene);
                     object.y = 40;
@@ -190,7 +190,7 @@ export class AnnotationTrack extends Track<'annotation'> {
 
                 (annotation as GeneAnnotation).nameOpacity = namesOpacity;
 
-                this._onStageAnnotations.use(annotationKey, () => {
+                this._onStageAnnotations.get(annotationKey, () => {
                     this.addAnnotation(annotation);
                     return annotation;
                 });

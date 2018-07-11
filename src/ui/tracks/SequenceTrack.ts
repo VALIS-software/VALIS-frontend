@@ -157,7 +157,7 @@ class SequenceTile extends TileNode<TilePayload> {
                             baseChar = 'N'; // any nucleobase
                         }
 
-                        let label = this._labelCache.use(i + '', () => this.createLabel(baseChar));
+                        let label = this._labelCache.get(i + '', () => this.createLabel(baseChar));
                         label.container.layoutParentX = (i + 0.5) * baseWidth;
                         label.container.layoutParentY = 0.5;
 
