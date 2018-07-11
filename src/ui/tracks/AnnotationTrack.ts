@@ -38,6 +38,7 @@ export class AnnotationTrack extends Track<'annotation'> {
     protected annotationStore: AnnotationTileStore;
     protected macroAnnotationStore: AnnotationTileStore;
     protected yScrollNode: Object2D;
+    protected dragEnabled: boolean;
 
     constructor(model: TrackModel<'annotation'>) {
         super(model);
@@ -55,8 +56,15 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.initializeYDrag();
     }
 
-    protected allowDrag() {
-        return this.getComputedHeight() >= TrackRow.expandedTrackHeight - 10;
+
+    private _lastComputedHeight: number;
+    applyTransformToSubNodes(root?: boolean) {
+        const h = this.getComputedHeight();
+        if (h !== this._lastComputedHeight) {
+            this.dragEnabled = (h >= (TrackRow.expandedTrackHeight - 10));
+            if (!this.dragEnabled) this.yScrollNode.y = 0;
+        }
+        super.applyTransformToSubNodes(root);
     }
 
     protected initializeYDrag() {
@@ -66,7 +74,7 @@ export class AnnotationTrack extends Track<'annotation'> {
         
         this.addInteractionListener('dragstart', (e) => {
             if (!e.isPrimary) return;
-            if (!this.allowDrag()) return;
+            if (!this.dragEnabled) return;
             if (e.buttonState !== 1) return;
             pointerY0 = e.localY;
             scrollY0 = this.yScrollNode.y;
@@ -75,7 +83,7 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.addInteractionListener('dragmove', (e) => {
             if (!e.isPrimary) return;
             if (e.buttonState !== 1) return;
-            if (!this.allowDrag()) return;
+            if (!this.dragEnabled) return;
             let dy = pointerY0 - e.localY;
             this.yScrollNode.y = Math.min(scrollY0 - dy, 0);
         });
