@@ -7,7 +7,7 @@ import Slider from 'material-ui/Slider';
 import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
-import QueryBuilder from '../../../../lib/sirius/QueryBuilder';
+import QueryBuilder from "sirius/QueryBuilder";
 import { CHROMOSOME_NAMES } from '../../helpers/constants';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import SiriusApi from "sirius/SiriusApi";

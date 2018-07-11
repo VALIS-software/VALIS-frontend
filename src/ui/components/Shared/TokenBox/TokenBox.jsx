@@ -10,7 +10,7 @@ import SearchResultsView from '../../SearchResultsView/SearchResultsView';
 import ErrorDetails from "../ErrorDetails/ErrorDetails";
 import buildQueryParser from "sirius/queryparser";
 import './TokenBox.scss';
-import { SiriusApi } from '../../../../../lib/sirius/SiriusApi';
+import SiriusApi from "sirius/SiriusApi";
 
 class TokenBox extends React.Component {
   constructor(props) {

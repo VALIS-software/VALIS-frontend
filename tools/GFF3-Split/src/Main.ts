@@ -16,10 +16,10 @@
  */
 
 import * as fs from 'fs';
-import AnnotationTileset from '../../../lib/sirius/AnnotationTileset';
-import Gff3Parser from '../../../lib/gff3/Gff3Parser';
-import { Terminal } from './Terminal';
-import { Feature } from '../../../lib/gff3/Feature';
+import AnnotationTileset from "sirius/AnnotationTileset";
+import Gff3Parser from "gff3/Gff3Parser";
+import { Terminal } from "./Terminal";
+import { Feature } from "gff3/Feature";
 
 // settings
 const outputDirectory = '../../data/chromosome1/annotation';

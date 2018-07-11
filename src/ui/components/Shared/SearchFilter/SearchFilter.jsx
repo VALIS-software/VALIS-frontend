@@ -1,11 +1,11 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import { DATA_SOURCES, VARIANT_TAGS, CHROMOSOME_NAMES, FILTER_TYPES } from '../../../helpers/constants.ts';
-import QueryBuilder from '../../../../../lib/sirius/QueryBuilder';
+import QueryBuilder from "sirius/QueryBuilder';
 
 const { Map, Set } = require('immutable');
 import './SearchFilter.scss';
-import { SiriusApi } from '../../../../../lib/sirius/SiriusApi';
+import SiriusApi from "sirius/SiriusApi";
 
 
 
