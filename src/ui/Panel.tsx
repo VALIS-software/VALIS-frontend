@@ -247,20 +247,26 @@ export class Panel extends Object2D {
         // gesture disambiguation; when dominantly zooming we want to reduce panning speed
         // normalize scroll vector
         let scrollVectorLength = Math.sqrt(xScrollDomPx * xScrollDomPx + yScrollDomPx * yScrollDomPx);
-        let normScrollY = yScrollDomPx / scrollVectorLength;
+        let normScrollX = xScrollDomPx / scrollVectorLength; // cosAngleY
+        let normScrollY = yScrollDomPx / scrollVectorLength; // cosAngleX
         // as normScrollVectorY approaches 1, we should scale xScrollDomPx to
-        let cosAngleY = normScrollY;
-        let absAngleY = Math.acos(Math.abs(cosAngleY));
-        let fractionalAngle = 2 * absAngleY / (Math.PI); // 0 = points along y, 1 = points along x
+        let absAngleY = Math.acos(Math.abs(normScrollY));
+        let fractionalAngleY = 2 * absAngleY / (Math.PI); // 0 = points along y, 1 = points along x
+        let absAngleX = Math.acos(Math.abs(normScrollX));
+        let fractionalAngleX = 2 * absAngleX / (Math.PI); // 0 = points along x, 1 = points along y
         
         // use fraction angle to reduce x as angle approaches y-pointing
         // see https://www.desmos.com/calculator/butkwn0xdt for function exploration
         let edge = 0.75;
         let xReductionFactor = Math.sin(
-            Math.pow(Math.min(fractionalAngle / edge, 1), 3) * (Math.PI / 2)
+            Math.pow(Math.min(fractionalAngleY / edge, 1), 3) * (Math.PI / 2)
+        );
+        let yReductionFactor = Math.sin(
+            Math.pow(Math.min(fractionalAngleX / edge, 1), 3) * (Math.PI / 2)
         );
 
         xScrollDomPx = xScrollDomPx * xReductionFactor;
+        yScrollDomPx = yScrollDomPx * yReductionFactor;
 
         // compute zoom multiplier from wheel y
         let zoomFactor = 1;
