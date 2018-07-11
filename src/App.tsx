@@ -95,9 +95,9 @@ export class App extends React.Component<Props, State> {
 			// @! quick hack some initial layout
 			let h = [
 				50,
-				200,
-				200,
-				200,
+				50,
+				50,
+				50,
 			][i];
 			trackViewer.addTrackRow(model, h, false);
 			i++;

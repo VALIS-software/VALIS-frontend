@@ -92,10 +92,29 @@ class TrackViewer extends Object2D {
         this.appModel = appModel;
     }
 
+    setRowHeight(row: TrackRow, heightPx: number) {
+        if (!this.rows) return;
+        const result = this.rows.find(d => d.trackRow === row);
+        if (result) {
+            result.heightPx = heightPx;
+        }
+        this.layoutTrackRows(true);
+    }
+
+    getRowHeight(row: TrackRow) : number {
+        if (!this.rows) return -1;
+        const result = this.rows.find(d => d.trackRow === row);
+        if (result) return result.heightPx;
+        else return -1;
+    }
+
     // track-viewer state deltas
     addTrackRow(model: TrackModel, heightPx: number = this.defaultTrackHeight, animate: boolean) {
         // create a tack and add the header element to the grid
-        let trackRow = new TrackRow(model, this.spacing);
+
+        const rowHeightSetter = (row: TrackRow, h:number) => { this.setRowHeight(row, h)};
+        const rowHeightGetter = (row: TrackRow) : number => this.getRowHeight(row);
+        let trackRow = new TrackRow(model, this.spacing, rowHeightSetter, rowHeightGetter);
         // add track tile to all panels
         for (let panel of this.panels) {
             panel.addTrack(trackRow.createTrack());
