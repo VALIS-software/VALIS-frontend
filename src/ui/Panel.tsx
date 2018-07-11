@@ -4,7 +4,6 @@ import SvgClose from "material-ui/svg-icons/navigation/close";
 import SvgEdit from "material-ui/svg-icons/image/edit";
 import SvgCancel from "material-ui/svg-icons/navigation/cancel";
 import SvgCheck from "material-ui/svg-icons/navigation/check";
-import { formatValue } from "./XAxis";
 import PanelModel from "../model/PanelModel";
 import { InteractionEvent, WheelInteractionEvent, WheelDeltaMode } from "./core/InteractionEvent";
 import Object2D from "./core/Object2D";
@@ -240,8 +239,8 @@ export class Panel extends Object2D {
     }
 
     formattedRange(): string {
-        const startBp = formatValue(this.x0, 8);
-        const endBp = formatValue(this.x1, 8);
+        const startBp = XAxis.formatValue(this.x0, 8);
+        const endBp = XAxis.formatValue(this.x1, 8);
         return `${startBp}bp to ${endBp}bp`;
     }
 

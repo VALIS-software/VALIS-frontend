@@ -6,36 +6,6 @@ import { BlendMode } from "../rendering/Renderer";
 import { Scalar } from "../math/Scalar";
 import { UsageCache } from "../ds/UsageCache";
 
-
-export function formatValue(x: number, maxLength: number) {
-    let str = x.toString();
-
-    if (str.length > maxLength) {
-        // if default print of string is too long, try to reduce it with a exponent symbol
-        let exp10 = Scalar.log10(Math.abs(x));
-        let expSign = Scalar.sign(exp10);
-        let exp1000Int = Math.floor(Math.abs(exp10 / 3)) * expSign;
-
-        let symbol = XAxis.siPrefixes[exp1000Int.toFixed(0)];
-        let reductionFactor = Math.pow(1000, exp1000Int);
-
-        if (symbol === undefined) {
-            let exp10Int = Math.floor(Math.abs(exp10)) * expSign;
-            symbol = exp10Int <= 3 ? '' : 'e' + exp10Int.toFixed(0);
-        }
-
-        let reducedX = x / reductionFactor;
-        let reducedXIntStr = Math.floor(reducedX).toFixed(0);
-        let dp = maxLength - reducedXIntStr.length - symbol.length - 1;
-
-        let numString = XAxis.toFixedTrunc(reducedX, Math.max(dp, 0));
-
-        str = numString + symbol;
-    }
-
-    return str;
-}
-
 export class XAxis extends Object2D {
 
     maxMajorTicks: number = 10000; // failsafe to avoid rendering hangs in case of bugs
@@ -163,7 +133,7 @@ export class XAxis extends Object2D {
 
             if (xMinor >= this.minDisplay && xMinor <= this.maxDisplay && isFinite(xMinor)) {
                 let minorParentX = (xMinor - this.x0 + this.offset) / span;
-                let str = formatValue(xMinor + this.startFrom, this._maxTextLength);
+                let str = XAxis.formatValue(xMinor + this.startFrom, this._maxTextLength);
                 let textMinor = this.labelCache.use(xMinor + '_' + str, () => this.createLabel(str));
                 textMinor.layoutParentX = minorParentX;
                 textMinor.setColor(0, 0, 0, minorAlpha);
@@ -172,7 +142,7 @@ export class XAxis extends Object2D {
 
             if (xMajor >= this.minDisplay && xMajor <= this.maxDisplay && isFinite(xMajor)) {
                 let majorParentX = (xMajor - this.x0 + this.offset) / span;
-                let str = formatValue(xMajor + this.startFrom, this._maxTextLength);
+                let str = XAxis.formatValue(xMajor + this.startFrom, this._maxTextLength);
                 let textMajor = this.labelCache.use(xMajor + '_' + str, () => this.createLabel(str));
                 textMajor.layoutParentX = majorParentX;
                 textMajor.setColor(0, 0, 0, 1);
@@ -251,6 +221,35 @@ export class XAxis extends Object2D {
         '-7': 'z', // zepto
         '-8': 'y', // yocto
     };
+
+    public static formatValue(x: number, maxLength: number) {
+        let str = x.toString();
+    
+        if (str.length > maxLength) {
+            // if default print of string is too long, try to reduce it with a exponent symbol
+            let exp10 = Scalar.log10(Math.abs(x));
+            let expSign = Scalar.sign(exp10);
+            let exp1000Int = Math.floor(Math.abs(exp10 / 3)) * expSign;
+    
+            let symbol = XAxis.siPrefixes[exp1000Int.toFixed(0)];
+            let reductionFactor = Math.pow(1000, exp1000Int);
+    
+            if (symbol === undefined) {
+                let exp10Int = Math.floor(Math.abs(exp10)) * expSign;
+                symbol = exp10Int <= 3 ? '' : 'e' + exp10Int.toFixed(0);
+            }
+    
+            let reducedX = x / reductionFactor;
+            let reducedXIntStr = Math.floor(reducedX).toFixed(0);
+            let dp = maxLength - reducedXIntStr.length - symbol.length - 1;
+    
+            let numString = XAxis.toFixedTrunc(reducedX, Math.max(dp, 0));
+    
+            str = numString + symbol;
+        }
+    
+        return str;
+    }
 
 }
 
