@@ -18,7 +18,7 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
     protected defaultCursor = 'crosshair';
 
     protected axisPointers: { [id: string]: AxisPointer } = {};
-    protected activeAxisPointerColor = [0, 140 / 255, 186 / 255, 1];
+    protected activeAxisPointerColor = [1, 1, 1, 0.8];
     protected secondaryAxisPointerColor = [0.2, 0.2, 0.2, 1];
 
     protected loadingIndicator: LoadingIndicator;
