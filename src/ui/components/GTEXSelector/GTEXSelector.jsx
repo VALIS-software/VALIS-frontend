@@ -39,9 +39,8 @@ class GTEXSelector extends React.Component {
       });
     } else {
       const builder = new QueryBuilder();
-      builder.newEdgeQuery();
+      builder.newInfoQuery();
       builder.filterSource(DATA_SOURCE_GTEX);
-      builder.filterMaxPValue(this.state.pvalue);
       const infoQuery = builder.build();
       this.api.getDistinctValues('info.biosample', infoQuery).then(data => {
         biosamplesCached = data;
@@ -92,6 +91,7 @@ class GTEXSelector extends React.Component {
   addQueryTrack = () => {
     const query = this.buildQuery();
     this.appModel.trackMixPanel("Add GTEX Track", { "query": query });
+    // QYD: The results of this query is "Edges" instead of GenomeNodes, we might need a new method for displaying
     this.appModel.addAnnotationTrack(this.state.title, query);
   }
 

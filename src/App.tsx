@@ -98,7 +98,7 @@ export class App extends React.Component<Props, State> {
 				200,
 				200,
 			][i];
-			trackViewer.addTrackRow(model, h);
+			trackViewer.addTrackRow(model, h, false);
 			i++;
 		}
 
