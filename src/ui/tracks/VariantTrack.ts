@@ -56,7 +56,7 @@ export class VariantTrack extends Track<'variant'> {
                     }
 
                     const altHeightPx = 20;
-                    const tileY = 10;
+                    const tileY = 15;
 
                     // @! suboptimal; should be using a batch text object
                     // display text
@@ -84,7 +84,6 @@ export class VariantTrack extends Track<'variant'> {
                                 let lengthDelta = altSpan - refSpan;
 
                                 // generate color from altFreq and lengthDelta
-                                let opacity = altFreq;
                                 let color: Array<number>;
                                 if (lengthDelta === 0) {
                                     color = [.6, .6, .6, 1];
@@ -93,7 +92,7 @@ export class VariantTrack extends Track<'variant'> {
                                 } else {
                                     color = [ 0, .6,  0, 1];
                                 }
-
+                                
                                 let text = new Text(OpenSansRegular, altSequence, 16, color);
                                 text.mask = this;
                                 this.add(text);
@@ -122,6 +121,16 @@ export class VariantTrack extends Track<'variant'> {
                             // multiple boxes
                             let refSpan = variant.refSequence.length;
 
+                            // draw line to show reference span
+                            instanceData.push({
+                                xFractional: fractionX,
+                                y: -5,
+                                z: 0,
+                                wFractional: refSpan / tile.span,
+                                h: 2,
+                                color: [1, 1, 1, 1],
+                            });
+
                             let altIndex = 0;
                             for (let altSequence in variant.alts) {
                                 let altSpan = altSequence.length;
@@ -130,7 +139,7 @@ export class VariantTrack extends Track<'variant'> {
                                 let lengthDelta = altSpan - refSpan;
 
                                 // generate color from altFreq and lengthDelta
-                                let opacity = altFreq;
+                                let opacity = altFreq <= 0 ? 0 : Math.sqrt(altFreq);
                                 let color: Array<number>;
                                 if (lengthDelta === 0) {
                                     color = [1, 1, 1, opacity];
@@ -158,7 +167,6 @@ export class VariantTrack extends Track<'variant'> {
                         instancesTile.z = 0.75;
                         instancesTile.mask = this;
 
-                        console.log('Created instances tile', instanceData, instancesTile);
                         return instancesTile;
                     });
 
