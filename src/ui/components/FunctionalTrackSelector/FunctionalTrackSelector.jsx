@@ -10,7 +10,7 @@ import Divider from "material-ui/Divider";
 import { RadioButton, RadioButtonGroup } from 'material-ui/RadioButton';
 import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-import SiriusApi from "../../../../lib/sirius";
+import SiriusApi from "../../../../lib/sirius/SiriusApi";
 
 // Styles
 import "./FunctionalTrackSelector.scss";
