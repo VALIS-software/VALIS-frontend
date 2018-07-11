@@ -1,5 +1,5 @@
 import { QueryType } from "sirius/QueryBuilder";
-import { CHROMOSOME_START_BASE_PAIRS, FILTER_TYPES } from "./constants";
+import { FILTER_TYPES } from "./constants";
 
 class Util {
 
