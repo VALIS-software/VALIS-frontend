@@ -19,7 +19,11 @@ export class TrackRow {
     get h(): number { return this._h; }
 
     set y(v: number) { this._y = v; this.layoutY(); }
-    set h(v: number) { this._h = v; this.layoutY(); }
+    set h(v: number) {
+        this._h = v;
+        this.layoutY();
+        this.updateHeader();
+    }
 
     protected _y: number;
     protected _h: number;
