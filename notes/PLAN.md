@@ -1,9 +1,6 @@
 - Variants:
-    - Review data sources
-    - Can have all manner of variant, how should we render?
-        - What is common amongs all variants?
-            - Start site and end site
-
+    - Show ref range
+    
 - Integrate latest UI
     --- PR
     - Anything missing from App.tsx
