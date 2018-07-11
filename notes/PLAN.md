@@ -1,6 +1,3 @@
-- Drag multiple edges
-- Yudong's PR feedback
-
 - Variants:
     - Review data sources
     - Can have all manner of variant, how should we render?
