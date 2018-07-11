@@ -1,6 +1,9 @@
 import * as React from "react";
 import IconButton from "material-ui/IconButton";
 import SvgClose from "material-ui/svg-icons/navigation/close";
+import SvgEdit from "material-ui/svg-icons/image/edit";
+import SvgCancel from "material-ui/svg-icons/navigation/cancel";
+import SvgCheck from "material-ui/svg-icons/navigation/check";
 import PanelModel from "../model/PanelModel";
 import { InteractionEvent, WheelInteractionEvent, WheelDeltaMode } from "./core/InteractionEvent";
 import Object2D from "./core/Object2D";
@@ -48,6 +51,8 @@ export class Panel extends Object2D {
 
     protected tileDragging = false;
     protected tileHovering = false;
+
+    protected isEditing: boolean = false;
 
     constructor(
         readonly model: PanelModel,
@@ -171,6 +176,8 @@ export class Panel extends Object2D {
         for (let tile of this.tracks) {
             tile.setRange(x0, x1);
         }
+
+        this.updatePanelHeader();
     }
 
     setSecondaryAxisPointers(secondaryAxisPointers: { [ pointerId: string ]: number }) {
@@ -201,6 +208,40 @@ export class Panel extends Object2D {
                 tile.setAxisPointer(pointerId, fractionX, AxisPointerStyle.Secondary);
             }
         }
+    }
+
+    finishEditing(rangeSpecifier?: string) {
+        this.isEditing = false;
+        if (rangeSpecifier) {
+            this.setRangeUsingRangeSpecifier(rangeSpecifier);
+        }
+        this.updatePanelHeader();
+    }
+
+    startEditing() {
+        this.isEditing = true;
+        this.updatePanelHeader();
+    }
+    
+    getRangeSpecifier(): string {
+        const startBp = Math.floor(this.x0).toFixed(0);
+        const endBp = Math.ceil(this.x1).toFixed(0);
+        return `chr1:${startBp}-${endBp}`;
+    }
+
+    setRangeUsingRangeSpecifier(specifier: string) {
+        const ranges = specifier.split(':')[1].split('-');
+        this.setRange(parseFloat(ranges[0]), parseFloat(ranges[1]));
+    }
+
+    formattedContig(): string {
+        return 'Chromosome 1';
+    }
+
+    formattedRange(): string {
+        const startBp = XAxis.formatValue(this.x0, 8);
+        const endBp = XAxis.formatValue(this.x1, 8);
+        return `${startBp}bp to ${endBp}bp`;
     }
 
     protected onTileLeave = (e: InteractionEvent) => {
@@ -395,56 +436,125 @@ export class Panel extends Object2D {
     }
 
     protected updatePanelHeader() {
-        this.header.content = <PanelHeader panel={ this } enableClose = { this._closable && !this.closing } onClose = { this.onClose } />;
+        this.header.content = <PanelHeader 
+            panel={ this } 
+            enableClose = { this._closable && !this.closing } 
+            onClose = { this.onClose } 
+            isEditing = { this.isEditing }
+            onEditCancel = { () => this.finishEditing() }
+            onEditSave = { (rangeSpecifier: string) => this.finishEditing(rangeSpecifier) }
+            onEditStart = { () => this.startEditing() }
+        />;
     }
 
 }
 
-function PanelHeader(props: {
+interface PanelProps {
     panel: Panel,
     enableClose: boolean,
+    isEditing: boolean,
+    onEditStart: () => void,
+    onEditSave: (rangeSpecifier: string) => void,
+    onEditCancel: () => void,
     onClose: (panel: Panel) => void
-}) {
-    return <div
-        style={{
-            position: 'relative',
-            width: '100%',
-            height: '100%',
-            color: '#e8e8e8',
-            backgroundColor: '#171615',
-            borderRadius: '8px',
-            fontSize: '12px',
-            fontWeight: 200,
-            overflow: 'hidden',
-            userSelect: 'none',
-        }}
-    >
-        <div style={{
-            position: 'absolute',
-            width: '100%',
-            textAlign: 'center',
-            top: '50%',
-            transform: 'translate(0, -50%)',
-            whiteSpace: 'nowrap',
-    }}>
-            {props.panel.model.name}
-        </div>
-        {props.enableClose ?
+}
+
+class PanelHeader extends React.Component<PanelProps,{}> {
+    
+    rangeSpecifier: string;
+
+    render() {
+        let headerContents = null;
+        
+        const headerContainerStyle : React.CSSProperties= {
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center'
+        };
+
+        const headerStyle : React.CSSProperties = {
+            marginTop: 8, 
+            marginLeft: 8
+        }
+
+        const iconColor = 'rgb(171, 171, 171)';
+        const iconHoverColor = 'rgb(255, 255, 255)';
+        const iconViewBoxSize = '0 0 32 32';
+        
+        if (this.props.isEditing) {
+            headerContents = (<div style={headerContainerStyle} >
+                <span><input onChange={(e) => this.rangeSpecifier = e.target.value } type="text" defaultValue={this.props.panel.getRangeSpecifier()}></input></span>
+                <span style={headerStyle}>
+                    <SvgCancel 
+                        onClick={() => this.props.onEditCancel()} 
+                        viewBox={iconViewBoxSize}
+                        color={iconColor}
+                        hoverColor={iconHoverColor} 
+                    />
+                </span>
+                <span style={headerStyle}>
+                    <SvgCheck 
+                        onClick={() => this.props.onEditSave(this.rangeSpecifier)} 
+                        viewBox={iconViewBoxSize}color={iconColor}
+                        hoverColor={iconHoverColor} 
+                    />
+                </span>
+            </div>);
+        } else {
+            headerContents = (<div style={headerContainerStyle} onClick={() => this.props.onEditStart()}>
+                <span><b>{this.props.panel.formattedContig()}</b> {this.props.panel.formattedRange()}</span>
+                <span style={headerStyle}>
+                    <SvgEdit 
+                        viewBox={iconViewBoxSize}
+                        color={iconColor}
+                        hoverColor={iconHoverColor} 
+                    />
+                </span>
+            </div>);
+        }
+
+        return <div
+            style={{
+                position: 'relative',
+                width: '100%',
+                height: '100%',
+                color: '#e8e8e8',
+                backgroundColor: '#171615',
+                borderRadius: '8px',
+                fontSize: '12px',
+                fontWeight: 200,
+                overflow: 'hidden',
+                userSelect: 'none',
+            }}
+        >
             <div style={{
                 position: 'absolute',
                 width: '100%',
-                textAlign: 'right',
+                textAlign: 'center',
                 top: '50%',
                 transform: 'translate(0, -50%)',
+                whiteSpace: 'nowrap',
+                cursor: 'pointer',
             }}>
-                <IconButton onClick={() => props.onClose(props.panel)}>
-                    <SvgClose color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' />
-                </IconButton>
+                {headerContents}
             </div>
+            {this.props.enableClose ?
+                <div style={{
+                    position: 'absolute',
+                    width: '100%',
+                    textAlign: 'right',
+                    top: '50%',
+                    transform: 'translate(0, -50%)',
+                }}>
+                    <IconButton onClick={() => this.props.onClose(this.props.panel)}>
+                        <SvgClose color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' />
+                    </IconButton>
+                </div>
 
-            : null
-        }
-    </div>
+                : null
+            }
+        </div>
+    }
 }
 
 export default Panel;
