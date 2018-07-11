@@ -9,9 +9,9 @@ import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
 import Checkbox from "material-ui/Checkbox";
 import Divider from "material-ui/Divider";
-import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
+import QueryBuilder from "sirius/QueryBuilder";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-import SiriusApi from "../../../../lib/sirius/SiriusApi";
+import SiriusApi from "sirius/SiriusApi";
 
 import {
   CHROMOSOME_NAMES,

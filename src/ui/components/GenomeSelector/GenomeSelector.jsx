@@ -10,7 +10,7 @@ import MenuItem from 'material-ui/MenuItem';
 import QueryBuilder from '../../../../lib/sirius/QueryBuilder';
 import { CHROMOSOME_NAMES } from '../../helpers/constants';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-import SiriusApi from "../../../../lib/sirius/SiriusApi";
+import SiriusApi from "sirius/SiriusApi";
 
 // Styles
 import './GenomeSelector.scss';

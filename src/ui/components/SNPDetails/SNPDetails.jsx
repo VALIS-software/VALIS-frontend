@@ -9,7 +9,7 @@ import Collapsible from '../Shared/Collapsible/Collapsible';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
 import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
-import SiriusApi from "../../../../lib/sirius/SiriusApi";
+import SiriusApi from "sirius/SiriusApi";
 // Styles
 import './SNPDetails.scss';
 import '../Shared/Shared.scss';

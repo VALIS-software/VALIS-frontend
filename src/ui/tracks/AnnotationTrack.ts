@@ -1,5 +1,5 @@
-import { Strand } from "../../../lib/gff3/Strand";
-import { GeneClass, TranscriptClass } from "../../../lib/sirius/AnnotationTileset";
+import { Strand } from "gff3/Strand";
+import { GeneClass, TranscriptClass } from "sirius/AnnotationTileset";
 import { Animator } from "../../animation/Animator";
 import UsageCache from "../../ds/UsageCache";
 import { Scalar } from "../../math/Scalar";

@@ -2,7 +2,7 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import DataListItem from '../DataListItem/DataListItem';
-import SiriusApi from "../../../../lib/sirius/SiriusApi";
+import SiriusApi from "sirius/SiriusApi";
 import {
   TRACK_TYPE_NETWORK,
 } from '../../helpers/constants';

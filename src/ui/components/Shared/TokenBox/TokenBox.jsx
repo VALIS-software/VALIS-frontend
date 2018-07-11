@@ -8,7 +8,7 @@ import ContentClear from 'material-ui/svg-icons/content/clear';
 import CircularProgress from "material-ui/CircularProgress";
 import SearchResultsView from '../../SearchResultsView/SearchResultsView';
 import ErrorDetails from "../ErrorDetails/ErrorDetails";
-import buildQueryParser from "../../../../../lib/sirius/queryparser";
+import buildQueryParser from "sirius/queryparser";
 import './TokenBox.scss';
 import { SiriusApi } from '../../../../../lib/sirius/SiriusApi';
 

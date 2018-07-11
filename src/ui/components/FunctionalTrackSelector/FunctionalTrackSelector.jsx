@@ -8,9 +8,9 @@ import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
 import Divider from "material-ui/Divider";
 import { RadioButton, RadioButtonGroup } from 'material-ui/RadioButton';
-import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
+import QueryBuilder from "sirius/QueryBuilder";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-import SiriusApi from "../../../../lib/sirius/SiriusApi";
+import SiriusApi from "sirius/SiriusApi";
 
 // Styles
 import "./FunctionalTrackSelector.scss";

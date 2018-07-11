@@ -1,4 +1,4 @@
-import { Strand } from "../../lib/gff3/Strand";
+import { Strand } from "gff3/Strand";
 
 export interface TrackTypeMap {
     'empty': {};

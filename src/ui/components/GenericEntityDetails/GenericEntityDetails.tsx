@@ -14,7 +14,7 @@ import DataListItem from "../DataListItem/DataListItem";
 import ZoomToButton from "../Shared/ZoomToButton/ZoomToButton";
 import Util from "../../helpers/util.js";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-import SiriusApi from "../../../../lib/sirius/SiriusApi";
+import SiriusApi from "sirius/SiriusApi";
 
 // Styles
 import "./GenericEntityDetails.scss";

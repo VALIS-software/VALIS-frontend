@@ -1,5 +1,4 @@
 import { Tile, TileStore } from "./TileStore";
-import { QueryBuilder } from "../../../lib/sirius/QueryBuilder";
 import axios from "../../../node_modules/axios";
 
 // Tile payload is a list of genes extended with nesting

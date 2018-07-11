@@ -9,13 +9,13 @@ import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton'
 import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import Util from "../../helpers/util";
 import { prettyPrint } from "../TraitDetails/TraitDetails";
-import SiriusApi from "../../../../lib/sirius/SiriusApi";
+import SiriusApi from "sirius/SiriusApi";
 const { Map, Set } = require('immutable');
 
 // Styles
 import "./SearchResultsView.scss";
 import 'react-virtualized/styles.css'
-import { EntityType } from "../../../../lib/sirius/EntityType";
+import { EntityType } from "sirius/EntityType";
 
 const FETCH_SIZE = 30;
 

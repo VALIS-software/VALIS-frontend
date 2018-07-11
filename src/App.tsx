@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Strand } from "../lib/gff3/Strand";
+import { Strand } from "gff3/Strand";
 import Animator from "./animation/Animator";
 import AnnotationTileStore, { MacroAnnotationTileStore } from "./model/data-store/AnnotationTileStore";
 import SequenceTileStore from "./model/data-store/SequenceTileStore";
@@ -21,9 +21,9 @@ import SearchResultsView from "./ui/components/SearchResultsView/SearchResultsVi
 // styles
 import "./App.scss";
 import ViewModel, { ViewEvent } from "./ui/models/ViewModel";
-import EntityType from "../lib/sirius/EntityType";
+import EntityType from "sirius/EntityType";
 import { VariantTileStore } from "./model/data-store/VariantTileStore";
-import { SiriusApi } from "../lib/sirius/SiriusApi";
+import SiriusApi from "sirius/SiriusApi";
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern

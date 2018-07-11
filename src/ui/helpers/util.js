@@ -1,4 +1,4 @@
-import { QueryType } from "../../../lib/sirius/QueryBuilder";
+import { QueryType } from "sirius/QueryBuilder";
 import { CHROMOSOME_START_BASE_PAIRS, FILTER_TYPES } from "./constants";
 
 class Util {

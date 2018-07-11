@@ -1,15 +1,15 @@
 // Dependencies
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import EntityType from "../../../../lib/sirius/EntityType";
-import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
+import EntityType from "sirius/EntityType";
+import QueryBuilder from "sirius/QueryBuilder";
 import DataListItem from "../DataListItem/DataListItem";
 import Collapsible from '../Shared/Collapsible/Collapsible';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
 import '../Shared/Shared.scss';
 import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
-import SiriusApi from "../../../../lib/sirius/SiriusApi";
+import SiriusApi from "sirius/SiriusApi";
 // Styles
 import './GeneDetails.scss';
 

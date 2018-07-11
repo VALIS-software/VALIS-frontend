@@ -4,7 +4,7 @@ import * as PropTypes from 'prop-types';
 import Collapsible from '../Shared/Collapsible/Collapsible';
 import AssociationList from '../Shared/AssociationList/AssociationList';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-import SiriusApi from "../../../../lib/sirius/SiriusApi";
+import SiriusApi from "sirius/SiriusApi";
 // Styles
 import './TraitDetails.scss';
 import '../Shared/Shared.scss';

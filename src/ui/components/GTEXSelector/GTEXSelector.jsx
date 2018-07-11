@@ -6,9 +6,9 @@ import CircularProgress from "material-ui/CircularProgress";
 import Slider from "material-ui/Slider";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
-import QueryBuilder from "../../../../lib/sirius/QueryBuilder";
+import QueryBuilder from "sirius/QueryBuilder";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-import SiriusApi from "../../../../lib/sirius/SiriusApi";
+import SiriusApi from "sirius/SiriusApi";
 
 import { DATA_SOURCE_GTEX } from "../../helpers/constants";
 
