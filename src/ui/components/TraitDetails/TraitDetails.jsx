@@ -37,10 +37,14 @@ class TraitDetails extends React.Component {
   }
 
   buildTraitQuery() {
+    const details = this.state.details;
+    if (!details || !details.name) {
+       return;
+    }
     const builder = new QueryBuilder();
     builder.newInfoQuery();
     builder.filterType("trait");
-    builder.searchText(name);
+    builder.searchText(details.name);
     const traitQuery = builder.build();
     builder.newEdgeQuery();
     builder.setToNode(traitQuery);
@@ -48,7 +52,7 @@ class TraitDetails extends React.Component {
     const edgeQuery = builder.build();
     builder.newGenomeQuery();
     builder.addToEdge(edgeQuery);
-    return builder.build()
+    return builder.build();
   }
 
   loadTraitDetails() {
