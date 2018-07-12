@@ -147,17 +147,21 @@ class GeneDetails extends React.Component {
     </div>);
 
     const linksData = [];
-    const mim = info.MIM;
+    const mim = info.omim_id;
     const geneId = info.GeneID;
     const ensemblID = info.gene_id;
     linksData.push(['ENSEMBL', `https://www.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=${ensemblID}`]);
-    linksData.push(['OMIM', `https://omim.org/entry/${mim}`]);
+    if (mim) {
+      linksData.push(['OMIM', `https://omim.org/entry/${mim}`]);
+    }
     linksData.push(['GeneCards', `http://www.genecards.org/cgi-bin/carddisp.pl?gene=${name}`]);
     linksData.push(['Gene Ontology', `http://amigo.geneontology.org/amigo/search/annotation?q=${name}`]);
-    linksData.push(['NCBI Gene', `https://www.ncbi.nlm.nih.gov/gene/${geneId}`]);
-    linksData.push(['BioGPS', `http://biogps.org/#goto=genereport&id=${geneId}`]);
-    linksData.push(['KEGG', `http://www.genome.jp/dbget-bin/www_bget?hsa+${geneId}`]);
-    linksData.push(['Monarch', `https://monarchinitiative.org/gene/NCBIGene:${geneId}`]);
+    if (geneId) {
+      linksData.push(['NCBI Gene', `https://www.ncbi.nlm.nih.gov/gene/${geneId}`]);
+      linksData.push(['BioGPS', `http://biogps.org/#goto=genereport&id=${geneId}`]);
+      linksData.push(['KEGG', `http://www.genome.jp/dbget-bin/www_bget?hsa+${geneId}`]);
+      linksData.push(['Monarch', `https://monarchinitiative.org/gene/NCBIGene:${geneId}`]);
+    }
     linksData.push(['MARRVEL', `http://marrvel.org/search/gene/${name}`]);
     linksData.push(['UCSC', `https://genome.ucsc.edu/cgi-bin/hgGene?db=hg38&hgg_chrom=${details.contig}&hgg_gene=uc004dfy.5&hgg_start=${details.start}&hgg_end=${details.end}&hgg_type=knownGene`]);
 
