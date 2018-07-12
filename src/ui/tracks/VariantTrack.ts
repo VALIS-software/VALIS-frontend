@@ -12,6 +12,7 @@ import { BlendMode, DrawMode, DrawContext } from "../../rendering/Renderer";
 import Object2D from "../core/Object2D";
 import { Text } from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
+import TextClone from "./util/TextClone";
 
 export class VariantTrack extends Track<'variant'> {
 
@@ -29,11 +30,13 @@ export class VariantTrack extends Track<'variant'> {
 
     protected _microTileCache = new UsageCache<MicroInstances>();
     protected _onStageAnnotations = new UsageCache<Object2D>();
-    protected _sequenceTextCache = new UsageCache<Object2D>();
+    protected _sequenceLabelCache = new UsageCache<{
+        container: Object2D, text: TextClone,
+    }>();
     protected updateDisplay() {
         this._pendingTiles.markAllUnused();
         this._onStageAnnotations.markAllUnused();
-        this._sequenceTextCache.markAllUnused();
+        this._sequenceLabelCache.markAllUnused();
 
         const x0 = this.x0;
         const x1 = this.x1;
@@ -55,55 +58,68 @@ export class VariantTrack extends Track<'variant'> {
                         return;
                     }
 
-                    const altHeightPx = 20;
+                    const altHeightPx = 25;
                     const tileY = 15;
 
-                    // @! suboptimal; should be using a batch text object
+                    const baseLayoutW = 1 / span;
+                    const baseDisplayWidth = widthPx * baseLayoutW;
+
+                    const maxTextSize = 16;
+                    const minTextSize = 5;
+                    const padding = 3;
+                    const maxOpacity = 1.0;
+                    const textSizePx = Math.min(baseDisplayWidth - padding, maxTextSize);
+                    let textOpacity = Math.min(Math.max((textSizePx - minTextSize) / (maxTextSize - minTextSize), 0.0), 1.0) * maxOpacity;
+                    textOpacity = textOpacity * textOpacity;
+
+                    // @! very suboptimal; should be using a batch text object
                     // display text
-                    for (let variant of tile.payload) {
-                        let refSpan = variant.refSequence.length;
-                        let startIndex = variant.baseIndex;
+                    if (textOpacity > 0 && textSizePx > 0) {
+                        for (let variant of tile.payload) {
+                            let refSpan = variant.refSequence.length;
+                            let startIndex = variant.baseIndex;
 
-                        let altIndex = 0;
+                            let altIndex = 0;
 
-                        for (let altSequence in variant.alts) {
-                            let altSpan = altSequence.length;
+                            for (let altSequence in variant.alts) {
+                                let altSpan = altSequence.length;
 
-                            let layoutParentX = (startIndex - x0) / span;
-                            let layoutW = (altSpan) / span;
-
-                            // skip text outside visible range
-                            if ((layoutParentX + layoutW) < 0 || layoutParentX > 1) {
-                                continue;
-                            }
-
-                            // ?create and update text
-                            let cacheKey = startIndex + altIndex + '';
-                            let text = this._sequenceTextCache.get(cacheKey, () => {
-                                let altFreq = variant.alts[altSequence];
                                 let lengthDelta = altSpan - refSpan;
-
                                 // generate color from altFreq and lengthDelta
+                                /*
                                 let color: Array<number>;
                                 if (lengthDelta === 0) {
                                     color = [.6, .6, .6, 1];
                                 } else if (lengthDelta < 0) {
-                                    color = [.6,  0,  0, 1];
+                                    color = [.6, 0, 0, 1];
                                 } else {
-                                    color = [ 0, .6,  0, 1];
+                                    color = [0, .6, 0, 1];
                                 }
-                                
-                                let text = new Text(OpenSansRegular, altSequence, 16, color);
-                                text.mask = this;
-                                this.add(text);
-                                return text;
-                            });
+                                */
 
-                            text.y = altIndex * altHeightPx + tileY;
-                            text.layoutParentX = layoutParentX;
-                            text.layoutW = layoutW;
+                                for (let i = 0; i < altSpan; i++) {
+                                    let baseCharacter = altSequence[i];
+                                    let layoutParentX = ((startIndex + i + 0.5) - x0) / span;
 
-                            altIndex++;
+                                    // skip text outside visible range
+                                    if ((layoutParentX + baseLayoutW) < 0 || layoutParentX > 1) {
+                                        continue;
+                                    }
+
+                                    // create and update text
+                                    let cacheKey = startIndex + ',' + altIndex + ',' + i;
+                                    let label = this._sequenceLabelCache.get(cacheKey, () => this.createBaseLabel(baseCharacter));
+
+                                    label.container.layoutParentX = layoutParentX;
+                                    label.container.layoutW = baseLayoutW;
+                                    label.container.sx = label.container.sy = textSizePx;
+                                    label.container.y = altIndex * altHeightPx + altHeightPx * 0.5 + tileY;
+
+                                    label.text.color[3] = textOpacity;
+                                }
+
+                                altIndex++;
+                            }
                         }
                     }
 
@@ -185,12 +201,49 @@ export class VariantTrack extends Track<'variant'> {
 
         this._pendingTiles.removeUnused(this.deleteTileLoadingDependency);
         this._onStageAnnotations.removeUnused((t) => this.remove(t));
-        this._sequenceTextCache.removeUnused((text) => {
-            this.remove(text);
-            text.releaseGPUResources();
-        });
+        this._sequenceLabelCache.removeUnused(this.deleteBaseLabel);
         this.toggleLoadingIndicator(this._pendingTiles.count > 0, true);
         this.displayNeedUpdate = false;
+    }
+
+    protected createBaseLabel = (baseCharacter: string) => {
+        let container = new Object2D();
+        container.z = 0.5;
+
+        let textInstance = VariantTrack.baseTextInstances[baseCharacter];
+        if (textInstance === undefined) {
+            textInstance = VariantTrack.baseTextInstances['?'];
+        }
+
+        let textClone = new TextClone(textInstance, [1, 1, 1, 1]);
+        textClone.additiveBlendFactor = 1.0;
+
+        container.add(textClone);
+
+        textClone.layoutX = -0.5;
+        textClone.layoutY = -0.5;
+        textClone.mask = this;
+
+        this.add(container);
+
+        return { container: container, text: textClone };
+    }
+
+    protected deleteBaseLabel = (label: { container: Object2D, text: TextClone }) => {
+        label.container.remove(label.text); // ensure textClone cleanup is fired
+        label.text.releaseGPUResources();
+        this.remove(label.container);
+    }
+
+    // we only need 1 text instance of each letter which we can render multiple times
+    // this saves reallocating new vertex buffers for each letter
+    // this is a stop-gap solution before something like batching or instancing
+    protected static baseTextInstances: { [key: string]: Text } = {
+        'A': new Text(OpenSansRegular, 'A', 1, [1, 1, 1, 1]),
+        'C': new Text(OpenSansRegular, 'C', 1, [1, 1, 1, 1]),
+        'G': new Text(OpenSansRegular, 'G', 1, [1, 1, 1, 1]),
+        'T': new Text(OpenSansRegular, 'T', 1, [1, 1, 1, 1]),
+        '?': new Text(OpenSansRegular, '?', 1, [1, 1, 1, 1]),
     }
 
 }

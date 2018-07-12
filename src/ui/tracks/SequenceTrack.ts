@@ -4,13 +4,14 @@ import { BlockPayload, TilePayload } from "../../model/data-store/SequenceTileSt
 import { SharedTileStore } from "../../model/data-store/SharedTileStores";
 import { Tile, TileState } from "../../model/data-store/TileStore";
 import { TrackModel } from "../../model/TrackModel";
-import GPUDevice, { GPUTexture, AttributeType } from "../../rendering/GPUDevice";
+import GPUDevice, { AttributeType, GPUTexture } from "../../rendering/GPUDevice";
 import { DrawContext, DrawMode } from "../../rendering/Renderer";
-import Object2D, { Object2DInternal } from "../core/Object2D";
+import Object2D from "../core/Object2D";
 import SharedResources from "../core/SharedResources";
 import { Text } from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
-import { TileNode, ShaderTrack } from "./ShaderTrack";
+import { ShaderTrack, TileNode } from "./ShaderTrack";
+import { TextClone } from "./util/TextClone";
 
 export class SequenceTrack extends ShaderTrack<TilePayload, BlockPayload> {
 
@@ -307,70 +308,6 @@ class SequenceTile extends TileNode<TilePayload> {
         'T': new Text(OpenSansRegular, 'T', 1, [1, 1, 1, 1]),
         'N': new Text(OpenSansRegular, 'N', 1, [1, 1, 1, 1]),
     }
-}
-
-/**
- * If we're repeating the same text a lot we can improve performance by having a single text instance and re-rendering it at different locations
- * 
- * **The original text instance is modified an should not be rendered on its own after using in a TextClone**
- */
-class TextClone extends Object2D {
-
-    color = new Float32Array(4);
-    additiveBlendFactor: number = 0.0;
-    
-    set _w(v: number) {}
-    set _h(v: number) {}
-
-    get _w() { return this.text.w; }
-    get _h() { return this.text.h; }
-
-    set render(v: boolean) { }
-    get render() { return this.text.render; }
-    
-    constructor(readonly text: Text, color: ArrayLike<number> = [0, 0, 0, 1]) {
-        super();
-        this.color.set(color);
-        this.transparent = true;
-        this.blendMode = text.blendMode;
-    }
-
-    onAdded() {
-        if (this.text.w === 0) {
-            this.text.addEventListener('glyphLayoutChanged', this.glyphLayoutChanged);
-        }
-    }
-
-    allocateGPUResources(device: GPUDevice) {
-        let textInternal = (this.text as any as Object2DInternal);
-
-        if (textInternal.gpuResourcesNeedAllocate) {
-            textInternal.allocateGPUResources(device);
-            textInternal.gpuResourcesNeedAllocate = false;
-        }
-
-        this.gpuProgram = textInternal.gpuProgram;
-        this.gpuVertexState = textInternal.gpuVertexState;
-    }
-
-    releaseGPUResources() {}
-
-    draw(context: DrawContext) {
-        let textInternal = (this.text as any as Object2DInternal);
-
-        // override with local transform and color
-        textInternal.worldTransformMat4 = this.worldTransformMat4;
-        this.text.color = this.color;
-        this.text.additiveBlendFactor = this.additiveBlendFactor;
-
-        this.text.draw(context);
-    }
-
-    protected glyphLayoutChanged = () => {
-        this.worldTransformNeedsUpdate = true;
-        this.text.removeEventListener('glyphLayoutChanged', this.glyphLayoutChanged);
-    }
-
 }
 
 export default SequenceTrack;

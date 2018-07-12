@@ -210,40 +210,6 @@ export class Panel extends Object2D {
         }
     }
 
-    finishEditing(rangeSpecifier?: string) {
-        this.isEditing = false;
-        if (rangeSpecifier) {
-            this.setRangeUsingRangeSpecifier(rangeSpecifier);
-        }
-        this.updatePanelHeader();
-    }
-
-    startEditing() {
-        this.isEditing = true;
-        this.updatePanelHeader();
-    }
-    
-    getRangeSpecifier(): string {
-        const startBp = Math.floor(this.x0).toFixed(0);
-        const endBp = Math.ceil(this.x1).toFixed(0);
-        return `chr1:${startBp}-${endBp}`;
-    }
-
-    setRangeUsingRangeSpecifier(specifier: string) {
-        const ranges = specifier.split(':')[1].split('-');
-        this.setRange(parseFloat(ranges[0]), parseFloat(ranges[1]));
-    }
-
-    formattedContig(): string {
-        return 'Chromosome 1';
-    }
-
-    formattedRange(): string {
-        const startBp = XAxis.formatValue(this.x0, 8);
-        const endBp = XAxis.formatValue(this.x1, 8);
-        return `${startBp}bp to ${endBp}bp`;
-    }
-
     protected onTileLeave = (e: InteractionEvent) => {
         this.tileHovering = false;
         if (!this.tileDragging) {
@@ -441,8 +407,19 @@ export class Panel extends Object2D {
     }
 
     protected updatePanelHeader() {
+        let formattedContig = 'Chromosome 1';
+        
+        let rangeString = `${XAxis.formatValue(this.x0, 8)}bp to ${XAxis.formatValue(this.x1, 8)}bp`;
+
+        const startBp = Math.floor(this.x0).toFixed(0);
+        const endBp = Math.ceil(this.x1).toFixed(0);
+        let rangeSpecifier = `chr1:${startBp}-${endBp}`;
+
         this.header.content = <PanelHeader 
-            panel={ this } 
+            panel={ this }
+            contig={ formattedContig }
+            rangeString={ rangeString }
+            rangeSpecifier={ rangeSpecifier }
             enableClose = { this._closable && !this.closing } 
             onClose = { this.onClose } 
             isEditing = { this.isEditing }
@@ -452,10 +429,31 @@ export class Panel extends Object2D {
         />;
     }
 
+    protected finishEditing(rangeSpecifier?: string) {
+        this.isEditing = false;
+        if (rangeSpecifier) {
+            this.setRangeUsingRangeSpecifier(rangeSpecifier);
+        }
+        this.updatePanelHeader();
+    }
+
+    protected startEditing() {
+        this.isEditing = true;
+        this.updatePanelHeader();
+    }
+
+    protected setRangeUsingRangeSpecifier(specifier: string) {
+        const ranges = specifier.split(':')[1].split('-');
+        this.setRange(parseFloat(ranges[0]), parseFloat(ranges[1]));
+    }
+
 }
 
 interface PanelProps {
     panel: Panel,
+    contig: string,
+    rangeString: string,
+    rangeSpecifier: string,
     enableClose: boolean,
     isEditing: boolean,
     onEditStart: () => void,
@@ -488,7 +486,7 @@ class PanelHeader extends React.Component<PanelProps,{}> {
         
         if (this.props.isEditing) {
             headerContents = (<div style={headerContainerStyle} >
-                <span><input onChange={(e) => this.rangeSpecifier = e.target.value } type="text" defaultValue={this.props.panel.getRangeSpecifier()}></input></span>
+                <span><input onChange={(e) => this.rangeSpecifier = e.target.value} type="text" defaultValue={this.props.rangeSpecifier}></input></span>
                 <span style={headerStyle}>
                     <SvgCancel 
                         onClick={() => this.props.onEditCancel()} 
@@ -507,7 +505,7 @@ class PanelHeader extends React.Component<PanelProps,{}> {
             </div>);
         } else {
             headerContents = (<div style={headerContainerStyle} onClick={() => this.props.onEditStart()}>
-                <span><b>{this.props.panel.formattedContig()}</b> {this.props.panel.formattedRange()}</span>
+                <span><b>{this.props.contig}</b> {this.props.rangeString}</span>
                 <span style={headerStyle}>
                     <SvgEdit 
                         viewBox={iconViewBoxSize}
