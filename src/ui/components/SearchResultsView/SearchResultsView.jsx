@@ -109,7 +109,6 @@ class SearchResultsView extends React.Component {
   }
 
   updateQueryModel = (query) => {
-    console.log('new query model', query);
     this.query = query;
     this.setState({
       showFilters: false,
