@@ -1,5 +1,6 @@
 - Variants:
-    - Show ref range
+    - Improve colors
+    - Macro display
     
 - Integrate latest UI
     --- PR
