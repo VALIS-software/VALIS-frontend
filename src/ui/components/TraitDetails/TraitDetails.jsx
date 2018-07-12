@@ -2,12 +2,17 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import Collapsible from '../Shared/Collapsible/Collapsible';
-import AssociationList from '../Shared/AssociationList/AssociationList';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
+import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
 import SiriusApi from "sirius/SiriusApi";
+import QueryModel from '../../models/QueryModel';
+import SiriusApi from "sirius/SiriusApi";
+import QueryBuilder from "sirius/QueryBuilder";
+
 // Styles
 import './TraitDetails.scss';
 import '../Shared/Shared.scss';
+import { QueryBuilder } from 'sirius/QueryBuilder';
 
 export const prettyPrint = (string) => {
   if (string.toUpperCase() === string) {
@@ -31,6 +36,21 @@ class TraitDetails extends React.Component {
     return prevState;
   }
 
+  buildTraitQuery() {
+    const builder = new QueryBuilder();
+    builder.newInfoQuery();
+    builder.filterType("trait");
+    builder.searchText(name);
+    const traitQuery = builder.build();
+    builder.newEdgeQuery();
+    builder.setToNode(traitQuery);
+    builder.filterMaxPValue(0.05);
+    const edgeQuery = builder.build();
+    builder.newGenomeQuery();
+    builder.addToEdge(edgeQuery);
+    return builder.build()
+  }
+
   loadTraitDetails() {
     const traitId = this.state.currentTraitId;
     SiriusApi.getDetails(this.state.currentTraitId).then(detailsData => {
@@ -45,6 +65,16 @@ class TraitDetails extends React.Component {
         error: err,
       });
     });
+  }
+  loadQuery(title, query) {
+    this.appModel.trackMixPanel("Run search", { 'query': JSON.stringify(query) });
+    const queryModel = new QueryModel(query);
+    const view = (<SearchResultsView text={''} query={queryModel} viewModel={this.viewModel} appModel={this.appModel} />);
+    this.viewModel.pushView(title, query, view);
+  }
+
+  renderSearchLink(title, query) {
+    return (<Collapsible onClick={() => this.loadQuery(title, query)} title={title} disabled={true} isLink={true}/>);
   }
 
   render() {
@@ -75,7 +105,7 @@ class TraitDetails extends React.Component {
       return (<div key={link[0]} onClick={openLink} className="row">{link[0]}</div>);
     });
 
-    const associations = (<AssociationList associations={this.state.relations} disableEqtl={true} appModel={this.props.appModel} viewModel={this.props.viewModel} />);
+    const associations = this.renderSearchLink('Trait associated variants', this.buildTraitQuery());
 
     return (<div className="trait-details">
       {header}
