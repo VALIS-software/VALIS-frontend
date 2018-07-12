@@ -9,6 +9,7 @@ import Collapsible from '../Shared/Collapsible/Collapsible';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
 import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
+import QueryModel from '../../models/QueryModel';
 import SiriusApi from "sirius/SiriusApi";
 // Styles
 import './SNPDetails.scss';
@@ -53,7 +54,7 @@ function GeneLink(props) {
       builder.filterName(props.geneName);
       builder.setLimit(1);
       const query = builder.build();
-      const view = (<SearchResultsView text={props.geneName} query={query} viewModel={props.viewModel} appModel={props.appModel} />);
+      const view = (<SearchResultsView text={props.geneName} query={new QueryModel(query)} viewModel={props.viewModel} appModel={props.appModel} />);
       props.viewModel.pushView('Search Results', query, view);
     }
   };
