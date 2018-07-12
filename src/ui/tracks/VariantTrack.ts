@@ -123,15 +123,7 @@ export class VariantTrack extends Track<'variant'> {
                             // multiple boxes
                             let refSpan = variant.refSequence.length;
 
-                            // draw line to show reference span
-                            instanceData.push({
-                                xFractional: fractionX,
-                                y: -5,
-                                z: 0,
-                                wFractional: refSpan / tile.span,
-                                h: 2,
-                                color: [1, 1, 1, 1],
-                            });
+                            let color: Array<number> = [1, 0, 0, 1.0]; // default to deletion
 
                             let altIndex = 0;
                             for (let altSequence in variant.alts) {
@@ -142,7 +134,6 @@ export class VariantTrack extends Track<'variant'> {
 
                                 // generate color from altFreq and lengthDelta
                                 let opacity = altFreq <= 0 ? 0 : Math.sqrt(altFreq);
-                                let color: Array<number>;
                                 if (lengthDelta === 0) {
                                     color = [1, 1, 1, opacity];
                                 } else if (lengthDelta < 0) {
@@ -162,6 +153,16 @@ export class VariantTrack extends Track<'variant'> {
 
                                 altIndex++;
                             }
+
+                            // draw line to show reference span
+                            instanceData.push({
+                                xFractional: fractionX,
+                                y: -5,
+                                z: 0,
+                                wFractional: refSpan / tile.span,
+                                h: 2,
+                                color: color.slice(0, 3).concat([1]),
+                            });
                         }
 
                         let instancesTile = new MicroInstances(instanceData);
