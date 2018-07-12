@@ -17,7 +17,7 @@ import TextClone from "./util/TextClone";
 export class VariantTrack extends Track<'variant'> {
 
     protected readonly macroLodBlendRange = 1;
-    protected readonly macroLodThresholdLow = 4;
+    protected readonly macroLodThresholdLow = 8;
     protected readonly macroLodThresholdHigh = this.macroLodThresholdLow + this.macroLodBlendRange;
 
     protected tileStore: VariantTileStore;
@@ -317,6 +317,9 @@ class MicroInstances extends InstancingBase<MicroInstance> {
                 vec3 pos = vec3(groupSize.x * instancePosition.x, instancePosition.yz);
                 size = vec2(groupSize.x * instanceSize.x, instanceSize.y);
 
+                // apply a minimum size
+                size.x = max(size.x, 1.0);
+
                 color = instanceColor;
 
                 gl_Position = groupModel * vec4(vec3(position * size, 0.0) + pos, 1.0);
@@ -338,7 +341,7 @@ class MicroInstances extends InstancingBase<MicroInstance> {
             varying vec2 vUv;
             
             void main() {
-                const float blendFactor = 0.0; // full additive blending
+                const float blendFactor = 1.0; // full additive blending
 
                 vec2 domPx = vUv * size;
             
