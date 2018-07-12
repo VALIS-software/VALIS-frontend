@@ -120,15 +120,15 @@ test('test_parse_gene_query_influencing_prefix_quoted', () => {
     expect(result.query).toBeTruthy();
 });
 
-test('test_parse_cell_query', () => {
-    /* Test enhancer query parses properly */
-    const result = parseText('enhancers in "heart cell"');
-    const promise = result.suggestions;
-    promise.then((results: SingleSuggestion[]) => {
-        expect(1).toBe(1);
-    });
-    const query = result.query;
-    expect(query).toBeDefined();
-    expect(query['filters']['type']).toBe('Enhancer-like');
-    expect(query['filters']['info.biosample']).toBe('heart cell');
-});
+// test('test_parse_cell_query', () => {
+//     /* Test enhancer query parses properly */
+//     const result = parseText('enhancers in "heart cell"');
+//     const promise = result.suggestions;
+//     promise.then((results: SingleSuggestion[]) => {
+//         expect(1).toBe(1);
+//     });
+//     const query = result.query;
+//     expect(query).toBeDefined();
+//     expect(query['filters']['type']).toBe('Enhancer-like');
+//     expect(query['filters']['info.biosample']).toBe('heart cell');
+// });

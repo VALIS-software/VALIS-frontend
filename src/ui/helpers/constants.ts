@@ -1,11 +1,3 @@
-const FILTER_TYPES = {
-  DATASET: 'dataset',
-  TYPE: 'type',
-  VARIANT_TAG: 'variant_tag',
-  ALLELE_FREQUENCY: 'allele_frequency',
-  P_VALUE: 'p_value',
-  CHROMOSOME: 'chromosome',
-};
 
 // These const strings should be consistent with backend sirius.realdata.constants
 const DATA_SOURCE_GENOME = 'GRCh38_gff';
@@ -55,7 +47,7 @@ for (let i = 0; i < CHROMOSOME_SIZES.length; i++) {
   CHROMOSOME_START_BASE_PAIRS.push(currSize);
 }
 
-const CHROMOSOME_NAMES = [];
+const CHROMOSOME_NAMES: Array<string> = [];
 for (let i = 1; i < 23; i++) {
   CHROMOSOME_NAMES.push(`chr${i}`);
 }
@@ -97,6 +89,5 @@ export {
   DATA_SOURCE_ENSEMBL,
   DATA_SOURCE_GTEX,
   DATA_SOURCES,
-  FILTER_TYPES,
   VARIANT_TAGS,
 };

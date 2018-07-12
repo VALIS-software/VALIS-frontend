@@ -9,8 +9,12 @@ import CircularProgress from "material-ui/CircularProgress";
 import SearchResultsView from '../../SearchResultsView/SearchResultsView';
 import ErrorDetails from "../ErrorDetails/ErrorDetails";
 import buildQueryParser from "sirius/queryparser";
-import './TokenBox.scss';
 import SiriusApi from "sirius/SiriusApi";
+import QueryModel from "../../../models/QueryModel";
+
+const immutable = require('immutable');
+
+import './TokenBox.scss';
 
 class TokenBox extends React.Component {
   constructor(props) {
@@ -174,8 +178,9 @@ class TokenBox extends React.Component {
   runSearch = () => {
     const queryStr = this.buildQueryStringFromTokens(this.state.tokens) + ' ' + this.state.searchString;
     this.appModel.trackMixPanel("Run search", { 'queryStr': queryStr });
-    const query = this.state.query;
-    const view = (<SearchResultsView text={queryStr} query={query} viewModel={this.viewModel} appModel={this.appModel} />);
+    const query = new QueryModel(this.state.query);
+    const uid = `search-result-${window.performance.now()}`;
+    const view = (<SearchResultsView key={uid} text={queryStr} query={query} viewModel={this.viewModel} appModel={this.appModel} />);
     this.viewModel.pushView('Search Results', query, view);
   }
 

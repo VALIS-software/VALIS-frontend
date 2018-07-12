@@ -1,4 +1,7 @@
 // Dependencies
+
+const immutable = require('immutable');
+
 import * as React from "react";
 import * as PropTypes from "prop-types";
 import CircularProgress from "material-ui/CircularProgress";
@@ -7,10 +10,11 @@ import GenomicLocation from "../Shared/GenomicLocation/GenomicLocation";
 import Pills from "../Shared/Pills/Pills";
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
-import Util from "../../helpers/util";
 import { prettyPrint } from "../TraitDetails/TraitDetails";
 import SiriusApi from "sirius/SiriusApi";
-const { Map, Set } = require('immutable');
+import { FilterType } from "../../../ui/models/QueryModel";
+
+
 
 // Styles
 import "./SearchResultsView.scss";
@@ -25,42 +29,33 @@ class SearchResultsView extends React.Component {
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
     this.api = this.appModel.api;
-    
-    this.currentQuery = null;
-    this.requestedQuery = null;
+
     this.cursor = 0;
-    this.query = props.query;
-    this.currentQuery = null;
-    this.filters = props.filters || new Map();
+    this.fetchedQuery = null;
 
     this.state = {
-      isLoading: false,
+      isLoading: true,
       results: [],
     };
     this._cache = new CellMeasurerCache({
       fixedWidth: true,
       minHeight: 80,
     });
+
+    this.updateQueryModel(props.query);
   }
 
   componentDidMount() {
     const height = document.getElementById('search-results-view').clientHeight;
     this.setState({ height });
   }
-  
-  componentDidUpdate(prevProps, prevState) {
-    this.query = this.props.query;
-    if (this.currentQuery !== this.queryToFetch()) {
-      this.fetch(true);
-    }
-  }
 
   addQueryAsTrack = () => {
-    this.props.appModel.addAnnotationTrack(this.props.text, this.state.query, this.state.filters);
+    //@TODO: wire this back 
+    //this.props.appModel.addAnnotationTrack(this.props.text, this.state.query, this.state.filters);
   }
 
   fetch = (clearResults = false) => {
-    const currentQuery = this.queryToFetch();
     // clear the results if needed
     if (clearResults) {
       this.cursor = 0;
@@ -77,11 +72,11 @@ class SearchResultsView extends React.Component {
     this.props.appModel.pushLoading();
 
     // update the current fetched query
-    this.currentQuery = currentQuery;
+    this.fetchedQuery = this.query;
     
     const cursor = this.cursor;
-
-    SiriusApi.getQueryResults(currentQuery, true, cursor, cursor + FETCH_SIZE).then(results => {
+    const queryJson = this.fetchedQuery.getFilteredQuery();
+    SiriusApi.getQueryResults(queryJson, true, cursor, cursor + FETCH_SIZE).then(results => {
       this.props.appModel.popLoading();
       const singleResult = (results.result_start === 0 && results.result_end === 1 && results.reached_end === true);
       if (singleResult) {
@@ -113,20 +108,16 @@ class SearchResultsView extends React.Component {
     });
   }
 
-  queryToFetch = () => {
-    return Util.applyFilterToQuery(this.query, this.filters);
-  }
-
-  updateFilters = (filters) => {
-    this.filters = new Map(filters);
+  updateQueryModel = (query) => {
+    this.query = query;
     this.setState({
       showFilters: false,
     });
 
     // update the track:
-    if (this.props.trackGuid) {
-      this.props.appModel.setTrackFilter(this.props.trackGuid, this.filters);
-    }
+    // if (this.props.trackGuid) {
+    //   this.props.appModel.setTrackFilter(this.props.trackGuid, this.filters);
+    // }
 
     // reload the data if needed
     this.fetch(true);
@@ -231,13 +222,34 @@ class SearchResultsView extends React.Component {
     let filterMenu = null;
 
     if (this.state.showFilters) {
-      filterMenu = (<SearchFilter key={this.filters.toString()} appModel={this.props.appModel} viewModel={this.props.viewModel} filters={this.filters} onFinish={this.updateFilters} onCancel={this.toggleFilters} />);
+      const enabledFilters = [FilterType.DATASET];
+      if (this.state.results.length > 0) {
+        const type = this.state.results[0].type;
+        if (type === 'variant' || type === 'SNP') {
+          enabledFilters.push(FilterType.VARIANT_TAG);
+        }
+        if (type !== 'trait') {
+          enabledFilters.push(FilterType.CHROMOSOME);
+        }
+      }
+      filterMenu = (<SearchFilter 
+        query={this.query}
+        onFinish={this.updateQueryModel} 
+        onCancel={this.toggleFilters} 
+        enabledFilters={enabledFilters}
+      />);
     }
+
+    let addTrackButton = null;
+    if (this.state.results && this.state.results[0].type !== 'trait') {
+      addTrackButton = (<button className="float-left" onClick={this.addQueryAsTrack}>Add as Track</button>);
+    }
+
     return (
       <div id="search-results-view" className="search-results-view">
         <div className="search-filters">
           <div className="clearfix">
-            <button className="float-left" onClick={this.addQueryAsTrack}>Add as Track</button>
+            {addTrackButton}
             <button className="float-right" onClick={this.toggleFilters}>Filter</button>
           </div>
           <div>{filterMenu}</div>

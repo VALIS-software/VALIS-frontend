@@ -7,12 +7,15 @@ import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
 import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
 import '../Shared/Shared.scss';
 import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
+import QueryModel from '../../models/QueryModel';
 import SiriusApi from "sirius/SiriusApi";
 import QueryBuilder from "sirius/QueryBuilder";
 import EntityType from "sirius/EntityType";
 
+
 // Styles
 import './GeneDetails.scss';
+import QueryModel from '../../models/QueryModel';
 
 
 function prettyPrint(str) {
@@ -106,7 +109,8 @@ class GeneDetails extends React.Component {
 
   loadQuery(title, query) {
     this.appModel.trackMixPanel("Run search", { 'query': JSON.stringify(query) });
-    const view = (<SearchResultsView text={''} query={query} viewModel={this.viewModel} appModel={this.appModel} />);
+    const queryModel = new QueryModel(query);
+    const view = (<SearchResultsView text={''} query={queryModel} viewModel={this.viewModel} appModel={this.appModel} />);
     this.viewModel.pushView(title, query, view);
   }
 
