@@ -333,6 +333,7 @@ export class Panel extends Object2D {
 
         e.preventDefault();
         e.stopPropagation();
+
         this._dragXF0 = e.fractionX;
         this._dragX00 = this.x0;
 
