@@ -19,6 +19,7 @@ type Props = {
     query: QueryModel,
     onFinish: (query: QueryModel) => void,
     onCancel: () => void,
+    enabledFilters: Array<FilterType>
 }
 
 const rootFilterOptions = [
@@ -103,7 +104,9 @@ class SearchFilter extends React.Component<Props, State> {
         </div>);
         if (this.state.currFilterMenu === null) {
             // show the filter selector
-            menuItems = rootFilterOptions.map(item => {
+            let options = rootFilterOptions;
+            if (this.props.enabledFilters) options = options.filter(d => this.props.enabledFilters.indexOf(d.type) >= 0);
+            menuItems = options.map(item => {
                 return (<div key={item.title} onClick={() => this.setCurrentFilterMenu(item.type)} className="filter-type-chooser">{item.title}</div>);
             });
             menuOptions = (<div className="clearfix">

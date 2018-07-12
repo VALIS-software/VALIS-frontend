@@ -12,7 +12,7 @@ import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton'
 import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import { prettyPrint } from "../TraitDetails/TraitDetails";
 import SiriusApi from "sirius/SiriusApi";
-import QueryModel from "../../../ui/models/QueryModel";
+import { FilterType } from "../../../ui/models/QueryModel";
 
 
 
@@ -222,17 +222,34 @@ class SearchResultsView extends React.Component {
     let filterMenu = null;
 
     if (this.state.showFilters) {
+      const enabledFilters = [FilterType.DATASET];
+      if (this.state.results.length > 0) {
+        const type = this.state.results[0].type;
+        if (type === 'variant' || type === 'SNP') {
+          enabledFilters.push(FilterType.VARIANT_TAG);
+        }
+        if (type !== 'trait') {
+          enabledFilters.push(FilterType.CHROMOSOME);
+        }
+      }
       filterMenu = (<SearchFilter 
         query={this.query}
         onFinish={this.updateQueryModel} 
         onCancel={this.toggleFilters} 
+        enabledFilters={enabledFilters}
       />);
     }
+
+    let addTrackButton = null;
+    if (this.state.results && this.state.results[0].type !== 'trait') {
+      addTrackButton = (<button className="float-left" onClick={this.addQueryAsTrack}>Add as Track</button>);
+    }
+
     return (
       <div id="search-results-view" className="search-results-view">
         <div className="search-filters">
           <div className="clearfix">
-            <button className="float-left" onClick={this.addQueryAsTrack}>Add as Track</button>
+            {addTrackButton}
             <button className="float-right" onClick={this.toggleFilters}>Filter</button>
           </div>
           <div>{filterMenu}</div>
