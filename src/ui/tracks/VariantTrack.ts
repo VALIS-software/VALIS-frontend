@@ -72,30 +72,16 @@ export class VariantTrack extends Track<'variant'> {
                     let textOpacity = Math.min(Math.max((textSizePx - minTextSize) / (maxTextSize - minTextSize), 0.0), 1.0) * maxOpacity;
                     textOpacity = textOpacity * textOpacity;
 
-                    // @! very suboptimal; should be using a batch text object
+                    // @! very suboptimal: draw each character individually; should be using a batch text object
                     // display text
                     if (textOpacity > 0 && textSizePx > 0) {
                         for (let variant of tile.payload) {
-                            let refSpan = variant.refSequence.length;
                             let startIndex = variant.baseIndex;
 
                             let altIndex = 0;
 
                             for (let altSequence in variant.alts) {
                                 let altSpan = altSequence.length;
-
-                                let lengthDelta = altSpan - refSpan;
-                                // generate color from altFreq and lengthDelta
-                                /*
-                                let color: Array<number>;
-                                if (lengthDelta === 0) {
-                                    color = [.6, .6, .6, 1];
-                                } else if (lengthDelta < 0) {
-                                    color = [.6, 0, 0, 1];
-                                } else {
-                                    color = [0, .6, 0, 1];
-                                }
-                                */
 
                                 for (let i = 0; i < altSpan; i++) {
                                     let baseCharacter = altSequence[i];
@@ -188,7 +174,7 @@ export class VariantTrack extends Track<'variant'> {
 
                     tileObject.layoutParentX = (tile.x - x0) / span;
                     tileObject.layoutW = tile.span / span;
-                    tileObject.opacity = 1.0;
+                    tileObject.opacity = microOpacity;
 
                     this._onStageAnnotations.get('micro-tile:' + tile.key, () => {
                         this.add(tileObject);
