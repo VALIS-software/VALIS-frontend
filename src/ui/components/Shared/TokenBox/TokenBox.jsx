@@ -87,13 +87,21 @@ class TokenBox extends React.Component {
 
       this.getSuggestions(this.state.tokens, showSuggestions);
     } else {
-      // fetch new suggestions:
-      const newTokens = this.state.tokens.slice(0);
-      newTokens.push({
-        value: value,
-        quoted: this.state.quoteInput,
-      });
-      this.getSuggestions(newTokens);
+        // fetch new suggestions:
+        const newTokens = this.state.tokens.slice(0);
+        newTokens.push({
+          value: value,
+          quoted: this.state.quoteInput,
+        });
+        const newString= this.buildQueryStringFromTokens(newTokens);
+        const testParse = this.queryParser.getSuggestions(newString);
+        if (testParse.query !== null && params.source === 'click') {
+          this.pushSearchResultsView(newTokens, newString, testParse.query);
+        } else {
+          this.getSuggestions(newTokens, true);
+        }
+        
+        
     }
   };
 
@@ -175,11 +183,15 @@ class TokenBox extends React.Component {
     return prevState;
   }
 
-  runSearch = () => {
-    const queryStr = this.buildQueryStringFromTokens(this.state.tokens) + ' ' + this.state.searchString;
-    this.appModel.trackMixPanel("Run search", { 'queryStr': queryStr });
-    const query = new QueryModel(this.state.query);
+  runCurrentSearch = () => {
+    this.pushSearchResultsView(this.state.tokens, this.state.searchString, this.state.query);
+  }
+
+  pushSearchResultsView = (tokens, searchString, query) => {
+    const queryStr = this.buildQueryStringFromTokens(tokens) + ' ' + searchString;
+    const query = new QueryModel(query);
     const uid = `search-result-${window.performance.now()}`;
+    this.appModel.trackMixPanel("Run search", { 'queryStr': queryStr });
     const view = (<SearchResultsView key={uid} text={queryStr} query={query} viewModel={this.viewModel} appModel={this.appModel} />);
     this.viewModel.pushView('Search Results', query, view);
   }
@@ -212,7 +224,7 @@ class TokenBox extends React.Component {
     if (formValue.length === 0 && evt.key === 'Backspace') {
       this.popToken();
     } else if (evt.key === 'Enter' && this.state.query) {
-      this.runSearch();
+      this.runCurrentSearch();
     }
   }
 
@@ -248,7 +260,7 @@ class TokenBox extends React.Component {
       open={this.state.open}
       filter={AutoComplete.fuzzyFilter}
       hintText={this.state.hintText}
-      menuCloseDelay={Infinity}
+      menuCloseDelay={0}
       dataSource={this.state.dataSource}
       dataSourceConfig={{text: 'value', value: 'value'}}
       onUpdateInput={this.handleUpdateInput}
@@ -262,7 +274,7 @@ class TokenBox extends React.Component {
     const searchEnabled = this.state.query !== null;
     const tooltip = searchEnabled ? 'Search' : 'Enter a valid search';
     const clearButton = drawClear ? (<IconButton tooltip="Clear" onClick={this.clearSearch}><SvgClose /></IconButton>) : (<div />);
-    const searchButton = (<IconButton onClick={this.runSearch} disabled={!searchEnabled} tooltip={tooltip}><ActionSearch /></IconButton>);
+    const searchButton = (<IconButton onClick={this.runCurrentSearch} disabled={!searchEnabled} tooltip={tooltip}><ActionSearch /></IconButton>);
     const progress = this.state.loading ? (<CircularProgress size={80} thickness={5} />) : null;
     const status = (<div style={style}>
       {progress}
