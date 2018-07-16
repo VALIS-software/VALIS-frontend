@@ -76,7 +76,6 @@ export class App extends React.Component<Props, State> {
 		SharedTileStore['sequence']['chromosome1'] = new SequenceTileStore('chromosome1');
 		SharedTileStore['annotation']['chromosome1'] = new AnnotationTileStore('chromosome1');
 		SharedTileStore['macroAnnotation']['chromosome1'] = new MacroAnnotationTileStore('chromosome1');
-		SharedTileStore['variant']['chromosome1'] = new VariantTileStore('chromosome1');
 
 		// @! temporary preload lods
 		SharedTileStore['sequence']['chromosome1'].getTiles(0.9, 1.1e6, 1 << 12, true, () => {});
@@ -86,13 +85,13 @@ export class App extends React.Component<Props, State> {
 		// initialize with some dummy data
 		let tracks: Array<TrackModel> = [
 			{ sequenceId: 'chromosome1', name: '→ Sequence', type: 'sequence' },
-			{ sequenceId: 'chromosome1', name: 'Variants', type: 'variant' },
+			{ sequenceId: 'chromosome1', name: 'Variants', type: 'variant', toEdges: undefined },
 			{ sequenceId: 'chromosome1', name: '→ Strand Genes', type: 'annotation', strand: Strand.Positive },
 			{ sequenceId: 'chromosome1', name: '← Strand Genes', type: 'annotation', strand: Strand.Negative },
 		];
 		let i = 0;
 		for (let model of tracks) {
-			trackViewer.addTrackRow(model);
+			trackViewer.addTrackRow(model, undefined, false);
 		}
 
 		for (let panel of [
@@ -324,13 +323,28 @@ export class App extends React.Component<Props, State> {
 		}
 	}
 
+	protected addVariantTrack(title: string, toEdges: any) {
+		this.state.trackViewer.addTrackRow({
+			type: 'variant',
+			sequenceId: 'chromosome1',
+			name: title,
+			toEdges: toEdges
+		});
+	}
+
 	// global app methods, assumes a single instance of App
 	static readonly canvasPixelRatio = window.devicePixelRatio || 1;
 
 	private static appInstance: App;
 
 	static displayRegion(contig: string, startBase: number, endBase: number) {
-		App.appInstance.displayRegion(contig, startBase, endBase);
+		this.appInstance.displayRegion(contig, startBase, endBase);
+	}
+
+	static addVariantTrack(title: string, toEdges: any) {
+		this.appInstance.addVariantTrack(title, toEdges);
+
+		console.log('addVariantTrack', toEdges);
 	}
 
 
