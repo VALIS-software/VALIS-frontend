@@ -37,16 +37,16 @@ class UpgradeDialog extends React.Component {
         style={{float:'left'}}
         onClick={this.handleClose}
       />,
-      <UserFeedbackButton label="Request Upgrade"/>,
+      <UserFeedbackButton label="Get more info"/>,
     ];
     return (<Dialog
-          title="Premium Feature"
+          title="Feature not available"
           actions={actions}
           modal={true}
           contentStyle={{width: 600}}
           open={this.state.open}
         >
-          This feature is only available in the full version of VALIS.
+          This feature is still under development. Please contact us for more information.
         </Dialog>);
     }
 }

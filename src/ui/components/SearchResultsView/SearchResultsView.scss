@@ -24,6 +24,13 @@ $filter-header-height: 48px;
 			&:hover {
 				border: 1px solid lighten($valis-blue-light, 20%);
 			}
+			.search-title {
+				max-width: 90%;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				overflow: hidden;
+				display: inline-block;
+			}
 			cursor: pointer;
 			background-color: $valis-white;
 			border: 1px solid $valis-grey-light;
