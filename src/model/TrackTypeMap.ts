@@ -6,5 +6,7 @@ export interface TrackTypeMap {
     'annotation': {
         strand: Strand,
     };
-    'variant': {},
+    'variant': {
+        toEdges?: any
+    },
 }
