@@ -107,7 +107,7 @@ class TrackViewer extends Object2D {
     }
 
     // track-viewer state deltas
-    addTrackRow(model: TrackModel, heightPx: number = this.defaultTrackHeight, animate: boolean = false) {
+    addTrackRow(model: TrackModel, heightPx: number = this.defaultTrackHeight, animate: boolean = true) {
         // create a tack and add the header element to the grid
 
         const rowHeightSetter = (row: TrackRow, h:number) => { this.setRowHeight(row, h, true)};
@@ -147,7 +147,7 @@ class TrackViewer extends Object2D {
         this.appModel.pushView((<DatasetSelector appModel={this.appModel}/>));
     }
 
-    addPanel(model: PanelModel, animate: boolean) {
+    addPanel(model: PanelModel, animate: boolean = true) {
         let edges = this.panelEdges;
         let newColumnIndex = Math.max(edges.length - 1, 0);
 
