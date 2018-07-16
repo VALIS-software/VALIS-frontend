@@ -24,8 +24,7 @@ export class VariantTrack extends Track<'variant'> {
 
     constructor(model: TrackModel<'variant'>) {
         super(model);
-
-        this.tileStore = SharedTileStore.variant[model.sequenceId];
+        this.tileStore = new VariantTileStore(model);
     }
 
     protected _microTileCache = new UsageCache<MicroInstances>();
