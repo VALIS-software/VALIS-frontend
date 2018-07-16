@@ -16,14 +16,15 @@
  */
 
 import * as fs from 'fs';
-import AnnotationTileset from "sirius/AnnotationTileset";
-import Gff3Parser from "gff3/Gff3Parser";
+import { AnnotationTileset, Tile }  from "../../../lib/sirius/AnnotationTileset";
+import Gff3Parser from "../../../lib/gff3/Gff3Parser";
 import { Terminal } from "./Terminal";
-import { Feature } from "gff3/Feature";
+import { Feature } from "../../../lib/gff3/Feature";
 
 // settings
-const outputDirectory = '../../data/chromosome1/annotation';
-const inputPath = 'data/Homo_sapiens.GRCh38.92.chromosome.1.gff3';
+// const outputDirectory = '../../data/chromosome1/annotation';
+const outputDirectory = '_output';
+const inputPath = 'data/Homo_sapiens.GRCh38.92.gff3';
 
 const featureTypeBlacklist = ['pseudogene', 'biological_region', 'chromosome'];
 
@@ -50,6 +51,12 @@ let macroTileset = new AnnotationTileset(
 	Terminal.error,
 );
 
+let completedSequences = new Set<string>();
+
+// delete any existing output
+deleteDirectory(outputDirectory);
+fs.mkdirSync(outputDirectory);
+
 let inputFileStat = fs.statSync(inputPath);
 
 let stream = fs.createReadStream(inputPath, {
@@ -57,72 +64,143 @@ let stream = fs.createReadStream(inputPath, {
 	autoClose: true,
 });
 
-const progressUpdatePeriod_ms = 1000/60;
+let _lastSequenceId: string | undefined = undefined;
 let _lastProgressTime_ms = -Infinity;
-let parser = new Gff3Parser({
+const storeFeatures = false;
+let parser = new Gff3Parser(
+	{
+		onFeatureComplete: (feature) => {
+			if (feature.sequenceId === undefined) {
+				Terminal.warn(`Undefined sequenceId for feature (skipping)`, feature);
+				return;
+			}
 
-	onFeatureComplete: (feature) => {
-		if (featureTypeBlacklist.indexOf(feature.type) === -1) {
-			tileset.addTopLevelFeature(feature);
-			macroTileset.addTopLevelFeature(feature);
-		} else {
-			skippedFeatureTypes[feature.type] = (skippedFeatureTypes[feature.type] || 0) + 1;
-		}
-		
-		// log progress
-		let hrtime = process.hrtime();
-		let t_ms = hrtime[0] * 1000 + hrtime[1]/1000000;
+			let _lastSequenceIdCopy = _lastSequenceId;
+			_lastSequenceId = feature.sequenceId;
 
-		if ((t_ms - _lastProgressTime_ms) > progressUpdatePeriod_ms) {
-			Terminal.clearLine();
-			Terminal.log(`Processing <b>${Math.round(100 * stream.bytesRead / inputFileStat.size)}%</b>`);
-			Terminal.cursorUp();
-			_lastProgressTime_ms = t_ms;
+			if (feature.sequenceId !== _lastSequenceIdCopy) {
+				if (_lastSequenceIdCopy !== undefined) {
+					// sequence complete
+					onSequenceComplete(_lastSequenceIdCopy);
+				}
+
+				// sequence started
+				Terminal.log(`Started sequence <b>${feature.sequenceId}</b>`);
+
+				if (completedSequences.has(feature.sequenceId)) {
+					Terminal.error(`Started sequence twice! Results will be unreliable`);
+				}
+			}
+
+			if (featureTypeBlacklist.indexOf(feature.type) === -1) {
+				tileset.addTopLevelFeature(feature);
+				macroTileset.addTopLevelFeature(feature);
+			} else {
+				skippedFeatureTypes[feature.type] = (skippedFeatureTypes[feature.type] || 0) + 1;
+			}
+			
+			// log progress
+			let hrtime = process.hrtime();
+			let t_ms = hrtime[0] * 1000 + hrtime[1]/1000000;
+			const progressUpdatePeriod_ms = 1000 / 60;
+
+			if ((t_ms - _lastProgressTime_ms) > progressUpdatePeriod_ms) {
+				Terminal.rewriteLineFormatted('progress-update', `<b>></b> Parsing features of sequence <b>${feature.sequenceId}</b> <b>${Math.round(100 * stream.bytesRead / inputFileStat.size)}%</b>`);
+				_lastProgressTime_ms = t_ms;
+			}
+		},
+
+		// print errors and comments
+		onError: Terminal.error,
+		onComment: (c) => Terminal.log(`<dim><i>${c}<//>`),
+
+		onComplete: (gff3) => {
+			if (_lastSequenceId !== undefined) {
+				onSequenceComplete(_lastSequenceId);
+			}
+			
+			// post-convert info
+			if (Object.keys(unknownFeatureTypes).length > 0) {
+				Terminal.warn('Unknown features:', unknownFeatureTypes);
+			}
+			if (Object.keys(skippedFeatureTypes).length > 0) {
+				Terminal.log('Skipped features:<b>', skippedFeatureTypes);
+			}
 		}
+
 	},
+	storeFeatures
+);
 
-	// print errors and comments
-	onError: Terminal.error,
-	onComment: (c) => Terminal.log(`<dim><i>${c}<//>`),
+function onSequenceComplete(sequenceId: string) {
+	Terminal.success(`Completed sequence <b>${sequenceId}</b>`);
 
-	onComplete: (gff3) => {
-		Terminal.clearLine();
-		
-		// post-convert info
-		if (Object.keys(unknownFeatureTypes).length > 0) {
-			Terminal.warn('Unknown features:', unknownFeatureTypes);
+	completedSequences.add(sequenceId);
+
+	// save tiles to disk
+	saveTiles(sequenceId, tileset.sequences[sequenceId], `${outputDirectory}/${sequenceId}`);
+
+	// release sequence tile data since we no longer need it
+	delete tileset.sequences[sequenceId];
+}
+
+function saveTiles(sequenceId: string, tiles: Array<Tile>, directory: string) {
+	try {
+		Terminal.log(`Saving sequence <b>${sequenceId}</b> tiles`);
+
+		// delete and create output directory
+		deleteDirectory(directory);
+
+		let totalFeatures = tiles.reduce((accumulator, current) => {
+			return accumulator + current.content.length;
+		}, 0);
+
+		if (totalFeatures === 0) {
+			return;
 		}
-		if (Object.keys(skippedFeatureTypes).length > 0) {
-			Terminal.log('Skipped features:<b>', skippedFeatureTypes);
+
+		fs.mkdirSync(directory);
+
+		// write tile files to output directory
+		let nSavedFiles = 0;
+
+		for (let tile of tiles) {
+			let filename = `${tile.startIndex.toFixed(0)},${tile.span.toFixed(0)}`;
+			let filePath = `${directory}/${filename}.json`;
+			fs.writeFileSync(filePath, JSON.stringify(tile.content));
+			nSavedFiles++;
 		}
 
-		saveTileset(tileset, outputDirectory);
-		saveTileset(macroTileset, outputDirectory + '-' + 'macro');
+		Terminal.success(`Saved <b>${nSavedFiles}</b> files into <b>${directory}</b>`);
+	} catch (e) {
+		Terminal.error(e);
+		process.exit();
+	}
+}
+
+function deleteDirectory(directory: string) {
+	// catch possible catastrophe
+	let lc = directory.trim().toLowerCase();
+	if (lc[0] === '/' || lc === '' || lc === '.') {
+		Terminal.error(`Illegal directory <b>${directory}</b>`);
+		throw 'Error deleting directory';
 	}
 
-});
-
-function saveTileset(tileset: AnnotationTileset, directory: string) {
 	// delete output directory
 	if (fs.existsSync(directory)) {
+		Terminal.log(`Deleting directory <b>${directory}</b>`);
+
 		for (let filename of fs.readdirSync(directory)) {
-			fs.unlinkSync(directory + '/' + filename);
+			let p = directory + '/' + filename;
+			if (fs.lstatSync(p).isDirectory()) {
+				deleteDirectory(p);
+			} else {
+				fs.unlinkSync(p);
+			}
 		}
+
 		fs.rmdirSync(directory);
 	}
-	// create output directory
-	fs.mkdirSync(directory);
-
-	// write tile files to output directory
-	let nSavedFiles = 0;
-	for (let tile of tileset.tiles) {
-		let filename = `${tile.startIndex.toFixed(0)},${tile.span.toFixed(0)}`;
-		let filePath = `${directory}/${filename}.json`;
-		fs.writeFileSync(filePath, JSON.stringify(tile.content));
-		nSavedFiles++;
-	}
-
-	Terminal.success(`Saved <b>${nSavedFiles}</b> files into <b>${directory}</b>`);
 }
 
 stream.on('data', parser.parseChunk);

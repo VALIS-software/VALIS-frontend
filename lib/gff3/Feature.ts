@@ -21,6 +21,7 @@ export type FeatureAttributes = {
 }
 
 export type Feature = {
+    sequenceId: string,
     id: string | undefined;
     name: string | undefined;
     type: string;

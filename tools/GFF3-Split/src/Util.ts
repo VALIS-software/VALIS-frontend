@@ -1,5 +1,5 @@
 import Terminal from "./Terminal";
-import Feature from "gff3/Feature";
+import Feature from "../../../lib/gff3/Feature";
 
 export function printSummary(features: Iterable<Feature>) {
     Terminal.log('Parsing complete\n');

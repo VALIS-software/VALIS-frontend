@@ -45,7 +45,7 @@ export class Gff3Parser {
         onComment: () => { },
     }
 
-    constructor(callbacks: Partial<Callbacks>) {
+    constructor(callbacks: Partial<Callbacks>, protected storeFeatures: boolean) {
         this.callbacks = {
             ...this.callbacks,
             ...callbacks,
@@ -72,7 +72,7 @@ export class Gff3Parser {
         // initialize parser state
         this.gff3 = {
             version: '3', // default to 3, may be overridden
-            sequences: {}
+            sequences: {},
         }
 
         this.currentScope = {};
@@ -130,6 +130,7 @@ export class Gff3Parser {
         }
 
         let feature: Feature = {
+            sequenceId: seqId,
             id: attributes.id,
             name: attributes.name,
             type: type,
@@ -149,7 +150,9 @@ export class Gff3Parser {
         // add to feature set
         if (attributes.parentIds == null) {
             // define a top-level feature
-            this.getSequence(seqId).features.add(feature);
+            if (this.storeFeatures) {
+                this.getSequence(seqId).features.add(feature);
+            }
             this.currentScopeTopLevel.add(feature);
         } else {
             // attach to a feature in the local scope
