@@ -328,8 +328,6 @@ export class App extends React.Component<Props, State> {
 
 	static addVariantTrack(title: string, toEdges: any) {
 		this.appInstance.addVariantTrack(title, toEdges);
-
-		console.log('addVariantTrack', toEdges);
 	}
 
 
