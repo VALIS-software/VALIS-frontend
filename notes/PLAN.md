@@ -84,8 +84,8 @@
     - Improve tile z positioning maaybe
     - Fix track cursor
     - search for @! depth-box tag
-
-- "Device" -> "GPUDevice"
+- Samples and examples
+- Open source
 
 - State management, undo/redo
 
