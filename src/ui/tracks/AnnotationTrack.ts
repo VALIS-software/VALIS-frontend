@@ -6,7 +6,7 @@ import { AnnotationTileStore, Gene, MacroAnnotationTileStore, Transcript } from 
 import SharedTileStore from "../../model/data-store/SharedTileStores";
 import { TileState } from "../../model/data-store/TileStore";
 import TrackModel from "../../model/TrackModel";
-import GPUDevice, { AttributeLayout, AttributeType, VertexAttributeBuffer } from "../../rendering/GPUDevice";
+import GPUDevice, { AttributeLayout, AttributeType, VertexAttributeBuffer } from "nucleus/GPUDevice";
 import { BlendMode, DrawContext, DrawMode } from "../../rendering/Renderer";
 import InstancingBase from "../core/InstancingBase";
 import Object2D from "../core/Object2D";

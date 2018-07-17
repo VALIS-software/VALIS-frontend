@@ -1,4 +1,4 @@
-import GPUDevice, { AttributeLayout, GPUBuffer, GPUVertexState, shaderTypeLength, VertexAttributeBuffer } from "../../rendering/GPUDevice";
+import GPUDevice, { AttributeLayout, GPUBuffer, GPUVertexState, shaderTypeLength, VertexAttributeBuffer } from "nucleus/GPUDevice";
 import Object2D from "./Object2D";
 import SharedResources from "./SharedResources";
 

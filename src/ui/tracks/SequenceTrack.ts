@@ -4,7 +4,7 @@ import { BlockPayload, TilePayload, SequenceTileStore } from "../../model/data-s
 import { SharedTileStore } from "../../model/data-store/SharedTileStores";
 import { Tile, TileState } from "../../model/data-store/TileStore";
 import { TrackModel } from "../../model/TrackModel";
-import GPUDevice, { AttributeType, GPUTexture } from "../../rendering/GPUDevice";
+import GPUDevice, { AttributeType, GPUTexture } from "nucleus/GPUDevice";
 import { DrawContext, DrawMode } from "../../rendering/Renderer";
 import Object2D from "../core/Object2D";
 import SharedResources from "../core/SharedResources";

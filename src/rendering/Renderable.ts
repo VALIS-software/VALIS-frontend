@@ -1,6 +1,6 @@
 import Node from './Node';
 import RenderPass from './RenderPass';
-import { GPUDevice, GPUProgram, GPUVertexState } from './GPUDevice';
+import { GPUDevice, GPUProgram, GPUVertexState } from "nucleus/GPUDevice";
 import { BlendMode, DrawContext } from './Renderer';
 
 export type RenderableInternal = {

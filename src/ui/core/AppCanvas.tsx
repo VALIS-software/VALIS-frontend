@@ -8,7 +8,7 @@
 
 import * as React from "react";
 import Node from '../../rendering/Node';
-import GPUDevice from '../../rendering/GPUDevice';
+import GPUDevice from "nucleus/GPUDevice";
 import RenderPass from '../../rendering/RenderPass';
 import Renderer from '../../rendering/Renderer';
 import Renderable from '../../rendering/Renderable';

@@ -1,5 +1,5 @@
 import SiriusApi from "sirius/SiriusApi";
-import GPUDevice, { ColorSpaceConversion, GPUTexture, TextureDataType, TextureFormat, TextureMagFilter, TextureMinFilter, TextureWrapMode } from "../../rendering/GPUDevice";
+import GPUDevice, { ColorSpaceConversion, GPUTexture, TextureDataType, TextureFormat, TextureMagFilter, TextureMinFilter, TextureWrapMode } from "nucleus/GPUDevice";
 import TileStore, { Tile } from "./TileStore";
 
 export type TilePayload = {

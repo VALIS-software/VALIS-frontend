@@ -6,7 +6,7 @@ import Scalar from "../../math/Scalar";
 import { TileState } from "../../model/data-store/TileStore";
 import UsageCache from "../../ds/UsageCache";
 import InstancingBase from "../core/InstancingBase";
-import GPUDevice, { AttributeLayout, VertexAttributeBuffer, AttributeType } from "../../rendering/GPUDevice";
+import GPUDevice, { AttributeLayout, VertexAttributeBuffer, AttributeType } from "nucleus/GPUDevice";
 import SharedResources from "../core/SharedResources";
 import { BlendMode, DrawMode, DrawContext } from "../../rendering/Renderer";
 import Object2D from "../core/Object2D";
