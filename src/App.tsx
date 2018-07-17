@@ -1,28 +1,25 @@
-import * as React from "react";
 import { Strand } from "gff3/Strand";
-import Animator from "./animation/Animator";
-import AnnotationTileStore, { MacroAnnotationTileStore } from "./model/data-store/AnnotationTileStore";
-import SequenceTileStore from "./model/data-store/SequenceTileStore";
-import SharedTileStore from "./model/data-store/SharedTileStores";
-import { TrackModel } from "./model/TrackModel";
-import { AppCanvas } from "./ui/core/AppCanvas";
-import TrackViewer from "./ui/TrackViewer";
-import Header from "./ui/components/Header/Header";
-import View from "./ui/View";
-import AppModel, { AppEvent } from "./ui/models/AppModel";
-import NavigationController from "./ui/components/NavigationController/NavigationController";
+import { Dialog, FlatButton, IconButton } from "material-ui";
 import { MuiThemeProvider } from "material-ui/styles";
-import BasicTheme from "./ui/themes/BasicTheme";
-import { EntityDetails } from "./ui/components/EntityDetails/EntityDetails";
-import { IconButton, FlatButton, Dialog } from "material-ui";
 import { ContentReport } from "material-ui/svg-icons";
-import SearchResultsView from "./ui/components/SearchResultsView/SearchResultsView";
-
-// styles
-import "./App.scss";
-import ViewModel, { ViewEvent } from "./ui/models/ViewModel";
+import * as React from "react";
 import EntityType from "sirius/EntityType";
 import SiriusApi from "sirius/SiriusApi";
+import Animator from "./animation/Animator";
+import { TrackModel } from "./model/TrackModel";
+import { EntityDetails } from "./ui/components/EntityDetails/EntityDetails";
+import Header from "./ui/components/Header/Header";
+import NavigationController from "./ui/components/NavigationController/NavigationController";
+import SearchResultsView from "./ui/components/SearchResultsView/SearchResultsView";
+import { AppCanvas } from "./ui/core/AppCanvas";
+import AppModel, { AppEvent } from "./ui/models/AppModel";
+import ViewModel, { ViewEvent } from "./ui/models/ViewModel";
+import BasicTheme from "./ui/themes/BasicTheme";
+import TrackViewer from "./ui/TrackViewer";
+import View from "./ui/View";
+import { SharedTileStore } from "./model/data-store/SharedTileStores";
+// styles
+import "./App.scss";
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
@@ -71,20 +68,10 @@ export class App extends React.Component<Props, State> {
 		let trackViewer = new TrackViewer();
 		trackViewer.setAppModel(this.appModel);
 
-		// @! temporary create tile stores
-		SharedTileStore['sequence']['chr1'] = new SequenceTileStore('chr1');
-		SharedTileStore['annotation']['chr1'] = new AnnotationTileStore('chr1');
-		SharedTileStore['macroAnnotation']['chr1'] = new MacroAnnotationTileStore('chr1');
-
-		// @! temporary preload lods
-		SharedTileStore['sequence']['chr1'].getTiles(0.9, 1.1e6, 1 << 12, true, () => {});
-		SharedTileStore['sequence']['chr1'].getTiles(0.95, 1.05e6, 1 << 8, true, () => {});
-		SharedTileStore['sequence']['chr1'].getTiles(0, 230e6, 1 << 23, true, () => {});
-
 		// initialize with some dummy data
 		let tracks: Array<TrackModel> = [
 			{ sequenceId: 'chr1', name: '→ Sequence', type: 'sequence' },
-			{ sequenceId: 'chr1', name: 'Variants', type: 'variant', toEdges: undefined },
+			// { sequenceId: 'chr1', name: 'Variants', type: 'variant', toEdges: undefined },
 			{ sequenceId: 'chr1', name: '→ Strand Genes', type: 'annotation', strand: Strand.Positive },
 			{ sequenceId: 'chr1', name: '← Strand Genes', type: 'annotation', strand: Strand.Negative },
 		];
@@ -95,7 +82,7 @@ export class App extends React.Component<Props, State> {
 
 		for (let panel of [
 			// { name: 'Chromosome 1', x0: 1358.4e3, x1: 1358.6e3}
-			{ name: 'Chromosome 1', x0: 0, x1: 249e6 }
+			{ contig: 'chr1', x0: 0, x1: 249e6 }
 		]) {
 			trackViewer.addPanel(panel, false);
 		}
@@ -165,6 +152,9 @@ export class App extends React.Component<Props, State> {
 
 		// remove event listeners
 		window.removeEventListener('resize', this.onResize);
+
+		// release shared resources
+		SharedTileStore.clearAll();
 	}
 
 	componentDidUpdate(prevProps: Props, prevState: State, snapshot: any) {

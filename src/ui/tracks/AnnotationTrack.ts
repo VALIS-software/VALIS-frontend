@@ -1,11 +1,10 @@
 import { Strand } from "gff3/Strand";
 import { GeneClass, TranscriptClass } from "sirius/AnnotationTileset";
-import { Animator } from "../../animation/Animator";
 import UsageCache from "../../ds/UsageCache";
 import { Scalar } from "../../math/Scalar";
-import { AnnotationTileStore, Gene, Transcript } from "../../model/data-store/AnnotationTileStore";
+import { AnnotationTileStore, Gene, MacroAnnotationTileStore, Transcript } from "../../model/data-store/AnnotationTileStore";
 import SharedTileStore from "../../model/data-store/SharedTileStores";
-import { Tile, TileState } from "../../model/data-store/TileStore";
+import { TileState } from "../../model/data-store/TileStore";
 import TrackModel from "../../model/TrackModel";
 import GPUDevice, { AttributeLayout, AttributeType, VertexAttributeBuffer } from "../../rendering/GPUDevice";
 import { BlendMode, DrawContext, DrawMode } from "../../rendering/Renderer";
@@ -15,8 +14,8 @@ import { Rect } from "../core/Rect";
 import SharedResources from "../core/SharedResources";
 import Text from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
-import Track from "./Track";
 import TrackRow from "../TrackRow";
+import Track from "./Track";
 
 /**
  * WIP Annotation tracks:
@@ -43,8 +42,16 @@ export class AnnotationTrack extends Track<'annotation'> {
     constructor(model: TrackModel<'annotation'>) {
         super(model);
         
-        this.annotationStore = SharedTileStore.annotation[model.sequenceId];
-        this.macroAnnotationStore = SharedTileStore.macroAnnotation[model.sequenceId];
+        this.annotationStore = SharedTileStore.getTileStore(
+            'annotation',
+            model.sequenceId,
+            () => { return new AnnotationTileStore(model.sequenceId); }
+        );
+        this.macroAnnotationStore = SharedTileStore.getTileStore(
+            'macroAnnotation',
+            model.sequenceId,
+            () => { return new MacroAnnotationTileStore(model.sequenceId); }
+        );
 
         this.yScrollNode = new Object2D();
         this.yScrollNode.z = 0;

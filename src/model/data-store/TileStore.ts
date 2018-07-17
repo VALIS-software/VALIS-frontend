@@ -100,6 +100,21 @@ export class TileStore<TilePayload, BlockPayload> {
         return block.payload;
     }
 
+    clear() {
+        // release block payloads
+        for (let lod of this.lods) {
+            for (let blockId in lod) {
+                let block = lod[blockId];
+                if (block === undefined || block.payload === undefined) {
+                    continue;
+                }
+                this.releaseBlockPayload(block.payload);
+            }
+        }
+        // release tiles to GC
+        this.lods = new Array();
+    }
+
     // user-overridden methods
     protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
         return null;

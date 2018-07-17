@@ -1,6 +1,6 @@
 import { UsageCache } from "../../ds/UsageCache";
 import { Scalar } from "../../math/Scalar";
-import { BlockPayload, TilePayload } from "../../model/data-store/SequenceTileStore";
+import { BlockPayload, TilePayload, SequenceTileStore } from "../../model/data-store/SequenceTileStore";
 import { SharedTileStore } from "../../model/data-store/SharedTileStores";
 import { Tile, TileState } from "../../model/data-store/TileStore";
 import { TrackModel } from "../../model/TrackModel";
@@ -18,7 +18,14 @@ export class SequenceTrack extends ShaderTrack<TilePayload, BlockPayload> {
     protected densityMultiplier = 2.0;
  
     constructor(model: TrackModel) {
-        super(model, SharedTileStore.sequence[model.sequenceId]);
+        super(model, SharedTileStore.getTileStore(
+            'sequence',
+            model.sequenceId,
+            () => {
+                return new SequenceTileStore(model.sequenceId);
+            }
+        ));
+
         this.color.set([0, 0, 0, 1]);
     }
 
