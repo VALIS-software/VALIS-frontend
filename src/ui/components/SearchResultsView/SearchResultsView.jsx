@@ -157,7 +157,7 @@ class SearchResultsView extends React.Component {
     const genePills = (<Pills items={result.info.variant_affected_genes} />);
     const tagPills = (<Pills items={result.info.variant_tags} />);
     const alleles = isGenomeNode ? this.renderRightInfo(result) : null;
-    title = (<div><span>{isGenomeNode ? result.name : prettyPrint(result.name, 25)}</span>{alleles}</div>);
+    title = (<div><span className="search-title">{isGenomeNode ? result.name : prettyPrint(result.name, 25)}</span>{alleles}</div>);
 
     const tags = result.info.variant_tags && result.info.variant_tags.length ? (<tr><td>Tags</td><td>{tagPills}</td></tr>) : null;
     const genes = result.info.variant_affected_genes && result.info.variant_affected_genes.length ? (<tr><td>Genes</td><td>{genePills}</td></tr>) : null;
