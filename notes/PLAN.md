@@ -1,24 +1,19 @@
+- Preload high sequence lods to avoid black when zooming out
+
 - Variants:
+    - Variant query tracks
     - Improve colors
     - Macro display
     
 - Integrate latest UI
     --- PR
-    - Anything missing from App.tsx
     - Fill out viewModel.js and appModel.ts functionality
         - Connect up TrackViewSettings
-    - api.js, merge into sirus lib
     - Migrate constants to src/Constants.ts
-    - Clear out as much as possible from Constants
-    - There's not a clear distinction of responsibilities between view and app models
-        - should viewModel exist? What's its purpose Should it's behaviour be mingrated to some navigation controller?
-    - Solve all @! refactor
-    - Remove as much as possible from util.js
     - Reorganise directories:
         - models shouldn't be in /ui
         - helpers shouldn't be in /ui
     - EventCreator -> node.js events
-    - Rebuild TrackTooltip
 
 - Tracks should never have pan-y
     - Should adaptively display
