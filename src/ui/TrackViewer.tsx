@@ -2,7 +2,6 @@ import React = require("react");
 import IconButton from "material-ui/IconButton";
 import SvgAdd from "material-ui/svg-icons/content/add";
 import Animator from "../animation/Animator";
-import PanelModel from "../model/PanelModel";
 import TrackModel from "../model/TrackModel";
 import Object2D from "./core/Object2D";
 import ReactObject from "./core/ReactObject";
@@ -14,6 +13,7 @@ import { DEFAULT_SPRING } from "./UIConstants";
 import AppModel from "../ui/models/AppModel";
 import DatasetSelector from "../ui/components/DatasetSelector/DatasetSelector";
 import { InteractionEvent } from "./core/InteractionEvent";
+import { GenomicLocation } from "../model/GenomicLocation";
 
 type Row = {
     trackRow: TrackRow, // track row pseudo object, positioning properties can be animated
@@ -62,7 +62,7 @@ class TrackViewer extends Object2D {
 
         this.addPanelButton = new ReactObject(
             <AddPanelButton onClick={() => {
-                this.addPanel({ name: 'Chromosome 1', x0: 0, x1: 249e6}, true);
+                this.addPanel({ contig: 'chr1', x0: 0, x1: 249e6}, true);
             }} />,
             this.panelHeaderHeight,
             this.panelHeaderHeight
@@ -107,7 +107,7 @@ class TrackViewer extends Object2D {
     }
 
     // track-viewer state deltas
-    addTrackRow(model: TrackModel, heightPx: number = this.defaultTrackHeight, animate: boolean = false) {
+    addTrackRow(model: TrackModel, heightPx: number = this.defaultTrackHeight, animate: boolean = true) {
         // create a tack and add the header element to the grid
 
         const rowHeightSetter = (row: TrackRow, h:number) => { this.setRowHeight(row, h, true)};
@@ -147,7 +147,7 @@ class TrackViewer extends Object2D {
         this.appModel.pushView((<DatasetSelector appModel={this.appModel}/>));
     }
 
-    addPanel(model: PanelModel, animate: boolean) {
+    addPanel(location: GenomicLocation, animate: boolean = true) {
         let edges = this.panelEdges;
         let newColumnIndex = Math.max(edges.length - 1, 0);
 
@@ -158,7 +158,10 @@ class TrackViewer extends Object2D {
         edges.push(newEdge);
 
         // create panel object and add header to the scene graph
-        let panel = new Panel(model, newColumnIndex, (p) => this.closePanel(p, true), this.spacing, this.panelHeaderHeight, this.xAxisHeight);
+        let panel = new Panel((p) => this.closePanel(p, true), this.spacing, this.panelHeaderHeight, this.xAxisHeight);
+        panel.setContig(location.contig);
+        panel.setRange(location.x0, location.x1);
+        panel.column = newColumnIndex; // @! should use array of panels instead of column field
         panel.layoutH = 1; // fill the full grid height
         this.grid.add(panel);
 
@@ -271,11 +274,13 @@ class TrackViewer extends Object2D {
 
         // delete track tiles from the track
         // (we can leave them in the scene-graph of the panel and the GC should still cull them all)
-        for (let row of this.rows) {
-            for (let track of row.trackRow.tracks) {
-                if (track.panel === panel) {
-                    panel.remove(track); // (since the panel is removed from the SG this isn't really required)
-                    row.trackRow.deleteTrack(track);
+        for (let track of panel.tracks) {
+            panel.remove(track);
+            for (let row of this.rows) {
+                for (let t of row.trackRow.tracks) {
+                    if (t === track) {
+                        row.trackRow.deleteTrack(track);
+                    }
                 }
             }
         }

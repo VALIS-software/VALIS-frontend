@@ -1,7 +1,6 @@
 /**
  * Temporary API for development 
  */
-
 import axios, { AxiosRequestConfig, CancelToken } from 'axios';
 
 import { TileContent } from './AnnotationTileset';
@@ -18,19 +17,19 @@ export class SiriusApi {
     } = {};
 
     static loadAnnotations(
-        sequenceId: string,
+        contig: string,
         macro: boolean,
         startBaseIndex: number,
         span: number,
     ): Promise<TileContent> {
-        let jsonPath = `https://valis-tmp-data.firebaseapp.com/data/${sequenceId}/annotation${macro ? '-macro' : ''}/${startBaseIndex},${span}.json`;
+        let jsonPath = `https://valis-tmp-data.firebaseapp.com/data/annotation/${contig}${macro ? '-macro' : ''}/${startBaseIndex},${span}.json`;
         return axios.get(jsonPath).then((a) => {
             return a.data;
         });
     }
 
     static loadACGTSubSequence(
-        sequenceId: string,
+        contig: string,
         lodLevel: number,
         lodStartBaseIndex: number,
         lodSpan: number,
@@ -46,7 +45,7 @@ export class SiriusApi {
         let startBasePair = samplingDensity * lodStartBaseIndex + 1;
         let spanBasePair = lodSpan * samplingDensity;
         let endBasePair = startBasePair + spanBasePair - 1;
-        let url = `${this.apiUrl}/datatracks/sequence/chr1/${startBasePair}/${endBasePair}?sampling_rate=${samplingDensity}`;
+        let url = `${this.apiUrl}/datatracks/sequence/${contig}/${startBasePair}/${endBasePair}?sampling_rate=${samplingDensity}`;
 
         return axios({
             method: 'get',
@@ -223,7 +222,7 @@ export class SiriusApi {
                 nullByteIndex = i;
                 break;
             } else {
-                // jsonHeader += String.fromCharCode(byte);
+                // jsonHeader += String.fromCharCode(byte); // we usually don't care about the json header since it's a copy of input parameters
             }
         }
 

@@ -117,7 +117,7 @@ export class SoTranscriptComponentClass {
 	static readonly instance = new SoTranscriptComponentClass();
 }
 
-type Tile = {
+export type Tile = {
 	startIndex: number,
 	span: number,
 	content: TileContent
@@ -125,7 +125,7 @@ type Tile = {
 
 export class AnnotationTileset {
 
-	readonly tiles = new Array<Tile>();
+	readonly sequences: { [sequenceId: string]: Array<Tile> } = {};
 
 	constructor(
 		protected tileSize: number,
@@ -139,7 +139,7 @@ export class AnnotationTileset {
 		let i0 = Math.floor(feature.start / this.tileSize);
 		let i1 = Math.floor(feature.end / this.tileSize);
 		for (let i = i0; i <= i1; i++) {
-			let tile = this.getTile(i);
+			let tile = this.getTile(feature.sequenceId, i);
 			this.addFeature(tile, feature);
 		}
 	}
@@ -198,12 +198,19 @@ export class AnnotationTileset {
 		}
 	}
 
-	protected getTile(index: number) {
-		if (this.tiles[index] == null) {
+	protected getTile(sequenceId: string, index: number) {
+		let tiles = this.sequences[sequenceId];
+
+		if (tiles === undefined) {
+			// create tile array for sequence
+			tiles = this.sequences[sequenceId] = [];
+		}
+
+		if (tiles[index] === undefined) {
 			// create intervening tiles
 			for (let i = 0; i <= index; i++) {
-				if (this.tiles[i] == null) {
-					this.tiles[i] = {
+				if (tiles[i] === undefined) {
+					tiles[i] = {
 						startIndex: i * this.tileSize,
 						span: this.tileSize,
 						content: []
@@ -212,7 +219,7 @@ export class AnnotationTileset {
 			}
 		}
 
-		return this.tiles[index];
+		return tiles[index];
 	}
 
 }

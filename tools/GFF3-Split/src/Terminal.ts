@@ -3,27 +3,57 @@ import * as process from 'process';
 
 export class Terminal {
 
-    static log(...args: Array<any>) {
-		process.stdout.write(format('<b><gray>><//> ' + util.format.apply(this, args)) + '\n');
-    }
+	private static currentRewriteId: string | undefined = undefined;
+
+	static log(...args: Array<any>) {
+		this.write(format('<b><gray>><//> ' + util.format.apply(this, args)) + '\n');
+	}
 
 	static error(...args: Array<any>) {
-		process.stdout.write(format('<b><red>> Error:</b> ' + util.format.apply(this, arguments)) + '\n');
-    }
+		this.write(format('<b><red>> Error:</b> ' + util.format.apply(this, arguments)) + '\n');
+	}
 
 	static warn(...args: Array<any>) {
-		process.stdout.write(format('<b><yellow>> Warning:</b> ' + util.format.apply(this, arguments)) + '\n');
-    }
+		this.write(format('<b><yellow>> Warning:</b> ' + util.format.apply(this, arguments)) + '\n');
+	}
 
 	static success(...args: Array<any>) {
-		process.stdout.write(format('<light_green><b>></b> ' + util.format.apply(this, arguments)) + '\n');
+		this.write(format('<light_green><b>></b> ' + util.format.apply(this, arguments)) + '\n');
+	}
+
+	static rewriteLine(id: string, str: string) {
+		if (this.currentRewriteId === id && id !== undefined) {
+			this.clearLine();
+		}
+
+		process.stdout.write(str);
+
+		this.currentRewriteId = id;
+	}
+
+	static rewriteLineFormatted(id: string, str: string) {
+		this.rewriteLine(id, format(str));
+	}
+
+	static format(str: string) {
+		return format(str);
 	}
 
 	static write(str: string) {
+		if (this.currentRewriteId !== undefined) {
+			process.stdout.write('\n');
+			this.currentRewriteId = undefined;
+		}
+
 		process.stdout.write(str);
 	}
 
 	static writeFormatted(str: string) {
+		if (this.currentRewriteId !== undefined) {
+			process.stdout.write('\n');
+			this.currentRewriteId = undefined;
+		}
+
 		Terminal.write(format(str));
 	}
 
@@ -35,9 +65,12 @@ export class Terminal {
 		}
 	}
 
+	/*
 	static cursorUp() {
-		process.stdout.write('\x1B[A');
+		this.currentRewriteId = undefined;
+		process.stdout.write('\x1B[A'); // cursor up
 	}
+	*/
 
 }
 

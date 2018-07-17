@@ -1,4 +1,3 @@
-
 // These const strings should be consistent with backend sirius.realdata.constants
 const DATA_SOURCE_GENOME = 'GRCh38_gff';
 const DATA_SOURCE_GWAS = 'GWAS';
@@ -13,39 +12,6 @@ const DATA_SOURCE_ExAC = 'ExAC';
 const DATA_SOURCE_TCGA = 'TCGA';
 const DATA_SOURCE_ENSEMBL = 'ENSEMBL';
 const DATA_SOURCE_GTEX = 'GTEx';
-
-const CHROMOSOME_SIZES = [
-  248956422,
-  242193529,
-  198295559,
-  190214555,
-  181538259,
-  170805979,
-  159345973,
-  145138636,
-  138394717,
-  133797422,
-  135086622,
-  133275309,
-  114364328,
-  107043718,
-  101991189,
-  90338345,
-  83257441,
-  80373285,
-  58617616,
-  64444167,
-  46709983,
-  50818468,
-  156040895,
-  57227415,
-];
-
-const CHROMOSOME_START_BASE_PAIRS = [0];
-for (let i = 0; i < CHROMOSOME_SIZES.length; i++) {
-  const currSize = CHROMOSOME_START_BASE_PAIRS[i] + CHROMOSOME_SIZES[i];
-  CHROMOSOME_START_BASE_PAIRS.push(currSize);
-}
 
 const CHROMOSOME_NAMES: Array<string> = [];
 for (let i = 1; i < 23; i++) {
@@ -73,7 +39,6 @@ const DATA_SOURCES = [
 ];
 
 export {
-  CHROMOSOME_START_BASE_PAIRS,
   CHROMOSOME_NAMES,
   DATA_SOURCE_GENOME,
   DATA_SOURCE_GWAS,

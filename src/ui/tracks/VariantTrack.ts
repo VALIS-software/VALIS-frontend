@@ -24,8 +24,16 @@ export class VariantTrack extends Track<'variant'> {
 
     constructor(model: TrackModel<'variant'>) {
         super(model);
+    }
 
-        this.tileStore = SharedTileStore.variant[model.sequenceId];
+    setContig(contig: string) {
+        let sourceKey = contig + JSON.stringify(this.model.toEdges);
+        this.tileStore = SharedTileStore.getTileStore(
+            'variant',
+            sourceKey,
+            (c) => new VariantTileStore(this.model, contig)
+        )
+        super.setContig(contig);
     }
 
     protected _microTileCache = new UsageCache<MicroInstances>();
@@ -93,7 +101,7 @@ export class VariantTrack extends Track<'variant'> {
                                     }
 
                                     // create and update text
-                                    let cacheKey = startIndex + ',' + altIndex + ',' + i;
+                                    let cacheKey = this.contig + ':' +  startIndex + ',' + altIndex + ',' + i;
                                     let label = this._sequenceLabelCache.get(cacheKey, () => this.createBaseLabel(baseCharacter));
 
                                     label.container.layoutParentX = layoutParentX;
@@ -109,7 +117,7 @@ export class VariantTrack extends Track<'variant'> {
                         }
                     }
 
-                    let tileObject = this._microTileCache.get(tile.key, () => {
+                    let tileObject = this._microTileCache.get(this.contig + ':' + tile.key, () => {
                         let instanceData = new Array<MicroInstance>();
 
                         // GC -> G = deletion of G
@@ -177,7 +185,7 @@ export class VariantTrack extends Track<'variant'> {
                     tileObject.layoutW = tile.span / span;
                     tileObject.opacity = microOpacity;
 
-                    this._onStageAnnotations.get('micro-tile:' + tile.key, () => {
+                    this._onStageAnnotations.get('micro-tile:' + this.contig + ':' + tile.key, () => {
                         this.add(tileObject);
                         return tileObject;
                     });
@@ -186,7 +194,7 @@ export class VariantTrack extends Track<'variant'> {
 
         }
 
-        this._pendingTiles.removeUnused(this.deleteTileLoadingDependency);
+        this._pendingTiles.removeUnused(this.removeTileLoadingDependency);
         this._onStageAnnotations.removeUnused((t) => this.remove(t));
         this._sequenceLabelCache.removeUnused(this.deleteBaseLabel);
         this.toggleLoadingIndicator(this._pendingTiles.count > 0, true);

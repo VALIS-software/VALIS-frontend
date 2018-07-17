@@ -20,6 +20,7 @@ import { FilterType } from "../../../ui/models/QueryModel";
 import "./SearchResultsView.scss";
 import 'react-virtualized/styles.css'
 import { EntityType } from "sirius/EntityType";
+import { App } from '../../../App';
 
 const FETCH_SIZE = 30;
 
@@ -51,8 +52,7 @@ class SearchResultsView extends React.Component {
   }
 
   addQueryAsTrack = () => {
-    //@TODO: wire this back 
-    //this.props.appModel.addAnnotationTrack(this.props.text, this.state.query, this.state.filters);
+    App.addVariantTrack(this.props.text, this.query.getFilteredQuery().toEdges);
   }
 
   fetch = (clearResults = false) => {

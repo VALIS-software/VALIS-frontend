@@ -6,12 +6,10 @@ import { TrackTypeMap } from "../../model/TrackTypeMap";
 import Rect from "../core/Rect";
 import Text from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
-import Panel from "../Panel";
 
 export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> extends Rect {
 
-    panel: Panel;
-
+    protected contig: string | undefined;
     protected x0: number;
     protected x1: number;
     
@@ -44,6 +42,11 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
         // @! depth-box, should be at top, maybe layoutParentZ = 1
         // - be careful to avoid conflict with cursor
         this.toggleLoadingIndicator(false, false);
+    }
+
+    setContig(contig: string) {
+        this.contig = contig;
+        this.displayNeedUpdate = true;
     }
 
     setRange(x0: number, x1: number) {
@@ -107,7 +110,7 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
         // fetch and display data
 
         this.displayNeedUpdate = false;
-        this._pendingTiles.removeUnused(this.deleteTileLoadingDependency);
+        this._pendingTiles.removeUnused(this.removeTileLoadingDependency);
         this.toggleLoadingIndicator(this._pendingTiles.count > 0, true);
     }
 
@@ -133,7 +136,7 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
         return tile;
     }
 
-    protected deleteTileLoadingDependency = (tile: Tile<any>) => {
+    protected removeTileLoadingDependency = (tile: Tile<any>) => {
         tile.removeEventListener('complete', this.onDependentTileComplete);
     }
 

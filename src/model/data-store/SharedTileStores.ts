@@ -1,16 +1,37 @@
 import { TileStore } from "./TileStore";
-import { AnnotationTileStore } from "./AnnotationTileStore";
-import { SequenceTileStore } from "./SequenceTileStore";
-import { VariantTileStore } from "./VariantTileStore";
 
-type StringMap<T> = { [id: string]: T };
+export class SharedTileStore {
 
-export const SharedTileStore = {
-    empty: {} as StringMap<TileStore<any, any>>,
-    sequence: {} as StringMap<SequenceTileStore>,
-    annotation: {} as StringMap<AnnotationTileStore>,
-    macroAnnotation: {} as StringMap<AnnotationTileStore>,
-    variant: {} as StringMap<VariantTileStore>,
+    private static tileStores: {
+        [type: string]: {
+            [sourceId: string]: TileStore<any, any>
+        }
+    } = {};
+
+    static getTileStore<T extends TileStore<any, any>>(type: string, sourceKey: string, constructor: (sourceId: string) => T): T {
+        let typeTileStores = this.tileStores[type] = this.tileStores[type] || {};
+        let tileStore: T = typeTileStores[sourceKey] = (typeTileStores[sourceKey] as T) || constructor(sourceKey);
+        return tileStore;
+    }
+
+    static clear(type: string) {
+        let typeTileStores = this.tileStores[type];
+        if (typeTileStores === undefined) return;
+
+        for (let sourceId in typeTileStores) {
+            let tileStore = typeTileStores[sourceId];
+            tileStore.clear();
+        }
+
+        delete this.tileStores[type];
+    }
+
+    static clearAll() {
+        for (let type in this.tileStores) {
+            this.clear(type);
+        }
+    }
+
 }
 
 export default SharedTileStore;
