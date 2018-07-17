@@ -8,6 +8,9 @@ import ConstructTrack from "./tracks/ConstructTrack";
 import SvgExpandMore from "material-ui/svg-icons/navigation/expand-more";
 import SvgExpandLess from "material-ui/svg-icons/navigation/expand-less";
 
+/**
+ * TrackRow is a pseudo Object2D used to layout a set of tracks vertically
+ */
 export class TrackRow {
 
     readonly tracks = new Set<Track>();
