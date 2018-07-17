@@ -22,6 +22,7 @@ import SearchResultsView from "./ui/components/SearchResultsView/SearchResultsVi
 import "./App.scss";
 import ViewModel, { ViewEvent } from "./ui/models/ViewModel";
 import EntityType from "sirius/EntityType";
+import SiriusApi from "sirius/SiriusApi";
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
