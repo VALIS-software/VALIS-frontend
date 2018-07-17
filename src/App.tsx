@@ -70,10 +70,10 @@ export class App extends React.Component<Props, State> {
 
 		// initialize with some dummy data
 		let tracks: Array<TrackModel> = [
-			{ sequenceId: 'chr1', name: '→ Sequence', type: 'sequence' },
-			// { sequenceId: 'chr1', name: 'Variants', type: 'variant', toEdges: undefined },
-			{ sequenceId: 'chr1', name: '→ Strand Genes', type: 'annotation', strand: Strand.Positive },
-			{ sequenceId: 'chr1', name: '← Strand Genes', type: 'annotation', strand: Strand.Negative },
+			{ name: '→ Sequence', type: 'sequence' },
+			{ name: 'Variants', type: 'variant'},
+			{ name: '→ Strand Genes', type: 'annotation', strand: Strand.Positive },
+			{ name: '← Strand Genes', type: 'annotation', strand: Strand.Negative },
 		];
 		let i = 0;
 		for (let model of tracks) {
@@ -261,15 +261,12 @@ export class App extends React.Component<Props, State> {
 	}
 
 	protected displayRegion(contig: string, startBase: number, endBase: number) {
-		if (contig !== 'chr1') {
-			console.warn(`displayRegion contig not yet supported for contig "${contig}"`)
-		}
-
 		let startIndex = startBase - 1;
 		let endIndex = endBase;
 
 		let panel0 = this.state.trackViewer.getPanel(0);
 		if (panel0 == null) return;
+		panel0.setContig(contig);
 		panel0.setRange(startIndex, endIndex);
 	}
 
@@ -315,7 +312,6 @@ export class App extends React.Component<Props, State> {
 	protected addVariantTrack(title: string, toEdges: any) {
 		this.state.trackViewer.addTrackRow({
 			type: 'variant',
-			sequenceId: 'chromosome1',
 			name: title,
 			toEdges: toEdges
 		});

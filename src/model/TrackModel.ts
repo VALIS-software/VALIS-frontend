@@ -9,7 +9,6 @@ import { TrackTypeMap } from "./TrackTypeMap";
 export type TrackModel<TrackType extends keyof TrackTypeMap = keyof TrackTypeMap> = 
     {
         type: TrackType;
-        sequenceId: string;
         name: string;
     } & TrackTypeMap[TrackType]
 

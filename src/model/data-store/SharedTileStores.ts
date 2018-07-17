@@ -4,13 +4,13 @@ export class SharedTileStore {
 
     private static tileStores: {
         [type: string]: {
-            [sequenceId: string]: TileStore<any, any>
+            [sourceId: string]: TileStore<any, any>
         }
     } = {};
 
-    static getTileStore<T extends TileStore<any, any>>(type: string, sequenceId: string, constructor: () => T): T {
+    static getTileStore<T extends TileStore<any, any>>(type: string, sourceId: string, constructor: (sourceId: string) => T): T {
         let typeTileStores = this.tileStores[type] = this.tileStores[type] || {};
-        let tileStore: T = typeTileStores[sequenceId] = (typeTileStores[sequenceId] as T) || constructor();
+        let tileStore: T = typeTileStores[sourceId] = (typeTileStores[sourceId] as T) || constructor(sourceId);
         return tileStore;
     }
 
@@ -18,8 +18,8 @@ export class SharedTileStore {
         let typeTileStores = this.tileStores[type];
         if (typeTileStores === undefined) return;
 
-        for (let sequenceId in typeTileStores) {
-            let tileStore = typeTileStores[sequenceId];
+        for (let sourceId in typeTileStores) {
+            let tileStore = typeTileStores[sourceId];
             tileStore.clear();
         }
 

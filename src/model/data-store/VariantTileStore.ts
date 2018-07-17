@@ -41,7 +41,7 @@ export type TilePayload = Array<{
 
 export class VariantTileStore extends TileStore<TilePayload, void> {
 
-    constructor(protected model: TrackModel<'variant'>, tileSize: number = 1 << 15, protected macro: boolean = false) {
+    constructor(protected model: TrackModel<'variant'>, protected contig: string, tileSize: number = 1 << 15, protected macro: boolean = false) {
         super(tileSize, 1);
     }
 
@@ -62,7 +62,7 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
             {
                 "type": "GenomeNode",
                 "filters": {
-                    "contig": "chr1", // @! should be source id / real contig
+                    "contig": this.contig,
                     "type": "SNP",
                     "start": { "$gte": startBase, "$lte": endBase }
                 },

@@ -41,17 +41,6 @@ export class AnnotationTrack extends Track<'annotation'> {
 
     constructor(model: TrackModel<'annotation'>) {
         super(model);
-        
-        this.annotationStore = SharedTileStore.getTileStore(
-            'annotation',
-            model.sequenceId,
-            () => { return new AnnotationTileStore(model.sequenceId); }
-        );
-        this.macroAnnotationStore = SharedTileStore.getTileStore(
-            'macroAnnotation',
-            model.sequenceId,
-            () => { return new MacroAnnotationTileStore(model.sequenceId); }
-        );
 
         this.yScrollNode = new Object2D();
         this.yScrollNode.z = 0;
@@ -63,6 +52,19 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.initializeYDrag();
     }
 
+    setContig(contig: string) {
+        this.annotationStore = SharedTileStore.getTileStore(
+            'annotation',
+            contig,
+            (c) => { return new AnnotationTileStore(c); }
+        );
+        this.macroAnnotationStore = SharedTileStore.getTileStore(
+            'macroAnnotation',
+            contig,
+            (c) => { return new MacroAnnotationTileStore(c); }
+        );
+        super.setContig(contig);
+    }
 
     private _lastComputedHeight: number;
     applyTransformToSubNodes(root?: boolean) {
@@ -128,7 +130,7 @@ export class AnnotationTrack extends Track<'annotation'> {
                     }
 
                     /** Instance Rendering */
-                    let tileObject = this._macroTileCache.get(tile.key, () => {
+                    let tileObject = this._macroTileCache.get(this.contig + ':' + tile.key, () => {
                         // initialize macro gene instances
                         // create array of gene annotation data
                         let instanceData = new Array<MacroGeneInstance>();
@@ -162,7 +164,7 @@ export class AnnotationTrack extends Track<'annotation'> {
                     tileObject.layoutW = tile.span / span;
                     tileObject.opacity = macroOpacity;
 
-                    this._onStageAnnotations.get('macro-gene-tile:' + tile.key, () => {
+                    this._onStageAnnotations.get('macro-gene-tile:' + this.contig + ':' + tile.key, () => {
                         this.addAnnotation(tileObject);
                         return tileObject;
                     });
@@ -171,7 +173,7 @@ export class AnnotationTrack extends Track<'annotation'> {
             }
         }
 
-        this._pendingTiles.removeUnused(this.deleteTileLoadingDependency);
+        this._pendingTiles.removeUnused(this.removeTileLoadingDependency);
         this._onStageAnnotations.removeUnused(this.removeAnnotation);
 
         this.toggleLoadingIndicator(this._pendingTiles.count > 0, true);
@@ -197,7 +199,7 @@ export class AnnotationTrack extends Track<'annotation'> {
                 // apply gene filter
                 if (gene.strand !== this.model.strand) continue;
 
-                let annotationKey = this.annotationKey(gene);
+                let annotationKey =  this.contig + ':' + this.annotationKey(gene);
 
                 let annotation = this._annotationCache.get(annotationKey, () => {
                     // create

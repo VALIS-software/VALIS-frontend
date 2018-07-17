@@ -18,14 +18,7 @@ export class SequenceTrack extends ShaderTrack<TilePayload, BlockPayload> {
     protected densityMultiplier = 2.0;
  
     constructor(model: TrackModel) {
-        super(model, SharedTileStore.getTileStore(
-            'sequence',
-            model.sequenceId,
-            () => {
-                return new SequenceTileStore(model.sequenceId);
-            }
-        ));
-
+        super(model, 'sequence', (c) => new SequenceTileStore(c));
         this.color.set([0, 0, 0, 1]);
     }
 

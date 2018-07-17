@@ -1,28 +1,28 @@
-import * as React from "react";
 import IconButton from "material-ui/IconButton";
-import SvgClose from "material-ui/svg-icons/navigation/close";
 import SvgEdit from "material-ui/svg-icons/image/edit";
 import SvgCancel from "material-ui/svg-icons/navigation/cancel";
 import SvgCheck from "material-ui/svg-icons/navigation/check";
-import PanelModel from "../model/PanelModel";
-import { InteractionEvent, WheelInteractionEvent, WheelDeltaMode } from "./core/InteractionEvent";
+import SvgClose from "material-ui/svg-icons/navigation/close";
+import * as React from "react";
+import { InteractionEvent, WheelDeltaMode, WheelInteractionEvent } from "./core/InteractionEvent";
 import Object2D from "./core/Object2D";
 import ReactObject from "./core/ReactObject";
 import Rect from "./core/Rect";
 import { OpenSansRegular } from "./font/Fonts";
 import Track, { AxisPointerStyle } from "./tracks/Track";
 import XAxis from "./XAxis";
-import { Scalar } from "../math/Scalar";
 
 export class Panel extends Object2D {
 
-    column: number;
+    column: number; // @! todo: refactor to remove this
+
     maxRange: number = 1e10;
     minRange: number = 10;
 
     readonly header: ReactObject;
     readonly xAxis: XAxis;
     readonly resizeHandle: Rect;
+    readonly tracks = new Set<Track>();
 
     get closable(): boolean { return this._closable; }
     get closing(): boolean { return this._closing; }
@@ -39,12 +39,12 @@ export class Panel extends Object2D {
     protected _closable = false;
     protected _closing = false;
 
-    // view model state
+    // view-state is defined by genomic location
     // viewport is designed to weight high precision to relatively small values (~millions) and lose precision for high values (~billions+)
-    readonly x0: number = 0; // these should only be changed by setRange()
-    readonly x1: number = 1e6;
-
-    protected tracks = new Set<Track>();
+    // these should only be changed by setContig() and setRange()
+    readonly contig: string;
+    readonly x0: number = 0;
+    readonly x1: number = 1;
 
     protected activeAxisPointers: { [ pointerId: string ]: number } = {};
     protected secondaryAxisPointers: { [pointerId: string]: number } = {};
@@ -52,11 +52,10 @@ export class Panel extends Object2D {
     protected tileDragging = false;
     protected tileHovering = false;
 
+    protected formattedContig: string;
     protected isEditing: boolean = false;
 
     constructor(
-        readonly model: PanelModel,
-        column: number,
         protected onClose: (t: Panel) => void,
         protected readonly spacing: { x: number, y: number },
         protected readonly panelHeaderHeight: number,
@@ -65,8 +64,6 @@ export class Panel extends Object2D {
         super();
         // a panel has nothing to render on its own
         this.render = false;
-
-        this.column = column;
 
         this.header = new ReactObject();
         this.fillX(this.header);
@@ -95,8 +92,6 @@ export class Panel extends Object2D {
         this.resizeHandle.z = 1;
         this.resizeHandle.render = false;
         this.setResizable(false);
-
-        this.setRange(model.x0, model.x1);
     }
 
     setResizable(v: boolean) {
@@ -108,13 +103,6 @@ export class Panel extends Object2D {
     }
 
     addTrack(track: Track) {
-        if (track.panel != null) {
-            console.error('A track tile has been added to ' + (track.panel === this ? 'the same panel more than once' : 'multiple panels'));
-            track.panel.remove(track);
-        }
-
-        track.panel = this;
-        
         track.addInteractionListener('dragstart', this.onTileDragStart);
         track.addInteractionListener('dragmove', this.onTileDragMove);
         track.addInteractionListener('dragend', this.onTileDragEnd);
@@ -122,6 +110,7 @@ export class Panel extends Object2D {
         track.addInteractionListener('pointermove', this.onTilePointerMove);
         track.addInteractionListener('pointerleave', this.onTileLeave);
 
+        track.setContig(this.contig);
         track.setRange(this.x0, this.x1);
 
         this.fillX(track);
@@ -138,10 +127,27 @@ export class Panel extends Object2D {
         track.removeInteractionListener('pointermove', this.onTilePointerMove);
         track.removeInteractionListener('pointerleave', this.onTileLeave);
 
-        track.panel = null;
         this.remove(track);
 
         this.tracks.delete(track);
+    }
+
+    setContig(contig: string) {
+        (this.contig as any) = contig;
+
+        for (let track of this.tracks) {
+            track.setContig(contig);
+        }
+
+        // parse contig and create a formatted contig
+        let chromosomeContigMatch = /chr(.*)$/.exec(contig);
+        if (chromosomeContigMatch) {
+            this.formattedContig = `Chromosome ${chromosomeContigMatch[1]}`;
+        } else {
+            this.formattedContig = `<Invalid contig> ${this.contig}`;
+        }
+
+        this.updatePanelHeader();
     }
 
     setRange(x0: number, x1: number) {
@@ -408,17 +414,15 @@ export class Panel extends Object2D {
     }
 
     protected updatePanelHeader() {
-        let formattedContig = 'Chromosome 1';
-        
         let rangeString = `${XAxis.formatValue(this.x0, 8)}bp to ${XAxis.formatValue(this.x1, 8)}bp`;
 
         const startBp = Math.floor(this.x0).toFixed(0);
         const endBp = Math.ceil(this.x1).toFixed(0);
-        let rangeSpecifier = `chr1:${startBp}-${endBp}`;
+        let rangeSpecifier = `${this.contig}:${startBp}-${endBp}`;
 
         this.header.content = <PanelHeader 
             panel={ this }
-            contig={ formattedContig }
+            contig={ this.formattedContig }
             rangeString={ rangeString }
             rangeSpecifier={ rangeSpecifier }
             enableClose = { this._closable && !this.closing } 
@@ -444,7 +448,17 @@ export class Panel extends Object2D {
     }
 
     protected setRangeUsingRangeSpecifier(specifier: string) {
-        const ranges = specifier.split(':')[1].split('-');
+        let parts = specifier.split(':');
+        let contig = parts[0];
+
+        // make chrx to chrX
+        let chromosomeContigMatch = /chr(.*)$/.exec(contig);
+        if (chromosomeContigMatch) {
+            contig = 'chr' + chromosomeContigMatch[1].toUpperCase();
+        }
+
+        const ranges = parts[1].split('-');
+        this.setContig(contig);
         this.setRange(parseFloat(ranges[0]), parseFloat(ranges[1]));
     }
 
@@ -487,7 +501,15 @@ class PanelHeader extends React.Component<PanelProps,{}> {
         
         if (this.props.isEditing) {
             headerContents = (<div style={headerContainerStyle} >
-                <span><input onChange={(e) => this.rangeSpecifier = e.target.value} type="text" defaultValue={this.props.rangeSpecifier}></input></span>
+                <span><input
+                    onChange={(e) => this.rangeSpecifier = e.target.value}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            this.props.onEditSave(this.rangeSpecifier);
+                        }
+                    }}
+                    type="text"
+                    defaultValue={this.props.rangeSpecifier}></input></span>
                 <span style={headerStyle}>
                     <SvgCancel 
                         onClick={() => this.props.onEditCancel()} 

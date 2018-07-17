@@ -8,6 +8,7 @@ import { DEFAULT_SPRING } from "../UIConstants";
 import Object2D from "../core/Object2D";
 import TileStore, { Tile, TileState } from "../../model/data-store/TileStore";
 import { Track } from "./Track";
+import SharedTileStore from "../../model/data-store/SharedTileStores";
 
 /**
  * TileTrack provides a base class for Tracks that use TileStore
@@ -15,12 +16,23 @@ import { Track } from "./Track";
 export class ShaderTrack<TilePayload, BlockPayload> extends Track {
 
     protected densityMultiplier = 1.0;
+    protected tileStore: TileStore<TilePayload, BlockPayload>;
 
     constructor(
         model: TrackModel,
-        protected tileStore: TileStore<TilePayload, BlockPayload>
+        protected tileStoreType: string,
+        protected tileStoreConstructor: (contig: string) => TileStore<TilePayload, BlockPayload>
     ) {
         super(model);
+    }
+
+    setContig(contig: string) {
+        this.tileStore = SharedTileStore.getTileStore(
+            this.tileStoreType,
+            contig,
+            this.tileStoreConstructor
+        )
+        super.setContig(contig);
     }
 
     protected constructTileNode() {
@@ -44,7 +56,7 @@ export class ShaderTrack<TilePayload, BlockPayload> extends Track {
             let lodLevel = Math.floor(displayLodLevel);
 
             this.tileStore.getTiles(x0, x1, samplingDensity, true, (tile) => {
-                let tileNode = this._tileNodeCache.get(tile.key, this.createTileNode);
+                let tileNode = this._tileNodeCache.get(this.contig + ':' + tile.key, this.createTileNode);
                 this.updateTileNode(tileNode, tile, x0, span, displayLodLevel);
 
                 // main tiles are positioned front-most so they appear above any fallback tiles
@@ -80,7 +92,7 @@ export class ShaderTrack<TilePayload, BlockPayload> extends Track {
                                 loadingTilesAllowed--;
                             }
 
-                            let fallbackNode = this._tileNodeCache.get(fallbackTile.key, this.createTileNode);
+                            let fallbackNode = this._tileNodeCache.get(this.contig + ':' + fallbackTile.key, this.createTileNode);
                             this.updateTileNode(fallbackNode, fallbackTile, x0, span, displayLodLevel);
 
                             // @! improve this
@@ -94,7 +106,7 @@ export class ShaderTrack<TilePayload, BlockPayload> extends Track {
                                 if (fadingTilesAllowed <= 0) {
                                     // this is a fading tile and we've run out of fading tile budget
                                     // mark it as unused so it's removed by UsageCache
-                                    this._tileNodeCache.markUnused(fallbackTile.key);
+                                    this._tileNodeCache.markUnused(this.contig + ':' + fallbackTile.key);
                                     continue;
                                 } else {
                                     fadingTilesAllowed--;
