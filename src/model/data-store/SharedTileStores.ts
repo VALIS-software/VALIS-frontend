@@ -8,9 +8,9 @@ export class SharedTileStore {
         }
     } = {};
 
-    static getTileStore<T extends TileStore<any, any>>(type: string, sourceId: string, constructor: (sourceId: string) => T): T {
+    static getTileStore<T extends TileStore<any, any>>(type: string, sourceKey: string, constructor: (sourceId: string) => T): T {
         let typeTileStores = this.tileStores[type] = this.tileStores[type] || {};
-        let tileStore: T = typeTileStores[sourceId] = (typeTileStores[sourceId] as T) || constructor(sourceId);
+        let tileStore: T = typeTileStores[sourceKey] = (typeTileStores[sourceKey] as T) || constructor(sourceKey);
         return tileStore;
     }
 
