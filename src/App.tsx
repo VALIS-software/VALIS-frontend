@@ -22,8 +22,6 @@ import SearchResultsView from "./ui/components/SearchResultsView/SearchResultsVi
 import "./App.scss";
 import ViewModel, { ViewEvent } from "./ui/models/ViewModel";
 import EntityType from "sirius/EntityType";
-import { VariantTileStore } from "./model/data-store/VariantTileStore";
-import SiriusApi from "sirius/SiriusApi";
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
@@ -73,21 +71,21 @@ export class App extends React.Component<Props, State> {
 		trackViewer.setAppModel(this.appModel);
 
 		// @! temporary create tile stores
-		SharedTileStore['sequence']['chromosome1'] = new SequenceTileStore('chromosome1');
-		SharedTileStore['annotation']['chromosome1'] = new AnnotationTileStore('chromosome1');
-		SharedTileStore['macroAnnotation']['chromosome1'] = new MacroAnnotationTileStore('chromosome1');
+		SharedTileStore['sequence']['chr1'] = new SequenceTileStore('chr1');
+		SharedTileStore['annotation']['chr1'] = new AnnotationTileStore('chr1');
+		SharedTileStore['macroAnnotation']['chr1'] = new MacroAnnotationTileStore('chr1');
 
 		// @! temporary preload lods
-		SharedTileStore['sequence']['chromosome1'].getTiles(0.9, 1.1e6, 1 << 12, true, () => {});
-		SharedTileStore['sequence']['chromosome1'].getTiles(0.95, 1.05e6, 1 << 8, true, () => {});
-		SharedTileStore['sequence']['chromosome1'].getTiles(0, 230e6, 1 << 23, true, () => {});
+		SharedTileStore['sequence']['chr1'].getTiles(0.9, 1.1e6, 1 << 12, true, () => {});
+		SharedTileStore['sequence']['chr1'].getTiles(0.95, 1.05e6, 1 << 8, true, () => {});
+		SharedTileStore['sequence']['chr1'].getTiles(0, 230e6, 1 << 23, true, () => {});
 
 		// initialize with some dummy data
 		let tracks: Array<TrackModel> = [
-			{ sequenceId: 'chromosome1', name: '→ Sequence', type: 'sequence' },
-			{ sequenceId: 'chromosome1', name: 'Variants', type: 'variant', toEdges: undefined },
-			{ sequenceId: 'chromosome1', name: '→ Strand Genes', type: 'annotation', strand: Strand.Positive },
-			{ sequenceId: 'chromosome1', name: '← Strand Genes', type: 'annotation', strand: Strand.Negative },
+			{ sequenceId: 'chr1', name: '→ Sequence', type: 'sequence' },
+			{ sequenceId: 'chr1', name: 'Variants', type: 'variant', toEdges: undefined },
+			{ sequenceId: 'chr1', name: '→ Strand Genes', type: 'annotation', strand: Strand.Positive },
+			{ sequenceId: 'chr1', name: '← Strand Genes', type: 'annotation', strand: Strand.Negative },
 		];
 		let i = 0;
 		for (let model of tracks) {
