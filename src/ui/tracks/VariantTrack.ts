@@ -27,10 +27,11 @@ export class VariantTrack extends Track<'variant'> {
     }
 
     setContig(contig: string) {
+        let sourceKey = contig + JSON.stringify(this.model.toEdges);
         this.tileStore = SharedTileStore.getTileStore(
             'variant',
-            contig,
-            (c) => new VariantTileStore(this.model, c)
+            sourceKey,
+            (c) => new VariantTileStore(this.model, contig)
         )
         super.setContig(contig);
     }
