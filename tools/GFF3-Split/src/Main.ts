@@ -22,7 +22,6 @@ import { Terminal } from "./Terminal";
 import { Feature } from "../../../lib/gff3/Feature";
 
 // settings
-// const outputDirectory = '../../data/chromosome1/annotation';
 const outputDirectory = '_output';
 const inputPath = 'data/Homo_sapiens.GRCh38.92.gff3';
 
@@ -85,7 +84,7 @@ let parser = new Gff3Parser(
 				}
 
 				// sequence started
-				Terminal.log(`Started sequence <b>${feature.sequenceId}</b>`);
+				// Terminal.log(`Started sequence <b>${feature.sequenceId}</b>`);
 
 				if (completedSequences.has(feature.sequenceId)) {
 					Terminal.error(`Started sequence twice! Results will be unreliable`);
@@ -138,16 +137,17 @@ function onSequenceComplete(sequenceId: string) {
 	completedSequences.add(sequenceId);
 
 	// save tiles to disk
-	saveTiles(sequenceId, tileset.sequences[sequenceId], `${outputDirectory}/${sequenceId}`);
+	// assume all sequences represent chromosome and prefix with chr
+	saveTiles(tileset.sequences[sequenceId], `${outputDirectory}/chr${sequenceId}`);
+	saveTiles(macroTileset.sequences[sequenceId], `${outputDirectory}/chr${sequenceId}-macro`);
 
-	// release sequence tile data since we no longer need it
+	// release sequence tile data to GC since we no longer need it
 	delete tileset.sequences[sequenceId];
+	delete macroTileset.sequences[sequenceId];
 }
 
-function saveTiles(sequenceId: string, tiles: Array<Tile>, directory: string) {
+function saveTiles(tiles: Array<Tile>, directory: string) {
 	try {
-		Terminal.log(`Saving sequence <b>${sequenceId}</b> tiles`);
-
 		// delete and create output directory
 		deleteDirectory(directory);
 
