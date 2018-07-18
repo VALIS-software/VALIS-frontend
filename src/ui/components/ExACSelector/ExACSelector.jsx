@@ -10,6 +10,7 @@ import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
 import { VARIANT_TAGS, DATA_SOURCE_ExAC } from "../../helpers/constants";
 import { SiriusApi } from "sirius/SiriusApi";
+import { App } from '../../../App';
 
 class ExACSelector extends React.Component {
   constructor(props) {
@@ -19,29 +20,9 @@ class ExACSelector extends React.Component {
       this.api = this.appModel.api;
     }
     this.state = {
-      genes: [],
       variantTagValue: null,
       availableVariantTags: VARIANT_TAGS,
     };
-  }
-
-  handleUpdateGeneInput = (searchText, dataSource, params) => {
-    if (searchText === '') {
-      this.setState({
-        searchGene: '',
-        genes: [],
-      });
-      return;
-    }
-    this.setState({
-      searchGene: searchText
-    });
-    if (params.source === "click") return;
-    SiriusApi.getSuggestions('GENE', searchText, 10).then(results => {
-      this.setState({
-        genes: results,
-      });
-    });
   }
 
   handelUpdateVariantTag = (event, index, value) => {
@@ -62,14 +43,16 @@ class ExACSelector extends React.Component {
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
     builder.filterSource(DATA_SOURCE_ExAC);
-    builder.filterAffectedGene(this.state.searchGene);
-    builder.filterVariantTag(this.state.variantTagValue);
+    builder.filterVariantTag(this.state.availableVariantTags[this.state.variantTagValue]);
   }
 
   addQueryTrack = () => {
     const query = this.buildQuery();
     this.appModel.trackMixPanel("Add ExAC Track", { "query": query });
-    this.appModel.addAnnotationTrack(this.state.title, query);
+    // QYD: The results of this query is "Edges" instead of GenomeNodes, we might need a new method for displaying
+    const tagValue = this.state.availableVariantTags[this.state.variantTagValue];
+    App.addVariantTrack(`${tagValue} (ExAC)`, query);
+    this.props.viewModel.closeView();
   }
 
   render() {
@@ -88,18 +71,6 @@ class ExACSelector extends React.Component {
     }
     return (
       <div className="track-editor">
-        <AutoComplete
-          floatingLabelText="Gene"
-          searchText={this.state.searchGene}
-          filter={AutoComplete.fuzzyFilter}
-          maxSearchResults={10}
-          hintText="Type a gene name"
-          menuCloseDelay={0}
-          dataSource={this.state.genes}
-          onUpdateInput={this.handleUpdateGeneInput}
-          errorText={!this.state.searchGene ? "This field is required" : ""}
-        />
-        <br /> <br />
         <SelectField
           value={this.state.variantTagValue}
           floatingLabelText="Variant Tag"
@@ -113,7 +84,7 @@ class ExACSelector extends React.Component {
           label="Add Track"
           primary={true}
           onClick={() => this.addQueryTrack()}
-          disabled={!this.state.variantTagValue || !this.state.searchGene}
+          disabled={!this.state.variantTagValue}
           style={{width: '95%'}}
         />
       </div>

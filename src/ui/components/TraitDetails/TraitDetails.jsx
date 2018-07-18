@@ -70,15 +70,16 @@ class TraitDetails extends React.Component {
       });
     });
   }
-  loadQuery(title, query) {
+
+  loadQuery(title, query, queryTitle) {
     this.appModel.trackMixPanel("Run search", { 'query': JSON.stringify(query) });
     const queryModel = new QueryModel(query);
-    const view = (<SearchResultsView text={''} query={queryModel} viewModel={this.viewModel} appModel={this.appModel} />);
+    const view = (<SearchResultsView text={title} query={queryModel} viewModel={this.viewModel} appModel={this.appModel} />);
     this.viewModel.pushView(title, query, view);
   }
 
-  renderSearchLink(title, query) {
-    return (<Collapsible onClick={() => this.loadQuery(title, query)} title={title} disabled={true} isLink={true}/>);
+  renderSearchLink(title, query, queryTitle) {
+    return (<Collapsible onClick={() => this.loadQuery(title, query, queryTitle)} title={title} disabled={true} isLink={true}/>);
   }
 
   render() {
@@ -109,7 +110,7 @@ class TraitDetails extends React.Component {
       return (<div key={link[0]} onClick={openLink} className="row">{link[0]}</div>);
     });
 
-    const associations = this.renderSearchLink('Trait associated variants', this.buildTraitQuery());
+    const associations = this.renderSearchLink('Variants associated with ' + name, this.buildTraitQuery(), name);
 
     return (<div className="trait-details">
       {header}

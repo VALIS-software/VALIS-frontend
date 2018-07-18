@@ -26,12 +26,12 @@ const fixedAnalysisData = [
   {
     "track_type": 'premium', 
     "title": "Correlate Regulatory Elements", 
-    "description": "Correlate sets of variants to regulatory annotations across cell-types."
+    "description": "Find regulatory annotations correlated with elements in a track."
   },
   {
     "track_type": 'premium', 
     "title": "Correlate Samples", 
-    "description": "Correlate sets of variants to patients VCFs."
+    "description": "Correlate sets of variants to patient cohorts."
   },
   {
     "track_type": 'premium', 

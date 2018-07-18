@@ -18,7 +18,7 @@ export default class QueryModel  {
     query: any;
     filters: Map<FilterType, FilterValueSet>;
     
-    constructor(query: any, filters?: Map<FilterType, FilterValueSet>) {
+    constructor(query: any, filters?: Map<FilterType, FilterValueSet>, displayTitle?: string) {
         this.query = Object.assign({}, query);
         this.filters = filters ? filters : Map<FilterType, FilterValueSet>();
     }

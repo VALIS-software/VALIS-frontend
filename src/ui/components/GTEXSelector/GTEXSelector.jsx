@@ -9,6 +9,7 @@ import MenuItem from "material-ui/MenuItem";
 import QueryBuilder from "sirius/QueryBuilder";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import SiriusApi from "sirius/SiriusApi";
+import { App } from '../../../App';
 
 import { DATA_SOURCE_GTEX } from "../../helpers/constants";
 
@@ -70,13 +71,6 @@ class GTEXSelector extends React.Component {
     this.setState({
       biosampleValue: value
     });
-    if (!this.state.fixTitle) {
-      const newTitle =
-        value === null ? "" : this.state.availableBiosamples[value];
-      this.setState({
-        title: newTitle
-      });
-    }
   }
 
 
@@ -84,7 +78,7 @@ class GTEXSelector extends React.Component {
     const builder = new QueryBuilder();
     builder.newEdgeQuery();
     builder.filterSource(DATA_SOURCE_GTEX);
-    builder.filterBiosample(this.state.biosampleValue);
+    builder.filterBiosample(this.state.availableBiosamples[this.state.biosampleValue]);
     builder.filterMaxPValue(this.state.pvalue);
     return builder.build();
   }
@@ -92,8 +86,10 @@ class GTEXSelector extends React.Component {
   addQueryTrack = () => {
     const query = this.buildQuery();
     this.appModel.trackMixPanel("Add GTEX Track", { "query": query });
+    const biosample = this.state.availableBiosamples[this.state.biosampleValue];
     // QYD: The results of this query is "Edges" instead of GenomeNodes, we might need a new method for displaying
-    this.appModel.addAnnotationTrack(this.state.title, query);
+    App.addVariantTrack(`${biosample} eQTLs`, query.toEdges);
+    this.props.viewModel.closeView();
   }
 
   componentDidMount() {
@@ -149,7 +145,7 @@ class GTEXSelector extends React.Component {
           label="Add Track"
           primary={true}
           onClick={() => this.addQueryTrack()}
-          disabled={!this.state.title}
+          disabled={!this.state.biosampleValue}
           style={{width: '95%'}}
         />
       </div>

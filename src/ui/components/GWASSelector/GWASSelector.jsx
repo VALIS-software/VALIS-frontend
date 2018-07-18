@@ -10,28 +10,11 @@ import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import QueryBuilder from "sirius/QueryBuilder";
 import {
   DATA_SOURCE_GWAS,
-  DATA_SOURCE_CLINVAR
 } from "../../helpers/constants";
 import SiriusApi from "sirius/SiriusApi";
-
+import { App } from '../../../App';
 // Styles
 import "./GWASSelector.scss";
-
-const logmin = 0;
-const logmax = Math.pow(10, 6);
-const power = 12;
-
-function transform(value) {
-  return Math.round(
-    (Math.exp(12 * value / logmax) - 1) / (Math.exp(power) - 1) * logmax
-  );
-}
-
-function reverse(value) {
-  return (
-    1 / power * Math.log((Math.exp(power) - 1) * value / logmax + 1) * logmax
-  );
-}
 
 class GWASSelector extends React.Component {
   constructor(props) {
@@ -44,20 +27,20 @@ class GWASSelector extends React.Component {
       title: "",
       searchTrait: "",
       searchSourceValue: 0,
-      traits: ["cancer", "Alzheimer", "sleep", "pain", "hair color", "asthma"],
+      traits: [],
       pvalue: 0.05,
-      maxnumber: 10000
     };
   }
 
-  updateTraits = (value) => {
+  componentDidMount() {
+    this.updateTraits();
+  }
+  
+
+  updateTraits = () => {
     const builder = new QueryBuilder();
     builder.newInfoQuery();
-    if (value === 1) {
-      builder.filterSource(DATA_SOURCE_GWAS);
-    } else if (value === 2) {
-      builder.filterSource(DATA_SOURCE_CLINVAR);
-    }
+    builder.filterSource(DATA_SOURCE_GWAS);
     builder.filterType("trait");
     const infoQuery = builder.build();
     SiriusApi.getDistinctValues("name", infoQuery).then(data => {
@@ -72,13 +55,6 @@ class GWASSelector extends React.Component {
     });
   }
 
-  handleUpdateTitle = (event) => {
-    this.setState({
-      title: event.target.value,
-      fixTitle: true
-    });
-  }
-
   handleUpdateTraitInput = (searchText) => {
     this.setState({
       searchTrait: searchText
@@ -90,53 +66,28 @@ class GWASSelector extends React.Component {
     }
   }
 
-  handleUpdateSearchSource = (event, index, value) => {
-    this.setState({
-      searchSourceValue: value
-    });
-    this.updateTraits(value);
-  }
-
   handleUpdatePValue = (event, value) => {
     this.setState({
       pvalue: value
     });
   }
 
-  handleUpdateMaxNumber = (event, value) => {
-    this.setState({
-      maxnumber: transform(value)
-    });
-  }
-
   buildGWASQuery() {
     const builder = new QueryBuilder();
     builder.newInfoQuery();
-    if (this.state.searchSourceValue === 1) {
-      builder.filterSource(DATA_SOURCE_GWAS);
-    } else if (this.state.searchSourceValue === 2) {
-      builder.filterSource(DATA_SOURCE_CLINVAR);
-    }
+    builder.filterSource(DATA_SOURCE_GWAS);
     builder.filterType("trait");
     builder.searchText(this.state.searchTrait);
     const infoQuery = builder.build();
     builder.newEdgeQuery();
-    if (this.state.searchSourceValue === 1) {
-      builder.filterSource(DATA_SOURCE_GWAS);
-    } else if (this.state.searchSourceValue === 2) {
-      builder.filterSource(DATA_SOURCE_CLINVAR);
-    }
+    builder.filterSource(DATA_SOURCE_GWAS);  
     builder.filterMaxPValue(this.state.pvalue);
     builder.setToNode(infoQuery);
     const edgeQuery = builder.build();
     builder.newGenomeQuery();
-    if (this.state.searchSourceValue === 1) {
-      builder.filterSource(DATA_SOURCE_GWAS);
-    } else if (this.state.searchSourceValue === 2) {
-      builder.filterSource(DATA_SOURCE_CLINVAR);
-    }
+    builder.filterSource(DATA_SOURCE_GWAS);
     builder.addToEdge(edgeQuery);
-    builder.setLimit(this.state.maxnumber);
+    builder.setLimit(100000000);
     const genomeQuery = builder.build();
     return genomeQuery;
   }
@@ -144,20 +95,8 @@ class GWASSelector extends React.Component {
   addQueryTrack() {
     const query = this.buildGWASQuery();
     this.appModel.trackMixPanel('Add GWAS Track', { 'query': query });
-    this.appModel.addAnnotationTrack(this.state.title, query);
-  }
-
-
-  componentDidMount() {
-    this.availableSourceNames = ['Any', 'GWAS', 'ClinVar'];
-    this.searchSourceItems = [];
-    for (let i = 0; i < this.availableSourceNames.length; i++) {
-      this.searchSourceItems.push(<MenuItem value={i} key={i} primaryText={this.availableSourceNames[i]} />);
-    }
-    this.setState({
-      searchSourceValue: 0,
-    });
-    this.updateTraits(0);
+    App.addVariantTrack(this.state.title, query.toEdges);
+    this.props.viewModel.closeView();
   }
 
   render() {
@@ -176,14 +115,6 @@ class GWASSelector extends React.Component {
           onUpdateInput={this.handleUpdateTraitInput}
           errorText={!this.state.searchTrait ? "This field is required" : ""}
         />
-        <br /> <br />
-        <SelectField
-          value={this.state.searchSourceValue}
-          floatingLabelText="Data Source"
-          onChange={this.handleUpdateSearchSource}
-        >
-          {this.searchSourceItems}
-        </SelectField>
         <br /> <br />
         <div>
           {" "}

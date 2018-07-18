@@ -125,11 +125,11 @@ class TokenBox extends React.Component {
   }
 
   buildResultTitleFromTokens(tokens, searchString) {
-    let type = tokens[0].value;
+    if (!tokens || tokens.length === 0) return searchString;
     let quotedStrs = tokens.filter(token => token.quoted);
     let value = (quotedStrs.length > 0) ? quotedStrs[0].value : searchString;
     value = value.length > 18 ? value.slice(0, 15) + '...' : value;
-    return `${type} (${value})`;
+    return value;
   }
 
   singleResult = (results, searchText) => {

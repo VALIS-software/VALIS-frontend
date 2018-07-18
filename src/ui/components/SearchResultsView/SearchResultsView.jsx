@@ -1,7 +1,4 @@
 // Dependencies
-
-const immutable = require('immutable');
-
 import * as React from "react";
 import * as PropTypes from "prop-types";
 import CircularProgress from "material-ui/CircularProgress";
