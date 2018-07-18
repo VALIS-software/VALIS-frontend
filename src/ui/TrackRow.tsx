@@ -19,6 +19,8 @@ export class TrackRow {
     readonly closeButton: ReactObject;
     readonly resizeHandle: Rect;
 
+    closing: boolean = false;
+
     get y(): number { return this._y; }
     get h(): number { return this._h; }
 
@@ -34,6 +36,7 @@ export class TrackRow {
     protected _headerIsExpandedState: boolean | undefined = undefined;
 
     constructor(
+        protected onClose: (t: TrackRow) => void,
         readonly model: TrackModel,
         protected readonly spacing: { x: number, y: number },
         protected readonly setHeight: (row: TrackRow, h: number) => void,
@@ -105,7 +108,9 @@ export class TrackRow {
                 this.setHeight(this, toggle ? TrackRow.expandedTrackHeight : TrackRow.collapsedTrackHeight);
             }}
         />);
-        this.closeButton.content = (<TrackCloseButton track={this} onClick={() => {}}/>);
+        this.closeButton.content = (<TrackCloseButton track={this} onClick={() => {
+            this.onClose(this);
+        }}/>);
     }
 
     protected isExpanded = () => {
