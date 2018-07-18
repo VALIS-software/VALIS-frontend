@@ -1,6 +1,7 @@
 import React = require("react");
 import TrackModel from "../model/TrackModel";
-import Object2D from "./core/Object2D";
+import IconButton from "material-ui/IconButton";
+import SvgClose from "material-ui/svg-icons/navigation/close";
 import ReactObject from "./core/ReactObject";
 import Rect from "./core/Rect";
 import Track from "./tracks/Track";
@@ -15,6 +16,7 @@ export class TrackRow {
 
     readonly tracks = new Set<Track>();
     readonly header: ReactObject;
+    readonly closeButton: ReactObject;
     readonly resizeHandle: Rect;
 
     get y(): number { return this._y; }
@@ -38,6 +40,7 @@ export class TrackRow {
         protected readonly getHeight: (row: TrackRow) => number
     ) {
         this.header = new ReactObject();
+        this.closeButton = new ReactObject();
 
         this.resizeHandle = new Rect(0, 0, [1, 0, 0, 1]);
         this.resizeHandle.h = this.spacing.y;
@@ -78,6 +81,9 @@ export class TrackRow {
         this.header.y = this.y + this.spacing.y * 0.5;
         this.header.h = this.h - this.spacing.y;
 
+        this.closeButton.y = this.y + this.spacing.y * 0.5;
+        this.closeButton.h = this.h - this.spacing.y;
+
         // tiles
         for (let track of this.tracks) {
             track.y = this.y + this.spacing.y * 0.5;
@@ -99,6 +105,7 @@ export class TrackRow {
                 this.setHeight(this, toggle ? TrackRow.expandedTrackHeight : TrackRow.collapsedTrackHeight);
             }}
         />);
+        this.closeButton.content = (<TrackCloseButton track={this} onClick={() => {}}/>);
     }
 
     protected isExpanded = () => {
@@ -108,6 +115,38 @@ export class TrackRow {
     public static readonly expandedTrackHeight = 200;
     public static readonly collapsedTrackHeight = 50;
 }
+
+
+function TrackCloseButton(props: {
+    onClick: (track: TrackRow) => void,
+    track: TrackRow,
+}) {
+    return <div
+    style={{
+        position: 'relative',
+        height: '100%',
+        width: '100%',
+        color: '#e8e8e8',
+        overflow: 'hidden',
+        userSelect: 'none',
+        backgroundColor: '#171615',
+        borderRadius: '0px 8px 8px 0px',
+    }}
+    >
+        <div style={{
+            position: 'absolute',
+            width: '100%',
+            textAlign: 'right',
+            top: '50%',
+            transform: 'translate(0, -50%)',
+        }}>
+            <IconButton onClick={() => props.onClick(props.track)}>
+                <SvgClose color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' />
+            </IconButton>
+        </div>
+    </div>
+}
+
 
 function TrackHeader(props: {
     track: TrackRow,
