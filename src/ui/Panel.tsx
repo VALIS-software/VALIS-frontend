@@ -561,6 +561,7 @@ class PanelHeader extends React.Component<PanelProps,{}> {
                 transform: 'translate(0, -50%)',
                 whiteSpace: 'nowrap',
                 cursor: 'pointer',
+                zIndex: 1,
             }}>
                 {headerContents}
             </div>
