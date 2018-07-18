@@ -5,7 +5,6 @@ import UpgradeDialog from "../Shared/UpgradeDialog/UpgradeDialog";
 import GWASSelector from "../GWASSelector/GWASSelector";
 import GenomeSelector from "../GenomeSelector/GenomeSelector";
 import TrackSelector from "../TrackSelector/TrackSelector";
-import FunctionalTrackSelector from "../FunctionalTrackSelector/FunctionalTrackSelector";
 import ENCODESelector from "../ENCODESelector/ENCODESelector";
 import GTEXSelector from "../GTEXSelector/GTEXSelector";
 import ExACSelector from "../ExACSelector/ExACSelector";

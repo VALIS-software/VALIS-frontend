@@ -98,7 +98,7 @@ export default class QueryModel  {
             if (tags.length === 1) {
                 filteredQuery.filters['info.variant_tags'] = tags[0];
             } else {
-                filteredQuery.filters['info.variant_tags'] = { "$in": tags };
+                filteredQuery.filters['info.variant_tags'] = { "$all": tags };
             }
         }
     

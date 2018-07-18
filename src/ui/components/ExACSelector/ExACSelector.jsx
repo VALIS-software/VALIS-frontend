@@ -8,7 +8,7 @@ import MenuItem from "material-ui/MenuItem";
 import QueryBuilder from "sirius/QueryBuilder";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
-import { VARIANT_TAGS, DATA_SOURCE_ExAC } from "../../helpers/constants";
+import { DATA_SOURCE_ExAC } from "../../helpers/constants";
 import { SiriusApi } from "sirius/SiriusApi";
 import { App } from '../../../App';
 
@@ -21,8 +21,27 @@ class ExACSelector extends React.Component {
     }
     this.state = {
       variantTagValue: null,
-      availableVariantTags: VARIANT_TAGS,
+      availableVariantTags: [],
     };
+  }
+
+  updateAvailableVariantTags = () => {
+    const builder = new QueryBuilder();
+    builder.newInfoQuery();
+    builder.filterSource(DATA_SOURCE_ExAC);
+    const infoQuery = builder.build();
+    this.api.getDistinctValues('info.variant_tags', infoQuery).then(data => {
+      this.setState({
+        availableVariantTags: data,
+        loading: false,
+      });
+    }, err => {
+      this.appModel.error(this, err);
+      this.setState({
+        error: err,
+        loading: false,
+      });
+    });
   }
 
   handelUpdateVariantTag = (event, index, value) => {
@@ -53,6 +72,11 @@ class ExACSelector extends React.Component {
     const tagValue = this.state.availableVariantTags[this.state.variantTagValue];
     App.addVariantTrack(`${tagValue} (ExAC)`, query);
     this.props.viewModel.closeView();
+  }
+
+  componentDidMount() {
+    // use api to pull all available variant tags
+    this.updateAvailableVariantTags();
   }
 
   render() {
