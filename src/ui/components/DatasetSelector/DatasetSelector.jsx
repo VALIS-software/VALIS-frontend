@@ -5,7 +5,6 @@ import UpgradeDialog from "../Shared/UpgradeDialog/UpgradeDialog";
 import GWASSelector from "../GWASSelector/GWASSelector";
 import GenomeSelector from "../GenomeSelector/GenomeSelector";
 import TrackSelector from "../TrackSelector/TrackSelector";
-import FunctionalTrackSelector from "../FunctionalTrackSelector/FunctionalTrackSelector";
 import ENCODESelector from "../ENCODESelector/ENCODESelector";
 import GTEXSelector from "../GTEXSelector/GTEXSelector";
 import ExACSelector from "../ExACSelector/ExACSelector";
@@ -15,7 +14,6 @@ import DataListItem from "../DataListItem/DataListItem";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
 const TRACK_TYPE_SEQUENCE = 'track_type_sequence';
-const TRACK_TYPE_FUNCTIONAL = 'track_type_functional';
 const TRACK_TYPE_GENOME = 'track_type_genome';
 const TRACK_TYPE_GWAS = 'track_type_gwas';
 const TRACK_TYPE_TCGA = 'track_type_tcga';
@@ -94,12 +92,6 @@ class DatasetSelector extends React.Component {
         "ENCODE Track",
         null,
         <ENCODESelector appModel={this.appModel} viewModel={this.viewModel} />
-      );
-    } else if (trackType === TRACK_TYPE_FUNCTIONAL) {
-      this.viewModel.pushView(
-        "Functional Tracks",
-        null,
-        <FunctionalTrackSelector appModel={this.appModel} />
       );
     } else if (trackType === TRACK_TYPE_EQTL) {
       this.viewModel.pushView(
