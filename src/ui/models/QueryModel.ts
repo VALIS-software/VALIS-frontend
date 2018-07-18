@@ -17,7 +17,7 @@ type FilterValueSet = Set<FilterValue>;
 export default class QueryModel  {
     query: any;
     filters: Map<FilterType, FilterValueSet>;
-    
+
     constructor(query: any, filters?: Map<FilterType, FilterValueSet>, displayTitle?: string) {
         this.query = Object.assign({}, query);
         this.filters = filters ? filters : Map<FilterType, FilterValueSet>();
@@ -46,7 +46,7 @@ export default class QueryModel  {
     setFilters(filters: Map<FilterType, FilterValueSet>) : QueryModel {
         return new QueryModel(this.query, filters);
     }
-    
+
     noneSelected(filterType: FilterType) {
         if (!this.filters.has(filterType)) return true;
         if (this.filters.has(filterType) && this.filters.get(filterType).isEmpty()) return true;
@@ -60,7 +60,7 @@ export default class QueryModel  {
             return false;
         }
     }
-    
+
     public static equal(queryA: QueryModel, queryB: QueryModel) : boolean {
         // @hack -- TODO: semantically correct query comparison
         if (queryA && !queryB) return false;
@@ -98,10 +98,10 @@ export default class QueryModel  {
             if (tags.length === 1) {
                 filteredQuery.filters['info.variant_tags'] = tags[0];
             } else {
-                filteredQuery.filters['info.variant_tags'] = { "$all": tags };
+                filteredQuery.filters['info.variant_tags'] = { "$in": tags };
             }
         }
-    
+
         if (filter.get(FilterType.CHROMOSOME)) {
             const contigs = filter.get(FilterType.CHROMOSOME).toArray();
             if (contigs.length === 1) {
