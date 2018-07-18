@@ -110,7 +110,7 @@ class GeneDetails extends React.Component {
   loadQuery(title, query) {
     this.appModel.trackMixPanel("Run search", { 'query': JSON.stringify(query) });
     const queryModel = new QueryModel(query);
-    const view = (<SearchResultsView text={''} query={queryModel} viewModel={this.viewModel} appModel={this.appModel} />);
+    const view = (<SearchResultsView text={title} query={queryModel} viewModel={this.viewModel} appModel={this.appModel} />);
     this.viewModel.pushView(title, query, view);
   }
 

@@ -124,6 +124,14 @@ class TokenBox extends React.Component {
     return pieces.join(' ');
   }
 
+  buildResultTitleFromTokens(tokens, searchString) {
+    let type = tokens[0].value;
+    let quotedStrs = tokens.filter(token => token.quoted);
+    let value = (quotedStrs.length > 0) ? quotedStrs[0].value : searchString;
+    value = value.length > 18 ? value.slice(0, 15) + '...' : value;
+    return `${type} (${value})`;
+  }
+
   singleResult = (results, searchText) => {
     return results.filter(result => AutoComplete.fuzzyFilter(searchText, result.value)).length > 0;
   }
@@ -188,11 +196,12 @@ class TokenBox extends React.Component {
   }
 
   pushSearchResultsView = (tokens, searchString, query) => {
-    const queryStr = this.buildQueryStringFromTokens(tokens) + ' ' + searchString;
+    let queryStr = this.buildQueryStringFromTokens(tokens);
+    let queryTitle = this.buildResultTitleFromTokens(tokens, searchString);
     const query = new QueryModel(query);
     const uid = `search-result-${window.performance.now()}`;
     this.appModel.trackMixPanel("Run search", { 'queryStr': queryStr });
-    const view = (<SearchResultsView key={uid} text={queryStr} query={query} viewModel={this.viewModel} appModel={this.appModel} />);
+    const view = (<SearchResultsView key={uid} text={queryTitle} query={query} viewModel={this.viewModel} appModel={this.appModel} />);
     this.viewModel.pushView('Search Results', query, view);
   }
 

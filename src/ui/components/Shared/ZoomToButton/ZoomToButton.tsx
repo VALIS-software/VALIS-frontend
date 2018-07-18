@@ -13,10 +13,9 @@ type Props = {
 }
 
 class ZoomToButton extends React.Component<Props> {
-
   zoom = () => {
     const { start, end, padding } = this.props;
-    const totalRange = Math.max(10000, (1.0 + padding) * (end - start));
+    const totalRange = (1.0 + padding) * (end - start);
     const finalStart = (start + end - totalRange) / 2.0;
     const finalEnd = (start + end + totalRange) / 2.0;
     App.displayRegion(this.props.contig, finalStart, finalEnd);

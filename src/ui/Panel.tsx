@@ -487,7 +487,7 @@ class PanelHeader extends React.Component<PanelProps,{}> {
         const headerContainerStyle : React.CSSProperties= {
             display: 'flex', 
             alignItems: 'center', 
-            justifyContent: 'center'
+            justifyContent: 'center',
         };
 
         const headerStyle : React.CSSProperties = {
@@ -499,6 +499,17 @@ class PanelHeader extends React.Component<PanelProps,{}> {
         const iconHoverColor = 'rgb(255, 255, 255)';
         const iconViewBoxSize = '0 0 32 32';
         
+        const closeIcon = this.props.enableClose ?
+            (<div style={{
+                position: 'absolute',
+                right: 0
+            }}>
+                <IconButton onClick={() => this.props.onClose(this.props.panel)}>
+                    <SvgClose color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' />
+                </IconButton>
+            </div>) : null
+
+
         if (this.props.isEditing) {
             headerContents = (<div style={headerContainerStyle} >
                 <span><input
@@ -525,6 +536,7 @@ class PanelHeader extends React.Component<PanelProps,{}> {
                         hoverColor={iconHoverColor} 
                     />
                 </span>
+                {closeIcon}
             </div>);
         } else {
             headerContents = (<div style={headerContainerStyle} onClick={() => this.props.onEditStart()}>
@@ -536,6 +548,7 @@ class PanelHeader extends React.Component<PanelProps,{}> {
                         hoverColor={iconHoverColor} 
                     />
                 </span>
+                {closeIcon}
             </div>);
         }
 
@@ -561,25 +574,9 @@ class PanelHeader extends React.Component<PanelProps,{}> {
                 transform: 'translate(0, -50%)',
                 whiteSpace: 'nowrap',
                 cursor: 'pointer',
-                zIndex: 1,
             }}>
                 {headerContents}
             </div>
-            {this.props.enableClose ?
-                <div style={{
-                    position: 'absolute',
-                    width: '100%',
-                    textAlign: 'right',
-                    top: '50%',
-                    transform: 'translate(0, -50%)',
-                }}>
-                    <IconButton onClick={() => this.props.onClose(this.props.panel)}>
-                        <SvgClose color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' />
-                    </IconButton>
-                </div>
-
-                : null
-            }
         </div>
     }
 }
