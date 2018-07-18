@@ -150,8 +150,8 @@ export class SiriusApi {
         });
     }
 
-    static getDistinctValues(index: number, query: any) {
-        const requestUrl = `${this.apiUrl}/distinct_values/${index}`;
+    static getDistinctValues(key: string, query: any) {
+        const requestUrl = `${this.apiUrl}/distinct_values/${key}`;
         return axios.post(requestUrl, query).then(data => {
             return data.data;
         });

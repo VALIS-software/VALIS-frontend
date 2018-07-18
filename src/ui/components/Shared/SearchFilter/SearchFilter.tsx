@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DATA_SOURCES, VARIANT_TAGS, CHROMOSOME_NAMES } from '../../../helpers/constants';
+import { DATA_SOURCES, CHROMOSOME_NAMES } from '../../../helpers/constants';
 import QueryBuilder from "sirius/QueryBuilder";
 import SiriusApi from "sirius/SiriusApi";
 import QueryModel from '../../../models/QueryModel';
@@ -65,14 +65,15 @@ class SearchFilter extends React.Component<Props, State> {
                     resolve(DATA_SOURCES);
                 }));
             } else if (type === FilterType.VARIANT_TAG) {
-                promise = new Promise(((resolve, reject) => {
-                    resolve(VARIANT_TAGS);
-                }));
+                const builder = new QueryBuilder();
+                builder.newInfoQuery();
+                const infoQuery = builder.build();
+                promise = SiriusApi.getDistinctValues('info.variant_tags', infoQuery);
             } else if (type === FilterType.TYPE) {
                 const builder = new QueryBuilder();
                 builder.newGenomeQuery();
                 const genomeQuery = builder.build();
-                promise = SiriusApi.getDistinctValues(FilterType.TYPE, genomeQuery)
+                promise = SiriusApi.getDistinctValues('type', genomeQuery)
             } else if (type === FilterType.CHROMOSOME) {
                 promise = new Promise(((resolve, reject) => {
                     resolve(CHROMOSOME_NAMES);
