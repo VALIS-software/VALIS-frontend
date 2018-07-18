@@ -169,6 +169,7 @@ class TrackViewer extends Object2D {
         }
 
         trackRow.closing = true;
+        trackRow.setResizable(false);
 
         this.endResizingTrackRow(trackRow);
 

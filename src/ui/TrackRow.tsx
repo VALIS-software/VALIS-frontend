@@ -55,6 +55,10 @@ export class TrackRow {
     }
 
     setResizable(v: boolean) {
+        // cannot re-enable resizing when row is closing
+        if (this.closing) {
+            v = false;
+        }
         this.resizeHandle.cursorStyle = v ? 'row-resize' : null;
         this.resizeHandle.color.set(v ? [0, 1, 0, 1] : [0.3, 0.3, 0.3, 1]);
     }
