@@ -92,14 +92,14 @@ export class QueryBuilder {
     this.query.filters['info.outtype'] = outType;
   }
 
-  filterStartBp(start: number) {
+  filterStartBp(start: any) {
     if (this.query.type !== QueryType.GENOME) {
       throw new Error('filterStartBp is only available for an Genome Query.');
     }
     this.query.filters.start = start;
   }
 
-  filterEndBp(end: number) {
+  filterEndBp(end: any) {
     if (this.query.type !== QueryType.GENOME) {
       throw new Error('filterEndBp is only available for an Genome Query.');
     }

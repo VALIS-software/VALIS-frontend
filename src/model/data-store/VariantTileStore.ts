@@ -1,5 +1,6 @@
 import { Tile, TileStore } from "./TileStore";
-import axios from "../../../node_modules/axios";
+import QueryBuilder from "sirius/QueryBuilder";
+import SiriusApi from "sirius/SiriusApi";
 import { TrackModel } from "../TrackModel";
 
 // Tile payload is a list of genes extended with nesting
@@ -59,20 +60,19 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
     protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
         let startBase = tile.x + 1;
         let endBase = startBase + tile.span;
-        return axios.post(
-            'http://35.185.230.75/query/full',
-            {
-                "type": "GenomeNode",
-                "filters": {
-                    "contig": this.contig,
-                    "type": "SNP",
-                    "start": { "$gte": startBase, "$lte": endBase }
-                },
-                "toEdges": this.model.toEdges ? this.model.toEdges : [],
-                "arithmetics": [],
-                "limit": 3000000
-            }
-        ).then((r) => {
+        const builder = new QueryBuilder();
+        builder.newGenomeQuery();
+        builder.filterType('SNP');
+        builder.filterContig(this.contig);
+        builder.filterStartBp({'>=': startBase, '<=': endBase});
+        if (this.model.toEdges) {
+            this.model.toEdges.forEach((e: any) => {
+                builder.addToEdge(e);
+            });
+        }
+        builder.setLimit(1000000);
+        const snpQuery = builder.build();
+        return SiriusApi.getQueryResults(snpQuery, true).then((r) => {
             let variants: Array<VariantGenomeNode> = r.data.data;
 
             return variants.map((v) => { return {
