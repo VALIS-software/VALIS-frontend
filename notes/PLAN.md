@@ -1,4 +1,5 @@
 - Clickable genes
+- Variant drag click bug
 
 - Variants:
     - Complete variant queries
