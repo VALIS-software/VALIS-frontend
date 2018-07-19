@@ -1,6 +1,6 @@
-import { Tile, TileStore } from "./TileStore";
-import axios from "../../../node_modules/axios";
+import { SiriusApi } from "sirius/SiriusApi";
 import { TrackModel } from "../TrackModel";
+import { Tile, TileStore } from "./TileStore";
 
 // Tile payload is a list of genes extended with nesting
 type VariantGenomeNode = {
@@ -60,21 +60,18 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
     protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
         let startBase = tile.x + 1;
         let endBase = startBase + tile.span;
-        return axios.post(
-            'http://35.185.230.75/query/full',
-            {
-                "type": "GenomeNode",
-                "filters": {
-                    "contig": this.contig,
-                    "type": "SNP",
-                    "start": { "$gte": startBase, "$lte": endBase }
-                },
-                "toEdges": this.model.toEdges ? this.model.toEdges : [],
-                "arithmetics": [],
-                "limit": 3000000
-            }
-        ).then((r) => {
-            let variants: Array<VariantGenomeNode> = r.data.data;
+        return SiriusApi.getQueryResults({
+            "type": "GenomeNode",
+            "filters": {
+                "contig": this.contig,
+                "type": "SNP",
+                "start": { "$gte": startBase, "$lte": endBase }
+            },
+            "toEdges": this.model.toEdges ? this.model.toEdges : [],
+            "arithmetics": [],
+            "limit": 3000000
+        }, true).then((r) => {
+            let variants: Array<VariantGenomeNode> = r.data;
 
             return variants.map((v) => {
                 return {
