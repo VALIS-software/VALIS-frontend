@@ -113,6 +113,8 @@ export class App extends React.Component<Props, State> {
 			if (!userProfile.name) {
 				window.location.href = '/login';
 			}
+			// assign identity of mixpanel
+			mixpanel.identify(userProfile.name);
 			this.setState({
 				userProfile: userProfile,
 			})
@@ -304,7 +306,6 @@ export class App extends React.Component<Props, State> {
 		if (event.data !== null) {
 			const msg: string = event.data.msg;
 			const details: any = event.data.details;
-			details.user = this.state.userProfile.name;
 			mixpanel.track(msg, details);
 		}
 	}

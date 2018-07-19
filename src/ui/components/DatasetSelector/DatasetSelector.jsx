@@ -14,7 +14,6 @@ import DataListItem from "../DataListItem/DataListItem";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
 const TRACK_TYPE_SEQUENCE = 'track_type_sequence';
-const TRACK_TYPE_FUNCTIONAL = 'track_type_functional';
 const TRACK_TYPE_GENOME = 'track_type_genome';
 const TRACK_TYPE_GWAS = 'track_type_gwas';
 const TRACK_TYPE_TCGA = 'track_type_tcga';
@@ -93,12 +92,6 @@ class DatasetSelector extends React.Component {
         "ENCODE Track",
         null,
         <ENCODESelector appModel={this.appModel} viewModel={this.viewModel} />
-      );
-    } else if (trackType === TRACK_TYPE_FUNCTIONAL) {
-      this.viewModel.pushView(
-        "Functional Tracks",
-        null,
-        <FunctionalTrackSelector appModel={this.appModel} />
       );
     } else if (trackType === TRACK_TYPE_EQTL) {
       this.viewModel.pushView(
