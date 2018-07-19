@@ -13,6 +13,10 @@ import Object2D from "../core/Object2D";
 import { Text } from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
 import TextClone from "./util/TextClone";
+import { Rect } from "../core/Rect";
+import { Animator } from "../../animation/Animator";
+import { App } from "../../App";
+import { QueryBuilder } from "sirius/QueryBuilder";
 
 export class VariantTrack extends Track<'variant'> {
 
@@ -21,9 +25,18 @@ export class VariantTrack extends Track<'variant'> {
     protected readonly macroLodThresholdHigh = this.macroLodThresholdLow + this.macroLodBlendRange;
 
     protected tileStore: VariantTileStore;
+    protected pointerOverTrack = false;
 
     constructor(model: TrackModel<'variant'>) {
         super(model);
+
+        this.addInteractionListener('pointerenter', (e) => {
+            this.pointerOverTrack = true;
+        });
+
+        this.addInteractionListener('pointerleave', (e) => {
+            this.pointerOverTrack = false;
+        });
     }
 
     setContig(contig: string) {
@@ -39,7 +52,7 @@ export class VariantTrack extends Track<'variant'> {
     protected _microTileCache = new UsageCache<MicroInstances>();
     protected _onStageAnnotations = new UsageCache<Object2D>();
     protected _sequenceLabelCache = new UsageCache<{
-        container: Object2D, text: TextClone,
+        root: Object2D, textParent: Object2D, text: TextClone,
     }>();
     protected updateDisplay() {
         this._pendingTiles.markAllUnused();
@@ -79,8 +92,8 @@ export class VariantTrack extends Track<'variant'> {
                     const baseDisplayWidth = widthPx * baseLayoutW;
 
                     const maxTextSize = 16;
-                    const minTextSize = 5;
-                    const padding = 3;
+                    const minTextSize = 1;
+                    const padding = 1;
                     const maxOpacity = 1.0;
                     const textSizePx = Math.min(baseDisplayWidth - padding, maxTextSize);
                     let textOpacity = Math.min(Math.max((textSizePx - minTextSize) / (maxTextSize - minTextSize), 0.0), 1.0) * maxOpacity;
@@ -93,13 +106,29 @@ export class VariantTrack extends Track<'variant'> {
                             let startIndex = variant.baseIndex;
 
                             let altIndex = 0;
+                            let refSpan = variant.refSequence.length;
+
+                            let color: Array<number> = [1, 0, 0, 1.0]; // default to deletion
 
                             for (let altSequence in variant.alts) {
                                 let altSpan = altSequence.length;
 
+                                let altFreq = variant.alts[altSequence];
+                                let lengthDelta = altSpan - refSpan;
+
+                                // generate color from altFreq and lengthDelta
+                                let opacity = 1;
+                                if (lengthDelta === 0) {
+                                    color = [1.0, 1.0, 1.0, opacity];
+                                } else if (lengthDelta < 0) {
+                                    color = [1.0, 0.3, 0.5, opacity];
+                                } else {
+                                    color = [0.3, 1.0, 0.5, opacity];
+                                }
+
                                 for (let i = 0; i < altSpan; i++) {
                                     let baseCharacter = altSequence[i];
-                                    let layoutParentX = ((startIndex + i + 0.5) - x0) / span;
+                                    let layoutParentX = ((startIndex + i) - x0) / span;
 
                                     // skip text outside visible range
                                     if ((layoutParentX + baseLayoutW) < 0 || layoutParentX > 1) {
@@ -108,12 +137,21 @@ export class VariantTrack extends Track<'variant'> {
 
                                     // create and update text
                                     let cacheKey = this.contig + ':' +  startIndex + ',' + altIndex + ',' + i;
-                                    let label = this._sequenceLabelCache.get(cacheKey, () => this.createBaseLabel(baseCharacter));
+                                    let label = this._sequenceLabelCache.get(cacheKey, () => {
+                                        return this.createBaseLabel(baseCharacter, color, () => {
+                                            let queryBuilder = new QueryBuilder();
+                                            queryBuilder.newGenomeQuery();
+                                            queryBuilder.filterID(variant.id);
+                                            App.search(queryBuilder.build());
+                                        });
+                                    });
 
-                                    label.container.layoutParentX = layoutParentX;
-                                    label.container.layoutW = baseLayoutW;
-                                    label.container.sx = label.container.sy = textSizePx;
-                                    label.container.y = altIndex * altHeightPx + altHeightPx * 0.5 + tileY;
+                                    label.root.layoutParentX = layoutParentX;
+                                    label.root.layoutW = baseLayoutW;
+                                    label.root.y = altIndex * altHeightPx + tileY;
+                                    label.root.h = altHeightPx;
+
+                                    label.textParent.sx = label.textParent.sy = textSizePx;
 
                                     label.text.color[3] = textOpacity;
                                 }
@@ -207,10 +245,44 @@ export class VariantTrack extends Track<'variant'> {
         this.displayNeedUpdate = false;
     }
 
-    protected createBaseLabel = (baseCharacter: string) => {
-        let container = new Object2D();
-        container.z = 0.5;
+    protected createBaseLabel = (baseCharacter: string, color: ArrayLike<number>, onClick: () => void) => {
+        let root = new Rect(0, 0, color);
+        root.blendFactor = 0;
+        root.mask = this;
+        root.opacity = 0;
+        root.z = 0.5;
+        
+        // highlight on mouse-over
+        const springStrength = 250;
+        root.addInteractionListener('pointermove', (e) => {
+            if (this.pointerOverTrack) {
+                root.cursorStyle = 'pointer';
+                Animator.springTo(root, {opacity: 0.6}, springStrength);
+            } else {
+                root.cursorStyle = null;
+                Animator.springTo(root, { opacity: 0 }, springStrength);    
+            }
+        });
+        root.addInteractionListener('pointerleave', () => {
+            root.cursorStyle = null;
+            Animator.springTo(root, { opacity: 0 }, springStrength);
+        });
 
+        // callback on click
+        root.addInteractionListener('click', (e) => {
+            if (this.pointerOverTrack && e.isPrimary) {
+                onClick();
+            }
+        });
+        
+        // add a 0-sized element centered in the root
+        // this is used to position the text
+        let textParent = new Object2D();
+        textParent.z = 0;
+        textParent.layoutParentX = 0.5;
+        textParent.layoutParentY = 0.5;
+
+        // create textClone
         let textInstance = VariantTrack.baseTextInstances[baseCharacter];
         if (textInstance === undefined) {
             textInstance = VariantTrack.baseTextInstances['?'];
@@ -218,22 +290,21 @@ export class VariantTrack extends Track<'variant'> {
 
         let textClone = new TextClone(textInstance, [1, 1, 1, 1]);
         textClone.additiveBlendFactor = 1.0;
-
-        container.add(textClone);
-
         textClone.layoutX = -0.5;
         textClone.layoutY = -0.5;
         textClone.mask = this;
 
-        this.add(container);
+        this.add(root);
+        root.add(textParent);
+        textParent.add(textClone);
 
-        return { container: container, text: textClone };
+        return { root: root, textParent: textParent, text: textClone };
     }
 
-    protected deleteBaseLabel = (label: { container: Object2D, text: TextClone }) => {
-        label.container.remove(label.text); // ensure textClone cleanup is fired
+    protected deleteBaseLabel = (label: { root: Object2D, textParent: Object2D, text: TextClone }) => {
+        label.textParent.remove(label.text); // ensure textClone cleanup is fired
         label.text.releaseGPUResources();
-        this.remove(label.container);
+        this.remove(label.root);
     }
 
     // we only need 1 text instance of each letter which we can render multiple times

@@ -6,6 +6,9 @@ import * as React from "react";
 import EntityType from "sirius/EntityType";
 import SiriusApi from "sirius/SiriusApi";
 import Animator from "./animation/Animator";
+// styles
+import "./App.scss";
+import { SharedTileStore } from "./model/data-store/SharedTileStores";
 import { TrackModel } from "./model/TrackModel";
 import { EntityDetails } from "./ui/components/EntityDetails/EntityDetails";
 import Header from "./ui/components/Header/Header";
@@ -13,13 +16,11 @@ import NavigationController from "./ui/components/NavigationController/Navigatio
 import SearchResultsView from "./ui/components/SearchResultsView/SearchResultsView";
 import { AppCanvas } from "./ui/core/AppCanvas";
 import AppModel, { AppEvent } from "./ui/models/AppModel";
+import QueryModel from "./ui/models/QueryModel";
 import ViewModel, { ViewEvent } from "./ui/models/ViewModel";
 import BasicTheme from "./ui/themes/BasicTheme";
 import TrackViewer from "./ui/TrackViewer";
 import View from "./ui/View";
-import { SharedTileStore } from "./model/data-store/SharedTileStores";
-// styles
-import "./App.scss";
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
@@ -318,6 +319,18 @@ export class App extends React.Component<Props, State> {
 		});
 	}
 
+	protected _searchCount = 0;
+	protected search(queryObject: any) {
+		const queryModel = new QueryModel(queryObject);
+
+		let title = 'Search';
+		const uid = `search-result-#${this._searchCount++}`;
+		const view = (<SearchResultsView key={uid} text={title} query={queryModel} viewModel={this.viewModel} appModel={this.appModel} />);
+
+		this.appModel.trackMixPanel("Automated search", { 'queryStr': JSON.stringify(queryObject) });
+		this.viewModel.pushView('Search Results', queryModel, view);
+	}
+
 	// global app methods, assumes a single instance of App
 	static readonly canvasPixelRatio = window.devicePixelRatio || 1;
 
@@ -331,6 +344,9 @@ export class App extends React.Component<Props, State> {
 		this.appInstance.addVariantTrack(title, toEdges);
 	}
 
+	static search(queryObject: any) {
+		this.appInstance.search(queryObject);
+	}
 
 }
 

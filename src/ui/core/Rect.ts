@@ -13,6 +13,7 @@ export class Rect extends Object2D {
 
     color = new Float32Array(4);
     opacity: number = 1;
+    blendFactor: number = 1;
 
     protected attributeLayout: AttributeLayout = [
         { name: 'position', type: AttributeType.VEC2 },
@@ -43,6 +44,7 @@ export class Rect extends Object2D {
     }
 
     draw(context: DrawContext) {
+        context.uniform1f('blendFactor', this.blendFactor);
         context.uniform2f('size', this.computedWidth, this.computedHeight);
         context.uniformMatrix4fv('model', false, this.worldTransformMat4);
         context.uniform4f('color', this.color[0], this.color[1], this.color[2], this.color[3] * this.opacity);
@@ -73,10 +75,11 @@ export class Rect extends Object2D {
             precision mediump float;
             varying vec2 vUv;
 
+            uniform float blendFactor;
             uniform vec4 color;
             
             void main() {
-                gl_FragColor = vec4(color.rgb * color.a, color.a);
+                gl_FragColor = vec4(color.rgb, blendFactor) * color.a;
             }
         `;
     }

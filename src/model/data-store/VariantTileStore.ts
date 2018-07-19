@@ -34,6 +34,7 @@ type VariantInfo = {
 }
 
 export type TilePayload = Array<{
+    id: string,
     baseIndex: number,
     refSequence: string,
     alts: { [sequence: string]: number }
@@ -75,11 +76,14 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
         ).then((r) => {
             let variants: Array<VariantGenomeNode> = r.data.data;
 
-            return variants.map((v) => { return {
-                baseIndex: v.start - 1,
-                refSequence: v.info.variant_ref,
-                alts: v.info.allele_frequencies,
-            } });
+            return variants.map((v) => {
+                return {
+                    id: v.id,
+                    baseIndex: v.start - 1,
+                    refSequence: v.info.variant_ref,
+                    alts: v.info.allele_frequencies,
+                }
+            });
         });
     }
 
