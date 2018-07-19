@@ -170,7 +170,7 @@ function buildPatientQuery(parsePath: ParsedToken[]): any {
 
 function buildSNPrsQuery(parsePath: ParsedToken[]): any {
     builder.newGenomeQuery();
-    builder.filterID('Gsnp_' + TRIM(parsePath[0].value));
+    builder.filterID('Gsnp_' + TRIM(parsePath[0].value.toLowerCase()));
     return builder.build();
 }
 
