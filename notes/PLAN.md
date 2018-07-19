@@ -1,5 +1,4 @@
-- Clickable track elements
-    - Variant tracks
+- Clickable genes
 
 - Variants:
     - Complete variant queries
