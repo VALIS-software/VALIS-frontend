@@ -26,6 +26,7 @@ class TrackViewer extends Object2D {
     readonly trackHeaderWidth: number = 180;
     readonly panelHeaderHeight: number = 50;
     readonly defaultTrackHeight: number = 50;
+
     readonly spacing = {
         x: 5,
         y: 5
@@ -123,10 +124,14 @@ class TrackViewer extends Object2D {
             heightPx: heightPx,
         });
 
+        trackRow.closeButton.layoutParentX = 1;
+        trackRow.closeButton.x = -this.spacing.x;
+        trackRow.closeButton.w = this.defaultTrackHeight;
         trackRow.header.x = -this.trackHeaderWidth + this.spacing.x * 0.5;
         trackRow.header.w = this.trackHeaderWidth;
 
         this.grid.add(trackRow.header);
+        this.grid.add(trackRow.closeButton);
         this.grid.add(trackRow.resizeHandle);
 
         trackRow.resizeHandle.layoutW = 1;
