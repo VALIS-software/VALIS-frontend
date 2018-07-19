@@ -58,6 +58,12 @@ export class VariantTrack extends Track<'variant'> {
             let macroOpacity: number = Scalar.linstep(this.macroLodThresholdLow, this.macroLodThresholdHigh, continuousLodLevel);
             let microOpacity: number = 1.0 - macroOpacity;
 
+            // when no filter is provided, show micro-view at all scales
+            if (this.model.toEdges != null) {
+                microOpacity = 1;
+                macroOpacity = 0;
+            }
+
             // micro-scale details
             if (microOpacity > 0) {
                 this.tileStore.getTiles(x0, x1, basePairsPerDOMPixel, true, (tile) => {

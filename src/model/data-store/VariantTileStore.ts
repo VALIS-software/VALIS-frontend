@@ -41,8 +41,11 @@ export type TilePayload = Array<{
 
 export class VariantTileStore extends TileStore<TilePayload, void> {
 
-    constructor(protected model: TrackModel<'variant'>, protected contig: string, tileSize: number = 1 << 15, protected macro: boolean = false) {
-        super(tileSize, 1);
+    constructor(protected model: TrackModel<'variant'>, protected contig: string) {
+        super(
+            model.toEdges == null ?  1 << 15 : 1 << 26, // tile-size
+            1
+        );
     }
 
     protected mapLodLevel(l: number) {
@@ -50,11 +53,6 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
     }
 
     protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
-
-        if (this.model.toEdges) {// @!
-            console.log('Request', tile, this.model);
-        }
-
         let startBase = tile.x + 1;
         let endBase = startBase + tile.span;
         return axios.post(
@@ -72,10 +70,6 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
             }
         ).then((r) => {
             let variants: Array<VariantGenomeNode> = r.data.data;
-
-            if (this.model.toEdges != null) { // @!
-                console.log(variants.length);
-            }
 
             return variants.map((v) => { return {
                 baseIndex: v.start - 1,
