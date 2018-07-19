@@ -72,9 +72,8 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
         }
         builder.setLimit(1000000);
         const snpQuery = builder.build();
-        return SiriusApi.getQueryResults(snpQuery, true).then((r) => {
-            let variants: Array<VariantGenomeNode> = r.data.data;
-
+        return SiriusApi.getQueryResults(snpQuery, true).then((data) => {
+            let variants: Array<VariantGenomeNode> = data.data;
             return variants.map((v) => { return {
                 baseIndex: v.start - 1,
                 refSequence: v.info.variant_ref,
