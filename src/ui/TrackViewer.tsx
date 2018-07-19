@@ -97,14 +97,13 @@ class TrackViewer extends Object2D {
         const result = this.rows.find(d => d.trackRow === row);
         if (result) {
             result.heightPx = heightPx;
+            this.layoutTrackRows(animate);
         }
-        this.layoutTrackRows(animate);
     }
 
-    getRowHeight(row: TrackRow) : number {
+    getRowHeight(row: TrackRow): number {
         const result = this.rows.find(d => d.trackRow === row);
-        if (result) return result.heightPx;
-        else return -1;
+        return result ? result.heightPx : null;
     }
 
     // track-viewer state deltas
@@ -113,7 +112,9 @@ class TrackViewer extends Object2D {
 
         const rowHeightSetter = (row: TrackRow, h:number) => { this.setRowHeight(row, h, true)};
         const rowHeightGetter = (row: TrackRow) : number => this.getRowHeight(row);
-        let trackRow = new TrackRow(model, this.spacing, rowHeightSetter, rowHeightGetter);
+
+        let trackRow = new TrackRow((t) => this.closeTrackRow(t), model, this.spacing, rowHeightSetter, rowHeightGetter);
+
         // add track tile to all panels
         for (let panel of this.panels) {
             panel.addTrack(trackRow.createTrack());
@@ -130,21 +131,52 @@ class TrackViewer extends Object2D {
         trackRow.header.x = -this.trackHeaderWidth + this.spacing.x * 0.5;
         trackRow.header.w = this.trackHeaderWidth;
 
+        trackRow.resizeHandle.layoutW = 1;
+        trackRow.resizeHandle.addInteractionListener('dragstart', (e) => {
+            if (e.isPrimary && e.buttonState === 1) {
+                e.preventDefault();
+                this.startResizingTrackRow(trackRow);
+            }
+        });
+        trackRow.resizeHandle.addInteractionListener('dragend', (e) => {
+            if (e.isPrimary) {
+                e.preventDefault();
+                this.endResizingTrackRow(trackRow);
+            }
+        });
+
+        trackRow.setResizable(true);
+
         this.grid.add(trackRow.header);
         this.grid.add(trackRow.closeButton);
         this.grid.add(trackRow.resizeHandle);
-
-        trackRow.resizeHandle.layoutW = 1;
-        trackRow.resizeHandle.addInteractionListener('dragstart', (e) => { e.preventDefault(); this.startResizingTrackRow(e, trackRow) });
-        trackRow.resizeHandle.addInteractionListener('dragend', (e) => { e.preventDefault(); this.endResizingTrackRow(e, trackRow) });
-
-        trackRow.setResizable(true);
 
         // first instantaneously the y position of the track and override h to 0
         this.layoutTrackRows(false, trackRow);
         trackRow.h = 0;
 
         // then animate all the tracks to the new layout
+        this.layoutTrackRows(animate);
+    }
+
+    closeTrackRow(trackRow: TrackRow, animate: boolean = true) {
+        // first set height to 0, when the animation is complete, remove the row's resources
+        let row: Row = this.rows.find((r) => r.trackRow === trackRow);
+        if (row === undefined) return; // this trackRow has already been removed
+
+        if (trackRow.closing) {
+            return;
+        }
+
+        trackRow.closing = true;
+        trackRow.setResizable(false);
+
+        this.endResizingTrackRow(trackRow);
+
+        // animate height to 0 and delete the row when complete
+        row.heightPx = 0;
+
+        Animator.addAnimationCompleteCallback(trackRow, 'h', this.deleteTrackRow, true);
         this.layoutTrackRows(animate);
     }
 
@@ -199,9 +231,8 @@ class TrackViewer extends Object2D {
         this.layoutPanels(animate);
     }
 
-    closePanel(panel: Panel, animate: boolean){
+    closePanel(panel: Panel, animate: boolean = true){
         if (panel.closing) {
-            console.error(`Trying to remove already removed panel`);
             return;
         }
 
@@ -226,10 +257,10 @@ class TrackViewer extends Object2D {
 
         // animate panel's width to 0, after which delete the panel
         if (animate) {
-            Animator.addAnimationCompleteCallback(panel, 'layoutW', this.cleanupPanel, true);
+            Animator.addAnimationCompleteCallback(panel, 'layoutW', this.deletePanel, true);
             Animator.springTo(panel, { layoutW: 0 }, DEFAULT_SPRING);
         } else {
-            this.cleanupPanel(panel);
+            this.deletePanel(panel);
         }
 
         // clear edges if there's less then 2, this allows edges to be re-initialized
@@ -251,11 +282,46 @@ class TrackViewer extends Object2D {
     }
 
     /**
+     * Removes the row from the scene and cleans up resources
+     *
+     * **Should only be called after closeTrackRow**
+     */
+    protected deleteTrackRow = (trackRow: TrackRow) => {
+        // remove trackRow elements from scene
+        this.grid.remove(trackRow.header);
+        this.grid.remove(trackRow.closeButton);
+        this.grid.remove(trackRow.resizeHandle);
+
+        // remove track tiles from panels and release resources
+        for (let panel of this.panels) {
+            for (let track of trackRow.tracks) {
+                panel.removeTrack(track);
+            }
+        }
+
+        // release track tile resources
+        for (let track of trackRow.tracks) {
+            trackRow.deleteTrack(track);
+        }
+
+        // remove row from rows array
+        let i = this.rows.length - 1;
+        while (i >= 0) {
+            let row = this.rows[i];
+            if (row.trackRow === trackRow) {
+                this.rows.splice(i, 1);
+                break;
+            }
+            i--;
+        }
+    }
+
+    /**
      * Removes the panel from the scene and cleans up resources
      *
      * **Should only be called after closePanel**
      */
-    protected cleanupPanel = (panel: Panel) => {
+    protected deletePanel = (panel: Panel) => {
         if (!panel.closing) {
             console.warn('cleanupPanel() called before closing the panel');
             this.closePanel(panel, false);
@@ -272,7 +338,7 @@ class TrackViewer extends Object2D {
         // stop any active animations on the panel
         Animator.stop(panel);
         // remove any open cleanupPanel panel callbacks
-        Animator.removeAnimationCompleteCallbacks(panel, 'layoutW', this.cleanupPanel);
+        Animator.removeAnimationCompleteCallbacks(panel, 'layoutW', this.deletePanel);
 
         // remove the panel from the scene
         this.grid.remove(panel);
@@ -285,6 +351,7 @@ class TrackViewer extends Object2D {
                 for (let t of row.trackRow.tracks) {
                     if (t === track) {
                         row.trackRow.deleteTrack(track);
+                        break;
                     }
                 }
             }
@@ -509,22 +576,18 @@ class TrackViewer extends Object2D {
         this._resizingPanels.delete(panel);
     }
 
-    protected startResizingTrackRow(e: InteractionEvent, trackRow: TrackRow) {
-        if (e.isPrimary && e.buttonState === 1) {
-            let row: Row = this.rows.find((r) => r.trackRow === trackRow);
-            this._resizingRows.add({
-                row: row,
-                initialHeightPx: row.trackRow.h,
-            });
-        }
+    protected startResizingTrackRow(trackRow: TrackRow) {
+        let row: Row = this.rows.find((r) => r.trackRow === trackRow);
+        this._resizingRows.add({
+            row: row,
+            initialHeightPx: row.trackRow.h,
+        });
     }
 
-    protected endResizingTrackRow(e: InteractionEvent, trackRow: TrackRow) {
-        if (e.isPrimary) {
-            for (let entry of this._resizingRows) {
-                if (entry.row.trackRow === trackRow) {
-                    this._resizingRows.delete(entry);
-                }
+    protected endResizingTrackRow(trackRow: TrackRow) {
+        for (let entry of this._resizingRows) {
+            if (entry.row.trackRow === trackRow) {
+                this._resizingRows.delete(entry);
             }
         }
     }

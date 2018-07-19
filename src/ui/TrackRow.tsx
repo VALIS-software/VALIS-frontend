@@ -19,6 +19,8 @@ export class TrackRow {
     readonly closeButton: ReactObject;
     readonly resizeHandle: Rect;
 
+    closing: boolean = false;
+
     get y(): number { return this._y; }
     get h(): number { return this._h; }
 
@@ -34,6 +36,7 @@ export class TrackRow {
     protected _headerIsExpandedState: boolean | undefined = undefined;
 
     constructor(
+        protected onClose: (t: TrackRow) => void,
         readonly model: TrackModel,
         protected readonly spacing: { x: number, y: number },
         protected readonly setHeight: (row: TrackRow, h: number) => void,
@@ -52,6 +55,10 @@ export class TrackRow {
     }
 
     setResizable(v: boolean) {
+        // cannot re-enable resizing when row is closing
+        if (this.closing) {
+            v = false;
+        }
         this.resizeHandle.cursorStyle = v ? 'row-resize' : null;
         this.resizeHandle.color.set(v ? [0, 1, 0, 1] : [0.3, 0.3, 0.3, 1]);
     }
@@ -105,7 +112,9 @@ export class TrackRow {
                 this.setHeight(this, toggle ? TrackRow.expandedTrackHeight : TrackRow.collapsedTrackHeight);
             }}
         />);
-        this.closeButton.content = (<TrackCloseButton track={this} onClick={() => {}}/>);
+        this.closeButton.content = (<TrackCloseButton track={this} onClick={() => {
+            this.onClose(this);
+        }}/>);
     }
 
     protected isExpanded = () => {
