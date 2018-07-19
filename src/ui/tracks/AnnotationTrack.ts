@@ -256,14 +256,6 @@ export class AnnotationTrack extends Track<'annotation'> {
 
 }
 
-class LoadingIndicator extends Text {
-
-    constructor() {
-        super(OpenSansRegular, 'Loading', 12, [1, 1, 1, 1]);
-    }
-
-}
-
 type MacroGeneInstance = {
     xFractional: number, y: number, z: number,
     wFractional: number, h: number,
