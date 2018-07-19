@@ -43,13 +43,17 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
 
     constructor(protected model: TrackModel<'variant'>, protected contig: string) {
         super(
-            model.toEdges == null ?  1 << 15 : 1 << 26, // tile-size
+            1 << 15, // tile size
             1
         );
     }
 
     protected mapLodLevel(l: number) {
-        return 0;
+        if (this.model.toEdges == null) {
+            return 0;
+        }
+
+        return Math.floor(l / 10) * 10;
     }
 
     protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
@@ -80,13 +84,4 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
     }
 
 }
-
-// export class MacroVariantTileStore extends VariantTileStore {
-
-//     constructor(sourceId: string) {
-//         super(sourceId, 1 << 25, true);
-//     }
-
-// }
-
 export default VariantTileStore;
