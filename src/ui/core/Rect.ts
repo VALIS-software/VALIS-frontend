@@ -12,7 +12,6 @@ import { Object2D } from "./Object2D";
 export class Rect extends Object2D {
 
     color = new Float32Array(4);
-    opacity: number = 1;
     blendFactor: number = 1;
 
     protected attributeLayout: AttributeLayout = [
