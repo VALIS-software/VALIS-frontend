@@ -72,7 +72,7 @@ class TrackViewer extends Object2D {
         this.addEventListener('dragmove', (e) => {
             if (this._resizingPanels.size > 0 || this._resizingRows.size > 0) return;
             let dy = e.localY - dragStartY;
-            this.rowOffsetY = yOffsetStart + dy;
+            this.rowOffsetY = Math.min(yOffsetStart + dy, 0);
             this.layoutTrackRows(false);
         });
 
