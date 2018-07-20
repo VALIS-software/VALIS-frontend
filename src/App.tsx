@@ -319,12 +319,12 @@ export class App extends React.Component<Props, State> {
 		});
 	}
 
-	protected _searchCount = 0;
+	protected _searchIncrementalId = 0;
 	protected search(queryObject: any) {
 		const queryModel = new QueryModel(queryObject);
 
 		let title = 'Search';
-		const uid = `search-result-#${this._searchCount++}`;
+		const uid = `search-result-#${this._searchIncrementalId++}`;
 		const view = (<SearchResultsView key={uid} text={title} query={queryModel} viewModel={this.viewModel} appModel={this.appModel} />);
 
 		this.appModel.trackMixPanel("Automated search", { 'queryStr': JSON.stringify(queryObject) });
