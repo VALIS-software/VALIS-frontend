@@ -53,8 +53,6 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.yScrollNode.z = 0;
         this.yScrollNode.layoutW = 1;
         this.add(this.yScrollNode);
-        
-        this.color.set([0.1, 0.1, 0.1, 1]);
 
         this.initializeYDrag();
 
