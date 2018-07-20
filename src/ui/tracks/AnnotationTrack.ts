@@ -40,7 +40,7 @@ export class AnnotationTrack extends Track<'annotation'> {
     protected dragEnabled: boolean;
 
     constructor(model: TrackModel<'annotation'>) {
-        super(model);
+        super(model, true);
 
         this.yScrollNode = new Object2D();
         this.yScrollNode.z = 0;

@@ -24,7 +24,7 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
 
     protected displayNeedUpdate = true;
 
-    constructor(protected model: TrackModel<ModelType>) {
+    constructor(protected model: TrackModel<ModelType>, ignoreDragListeners?: boolean) {
         super(0, 0, [0, 0, 0, 1]);
 
         this.cursorStyle = this.defaultCursor;
@@ -44,7 +44,7 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
         // - be careful to avoid conflict with cursor
         this.toggleLoadingIndicator(false, false);
 
-        this.initializeYDrag();
+        if (!ignoreDragListeners) this.initializeYDrag();
     }
 
     setContig(contig: string) {
