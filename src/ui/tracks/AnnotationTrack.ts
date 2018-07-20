@@ -16,6 +16,9 @@ import Text from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
 import TrackRow from "../TrackRow";
 import Track from "./Track";
+import Animator from "../../animation/Animator";
+import App from "../../App";
+import QueryBuilder from "sirius/QueryBuilder";
 
 /**
  * WIP Annotation tracks:
@@ -39,6 +42,10 @@ export class AnnotationTrack extends Track<'annotation'> {
     protected yScrollNode: Object2D;
     protected dragEnabled: boolean;
 
+    protected pointerState: TrackPointerState = {
+        pointerOver: false,
+    }
+
     constructor(model: TrackModel<'annotation'>) {
         super(model);
 
@@ -50,6 +57,14 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.color.set([0.1, 0.1, 0.1, 1]);
 
         this.initializeYDrag();
+
+        this.addInteractionListener('pointerenter', (e) => {
+            this.pointerState.pointerOver = true;
+        });
+
+        this.addInteractionListener('pointerleave', (e) => {
+            this.pointerState.pointerOver = false;
+        });
     }
 
     setContig(contig: string) {
@@ -205,7 +220,7 @@ export class AnnotationTrack extends Track<'annotation'> {
 
                 let annotation = this._annotationCache.get(annotationKey, () => {
                     // create
-                    let object = new GeneAnnotation(gene);
+                    let object = new GeneAnnotation(gene, this.pointerState);
                     object.y = 40;
                     object.layoutH = 0;
                     object.z = 1 / 4;
@@ -226,10 +241,6 @@ export class AnnotationTrack extends Track<'annotation'> {
                 annotation.opacity = opacity;
             }
         });
-    }
-
-    protected createGeneAnnotation = (gene: Gene) => {
-        return new GeneAnnotation(gene);
     }
 
     protected addAnnotation = (annotation: Object2D) => {
@@ -256,6 +267,10 @@ export class AnnotationTrack extends Track<'annotation'> {
         return feature.soClass + '\x1F' + feature.name + '\x1F' + feature.startIndex + '\x1F' + feature.length;
     }    
 
+}
+
+type TrackPointerState = {
+    pointerOver: boolean,
 }
 
 type MacroGeneInstance = {
@@ -406,9 +421,10 @@ class GeneAnnotation extends Object2D {
     protected name: Text;
     protected _opacity: number = 1;
 
-    constructor(protected readonly gene: Gene) {
+    constructor(protected readonly gene: Gene, trackPointerState: TrackPointerState) {
         super();
 
+        /**
         let spanMarker = new TranscriptSpan(gene.strand);
         spanMarker.color.set([138 / 0xFF, 136 / 0xFF, 191 / 0xFF, 0.38]);
         spanMarker.layoutW = 1;
@@ -416,22 +432,22 @@ class GeneAnnotation extends Object2D {
         spanMarker.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
         spanMarker.transparent = true;
         this.add(spanMarker);
-
         devColorFromElement('gene', spanMarker.color);
+        /**/
         
         this.name = new Text(OpenSansRegular, gene.name, 16, [1, 1, 1, 1]);
         this.name.layoutY = -1;
         this.name.y = -5;
         this.add(this.name);
 
-        let transcriptOffset = 20;
+        let transcriptOffset = 5;
         let transcriptHeight = 20;
         let transcriptSpacing = 10;
         
         for (let i = 0; i < gene.transcripts.length; i++) {
             let transcript = gene.transcripts[i];
 
-            let transcriptAnnotation = new TranscriptAnnotation(transcript, gene.strand);
+            let transcriptAnnotation = new TranscriptAnnotation(transcript, gene.strand, this.onTranscriptClick, trackPointerState);
             transcriptAnnotation.h = transcriptHeight;
             transcriptAnnotation.y = i * (transcriptHeight + transcriptSpacing) + transcriptOffset;
 
@@ -440,6 +456,18 @@ class GeneAnnotation extends Object2D {
 
             this.add(transcriptAnnotation);
         }
+    }
+
+    onTranscriptClick = (transcript: Transcript) => {
+        if (this.gene.name == null) {
+            console.warn(`Cannot search for a gene with no name`, this.gene);
+            return;
+        }
+
+        let queryBuilder = new QueryBuilder();
+        queryBuilder.newGenomeQuery();
+        queryBuilder.filterName(this.gene.name.toUpperCase());
+        App.search(queryBuilder.build());
     }
 
 }
@@ -458,7 +486,7 @@ class TranscriptAnnotation extends Object2D {
 
     protected _opacity: number = 1;
 
-    constructor(protected readonly transcript: Transcript, strand: Strand) {
+    constructor(protected readonly transcript: Transcript, strand: Strand, onClick: (transcript: Transcript) => void, trackPointerState: TrackPointerState) {
         super();
 
         let transcriptColor = {
@@ -467,14 +495,59 @@ class TranscriptAnnotation extends Object2D {
             [TranscriptClass.NonProteinCoding]: [0, 1, 1, 0.25],
         }
 
+        let backgroundColor = [107 /0xff, 109 /0xff, 136 /0xff, 0.17];
+
+        let background = new Rect(0, 0, backgroundColor);
+        background.cursorStyle = 'pointer';
+        background.z = 0;
+        background.transparent = true;
+        background.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
+        background.layoutW = 1;
+        background.layoutH = 1;
+
+        let passiveOpacity = background.color[3];
+        let hoverOpacity = passiveOpacity * 3;
+
+        this.add(background);
+
+        devColorFromElement('transcript-background', background.color, () => {
+            passiveOpacity = background.color[3];
+            hoverOpacity = passiveOpacity * 3;
+        });
+
+        // highlight on mouse-over
+        const springStrength = 300;
+        background.addInteractionListener('pointermove', (e) => {
+            if (trackPointerState.pointerOver) {
+                background.cursorStyle = 'pointer';
+                Animator.springTo(background.color, { 3: hoverOpacity }, springStrength);
+            } else {
+                background.cursorStyle = null;
+                Animator.springTo(background.color, { 3: passiveOpacity }, springStrength);
+            }
+        });
+        background.addInteractionListener('pointerleave', () => {
+            background.cursorStyle = null;
+            Animator.springTo(background.color, { 3: passiveOpacity }, springStrength);
+        });
+
+        // callback on click
+        background.addInteractionListener('pointerup', (e) => {
+            if (trackPointerState.pointerOver && e.isPrimary) {
+                e.preventDefault();
+                e.stopPropagation();
+                onClick(transcript);
+            }
+        });
+
         /**/
         let spanMarker = new TranscriptSpan(strand);
-        spanMarker.color.set([138 / 0xFF, 136 / 0xFF, 191 / 0xFF, 0.38 * 0.5]);
+        spanMarker.color.set([138 / 0xFF, 136 / 0xFF, 191 / 0xFF, 0.38]);
         spanMarker.h = 10;
         spanMarker.layoutW = 1;
         spanMarker.layoutY = -0.5;
         spanMarker.layoutParentY = 0.5;
-        spanMarker.z = 0.0;
+        spanMarker.z = 0.1;
         spanMarker.transparent = true;
         spanMarker.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
         this.add(spanMarker);
@@ -527,7 +600,7 @@ class TranscriptAnnotation extends Object2D {
 }
 
 //@! quick dev-time hack
-function devColorFromElement(id: string, colorArray: Float32Array) {
+function devColorFromElement(id: string, colorArray: Float32Array, onChange?: (colorArray: Float32Array) => void) {
     let target = document.getElementById(id);
 
     let updateColor = () => {
@@ -541,6 +614,10 @@ function devColorFromElement(id: string, colorArray: Float32Array) {
         let a = result[5] ? parseFloat(result[5]) : 1.0;
         colorArray.set(rgb);
         colorArray[3] = a;
+
+        if (onChange != null) {
+            onChange(colorArray);
+        }
     }
 
     updateColor();
