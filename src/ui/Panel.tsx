@@ -19,8 +19,6 @@ export class Panel extends Object2D {
     maxRange: number = 1e10;
     minRange: number = 10;
 
-    
-
     readonly header: ReactObject;
     readonly xAxis: XAxis;
     readonly resizeHandle: Rect;
@@ -349,8 +347,7 @@ export class Panel extends Object2D {
     // drag state
     protected _dragXF0: number;
     protected _dragX00: number;
-    protected _dragYF0: number;
-    protected _dragY00: number;
+
     protected onTileDragStart = (e: InteractionEvent) => {
         if (e.buttonState !== 1) return;
 
@@ -376,7 +373,6 @@ export class Panel extends Object2D {
         let dxf = e.fractionX - this._dragXF0;
         let x0 = this._dragX00 + span * (-dxf);
         let x1 = x0 + span;
-
         this.setRange(x0, x1);
         this.setActiveAxisPointer(e);
     }

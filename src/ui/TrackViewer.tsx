@@ -143,7 +143,6 @@ class TrackViewer extends Object2D {
         trackRow.closeButton.w = this.defaultTrackHeight;
         trackRow.header.x = -this.trackHeaderWidth + this.spacing.x * 0.5;
         trackRow.header.w = this.trackHeaderWidth;
-        trackRow.header.z = 100;
 
         trackRow.resizeHandle.layoutW = 1;
         trackRow.resizeHandle.addInteractionListener('dragstart', (e) => {
@@ -214,7 +213,6 @@ class TrackViewer extends Object2D {
         panel.setRange(location.x0, location.x1);
         panel.column = newColumnIndex; // @! should use array of panels instead of column field
         panel.layoutH = 1; // fill the full grid height
-        
         this.grid.add(panel);
 
         // initialize tracks for this panel
@@ -300,7 +298,6 @@ class TrackViewer extends Object2D {
 
         return null;
     }
-
 
     /**
      * Removes the row from the scene and cleans up resources
