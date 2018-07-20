@@ -38,6 +38,7 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
         this.loadingIndicator.layoutParentY = 1;
         this.loadingIndicator.x = 10;
         this.loadingIndicator.y = -10;
+        this.loadingIndicator.mask = this;
         this.add(this.loadingIndicator);
         // @! depth-box, should be at top, maybe layoutParentZ = 1
         // - be careful to avoid conflict with cursor
