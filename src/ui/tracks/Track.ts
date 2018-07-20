@@ -12,7 +12,6 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
     protected contig: string | undefined;
     protected x0: number;
     protected x1: number;
-    protected pointerY0: number = 0;
     
     protected defaultCursor = 'crosshair';
 
