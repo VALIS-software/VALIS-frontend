@@ -1,7 +1,7 @@
-import { Tile, TileStore } from "./TileStore";
 import QueryBuilder from "sirius/QueryBuilder";
 import SiriusApi from "sirius/SiriusApi";
 import { TrackModel } from "../TrackModel";
+import { Tile, TileStore } from "./TileStore";
 
 // Tile payload is a list of genes extended with nesting
 type VariantGenomeNode = {
@@ -35,6 +35,7 @@ type VariantInfo = {
 }
 
 export type TilePayload = Array<{
+    id: string,
     baseIndex: number,
     refSequence: string,
     alts: { [sequence: string]: number }
@@ -60,6 +61,7 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
     protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
         let startBase = tile.x + 1;
         let endBase = startBase + tile.span;
+
         const builder = new QueryBuilder();
         builder.newGenomeQuery();
         builder.filterType('SNP');
@@ -71,10 +73,13 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
             });
         }
         builder.setLimit(1000000);
+
         const snpQuery = builder.build();
+
         return SiriusApi.getQueryResults(snpQuery, true).then((data) => {
             let variants: Array<VariantGenomeNode> = data.data;
             return variants.map((v) => { return {
+                id: v.id,
                 baseIndex: v.start - 1,
                 refSequence: v.info.variant_ref,
                 alts: v.info.allele_frequencies,
