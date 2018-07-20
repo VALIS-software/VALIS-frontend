@@ -122,54 +122,7 @@ export class AnnotationTrack extends Track<'annotation'> {
             }
 
             if (macroOpacity > 0) {
-                this.macroAnnotationStore.getTiles(x0, x1, basePairsPerDOMPixel, true, (tile) => {
-                    if (tile.state !== TileState.Complete) {
-                        // if the tile is incomplete then wait until complete and call updateAnnotations() again
-                        this._pendingTiles.get(tile.key, () => this.createTileLoadingDependency(tile));
-                        return;
-                    }
-
-                    /** Instance Rendering */
-                    let tileObject = this._macroTileCache.get(this.contig + ':' + tile.key, () => {
-                        // initialize macro gene instances
-                        // create array of gene annotation data
-                        let instanceData = new Array<MacroGeneInstance>();
-                        let nonCodingColor = [82 / 0xff, 75 / 0xff, 165 / 0xff, 0.4];
-                        let codingColor = [26 / 0xff, 174/0xff, 222/0xff, 0.4];
-
-                        for (let gene of tile.payload) {
-                            if (gene.strand !== this.model.strand) continue;
-
-                            let color = gene.class === GeneClass.NonProteinCoding ? nonCodingColor : codingColor;
-                            let height = gene.transcriptCount * 20 + (gene.transcriptCount - 1) * 10 + 60;
-
-                            instanceData.push({
-                                xFractional: (gene.startIndex - tile.x) / tile.span,
-                                y: 0,
-                                z: 0,
-                                wFractional: gene.length / tile.span,
-                                h: height,
-                                color: color,
-                            });
-                        }
-                        
-                        let geneInstances = new MacroGeneInstances(instanceData);
-                        geneInstances.y = 0;
-                        geneInstances.z = 0.75;
-                        geneInstances.mask = this;
-                        return geneInstances;
-                    });
-
-                    tileObject.layoutParentX = (tile.x - x0) / span;
-                    tileObject.layoutW = tile.span / span;
-                    tileObject.opacity = macroOpacity;
-
-                    this._onStageAnnotations.get('macro-gene-tile:' + this.contig + ':' + tile.key, () => {
-                        this.addAnnotation(tileObject);
-                        return tileObject;
-                    });
-                    /**/
-                });
+                this.updateMacroAnnotations(x0, x1, span, basePairsPerDOMPixel, macroOpacity);
             }
         }
 
@@ -180,8 +133,57 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.displayNeedUpdate = false;
     }
 
+    protected updateMacroAnnotations(x0: number, x1: number, span: number, samplingDensity: number, opacity: number) {
+        this.macroAnnotationStore.getTiles(x0, x1, samplingDensity, true, (tile) => {
+            if (tile.state !== TileState.Complete) {
+                // if the tile is incomplete then wait until complete and call updateAnnotations() again
+                this._pendingTiles.get(tile.key, () => this.createTileLoadingDependency(tile));
+                return;
+            }
+
+            // Instance Rendering
+            let tileObject = this._macroTileCache.get(this.contig + ':' + tile.key, () => {
+                // initialize macro gene instances
+                // create array of gene annotation data
+                let instanceData = new Array<MacroGeneInstance>();
+                let nonCodingColor = [82 / 0xff, 75 / 0xff, 165 / 0xff, 0.4];
+                let codingColor = [26 / 0xff, 174 / 0xff, 222 / 0xff, 0.4];
+
+                for (let gene of tile.payload) {
+                    if (gene.strand !== this.model.strand) continue;
+
+                    let color = gene.class === GeneClass.NonProteinCoding ? nonCodingColor : codingColor;
+                    let height = gene.transcriptCount * 20 + (gene.transcriptCount - 1) * 10 + 60;
+
+                    instanceData.push({
+                        xFractional: (gene.startIndex - tile.x) / tile.span,
+                        y: 0,
+                        z: 0,
+                        wFractional: gene.length / tile.span,
+                        h: height,
+                        color: color,
+                    });
+                }
+
+                let geneInstances = new MacroGeneInstances(instanceData);
+                geneInstances.y = 0;
+                geneInstances.z = 0.75;
+                geneInstances.mask = this;
+                return geneInstances;
+            });
+
+            tileObject.layoutParentX = (tile.x - x0) / span;
+            tileObject.layoutW = tile.span / span;
+            tileObject.opacity = opacity;
+
+            this._onStageAnnotations.get('macro-gene-tile:' + this.contig + ':' + tile.key, () => {
+                this.addAnnotation(tileObject);
+                return tileObject;
+            });
+        });
+    }
+
     protected updateMicroAnnotations(x0: number, x1: number, span: number, samplingDensity: number, continuousLodLevel: number,  opacity: number) {
-        
         let namesOpacity = 1.0 - Scalar.linstep(this.namesLodThresholdLow, this.namesLodThresholdHigh, continuousLodLevel);
 
         this.annotationStore.getTiles(x0, x1, samplingDensity, true, (tile) => {
