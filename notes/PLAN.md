@@ -1,4 +1,4 @@
-- Clickable genes
+- Interval track for encode
 - Variant drag click bug
 
 - Variants:
