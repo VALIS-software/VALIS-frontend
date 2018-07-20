@@ -117,7 +117,6 @@ export class Panel extends Object2D {
         track.addInteractionListener('wheel', this.onTileWheel);
         track.addInteractionListener('pointermove', this.onTilePointerMove);
         track.addInteractionListener('pointerleave', this.onTileLeave);
-        track.addEventListener('setScroll', this.onTileSetScroll);
         track.setContig(this.contig);
         track.setRange(this.x0, this.x1);
 
@@ -134,7 +133,6 @@ export class Panel extends Object2D {
         track.removeInteractionListener('wheel', this.onTileWheel);
         track.removeInteractionListener('pointermove', this.onTilePointerMove);
         track.removeInteractionListener('pointerleave', this.onTileLeave);
-        track.removeEventListener('setScroll', this.onTileSetScroll);
 
         this.remove(track);
 
@@ -223,10 +221,6 @@ export class Panel extends Object2D {
                 tile.setAxisPointer(pointerId, fractionX, AxisPointerStyle.Secondary);
             }
         }
-    }
-
-    protected onTileSetScroll = (e: number) => {
-        this.eventEmitter.emit('setScroll', e);
     }
 
     protected onTileLeave = (e: InteractionEvent) => {

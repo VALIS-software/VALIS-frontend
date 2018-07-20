@@ -80,38 +80,58 @@ class TrackViewer extends Object2D {
             <AddPanelButton onClick={() => {
                 this.addPanel({ contig: 'chr1', x0: 0, x1: 249e6}, true);
             }} />,
-            this.panelHeaderHeight + this.spacing.x,
-            this.panelHeaderHeight + this.xAxisHeight,
+            this.panelHeaderHeight,
+            this.panelHeaderHeight,
         );
-        this.addPanelButton.x =  -this.spacing.x;
-        this.addPanelButton.y =  -this.spacing.y;
+        this.addPanelButton.x =  this.spacing.x * 0.5;
         this.addPanelButton.style = {
             zIndex: 3,
-            backgroundColor: '#fff',
-            paddingTop: this.spacing.x,
-            paddingBottom: this.xAxisHeight,
-            paddingLeft: this.spacing.x,
         }
         this.addPanelButton.layoutParentX = 1;
         this.addPanelButton.layoutY = -1;
+        this.addPanelButton.y = -this.xAxisHeight - this.spacing.x * 0.5;
         this.grid.add(this.addPanelButton);
 
         this.addDataTrackButton = new ReactObject(
             <AddDataTrackButton onClick={this.addDatasetBrowser} />,
-            this.panelHeaderHeight + this.spacing.x,
-            this.panelHeaderHeight + this.xAxisHeight,
+            this.panelHeaderHeight,
+            this.panelHeaderHeight,
         );
         this.addDataTrackButton.x = -this.trackHeaderWidth + this.spacing.x * 0.5;
-        this.addDataTrackButton.y = -this.spacing.y;
         this.addDataTrackButton.layoutParentX = 0;
         this.addDataTrackButton.layoutY = -1;
         this.addDataTrackButton.w = this.trackHeaderWidth;
+        this.addDataTrackButton.y = this.spacing.y * 0.5 - this.xAxisHeight - this.spacing.y;
         this.addDataTrackButton.style = {
             zIndex: 3,
-            backgroundColor: '#fff',
-            paddingBottom: this.xAxisHeight + 0.5 * this.spacing.y
         }
         this.grid.add(this.addDataTrackButton);
+
+        const leftTrackMask = new ReactObject(<div 
+            style={
+                {
+                    backgroundColor: '#fff',
+                    zIndex: 2,
+                    width: '100%',
+                    height: '100%',
+                }
+            }
+        />, this.trackHeaderWidth  + this.spacing.x, this.panelHeaderHeight + this.xAxisHeight - 0.5 * this.spacing.y);
+        this.add(leftTrackMask);
+
+        const rightTrackMask = new ReactObject(<div 
+            style={
+                {
+                    backgroundColor: '#fff',
+                    zIndex: 2,
+                    width: '100%',
+                    height: '100%',
+                }
+            }
+        />, this.panelHeaderHeight + 1.5 * this.spacing.x, this.panelHeaderHeight + this.xAxisHeight - 0.5 * this.spacing.y);
+        rightTrackMask.layoutParentX = 1;
+        rightTrackMask.x = -this.panelHeaderHeight - 1.5 * this.spacing.x;
+        this.add(rightTrackMask);
 
         this.layoutGridContainer();
     }
@@ -649,7 +669,7 @@ function AddPanelButton(props: {
         height: '100%',
         color: '#e8e8e8',
         backgroundColor: '#171615',
-        borderRadius: '8px 8px 8px 8px',
+        borderRadius: '8px 0px 0px 8px',
     }}
     >
         <div style={{

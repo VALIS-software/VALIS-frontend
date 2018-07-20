@@ -24,7 +24,7 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
 
     protected displayNeedUpdate = true;
 
-    constructor(protected model: TrackModel<ModelType>, ignoreDragListeners?: boolean) {
+    constructor(protected model: TrackModel<ModelType>) {
         super(0, 0, [0, 0, 0, 1]);
 
         this.cursorStyle = this.defaultCursor;
@@ -43,8 +43,6 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
         // @! depth-box, should be at top, maybe layoutParentZ = 1
         // - be careful to avoid conflict with cursor
         this.toggleLoadingIndicator(false, false);
-
-        if (!ignoreDragListeners) this.initializeYDrag();
     }
 
     setContig(contig: string) {
@@ -93,24 +91,6 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
 
         this.remove(axisPointer);
         delete this.axisPointers[id];
-    }
-
-    protected defaultDragStart = (e: any) => {
-        if (!e.isPrimary) return;
-        if (e.buttonState !== 1) return;
-        this.pointerY0 = e.localY;
-    }
-
-    protected defaultDragMove = (e: any) => {
-        if (!e.isPrimary) return;
-        if (e.buttonState !== 1) return;
-        let dy = this.pointerY0 - e.localY;
-        this.eventEmitter.emit('setScroll', -dy);
-    }
-
-    protected initializeYDrag() {
-        this.addInteractionListener('dragstart', this.defaultDragStart);
-        this.addInteractionListener('dragmove', this.defaultDragMove);
     }
 
     private _lastComputedWidth: number;

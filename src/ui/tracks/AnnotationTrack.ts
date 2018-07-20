@@ -40,7 +40,7 @@ export class AnnotationTrack extends Track<'annotation'> {
     protected dragEnabled: boolean;
 
     constructor(model: TrackModel<'annotation'>) {
-        super(model, true);
+        super(model);
 
         this.yScrollNode = new Object2D();
         this.yScrollNode.z = 0;
@@ -83,10 +83,6 @@ export class AnnotationTrack extends Track<'annotation'> {
         
         this.addInteractionListener('dragstart', (e) => {
             if (!e.isPrimary) return;
-            if (!this.dragEnabled) {
-                this.defaultDragStart(e);
-                return;
-            }
             if (e.buttonState !== 1) return;
             pointerY0 = e.localY;
             scrollY0 = this.yScrollNode.y;
@@ -95,10 +91,6 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.addInteractionListener('dragmove', (e) => {
             if (!e.isPrimary) return;
             if (e.buttonState !== 1) return;
-            if (!this.dragEnabled) {
-                this.defaultDragMove(e);
-                return;
-            }
             let dy = pointerY0 - e.localY;
             this.yScrollNode.y = Math.min(scrollY0 - dy, 0);
         });
