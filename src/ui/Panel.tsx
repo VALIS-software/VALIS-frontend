@@ -352,7 +352,6 @@ export class Panel extends Object2D {
         if (e.buttonState !== 1) return;
 
         e.preventDefault();
-        e.stopPropagation();
 
         this._dragXF0 = e.fractionX;
         this._dragX00 = this.x0;
@@ -364,7 +363,6 @@ export class Panel extends Object2D {
         if (e.buttonState !== 1) return;
 
         e.preventDefault();
-        e.stopPropagation();
 
         this.tileDragging = true;
 
@@ -379,7 +377,6 @@ export class Panel extends Object2D {
 
     protected onTileDragEnd = (e: InteractionEvent) => {
         e.preventDefault();
-        e.stopPropagation();
 
         this.tileDragging = false;
 
