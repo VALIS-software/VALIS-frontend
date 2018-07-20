@@ -334,6 +334,9 @@ export class Panel extends Object2D {
     // drag state
     protected _dragXF0: number;
     protected _dragX00: number;
+    // track total drag distance to hint whether or not we should cancel some interactions
+    protected _lastDragLX: number;
+    protected _dragDist: number;
     protected onTileDragStart = (e: InteractionEvent) => {
         if (e.buttonState !== 1) return;
 
@@ -342,6 +345,9 @@ export class Panel extends Object2D {
 
         this._dragXF0 = e.fractionX;
         this._dragX00 = this.x0;
+
+        this._lastDragLX = e.localX;
+        this._dragDist = 0;
 
         this.tileDragging = true;
     }
@@ -360,14 +366,21 @@ export class Panel extends Object2D {
         let x0 = this._dragX00 + span * (-dxf);
         let x1 = x0 + span;
 
+        this._dragDist += Math.abs(e.localX - this._lastDragLX);
+        this._lastDragLX = e.localX;
+
         this.setRange(x0, x1);
 
         this.setActiveAxisPointer(e);
     }
 
     protected onTileDragEnd = (e: InteractionEvent) => {
-        e.preventDefault();
         e.stopPropagation();
+
+        // if total drag distance, preventDefault so that pointerup isn't fired for other nodes
+        if (this._dragDist > 4) {
+            e.preventDefault();
+        }
 
         this.tileDragging = false;
 
