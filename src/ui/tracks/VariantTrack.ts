@@ -269,7 +269,7 @@ export class VariantTrack extends Track<'variant'> {
         });
 
         // callback on click
-        root.addInteractionListener('click', (e) => {
+        root.addInteractionListener('pointerup', (e) => {
             if (this.pointerOverTrack && e.isPrimary) {
                 e.preventDefault();
                 e.stopPropagation();
