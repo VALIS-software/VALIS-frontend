@@ -1,22 +1,22 @@
-import { SharedTileStore } from "../../model/data-store/SharedTileStores";
-import { VariantTileStore } from "../../model/data-store/VariantTileStore";
-import { TrackModel } from "../../model/TrackModel";
-import Track from "./Track";
-import Scalar from "../../math/Scalar";
-import { TileState } from "../../model/data-store/TileStore";
-import UsageCache from "../../ds/UsageCache";
-import InstancingBase from "../core/InstancingBase";
-import GPUDevice, { AttributeLayout, VertexAttributeBuffer, AttributeType } from "../../rendering/GPUDevice";
-import SharedResources from "../core/SharedResources";
-import { BlendMode, DrawMode, DrawContext } from "../../rendering/Renderer";
-import Object2D from "../core/Object2D";
-import { Text } from "../core/Text";
-import { OpenSansRegular } from "../font/Fonts";
-import TextClone from "./util/TextClone";
-import { Rect } from "../core/Rect";
+import { QueryBuilder } from "sirius/QueryBuilder";
 import { Animator } from "../../animation/Animator";
 import { App } from "../../App";
-import { QueryBuilder } from "sirius/QueryBuilder";
+import UsageCache from "../../ds/UsageCache";
+import Scalar from "../../math/Scalar";
+import { SharedTileStore } from "../../model/data-store/SharedTileStores";
+import { TileState } from "../../model/data-store/TileStore";
+import { VariantTileStore } from "../../model/data-store/VariantTileStore";
+import { TrackModel } from "../../model/TrackModel";
+import GPUDevice, { AttributeLayout, AttributeType, VertexAttributeBuffer } from "../../rendering/GPUDevice";
+import { BlendMode, DrawContext, DrawMode } from "../../rendering/Renderer";
+import InstancingBase from "../core/InstancingBase";
+import Object2D from "../core/Object2D";
+import { Rect } from "../core/Rect";
+import SharedResources from "../core/SharedResources";
+import { Text } from "../core/Text";
+import { OpenSansRegular } from "../font/Fonts";
+import Track from "./Track";
+import TextClone from "./util/TextClone";
 
 export class VariantTrack extends Track<'variant'> {
 
