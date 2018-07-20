@@ -36,33 +36,33 @@ export class QueryBuilder {
     };
   }
 
-  filterID(id: string) {
+  filterID(id: any) {
     this.query.filters._id = id;
   }
 
-  filterType(type: string) {
+  filterType(type: any) {
     this.query.filters.type = type;
   }
 
-  filterSource(source: string) {
+  filterSource(source: any) {
     this.query.filters.source = source;
   }
 
-  filterContig(contig: string) {
+  filterContig(contig: any) {
     if (this.query.type !== QueryType.GENOME) {
       throw new Error('filter contig only available for GenomeNodes');
     }
     this.query.filters.contig = contig;
   }
 
-  filterLength(length: number) {
+  filterLength(length: any) {
     if (this.query.type !== QueryType.GENOME) {
       throw new Error('Length only available for GenomeNodes');
     }
     this.query.filters.length = length;
   }
 
-  filterName(name: string) {
+  filterName(name: any) {
     this.query.filters.name = name;
   }
 
@@ -92,14 +92,14 @@ export class QueryBuilder {
     this.query.filters['info.outtype'] = outType;
   }
 
-  filterStartBp(start: number) {
+  filterStartBp(start: any) {
     if (this.query.type !== QueryType.GENOME) {
       throw new Error('filterStartBp is only available for an Genome Query.');
     }
     this.query.filters.start = start;
   }
 
-  filterEndBp(end: number) {
+  filterEndBp(end: any) {
     if (this.query.type !== QueryType.GENOME) {
       throw new Error('filterEndBp is only available for an Genome Query.');
     }

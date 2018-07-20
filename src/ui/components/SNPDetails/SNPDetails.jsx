@@ -77,7 +77,6 @@ class SNPDetails extends React.Component {
     this.state = {};
   }
 
-
   static getDerivedStateFromProps(nextProps, prevState) {
     if (!prevState) prevState = {};
     prevState.currentSnpId = nextProps.snpId;
@@ -95,6 +94,19 @@ class SNPDetails extends React.Component {
     }, (err) => {
       this.appModel.error(this, err);
     });
+  }
+
+  renderSectionPills(title, data) {
+    if (!data) {
+      return null;
+    }
+    if (! Array.isArray(data)) {
+      data = [data];
+    }
+    return (<div className="section">
+      <div className="section-header"> {title} </div>
+      <div><Pills items={data} /></div>
+    </div>);
   }
 
   render() {
@@ -169,14 +181,11 @@ class SNPDetails extends React.Component {
       <span className="sidebar-name">{nameShortened}{zoomBtn}</span>
     </div>);
 
-    const biotypes = details.info.variant_affected_bio_types ? (<div className="section">
-      <div className="section-header"> Affected Bio Types </div>
-      <div><Pills items={details.info.variant_affected_bio_types} /></div>
-    </div>) : null;
-    const tags = details.info.variant_tags ? (<div className="section">
-      <div className="section-header"> Tags </div>
-      <div><Pills items={details.info.variant_tags} /></div>
-    </div>) : null;
+    const biotypes = this.renderSectionPills("Affected Bio Types", details.info.variant_affected_bio_types);
+    const tags = this.renderSectionPills("Variant Tags", details.info.variant_tags);
+    const sources = this.renderSectionPills("Sources", details.source);
+    const biosamples = this.renderSectionPills("Biosamples", details.info.biosample);
+    const mutationStatus = this.renderSectionPills("Mutation Status", details.info.Mutation_Status);
 
     return (<div className="snp-details">
       {header}
@@ -194,12 +203,11 @@ class SNPDetails extends React.Component {
             <div className="section-header"> Location </div>
             {location}
           </div>
+          {biosamples}
           {biotypes}
           {tags}
-          <div className="section">
-            <div className="section-header"> Sources </div>
-            <div>{details.source}</div>
-          </div>
+          {mutationStatus}
+          {sources}
         </div>
       </Collapsible>
       <AssociationList associations={this.state.relations} appModel={this.props.appModel} viewModel={this.props.viewModel} />
