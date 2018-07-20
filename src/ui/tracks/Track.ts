@@ -43,6 +43,8 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
         // @! depth-box, should be at top, maybe layoutParentZ = 1
         // - be careful to avoid conflict with cursor
         this.toggleLoadingIndicator(false, false);
+
+        this.initializeYDrag();
     }
 
     setContig(contig: string) {
