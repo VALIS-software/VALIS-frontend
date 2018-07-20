@@ -12,6 +12,8 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
     protected contig: string | undefined;
     protected x0: number;
     protected x1: number;
+    protected scrollY0: number = 0;
+    protected pointerY0: number = 0;
     
     protected defaultCursor = 'crosshair';
 
@@ -90,6 +92,24 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
 
         this.remove(axisPointer);
         delete this.axisPointers[id];
+    }
+
+    protected defaultDragStart = (e: any) => {
+        if (!e.isPrimary) return;
+        if (e.buttonState !== 1) return;
+        this.pointerY0 = e.localY;
+    }
+
+    protected defaultDragMove = (e: any) => {
+        if (!e.isPrimary) return;
+        if (e.buttonState !== 1) return;
+        let dy = this.pointerY0 - e.localY;
+        this.eventEmitter.emit('setScroll', -dy);
+    }
+
+    protected initializeYDrag() {
+        this.addInteractionListener('dragstart', this.defaultDragStart);
+        this.addInteractionListener('dragmove', this.defaultDragMove);
     }
 
     private _lastComputedWidth: number;

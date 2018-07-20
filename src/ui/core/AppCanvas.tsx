@@ -127,13 +127,20 @@ export class AppCanvas extends React.Component<Props, State> {
 
     render() {
         const pixelRatio = this.props.pixelRatio || window.devicePixelRatio || 1;
-
+        const canvasWidth = this.props.width * pixelRatio + 'px';
+        const canvasHeight = this.props.height * pixelRatio + 'px';
+        const containerStyle : React.CSSProperties = {
+            position: 'relative', 
+            overflow: 'hidden',
+            width: canvasWidth,
+            height: canvasHeight,
+        };
         return (
-            <div className="viewer" style={{ position: 'relative' }}>
+            <div className="viewer" style={containerStyle}>
                 <canvas
                     ref={(v) => this.canvas = v}
-                    width={this.props.width * pixelRatio + 'px'}
-                    height={this.props.height * pixelRatio + 'px'}
+                    width={canvasWidth}
+                    height={canvasHeight}
                     style={{
                         display: 'block',
                         position: 'absolute',

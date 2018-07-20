@@ -39,6 +39,7 @@ class TrackViewer extends Object2D {
     protected rows = new Array<Row>();
 
     protected panelEdges = new Array<number>();
+    protected yOffset: number = 0;
 
     /** used to collectively position panels and track tiles */
     protected grid: Object2D;
@@ -65,25 +66,37 @@ class TrackViewer extends Object2D {
             <AddPanelButton onClick={() => {
                 this.addPanel({ contig: 'chr1', x0: 0, x1: 249e6}, true);
             }} />,
-            this.panelHeaderHeight,
-            this.panelHeaderHeight
+            this.panelHeaderHeight + this.spacing.x,
+            this.panelHeaderHeight + this.xAxisHeight,
         );
-        this.addPanelButton.x = this.spacing.x * 0.5 ;
+        this.addPanelButton.x =  -this.spacing.x;
+        this.addPanelButton.y =  -this.spacing.y;
+        this.addPanelButton.style = {
+            zIndex: 3,
+            backgroundColor: '#fff',
+            paddingTop: this.spacing.x,
+            paddingBottom: this.xAxisHeight,
+            paddingLeft: this.spacing.x,
+        }
         this.addPanelButton.layoutParentX = 1;
         this.addPanelButton.layoutY = -1;
-        this.addPanelButton.y = -this.xAxisHeight - this.spacing.x * 0.5;
         this.grid.add(this.addPanelButton);
 
         this.addDataTrackButton = new ReactObject(
             <AddDataTrackButton onClick={this.addDatasetBrowser} />,
-            this.panelHeaderHeight,
-            this.panelHeaderHeight
+            this.panelHeaderHeight + this.spacing.x,
+            this.panelHeaderHeight + this.xAxisHeight,
         );
         this.addDataTrackButton.x = -this.trackHeaderWidth + this.spacing.x * 0.5;
+        this.addDataTrackButton.y = -this.spacing.y;
         this.addDataTrackButton.layoutParentX = 0;
         this.addDataTrackButton.layoutY = -1;
         this.addDataTrackButton.w = this.trackHeaderWidth;
-        this.addDataTrackButton.y = this.spacing.y * 0.5 - this.xAxisHeight - this.spacing.y;
+        this.addDataTrackButton.style = {
+            zIndex: 3,
+            backgroundColor: '#fff',
+            paddingBottom: this.xAxisHeight + 0.5 * this.spacing.y
+        }
         this.grid.add(this.addDataTrackButton);
 
         this.layoutGridContainer();
@@ -108,7 +121,7 @@ class TrackViewer extends Object2D {
 
     // track-viewer state deltas
     addTrackRow(model: TrackModel, heightPx: number = this.defaultTrackHeight, animate: boolean = true) {
-        // create a tack and add the header element to the grid
+        // create a track and add the header element to the grid
 
         const rowHeightSetter = (row: TrackRow, h:number) => { this.setRowHeight(row, h, true)};
         const rowHeightGetter = (row: TrackRow) : number => this.getRowHeight(row);
@@ -130,6 +143,7 @@ class TrackViewer extends Object2D {
         trackRow.closeButton.w = this.defaultTrackHeight;
         trackRow.header.x = -this.trackHeaderWidth + this.spacing.x * 0.5;
         trackRow.header.w = this.trackHeaderWidth;
+        trackRow.header.z = 100;
 
         trackRow.resizeHandle.layoutW = 1;
         trackRow.resizeHandle.addInteractionListener('dragstart', (e) => {
@@ -200,12 +214,18 @@ class TrackViewer extends Object2D {
         panel.setRange(location.x0, location.x1);
         panel.column = newColumnIndex; // @! should use array of panels instead of column field
         panel.layoutH = 1; // fill the full grid height
+        
         this.grid.add(panel);
 
         // initialize tracks for this panel
        for (let row of this.rows) {
            panel.addTrack(row.trackRow.createTrack());
        }
+
+       panel.addEventListener('setScroll', (e) => {
+           this.yOffset += e;
+           this.layoutTrackRows(false);
+       });
 
         this.panels.add(panel);
 
@@ -280,6 +300,7 @@ class TrackViewer extends Object2D {
 
         return null;
     }
+
 
     /**
      * Removes the row from the scene and cleans up resources
@@ -399,7 +420,7 @@ class TrackViewer extends Object2D {
                     Animator.springTo(trackRow, { y: y, h: h }, DEFAULT_SPRING);
                 } else {
                     Animator.stop(trackRow, ['y', 'h']);
-                    trackRow.y = y;
+                    trackRow.y = y + this.yOffset;
                     trackRow.h = h;
                 }
             }
@@ -595,7 +616,7 @@ class TrackViewer extends Object2D {
 }
 
 function AddPanelButton(props: {
-    onClick: () => void
+    onClick: () => void,
 }) {
     return <div
     style={{
@@ -604,7 +625,7 @@ function AddPanelButton(props: {
         height: '100%',
         color: '#e8e8e8',
         backgroundColor: '#171615',
-        borderRadius: '8px 0px 0px 8px',
+        borderRadius: '8px 8px 8px 8px',
     }}
     >
         <div style={{

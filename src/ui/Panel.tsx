@@ -19,6 +19,8 @@ export class Panel extends Object2D {
     maxRange: number = 1e10;
     minRange: number = 10;
 
+    
+
     readonly header: ReactObject;
     readonly xAxis: XAxis;
     readonly resizeHandle: Rect;
@@ -36,6 +38,9 @@ export class Panel extends Object2D {
         this.updatePanelHeader();
     }
 
+    get yOffset() { return this._yOffset; }
+
+    protected _yOffset: number = 0;
     protected _closable = false;
     protected _closing = false;
 
@@ -68,6 +73,10 @@ export class Panel extends Object2D {
         this.header = new ReactObject();
         this.fillX(this.header);
         this.header.h = this.panelHeaderHeight;
+        this.header.style = {
+            zIndex: 3,
+            backgroundColor: '#fff',
+        }
         this.header.layoutY = -1;
         this.header.y = -this.xAxisHeight - this.spacing.y * 0.5;
         this.add(this.header);
@@ -77,6 +86,7 @@ export class Panel extends Object2D {
         this.xAxis = new XAxis(this.x0, this.x1, 11, OpenSansRegular, offset, 1, 1);
         this.xAxis.minDisplay = 0;
         this.xAxis.maxDisplay = Infinity;
+        this.xAxis.y = -this.spacing.y;
         this.xAxis.h = this.xAxisHeight;
         this.xAxis.layoutY = -1;
         this.fillX(this.xAxis);
@@ -109,7 +119,7 @@ export class Panel extends Object2D {
         track.addInteractionListener('wheel', this.onTileWheel);
         track.addInteractionListener('pointermove', this.onTilePointerMove);
         track.addInteractionListener('pointerleave', this.onTileLeave);
-
+        track.addEventListener('setScroll', this.onTileSetScroll);
         track.setContig(this.contig);
         track.setRange(this.x0, this.x1);
 
@@ -126,6 +136,7 @@ export class Panel extends Object2D {
         track.removeInteractionListener('wheel', this.onTileWheel);
         track.removeInteractionListener('pointermove', this.onTilePointerMove);
         track.removeInteractionListener('pointerleave', this.onTileLeave);
+        track.removeEventListener('setScroll', this.onTileSetScroll);
 
         this.remove(track);
 
@@ -214,6 +225,10 @@ export class Panel extends Object2D {
                 tile.setAxisPointer(pointerId, fractionX, AxisPointerStyle.Secondary);
             }
         }
+    }
+
+    protected onTileSetScroll = (e: number) => {
+        this.eventEmitter.emit('setScroll', e);
     }
 
     protected onTileLeave = (e: InteractionEvent) => {
@@ -334,6 +349,8 @@ export class Panel extends Object2D {
     // drag state
     protected _dragXF0: number;
     protected _dragX00: number;
+    protected _dragYF0: number;
+    protected _dragY00: number;
     protected onTileDragStart = (e: InteractionEvent) => {
         if (e.buttonState !== 1) return;
 
@@ -361,7 +378,6 @@ export class Panel extends Object2D {
         let x1 = x0 + span;
 
         this.setRange(x0, x1);
-
         this.setActiveAxisPointer(e);
     }
 
