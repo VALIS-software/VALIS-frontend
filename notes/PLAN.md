@@ -1,5 +1,4 @@
 - Interval track for encode
-- Variant drag click bug
 
 - Variants:
     - Complete variant queries
