@@ -22,7 +22,8 @@ class ZoomToButton extends React.Component<Props> {
   }
 
   render() {
-    return (<IconButton><ZoomIn onClick={this.zoom} /></IconButton>);
+    // material-ui doesn't setup the cursor styles properly, so we override:
+    return (<IconButton  onClick={this.zoom}><ZoomIn /></IconButton>);
   }
 }
 

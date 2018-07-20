@@ -1,6 +1,6 @@
 // These const strings should be consistent with backend sirius.realdata.constants
 const DATA_SOURCE_GENOME = 'GRCh38_gff';
-const DATA_SOURCE_GWAS = 'GWAS';
+const DATA_SOURCE_GWAS = 'GWAS Catalog';
 const DATA_SOURCE_CLINVAR = 'ClinVar';
 const DATA_SOURCE_DBSNP = 'dbSNP';
 const DATA_SOURCE_ENCODE = 'ENCODE';

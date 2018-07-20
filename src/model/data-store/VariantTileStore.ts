@@ -1,4 +1,5 @@
-import { SiriusApi } from "sirius/SiriusApi";
+import QueryBuilder from "sirius/QueryBuilder";
+import SiriusApi from "sirius/SiriusApi";
 import { TrackModel } from "../TrackModel";
 import { Tile, TileStore } from "./TileStore";
 
@@ -60,27 +61,29 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
     protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
         let startBase = tile.x + 1;
         let endBase = startBase + tile.span;
-        return SiriusApi.getQueryResults({
-            "type": "GenomeNode",
-            "filters": {
-                "contig": this.contig,
-                "type": "SNP",
-                "start": { "$gte": startBase, "$lte": endBase }
-            },
-            "toEdges": this.model.toEdges ? this.model.toEdges : [],
-            "arithmetics": [],
-            "limit": 3000000
-        }, true).then((r) => {
-            let variants: Array<VariantGenomeNode> = r.data;
 
-            return variants.map((v) => {
-                return {
-                    id: v.id,
-                    baseIndex: v.start - 1,
-                    refSequence: v.info.variant_ref,
-                    alts: v.info.allele_frequencies,
-                }
+        const builder = new QueryBuilder();
+        builder.newGenomeQuery();
+        builder.filterType('SNP');
+        builder.filterContig(this.contig);
+        builder.filterStartBp({'>=': startBase, '<=': endBase});
+        if (this.model.toEdges) {
+            this.model.toEdges.forEach((e: any) => {
+                builder.addToEdge(e);
             });
+        }
+        builder.setLimit(1000000);
+
+        const snpQuery = builder.build();
+
+        return SiriusApi.getQueryResults(snpQuery, true).then((data) => {
+            let variants: Array<VariantGenomeNode> = data.data;
+            return variants.map((v) => { return {
+                id: v.id,
+                baseIndex: v.start - 1,
+                refSequence: v.info.variant_ref,
+                alts: v.info.allele_frequencies,
+            } });
         });
     }
 
