@@ -174,7 +174,7 @@ export class QueryBuilder {
   }
 
   build() {
-    return Object.assign({}, this.query);
+    return JSON.parse(JSON.stringify(this.query));
   }
 }
 
