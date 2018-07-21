@@ -35,7 +35,7 @@ class GWASSelector extends React.Component {
   componentDidMount() {
     this.updateTraits();
   }
-  
+
 
   updateTraits = () => {
     const builder = new QueryBuilder();
@@ -75,17 +75,14 @@ class GWASSelector extends React.Component {
   buildGWASQuery() {
     const builder = new QueryBuilder();
     builder.newInfoQuery();
-    builder.filterSource(DATA_SOURCE_GWAS);
     builder.filterType("trait");
     builder.searchText(this.state.searchTrait);
     const infoQuery = builder.build();
     builder.newEdgeQuery();
-    builder.filterSource(DATA_SOURCE_GWAS);  
     builder.filterMaxPValue(this.state.pvalue);
     builder.setToNode(infoQuery);
     const edgeQuery = builder.build();
     builder.newGenomeQuery();
-    builder.filterSource(DATA_SOURCE_GWAS);
     builder.addToEdge(edgeQuery);
     builder.setLimit(100000000);
     const genomeQuery = builder.build();
@@ -95,7 +92,7 @@ class GWASSelector extends React.Component {
   addQueryTrack() {
     const query = this.buildGWASQuery();
     this.appModel.trackMixPanel('Add GWAS Track', { 'query': query });
-    App.addVariantTrack(this.state.title, query.toEdges);
+    App.addVariantTrack(this.state.title, query);
     this.props.viewModel.closeView();
   }
 

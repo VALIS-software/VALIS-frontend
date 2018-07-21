@@ -49,7 +49,7 @@ class SearchResultsView extends React.Component {
   }
 
   addQueryAsTrack = () => {
-    App.addVariantTrack(this.props.text, this.query.getFilteredQuery().toEdges);
+    App.addVariantTrack(this.props.text, this.query.getFilteredQuery());
   }
 
   fetch = (clearResults = false) => {
@@ -70,7 +70,7 @@ class SearchResultsView extends React.Component {
 
     // update the current fetched query
     this.fetchedQuery = this.query;
-    
+
     const cursor = this.cursor;
     const queryJson = this.fetchedQuery.getFilteredQuery();
     SiriusApi.getQueryResults(queryJson, true, cursor, cursor + FETCH_SIZE).then(results => {
@@ -229,10 +229,10 @@ class SearchResultsView extends React.Component {
           enabledFilters.push(FilterType.CHROMOSOME);
         }
       }
-      filterMenu = (<SearchFilter 
+      filterMenu = (<SearchFilter
         query={this.query}
-        onFinish={this.updateQueryModel} 
-        onCancel={this.toggleFilters} 
+        onFinish={this.updateQueryModel}
+        onCancel={this.toggleFilters}
         enabledFilters={enabledFilters}
       />);
     }

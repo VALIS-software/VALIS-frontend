@@ -51,7 +51,7 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
     }
 
     protected mapLodLevel(l: number) {
-        if (this.model.toEdges == null) {
+        if (this.model.query == null) {
             return 0;
         }
 
@@ -62,16 +62,15 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
         let startBase = tile.x + 1;
         let endBase = startBase + tile.span;
 
-        const builder = new QueryBuilder();
-        builder.newGenomeQuery();
+        let builder = new QueryBuilder();
+        if (this.model.query) {
+            builder = new QueryBuilder(this.model.query);
+        } else {
+            builder.newGenomeQuery();
+        }
         builder.filterType('SNP');
         builder.filterContig(this.contig);
         builder.filterStartBp({'>=': startBase, '<=': endBase});
-        if (this.model.toEdges) {
-            this.model.toEdges.forEach((e: any) => {
-                builder.addToEdge(e);
-            });
-        }
         builder.setLimit(1000000);
 
         const snpQuery = builder.build();
