@@ -18,7 +18,7 @@ import "./GWASSelector.scss";
 
 const logmin = 0;
 const logmax = 0.01;
-const power = 10;
+const power = 30;
 
 function transform(value) {
   return (Math.exp(power * value / logmax) - 1) / (Math.exp(power) - 1) * logmax;
