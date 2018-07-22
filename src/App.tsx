@@ -110,18 +110,18 @@ export class App extends React.Component<Props, State> {
 		this.startFrameLoop();
 
 		// Get User Profile, redirect if not logged in
-		// SiriusApi.getUserProfile().then((userProfile: any) => {
-		// 	if (!userProfile.name) {
-		// 		window.location.href = '/login';
-		// 	}
-		// 	// assign identity of mixpanel
-		// 	mixpanel.identify(userProfile.name);
-		// 	this.setState({
-		// 		userProfile: userProfile,
-		// 	})
-		// }, (err: object) => {
-		// 	window.location.href = '/login';
-		// });
+		SiriusApi.getUserProfile().then((userProfile: any) => {
+			if (!userProfile.name) {
+				window.location.href = '/login';
+			}
+			// assign identity of mixpanel
+			mixpanel.identify(userProfile.name);
+			this.setState({
+				userProfile: userProfile,
+			})
+		}, (err: object) => {
+			window.location.href = '/login';
+		});
 
 		// add event listeners
 		window.addEventListener('resize', this.onResize);
