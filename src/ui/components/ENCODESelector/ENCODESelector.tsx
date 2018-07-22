@@ -67,7 +67,7 @@ class ENCODESelector extends React.Component<Props, State> {
       genomeTypeValue: null,
       chromoNameValue: 0,
       minLength: 10,
-      maxnumber: 10000,
+      maxnumber: 1000000,
       availableTypes: [],
       availableBiosamples: [],
       availableTargets: [],
