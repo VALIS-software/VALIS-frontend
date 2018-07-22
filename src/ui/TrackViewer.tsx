@@ -121,6 +121,8 @@ class TrackViewer extends Object2D {
         this.add(rightTrackMask);
 
         this.layoutGridContainer();
+
+        window.addEventListener('resize', this.onResize);
     }
 
     setAppModel(appModel: AppModel) {
@@ -523,13 +525,26 @@ class TrackViewer extends Object2D {
         // (grid height is set dynamically when laying out tracks)
     }
 
+    // limits rowOffsetY to only overflow region
+    // not a perfect technique but does the job for now
+    protected applyOverflowLimits() {
+        let maxOffset = 0;
 
-    // local state for grid-resizing
-    private _resizingPanels = new Set<Panel>();
-    private _resizingRows = new Set<{
-        row: Row,
-        initialHeightPx: number
-    }>();
+        // determine minOffset from grid overflow
+        // assumes grid.h is up to date (requires calling layoutTrackRows(false))
+        let trackViewerHeight = this.getComputedHeight();
+        let gridViewportHeight = trackViewerHeight - this.grid.y;
+
+        let overflow = this.grid.h - gridViewportHeight - this.rowOffsetY;
+        let minOffset = -overflow;
+
+        this.rowOffsetY = Math.min(Math.max(this.rowOffsetY, minOffset), maxOffset);
+    }
+
+    protected onResize = (e: Event) => {
+        this.applyOverflowLimits();
+        this.layoutTrackRows(false);
+    }
 
     protected initializeDragPanning() {
         let dragStartY: number = undefined;
@@ -543,23 +558,20 @@ class TrackViewer extends Object2D {
             if (this._resizingPanels.size > 0 || this._resizingRows.size > 0) return;
             let dy = e.localY - dragStartY;
 
-            let maxOffset = 0;
+            this.rowOffsetY = yOffsetStart + dy;
 
-            // determine minOffset from grid overflow
-            // assumes grid.h is up to date (requires calling layoutTrackRows(false))
-            let trackViewerHeight = this.getComputedHeight();
-            let gridViewportHeight = trackViewerHeight - this.grid.y;
-
-            // not a perfect technique but does the job
-            let overflow = this.grid.h - gridViewportHeight - this.rowOffsetY;
-            let minOffset = -overflow;
-
-            this.rowOffsetY = Math.min(Math.max(yOffsetStart + dy, minOffset), maxOffset);
+            this.applyOverflowLimits();
 
             this.layoutTrackRows(false);
         });
     }
 
+    // local state for grid-resizing
+    private _resizingPanels = new Set<Panel>();
+    private _resizingRows = new Set<{
+        row: Row,
+        initialHeightPx: number
+    }>();
     /**
      * Setup event listeners to enable resizing of panels and tracks
      */
