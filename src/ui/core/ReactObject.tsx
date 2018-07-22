@@ -7,11 +7,11 @@ export class ReactObject extends Object2D {
     set content(n: React.ReactNode) { this._content = n; this.eventEmitter.emit('setContent', n); };
     get content() { return this._content; };
     
-    set style(style: React.CSSProperties) { this._style = style; this.eventEmitter.emit('setContent', this._content); };
-    get style() { return this._style; };
+    set containerStyle(style: React.CSSProperties) { this._containerStyle = style; this.eventEmitter.emit('setContent', this._content); };
+    get containerStyle() { return this._containerStyle; };
 
     protected _content: React.ReactNode;
-    protected _style: React.CSSProperties;
+    protected _containerStyle: React.CSSProperties;
 
     constructor(content?: React.ReactNode, w?: number, h?: number) {
         super();
@@ -71,7 +71,7 @@ export class ReactObjectContainer extends React.Component<{
             worldTransform: reactObjectInternal.worldTransformMat4,
             computedWidth: reactObjectInternal.computedWidth,
             computedHeight: reactObjectInternal.computedHeight,
-            style: props.reactObject.style,
+            style: props.reactObject.containerStyle,
         }        
     }
 

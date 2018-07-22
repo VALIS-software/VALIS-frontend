@@ -68,7 +68,7 @@ export class Panel extends Object2D {
         this.header = new ReactObject();
         this.fillX(this.header);
         this.header.h = this.panelHeaderHeight;
-        this.header.style = {
+        this.header.containerStyle = {
             zIndex: 3,
             backgroundColor: '#fff',
         }
