@@ -4,7 +4,9 @@ import * as PropTypes from "prop-types";
 import CircularProgress from "material-ui/CircularProgress";
 import SearchFilter from "../Shared/SearchFilter/SearchFilter";
 import GenomicLocation from "../Shared/GenomicLocation/GenomicLocation";
+import ArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import Pills from "../Shared/Pills/Pills";
+import FlatButton from 'material-ui/FlatButton';
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import { prettyPrint } from "../TraitDetails/TraitDetails";
@@ -27,6 +29,7 @@ class SearchResultsView extends React.Component {
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
     this.api = this.appModel.api;
+    this.savedQuery = null;
 
     this.cursor = 0;
     this.fetchedQuery = null;
@@ -119,6 +122,7 @@ class SearchResultsView extends React.Component {
 
   updateQueryModel = (query) => {
     this.autoClickSingleResult = false;
+    this.savedQuery = this.query;
     this.query = query;
     this.setState({
       showFilters: false,
@@ -131,6 +135,10 @@ class SearchResultsView extends React.Component {
 
     // reload the data if needed
     this.fetch(true);
+  }
+
+  runLastQuery = () => {
+    this.updateQueryModel(this.savedQuery);
   }
 
   resultSelected(result) {
@@ -205,7 +213,7 @@ class SearchResultsView extends React.Component {
       </div>
     </CellMeasurer >);
   }
-
+  
   render() {
     if (this.state.isLoading && this.state.results.length === 0) {
       return (<div id="search-results-view" className="search-results-view navigation-controller-loading">
@@ -215,15 +223,19 @@ class SearchResultsView extends React.Component {
       const style = {
         height: (this.state.height) + 'px',
       };
-      const feedbackButton = (<button style={{width: '120px'}}>Send us a request</button>);
+      const backButton = this.savedQuery ? (<div>
+        <FlatButton onClick={() => this.runLastQuery()} icon={(<ArrowBack />)} label="Back to results"/>
+      </div>) : null;
       return (<div id="search-results-view" className="search-results-view">
           <div style={style} className="search-results-list">
               <div className="search-results-empty">
                 <h3>No results found.</h3>
+                {backButton}
                 <div>
                    Think we are missing this data?
                    <UserFeedBackButton label="Submit Request"/>
                 </div>
+                
               </div>
           </div>
        </div>);
