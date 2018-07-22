@@ -71,7 +71,7 @@ class TrackViewer extends Object2D {
             this.panelHeaderHeight,
         );
         this.addPanelButton.x =  this.spacing.x * 0.5;
-        this.addPanelButton.style = {
+        this.addPanelButton.containerStyle = {
             zIndex: 3,
         }
         this.addPanelButton.layoutParentX = 1;
@@ -89,7 +89,7 @@ class TrackViewer extends Object2D {
         this.addDataTrackButton.layoutY = -1;
         this.addDataTrackButton.w = this.trackHeaderWidth;
         this.addDataTrackButton.y = this.spacing.y * 0.5 - this.xAxisHeight - this.spacing.y;
-        this.addDataTrackButton.style = {
+        this.addDataTrackButton.containerStyle = {
             zIndex: 3,
         }
         this.grid.add(this.addDataTrackButton);
