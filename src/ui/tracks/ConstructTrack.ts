@@ -2,7 +2,7 @@ import { TrackModel } from "../../model/TrackModel";
 import AnnotationTrack from "./AnnotationTrack";
 import SequenceTrack from "./SequenceTrack";
 import Track from "./Track";
-import { VariantTrack } from "./VariantTrack";
+import VariantTrack from "./VariantTrack";
 import IntervalTrack from "./IntervalTrack";
 
 export function ConstructTrack(model: TrackModel) {
