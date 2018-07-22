@@ -41,7 +41,7 @@ const fixedTrackData = [
   },
   {
     "track_type": TRACK_TYPE_EQTL,
-    "title": "GTeX eQTLs",
+    "title": "GTEx eQTLs",
     "description": "Quantitative trait loci from 53 human tissues curated from the Genotype-Tissue Expression project."
   },
   // {
