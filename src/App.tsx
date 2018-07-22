@@ -312,8 +312,12 @@ export class App extends React.Component<Props, State> {
 		}
 	}
 
+	protected addTrack(model: TrackModel) {
+		this.state.trackViewer.addTrackRow(model);
+	}
+
 	protected addVariantTrack(title: string, query: any) {
-		this.state.trackViewer.addTrackRow({
+		this.addTrack({
 			type: 'variant',
 			name: title,
 			query: query
@@ -328,7 +332,7 @@ export class App extends React.Component<Props, State> {
 			span: number
 		}
 	) {
-		this.state.trackViewer.addTrackRow({
+		this.addTrack({
 			name: title,
 			type: 'interval',
 			tileStoreType: 'interval',
@@ -358,6 +362,10 @@ export class App extends React.Component<Props, State> {
 
 	static displayRegion(contig: string, startBase: number, endBase: number) {
 		this.appInstance.displayRegion(contig, startBase, endBase);
+	}
+
+	static addTrack(model: TrackModel) {
+		this.appInstance.addTrack(model);
 	}
 
 	static addVariantTrack(title: string, query: any) {
