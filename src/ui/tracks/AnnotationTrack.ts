@@ -1,25 +1,22 @@
 import { Strand } from "gff3/Strand";
 import { GeneClass, TranscriptClass } from "sirius/AnnotationTileset";
+import QueryBuilder from "sirius/QueryBuilder";
+import Animator from "../../animation/Animator";
+import App from "../../App";
 import UsageCache from "../../ds/UsageCache";
 import { Scalar } from "../../math/Scalar";
 import { AnnotationTileStore, Gene, MacroAnnotationTileStore, Transcript } from "../../model/data-store/AnnotationTileStore";
 import SharedTileStore from "../../model/data-store/SharedTileStores";
 import { TileState } from "../../model/data-store/TileStore";
 import TrackModel from "../../model/TrackModel";
-import GPUDevice, { AttributeLayout, AttributeType, VertexAttributeBuffer } from "../../rendering/GPUDevice";
-import { BlendMode, DrawContext, DrawMode } from "../../rendering/Renderer";
-import InstancingBase from "../core/InstancingBase";
+import { BlendMode, DrawContext } from "../../rendering/Renderer";
 import Object2D from "../core/Object2D";
 import { Rect } from "../core/Rect";
-import SharedResources from "../core/SharedResources";
 import Text from "../core/Text";
+import InteractiveStyling from "../dev/InteractiveStyling";
 import { OpenSansRegular } from "../font/Fonts";
 import TrackRow from "../TrackRow";
 import Track from "./Track";
-import Animator from "../../animation/Animator";
-import App from "../../App";
-import QueryBuilder from "sirius/QueryBuilder";
-import InteractiveStyling from "../dev/InteractiveStyling";
 import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
 
 /**
