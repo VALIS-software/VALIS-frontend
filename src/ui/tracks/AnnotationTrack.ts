@@ -19,6 +19,7 @@ import Track from "./Track";
 import Animator from "../../animation/Animator";
 import App from "../../App";
 import QueryBuilder from "sirius/QueryBuilder";
+import InteractiveStyling from "../dev/InteractiveStyling";
 
 /**
  * WIP Annotation tracks:
@@ -428,7 +429,7 @@ class GeneAnnotation extends Object2D {
         spanMarker.h = 10;
         spanMarker.transparent = true;
         this.add(spanMarker);
-        devColorFromElement('gene', spanMarker.color);
+        InteractiveStyling.colorFromElement('gene', spanMarker.color);
         /**/
         
         this.name = new Text(OpenSansRegular, gene.name, 16, [1, 1, 1, 1]);
@@ -505,7 +506,7 @@ class TranscriptAnnotation extends Object2D {
 
         this.add(background);
 
-        devColorFromElement('transcript-background', background.color, () => {
+        InteractiveStyling.colorFromElement('transcript-background', background.color, () => {
             passiveOpacity = background.color[3];
             hoverOpacity = passiveOpacity * 3;
         });
@@ -593,33 +594,6 @@ class TranscriptAnnotation extends Object2D {
 
 }
 
-//@! quick dev-time hack
-function devColorFromElement(id: string, colorArray: Float32Array, onChange?: (colorArray: Float32Array) => void) {
-    let target = document.getElementById(id);
-
-    let updateColor = () => {
-        let cssColor = target.style.color;
-        let result = cssColor.match(/\w+\((\d+), (\d+), (\d+)(, ([\d.]+))?\)/);
-        if (result == null) {
-            console.warn('Could not parse css color', cssColor);
-            return;
-        }
-        let rgb = result.slice(1, 4).map(v => parseFloat(v) / 255);
-        let a = result[5] ? parseFloat(result[5]) : 1.0;
-        colorArray.set(rgb);
-        colorArray[3] = a;
-
-        if (onChange != null) {
-            onChange(colorArray);
-        }
-    }
-
-    updateColor();
-
-    let observer = new MutationObserver((mutations) => mutations.forEach(updateColor));
-    observer.observe(target, { attributes: true, attributeFilter: ['style'] });
-}
-
 class Exon extends Rect {
 
     constructor() {
@@ -630,7 +604,7 @@ class Exon extends Rect {
 
         this.transparent = true;
 
-        devColorFromElement('exon', this.color);
+        InteractiveStyling.colorFromElement('exon', this.color);
     }
 
     draw(context: DrawContext) {
@@ -678,7 +652,7 @@ class UTR extends Rect {
 
         this.transparent = true;
 
-        devColorFromElement('utr', this.color);
+        InteractiveStyling.colorFromElement('utr', this.color);
     }
 
     draw(context: DrawContext) {
@@ -760,7 +734,7 @@ class CDS extends Rect {
         this.transparent = true;
         this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
 
-        devColorFromElement('cds', this.color);
+        InteractiveStyling.colorFromElement('cds', this.color);
     }
 
     draw(context: DrawContext) {
