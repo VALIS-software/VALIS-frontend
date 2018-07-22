@@ -74,8 +74,8 @@ class TraitDetails extends React.Component {
   loadQuery(title, query, queryTitle) {
     this.appModel.trackMixPanel("Run search", { 'query': JSON.stringify(query) });
     const queryModel = new QueryModel(query);
-    const view = (<SearchResultsView text={title} query={queryModel} viewModel={this.viewModel} appModel={this.appModel} />);
-    this.viewModel.pushView(title, query, view);
+    const view = (<SearchResultsView text={queryTitle} query={queryModel} viewModel={this.viewModel} appModel={this.appModel} />);
+    this.viewModel.pushView(queryTitle, query, view);
   }
 
   renderSearchLink(title, query, queryTitle) {
@@ -125,7 +125,7 @@ class TraitDetails extends React.Component {
       return (<div key={link[0]} onClick={openLink} className="row">{link[0]}</div>);
     });
 
-    const associations = this.renderSearchLink('Associated Variants', this.buildTraitQuery(), name);
+    const associations = this.renderSearchLink('Associated Variants', this.buildTraitQuery(), 'Variants Associated with ' + name);
 
     return (<div className="trait-details">
       {header}
