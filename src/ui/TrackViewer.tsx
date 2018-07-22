@@ -526,7 +526,6 @@ class TrackViewer extends Object2D {
     }
 
     // limits rowOffsetY to only overflow region
-    // not a perfect technique but does the job for now
     protected applyOverflowLimits() {
         let maxOffset = 0;
 
@@ -534,8 +533,14 @@ class TrackViewer extends Object2D {
         // assumes grid.h is up to date (requires calling layoutTrackRows(false))
         let trackViewerHeight = this.getComputedHeight();
         let gridViewportHeight = trackViewerHeight - this.grid.y;
+        
+        // compute total row-height
+        let rowHeight = 0;
+        for (let row of this.rows) {
+            rowHeight += row.heightPx;
+        }
 
-        let overflow = this.grid.h - gridViewportHeight - this.rowOffsetY;
+        let overflow = rowHeight - gridViewportHeight;
         let minOffset = -overflow;
 
         this.rowOffsetY = Math.min(Math.max(this.rowOffsetY, minOffset), maxOffset);
