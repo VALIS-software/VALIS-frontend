@@ -12,8 +12,8 @@ import TCGASelector from "../TCGASelector/TCGASelector";
 import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector";
 import DataListItem from "../DataListItem/DataListItem";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
+import App from "../../../App";
 
-const TRACK_TYPE_SEQUENCE = 'track_type_sequence';
 const TRACK_TYPE_GENOME = 'track_type_genome';
 const TRACK_TYPE_GWAS = 'track_type_gwas';
 const TRACK_TYPE_TCGA = 'track_type_tcga';
@@ -21,6 +21,8 @@ const TRACK_TYPE_EQTL = 'track_type_eqtl';
 const TRACK_TYPE_EXAC = 'track_type_exac';
 const TRACK_TYPE_ENCODE = 'track_type_encode';
 const TRACK_TYPE_BOOLEAN = 'track_type_boolean';
+const TRACK_TYPE_SEQUENCE = 'track_type_sequence';
+const TRACK_TYPE_GENES = 'track_type_gene';
 
 // Styles
 import "./DatasetSelector.scss";
@@ -50,6 +52,11 @@ const fixedTrackData = [
     "track_type": TRACK_TYPE_EXAC,
     "title": "ExAC Variants",
     "description": "Search labeled variants of over 60k exomes from the Exome Aggregation Consortium."
+  },
+  {
+    "track_type": TRACK_TYPE_SEQUENCE,
+    "title": "Sequence",
+    "description": "Nucleobase sequence."
   },
   {
     "track_type": "premium",
@@ -111,22 +118,16 @@ class DatasetSelector extends React.Component {
         null,
         <ExACSelector appModel={this.appModel} viewModel={this.viewModel} />
       );
-    }else if (trackType === TRACK_TYPE_SEQUENCE) {
-      this.viewModel.pushView(
-        "Sequence Tracks",
-        null,
-        <TrackSelector
-          trackType={trackType}
-          appModel={this.appModel}
-          viewModel={this.viewModel}
-        />
-      );
     } else if (trackType === TRACK_TYPE_BOOLEAN) {
       this.viewModel.pushView(
         "Boolean Tracks",
         null,
         <BooleanTrackSelector appModel={this.appModel} viewModel={this.viewModel} />
       );
+    } else if (trackType === TRACK_TYPE_SEQUENCE) {
+      App.addTrack({ name: '→ Sequence', type: 'sequence' });
+    } else if (trackType === TRACK_TYPE_GENES) {
+
     } else if (trackType === 'premium') {
       this.setState({
         showUpgrade: true,
@@ -141,7 +142,6 @@ class DatasetSelector extends React.Component {
     if (this.state.error) {
       return (<ErrorDetails error={this.state.error} />);
     }
-    const dataSetSelected = this.dataSetSelected;
     const dataInfo = this.state.dataInfo;
     const dataInfoBlocks = [];
     for (const di of dataInfo) {
