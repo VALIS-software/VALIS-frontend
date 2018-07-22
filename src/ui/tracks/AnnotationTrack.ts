@@ -298,7 +298,6 @@ class MacroGeneInstances extends InstancingBase<MacroGeneInstance> {
         );
 
         this.transparent = true;
-        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
     }
 
     draw(context: DrawContext) {
@@ -427,7 +426,6 @@ class GeneAnnotation extends Object2D {
         spanMarker.color.set([138 / 0xFF, 136 / 0xFF, 191 / 0xFF, 0.38]);
         spanMarker.layoutW = 1;
         spanMarker.h = 10;
-        spanMarker.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
         spanMarker.transparent = true;
         this.add(spanMarker);
         devColorFromElement('gene', spanMarker.color);
@@ -499,7 +497,6 @@ class TranscriptAnnotation extends Object2D {
         background.cursorStyle = 'pointer';
         background.z = 0;
         background.transparent = true;
-        background.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
         background.layoutW = 1;
         background.layoutH = 1;
 
@@ -547,7 +544,6 @@ class TranscriptAnnotation extends Object2D {
         spanMarker.layoutParentY = 0.5;
         spanMarker.z = 0.1;
         spanMarker.transparent = true;
-        spanMarker.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
         this.add(spanMarker);
         /**/
 
@@ -633,7 +629,6 @@ class Exon extends Rect {
         this.color[3] = 0.1;
 
         this.transparent = true;
-        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
 
         devColorFromElement('exon', this.color);
     }
@@ -682,7 +677,6 @@ class UTR extends Rect {
         this.color[3] = 0.1;
 
         this.transparent = true;
-        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
 
         devColorFromElement('utr', this.color);
     }

@@ -164,7 +164,6 @@ export class TileNode<TilePayload> extends Object2D {
         this._opacity = opacity;
         // switch to opaque rendering as soon as opacity hits 1
         this.transparent = opacity < 1;
-        this.blendMode = opacity < 1 ? BlendMode.PREMULTIPLIED_ALPHA : BlendMode.NONE;
     }
 
     get opacity() {

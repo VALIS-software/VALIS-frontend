@@ -34,7 +34,6 @@ export default class IntervalInstances extends InstancingBase<IntervalInstance> 
         );
 
         this.transparent = true;
-        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
     }
 
     draw(context: DrawContext) {
