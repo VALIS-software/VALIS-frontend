@@ -73,9 +73,9 @@ export class App extends React.Component<Props, State> {
 		// initialize with some dummy data
 		let tracks: Array<TrackModel> = [
 			{ name: '→ Sequence', type: 'sequence' },
-			// { name: 'Variants', type: 'variant'},
-			// { name: '→ Strand Genes', type: 'annotation', strand: Strand.Positive },
-			// { name: '← Strand Genes', type: 'annotation', strand: Strand.Negative },
+			{ name: 'Variants', type: 'variant'},
+			{ name: '→ Strand Genes', type: 'annotation', strand: Strand.Positive },
+			{ name: '← Strand Genes', type: 'annotation', strand: Strand.Negative },
 		];
 		let i = 0;
 		for (let model of tracks) {
@@ -333,6 +333,7 @@ export class App extends React.Component<Props, State> {
 			name: title,
 			type: 'interval',
 			tileStoreType: 'interval',
+			query: query,
 			tileStoreConstructor: (contig) => {
 				return new GenericIntervalTileStore(contig, query, resultTransform);
 			}
