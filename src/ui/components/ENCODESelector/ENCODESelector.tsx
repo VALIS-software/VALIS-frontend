@@ -1,48 +1,65 @@
 // Dependencies
-import * as React from "react";
-import * as PropTypes from "prop-types";
-import TextField from "material-ui/TextField";
-import AutoComplete from "material-ui/AutoComplete";
-import Slider from "material-ui/Slider";
-import RaisedButton from "material-ui/RaisedButton/RaisedButton";
-import SelectField from "material-ui/SelectField";
-import MenuItem from "material-ui/MenuItem";
 import Checkbox from "material-ui/Checkbox";
 import Divider from "material-ui/Divider";
+import MenuItem from "material-ui/MenuItem";
+import RaisedButton from "material-ui/RaisedButton";
+import SelectField from "material-ui/SelectField";
+import * as React from "react";
 import QueryBuilder from "sirius/QueryBuilder";
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import SiriusApi from "sirius/SiriusApi";
-
-import {
-  CHROMOSOME_NAMES,
-  DATA_SOURCE_ENCODE
-} from "../../helpers/constants";
-
+import App from "../../../App";
+import { CHROMOSOME_NAMES, DATA_SOURCE_ENCODE } from "../../helpers/constants";
+import AppModel from "../../models/AppModel";
+import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 // Styles
 import "./ENCODESelector.scss";
 
-const logmin = 0;
 const logmax = Math.pow(10, 6);
 const power = 12;
 
-function transform(value) {
+function transform(value: number) {
   return Math.round(
     (Math.exp(12 * value / logmax) - 1) / (Math.exp(power) - 1) * logmax
   );
 }
 
-function reverse(value) {
+function reverse(value: number) {
   return (
     1 / power * Math.log((Math.exp(power) - 1) * value / logmax + 1) * logmax
   );
 }
 
-class ENCODESelector extends React.Component {
-  constructor(props) {
+type Props = {
+  appModel: AppModel,
+}
+
+type State = {
+  biosampleValue: any,
+  error: any,
+  title: any,
+  genomeTypeValue: any,
+  chromoNameValue: number,
+  minLength: number,
+  maxnumber: number,
+  availableTypes: Array<any>,
+  availableBiosamples: Array<any>,
+  availableTargets: Array<any>,
+  checked: Array<any>,
+  fixTitle: boolean,
+}
+
+class ENCODESelector extends React.Component<Props, State> {
+
+  appModel: AppModel;
+  selectedBiosample: any;
+  selectedType: any;
+  selectedTargets: any;
+  availableChromoNames: Array<string>;
+
+  constructor(props: Props) {
     super(props);
     if (props.appModel) {
       this.appModel = props.appModel;
-      this.api = this.appModel.api;
     }
     this.state = {
       title: "",
@@ -54,7 +71,9 @@ class ENCODESelector extends React.Component {
       availableTypes: [],
       availableBiosamples: [],
       availableTargets: [],
-      checked: []
+      checked: [],
+      error: undefined,
+      fixTitle: undefined
     };
   }
 
@@ -159,14 +178,14 @@ class ENCODESelector extends React.Component {
     });
   }
 
-  handleUpdateTitle = (event) => {
+  handleUpdateTitle = (event: any) => {
     this.setState({
       title: event.target.value,
       fixTitle: true
     });
   }
 
-  handelUpdateBiosample = (event, index, value) => {
+  handelUpdateBiosample = (event: any, index: any, value: any) => {
     this.setState({
       biosampleValue: value
     });
@@ -185,7 +204,7 @@ class ENCODESelector extends React.Component {
     }
   }
 
-  handleUpdateType = (event, index, value) => {
+  handleUpdateType = (event: any, index: number, value: any) => {
     this.setState({
       genomeTypeValue: value
     });
@@ -197,7 +216,7 @@ class ENCODESelector extends React.Component {
     }
   }
 
-  handleCheckBox = (index) => {
+  handleCheckBox = (index: number) => {
     const newChecked = this.state.checked;
     newChecked[index] = !newChecked[index];
     this.setState({
@@ -214,19 +233,19 @@ class ENCODESelector extends React.Component {
     this.updateAvailableTypes();
   }
 
-  handleUpdateChromName = (event, index, value) => {
+  handleUpdateChromName = (event: any, index: number, value: any) => {
     this.setState({
       chromoNameValue: value
     });
   }
 
-  handleUpdateMinLength = (event, value) => {
+  handleUpdateMinLength = (event: any, value: any) => {
     this.setState({
       minLength: value
     });
   }
 
-  handleUpdateMaxNumber = (event, value) => {
+  handleUpdateMaxNumber = (event: any, value: any) => {
     this.setState({
       maxnumber: transform(value)
     });
@@ -259,15 +278,16 @@ class ENCODESelector extends React.Component {
   addQueryTrack = () => {
     const query = this.buildQuery();
     this.appModel.trackMixPanel("Add ENCODE Track", { "query": query });
-    this.appModel.addAnnotationTrack(this.state.title, query);
+    App.addIntervalTrack(this.state.title, query, (e) => {
+      return {
+        startIndex: e.start - 1,
+        span: e.length
+      }
+    });
   }
 
   componentDidMount() {
     this.availableChromoNames = ['Any'].concat(CHROMOSOME_NAMES);
-    this.chromoNameItems = [];
-    for (let i = 0; i < this.availableChromoNames.length; i++) {
-      this.chromoNameItems.push(<MenuItem value={i} key={i} primaryText={this.availableChromoNames[i]} />);
-    }
     // use api to pull all available biosamples
     this.updateAvailableBiosamples();
     this.updateAvailableTypes();
@@ -347,9 +367,5 @@ class ENCODESelector extends React.Component {
     );
   }
 }
-
-ENCODESelector.propTypes = {
-  appModel: PropTypes.object
-};
 
 export default ENCODESelector;

@@ -272,7 +272,7 @@ class Label extends Object2D {
         this.tick = new Rect(tickWidthPx, tickHeightPx);
         this.tick.layoutX = -0.5;
         this.tick.layoutY = -1;
-        this.tick.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
+        this.tick.transparent = true;
         this.add(this.tick);
 
         this.render = false;

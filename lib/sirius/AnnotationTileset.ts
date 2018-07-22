@@ -1,5 +1,5 @@
-import { Strand } from "../gff3/Strand";
-import { Feature } from "../gff3/Feature";
+import { Strand } from "gff3/Strand";
+import { Feature } from "gff3/Feature";
 
 export enum GenomeFeatureType {
 	// order corresponds to nesting depth

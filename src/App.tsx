@@ -21,6 +21,7 @@ import ViewModel, { ViewEvent } from "./ui/models/ViewModel";
 import BasicTheme from "./ui/themes/BasicTheme";
 import TrackViewer from "./ui/TrackViewer";
 import View from "./ui/View";
+import GenericIntervalTileStore from "./model/data-store/GenericIntervalTileStore";
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
@@ -319,6 +320,25 @@ export class App extends React.Component<Props, State> {
 		});
 	}
 
+	protected addIntervalTrack(
+		title: string,
+		query: any,
+		resultTransform: (entry: any) => {
+			startIndex: number,
+			span: number
+		}
+	) {
+		this.state.trackViewer.addTrackRow({
+			name: title,
+			type: 'interval',
+			tileStoreType: 'interval',
+			query: query,
+			tileStoreConstructor: (contig) => {
+				return new GenericIntervalTileStore(contig, query, resultTransform);
+			}
+		});
+	}
+
 	protected _searchIncrementalId = 0;
 	protected search(queryObject: any) {
 		const queryModel = new QueryModel(queryObject);
@@ -342,6 +362,17 @@ export class App extends React.Component<Props, State> {
 
 	static addVariantTrack(title: string, query: any) {
 		this.appInstance.addVariantTrack(title, query);
+	}
+
+	static addIntervalTrack(
+		title: string,
+		query: any,
+		resultTransform: (entry: any) => {
+			startIndex: number,
+			span: number
+		}
+	) {
+		this.appInstance.addIntervalTrack(title, query, resultTransform);
 	}
 
 	static search(queryObject: any) {

@@ -9,7 +9,7 @@ import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton'
 import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import { prettyPrint } from "../TraitDetails/TraitDetails";
 import SiriusApi from "sirius/SiriusApi";
-import { FilterType } from "../../../ui/models/QueryModel";
+import { FilterType } from "../../models/QueryModel";
 
 
 
