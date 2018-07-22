@@ -43,14 +43,13 @@ class SearchResultsView extends React.Component {
       minHeight: 80,
     });
 
-    this.autoClickSingleResult = props.autoClickSingleResult;
-
     this.updateQueryModel(props.query);
   }
 
   componentDidMount() {
     const height = document.getElementById('search-results-view').clientHeight;
     this.setState({ height });
+    this.autoClickSingleResult = this.props.autoClickSingleResult;
   }
 
   addQueryAsTrack = () => {
@@ -313,7 +312,7 @@ SearchResultsView.propTypes = {
   viewModel: PropTypes.object,
   query: PropTypes.object,
   text: PropTypes.string,
-  autoClickSingleResult: PropTypes.boolean,
+  autoClickSingleResult: PropTypes.bool,
 };
 
 export default SearchResultsView;
