@@ -76,8 +76,8 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
             return variants.map((v) => { return {
                 id: v.id,
                 baseIndex: v.start - 1,
-                refSequence: v.info.variant_ref,
-                alts: v.info.allele_frequencies,
+                refSequence: v.info.variant_ref ? v.info.variant_ref: '',
+                alts: v.info.allele_frequencies ? v.info.allele_frequencies: {},
             } });
         });
     }
