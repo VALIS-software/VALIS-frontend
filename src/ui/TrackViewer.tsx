@@ -688,6 +688,9 @@ class TrackViewer extends Object2D {
                 this._resizingRows.delete(entry);
             }
         }
+
+        this.applyOverflowLimits();
+        this.layoutTrackRows(false);
     }
 
 }
