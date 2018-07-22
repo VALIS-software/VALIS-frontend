@@ -60,21 +60,9 @@ class TrackViewer extends Object2D {
         this.grid = new Rect(0, 0, [0.9, 0.9, 0.9, 1]); // grid is Rect type for debug display
         this.grid.render = false;
         this.add(this.grid);
+
+        this.initializeDragPanning();
         this.initializeGridResizing();
-
-        let dragStartY: number = undefined;
-        let yOffsetStart: number = undefined;
-        this.addEventListener('dragstart', (e) => {
-            dragStartY = e.localY;
-            yOffsetStart = this.rowOffsetY;
-        });
-
-        this.addEventListener('dragmove', (e) => {
-            if (this._resizingPanels.size > 0 || this._resizingRows.size > 0) return;
-            let dy = e.localY - dragStartY;
-            this.rowOffsetY = Math.min(yOffsetStart + dy, 0);
-            this.layoutTrackRows(false);
-        });
 
         this.addPanelButton = new ReactObject(
             <AddPanelButton onClick={() => {
@@ -543,6 +531,35 @@ class TrackViewer extends Object2D {
         row: Row,
         initialHeightPx: number
     }>();
+
+    protected initializeDragPanning() {
+        let dragStartY: number = undefined;
+        let yOffsetStart: number = undefined;
+        this.addEventListener('dragstart', (e) => {
+            dragStartY = e.localY;
+            yOffsetStart = this.rowOffsetY;
+        });
+
+        this.addEventListener('dragmove', (e) => {
+            if (this._resizingPanels.size > 0 || this._resizingRows.size > 0) return;
+            let dy = e.localY - dragStartY;
+
+            let maxOffset = 0;
+
+            // determine minOffset from grid overflow
+            // assumes grid.h is up to date (requires calling layoutTrackRows(false))
+            let trackViewerHeight = this.getComputedHeight();
+            let gridViewportHeight = trackViewerHeight - this.grid.y;
+
+            // not a perfect technique but does the job
+            let overflow = this.grid.h - gridViewportHeight - this.rowOffsetY;
+            let minOffset = -overflow;
+
+            this.rowOffsetY = Math.min(Math.max(yOffsetStart + dy, minOffset), maxOffset);
+
+            this.layoutTrackRows(false);
+        });
+    }
 
     /**
      * Setup event listeners to enable resizing of panels and tracks
