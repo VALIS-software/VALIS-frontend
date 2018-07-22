@@ -108,12 +108,12 @@ export class QueryBuilder {
 
   filterAffectedGene(gene: any) {
     const previous = this.query.filters['variant_affected_genes'] || [];
-    this.query.filters['variant_affected_genes'] = { $all: previous.concat([gene]) };
+    this.query.filters['info.variant_affected_genes'] = gene;
   }
 
   filterVariantTag(tag: any) {
     const previous = this.query.filters['variant_tags'] || [];
-    this.query.filters['variant_tags'] = { $all: previous.concat([tag]) };
+    this.query.filters['info.variant_tags'] = tag;
   }
 
   searchText(text: string) {

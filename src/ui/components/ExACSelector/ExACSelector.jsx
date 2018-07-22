@@ -62,12 +62,12 @@ class ExACSelector extends React.Component {
     builder.newGenomeQuery();
     builder.filterSource(DATA_SOURCE_ExAC);
     builder.filterVariantTag(this.state.availableVariantTags[this.state.variantTagValue]);
+    return builder.build();
   }
 
   addQueryTrack = () => {
     const query = this.buildQuery();
     this.appModel.trackMixPanel("Add ExAC Track", { "query": query });
-    // QYD: The results of this query is "Edges" instead of GenomeNodes, we might need a new method for displaying
     const tagValue = this.state.availableVariantTags[this.state.variantTagValue];
     App.addVariantTrack(`${tagValue} (ExAC)`, query);
     this.props.viewModel.closeView();
@@ -107,7 +107,7 @@ class ExACSelector extends React.Component {
           label="Add Track"
           primary={true}
           onClick={() => this.addQueryTrack()}
-          disabled={!this.state.variantTagValue}
+          disabled={this.state.variantTagValue === null}
           style={{width: '95%'}}
         />
       </div>
