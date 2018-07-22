@@ -42,6 +42,9 @@ export default class GenericIntervalTileStore extends TileStore<TilePayload, voi
     }
 
     protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
+        // @! quality improvement; reduce perception of shivering when zooming in
+        // if lod level = 0 and a macro track exists that covers this tile then we can filter that tile to get the lod 0 tile (so no network request or promise)
+        
         let startBase = tile.x + 1;
         let endBase = startBase + tile.span;
         
