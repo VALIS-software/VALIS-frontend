@@ -133,12 +133,12 @@ class SNPDetails extends React.Component {
 
     if (details.info.variant_affected_genes) {
       let affectedGenes = details.info.variant_affected_genes;
-      if (affectedGenes) {
+      if (affectedGenes && affectedGenes.length > 0) {
         const geneLinks = [];
         for (const geneName of affectedGenes) {
           geneLinks.push(<GeneLink key={geneName} geneName={geneName} viewModel={this.props.viewModel} appModel={this.props.appModel} />)
         }
-        variantType = (<div className="snp-type-wrapper">{details.type} of {geneLinks}</div>);
+        variantType = (<div className="snp-type-wrapper">Variant of {geneLinks}</div>);
       }
     }
 

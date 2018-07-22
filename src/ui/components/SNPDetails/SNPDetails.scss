@@ -30,6 +30,7 @@
 
     .base-pair-label {
       width: 18px;
+      font-size: $valis-font-size-small-description;
       font-weight: bold;
     }
 
@@ -40,6 +41,7 @@
     .bar-elem {
       height: 8px;
       border-radius: 8px;
+      background-color: $valis-blue-light;
     }
   }
 
@@ -55,21 +57,21 @@
   }
 
   .A {
-    background-color: #4394F7;
+    background-color: #4394F7 !important;
   }
 
   
   .T {
-    background-color: #F2CC1F;
+    background-color: #F2CC1F !important;
   }
 
   
   .C {
-    background-color: #E54546;
+    background-color: #E54546 !important;
   }
 
   .G {
-    background-color: #5FB732;
+    background-color: #5FB732 !important;
   }
 
 }

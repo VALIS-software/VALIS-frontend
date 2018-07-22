@@ -88,7 +88,7 @@ export class App extends React.Component<Props, State> {
 		]) {
 			trackViewer.addPanel(panel, false);
 		}
-		
+
 		this.state = {
 			views: [],
 			headerHeight: this.headerHeight,
@@ -192,7 +192,7 @@ export class App extends React.Component<Props, State> {
 				{errorList}
 			</Dialog>);
 		}
-		
+
 		return (
 			<MuiThemeProvider muiTheme={BasicTheme}>
 				<div>
@@ -200,7 +200,7 @@ export class App extends React.Component<Props, State> {
 					<AppCanvas
 						ref={(v) => this.appCanvas = v}
 						width={this.state.viewerWidth}
-						height={this.state.viewerHeight} 
+						height={this.state.viewerHeight}
 						content={this.state.trackViewer}
 						pixelRatio={App.canvasPixelRatio}
 					/>
@@ -312,11 +312,11 @@ export class App extends React.Component<Props, State> {
 		}
 	}
 
-	protected addVariantTrack(title: string, toEdges: any) {
+	protected addVariantTrack(title: string, query: any) {
 		this.state.trackViewer.addTrackRow({
 			type: 'variant',
 			name: title,
-			toEdges: toEdges
+			query: query
 		});
 	}
 
@@ -360,8 +360,8 @@ export class App extends React.Component<Props, State> {
 		this.appInstance.displayRegion(contig, startBase, endBase);
 	}
 
-	static addVariantTrack(title: string, toEdges: any) {
-		this.appInstance.addVariantTrack(title, toEdges);
+	static addVariantTrack(title: string, query: any) {
+		this.appInstance.addVariantTrack(title, query);
 	}
 
 	static addIntervalTrack(

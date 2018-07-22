@@ -35,7 +35,7 @@ class GWASSelector extends React.Component {
   componentDidMount() {
     this.updateTraits();
   }
-  
+
 
   updateTraits = () => {
     const builder = new QueryBuilder();
@@ -80,14 +80,14 @@ class GWASSelector extends React.Component {
     builder.searchText(this.state.searchTrait);
     const infoQuery = builder.build();
     builder.newEdgeQuery();
-    builder.filterSource(DATA_SOURCE_GWAS);  
+    builder.filterSource(DATA_SOURCE_GWAS);
     builder.filterMaxPValue(this.state.pvalue);
     builder.setToNode(infoQuery);
     const edgeQuery = builder.build();
     builder.newGenomeQuery();
     builder.filterSource(DATA_SOURCE_GWAS);
     builder.addToEdge(edgeQuery);
-    builder.setLimit(100000000);
+    builder.setLimit(1000000);
     const genomeQuery = builder.build();
     return genomeQuery;
   }
@@ -95,7 +95,7 @@ class GWASSelector extends React.Component {
   addQueryTrack() {
     const query = this.buildGWASQuery();
     this.appModel.trackMixPanel('Add GWAS Track', { 'query': query });
-    App.addVariantTrack(this.state.title, query.toEdges);
+    App.addVariantTrack(this.state.title, query);
     this.props.viewModel.closeView();
   }
 
@@ -108,7 +108,7 @@ class GWASSelector extends React.Component {
         <AutoComplete
           floatingLabelText="Trait"
           searchText={this.state.searchTrait}
-          filter={AutoComplete.caseInsensitiveFilter}
+          filter={AutoComplete.fuzzyFilter}
           maxSearchResults={10}
           hintText="Type anything"
           dataSource={this.state.traits}

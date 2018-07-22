@@ -8,7 +8,7 @@ export interface TrackTypeMap {
         strand: Strand,
     };
     'variant': {
-        toEdges?: any
+        query?: any
     },
     'interval': {
         tileStoreType: string,
