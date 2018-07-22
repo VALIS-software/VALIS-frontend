@@ -1,6 +1,6 @@
 // Dependencies
 import FlatButton from 'material-ui/FlatButton';
-import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
+import { Toolbar, ToolbarGroup, ToolbarTitle } from 'material-ui/Toolbar';
 import * as React from 'react';
 import AppModel from '../../models/AppModel';
 import ViewModel from '../../models/ViewModel';
@@ -37,7 +37,8 @@ class Header extends React.Component<Props, State> {
   const analyzeButton = (<FlatButton onClick={this.openAnalysis} label="Analysis" icon={(<ShowChart/>)}></FlatButton>);
     return (<div className="header">
       <Toolbar>
-        <ToolbarGroup firstChild={true}>
+        <ToolbarTitle text="VALIS"/>
+        <ToolbarGroup>
           <div className="search-box">
             <TokenBox appModel={this.props.appModel} viewModel={this.props.viewModel} />
           </div>

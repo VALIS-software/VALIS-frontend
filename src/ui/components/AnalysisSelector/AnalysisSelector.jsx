@@ -26,17 +26,22 @@ const fixedAnalysisData = [
   {
     "track_type": 'premium', 
     "title": "Correlate Regulatory Elements", 
-    "description": "Find regulatory annotations correlated with elements in a track."
+    "description": "Find regulatory annotations correlated with elements in your tracks."
   },
   {
     "track_type": 'premium', 
     "title": "Correlate Samples", 
-    "description": "Correlate sets of variants to patient cohorts."
+    "description": "Correlate sets of variants or regulatory annotations to patient cohorts."
   },
   {
     "track_type": 'premium', 
     "title": "Predict Functional Effects", 
     "description": "Predict the effect of non-coding variants on expression, methylation or chromatin accessibility."
+  },
+  {
+    "track_type": 'premium', 
+    "title": "Export Data", 
+    "description": "Export data from tracks to BED, GFF or CSV format."
   },
   {
     "track_type": 'premium', 
