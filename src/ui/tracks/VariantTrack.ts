@@ -132,28 +132,48 @@ export default class VariantTrack extends Track<'variant'> {
                                         continue;
                                     }
 
-                                    // create and update text
-                                    let cacheKey = this.contig + ':' +  startIndex + ',' + altIndex + ',' + i;
-                                    let label = this._sequenceLabelCache.get(cacheKey, () => {
-                                        return this.createBaseLabel(baseCharacter, color, () => {
-                                            let queryBuilder = new QueryBuilder();
-                                            queryBuilder.newGenomeQuery();
-                                            queryBuilder.filterID(variant.id);
-                                            App.search(queryBuilder.build());
-                                        });
-                                    });
-
-                                    label.root.layoutParentX = layoutParentX;
-                                    label.root.layoutW = baseLayoutW;
-                                    label.root.y = altIndex * altHeightPx + tileY;
-                                    label.root.h = altHeightPx;
-
-                                    label.textParent.sx = label.textParent.sy = textSizePx;
-
-                                    label.text.color[3] = textOpacity;
+                                    this.displayLabel(
+                                        variant.id,
+                                        baseCharacter,
+                                        color,
+                                        startIndex,
+                                        altIndex,
+                                        i,
+                                        layoutParentX,
+                                        baseLayoutW,
+                                        altHeightPx,
+                                        textSizePx,
+                                        textOpacity,
+                                        tileY
+                                    );
                                 }
 
                                 altIndex++;
+                            }
+
+                            // no alts were drawn so there's no handle to click, create an empty one to make them clickable
+                            if (altIndex === 0) {
+                                let layoutParentX = ((startIndex + 0) - x0) / span;
+
+                                // skip text outside visible range
+                                if ((layoutParentX + baseLayoutW) < 0 || layoutParentX > 1) {
+                                    continue;
+                                }
+
+                                this.displayLabel(
+                                    variant.id,
+                                    null,
+                                    color,
+                                    startIndex,
+                                    altIndex,
+                                    0,
+                                    layoutParentX,
+                                    baseLayoutW,
+                                    altHeightPx,
+                                    textSizePx,
+                                    textOpacity,
+                                    tileY
+                                );
                             }
                         }
                     }
@@ -203,6 +223,18 @@ export default class VariantTrack extends Track<'variant'> {
                                 altIndex++;
                             }
 
+                            // no alts were drawn so there's no handle to click, create an empty one to make them clickable
+                            if (altIndex === 0) {
+                                instanceData.push({
+                                    xFractional: fractionX,
+                                    y: 0,
+                                    z: 0,
+                                    wFractional: refSpan / tile.span,
+                                    h: altHeightPx,
+                                    color: [1, 0, 0, 0.5],
+                                });
+                            }
+
                             // draw line to show reference span
                             instanceData.push({
                                 xFractional: fractionX,
@@ -244,6 +276,45 @@ export default class VariantTrack extends Track<'variant'> {
         this.displayNeedUpdate = false;
     }
 
+    protected displayLabel(
+        variantId: string,
+        baseCharacter: string,
+        color: ArrayLike<number>,
+        startIndex: number,
+        altIndex: number,
+        charIndex: number,
+
+        layoutParentX: number,
+        baseLayoutW: number,
+
+        altHeightPx: number,
+        textSizePx: number,
+        textOpacity: number,
+        tileY: number,
+    ) {
+
+        let cacheKey = this.contig + ':' + startIndex + ',' + altIndex + ',' + charIndex;
+        let label = this._sequenceLabelCache.get(cacheKey, () => {
+            return this.createBaseLabel(baseCharacter, color, () => {
+                let queryBuilder = new QueryBuilder();
+                queryBuilder.newGenomeQuery();
+                queryBuilder.filterID(variantId);
+                App.search(queryBuilder.build());
+            });
+        });
+
+        label.root.layoutParentX = layoutParentX;
+        label.root.layoutW = baseLayoutW;
+        label.root.y = altIndex * altHeightPx + tileY;
+        label.root.h = altHeightPx;
+
+        label.textParent.sx = label.textParent.sy = textSizePx;
+
+        if (label.text != null) {
+            label.text.color[3] = textOpacity;
+        }
+    }
+
     protected createBaseLabel = (baseCharacter: string, color: ArrayLike<number>, onClick: () => void) => {
         let root = new Rect(0, 0, color);
         root.blendFactor = 0;
@@ -283,28 +354,36 @@ export default class VariantTrack extends Track<'variant'> {
         textParent.layoutParentX = 0.5;
         textParent.layoutParentY = 0.5;
 
+        let textClone: TextClone = null;
+
         // create textClone
-        let textInstance = VariantTrack.baseTextInstances[baseCharacter];
-        if (textInstance === undefined) {
-            textInstance = VariantTrack.baseTextInstances['?'];
+        if (baseCharacter !== null) {
+            let textInstance = VariantTrack.baseTextInstances[baseCharacter];
+            if (textInstance === undefined) {
+                textInstance = VariantTrack.baseTextInstances['?'];
+            }
+
+            let textClone = new TextClone(textInstance, [1, 1, 1, 1]);
+            textClone.additiveBlendFactor = 1.0;
+            textClone.layoutX = -0.5;
+            textClone.layoutY = -0.5;
+            textClone.mask = this;
+
+            textParent.add(textClone);
+            root.add(textParent);
         }
 
-        let textClone = new TextClone(textInstance, [1, 1, 1, 1]);
-        textClone.additiveBlendFactor = 1.0;
-        textClone.layoutX = -0.5;
-        textClone.layoutY = -0.5;
-        textClone.mask = this;
 
         this.add(root);
-        root.add(textParent);
-        textParent.add(textClone);
 
         return { root: root, textParent: textParent, text: textClone };
     }
 
     protected deleteBaseLabel = (label: { root: Object2D, textParent: Object2D, text: TextClone }) => {
-        label.textParent.remove(label.text); // ensure textClone cleanup is fired
-        label.text.releaseGPUResources();
+        if (label.text != null) {
+            label.textParent.remove(label.text); // ensure textClone cleanup is fired
+            label.text.releaseGPUResources();
+        }
         this.remove(label.root);
     }
 
