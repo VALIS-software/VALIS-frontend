@@ -150,7 +150,7 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.macroAnnotationStore.getTiles(x0, x1, samplingDensity, true, (tile) => {
             if (tile.state !== TileState.Complete) {
                 // if the tile is incomplete then wait until complete and call updateAnnotations() again
-                this._pendingTiles.get(tile.key, () => this.createTileLoadingDependency(tile));
+                this._pendingTiles.get(this.contig + ':' + tile.key, () => this.createTileLoadingDependency(tile));
                 return;
             }
 
@@ -202,7 +202,7 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.annotationStore.getTiles(x0, x1, samplingDensity, true, (tile) => {
             if (tile.state !== TileState.Complete) {
                 // if the tile is incomplete then wait until complete and call updateAnnotations() again
-                this._pendingTiles.get(tile.key, () => this.createTileLoadingDependency(tile));
+                this._pendingTiles.get(this.contig + ':' + tile.key, () => this.createTileLoadingDependency(tile));
                 return;
             }
         
