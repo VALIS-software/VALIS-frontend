@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "webpack-dev-server --env.dev",
-    "dev-remote": "webpack-dev-server --env.dev --env.API_URL=http://35.230.87.182",
+    "dev-remote": "webpack-dev-server --env.dev --env.API_URL=http://35.185.230.75",
     "production": "webpack --env.production",
     "deploy": "webpack --env.deploy --display-error-details",
     "test": "jest"
