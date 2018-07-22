@@ -1,4 +1,5 @@
 import UsageCache from "../../ds/UsageCache";
+import { Scalar } from "../../math/Scalar";
 import GenericIntervalTileStore from "../../model/data-store/GenericIntervalTileStore";
 import SharedTileStore from "../../model/data-store/SharedTileStores";
 import { Tile, TileState } from "../../model/data-store/TileStore";
@@ -6,7 +7,6 @@ import { TrackModel } from "../../model/TrackModel";
 import { Object2D } from "../core/Object2D";
 import Track from "./Track";
 import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
-import { Scalar } from "../../math/Scalar";
 
 type TilePayload = Float32Array;
 
@@ -81,8 +81,9 @@ export default class IntervalTrack extends Track<'interval'> {
         node.z = z;
 
         // decrease opacity at large lods to prevent white-out as interval cluster together and overlap
-        node.opacity = Scalar.lerp(1, 0.1, Scalar.clamp(continuousLodLevel / 15, 0, 1));
-        node.transparent = node.opacity < 1; // try and display in opaque pass if we can
+        let e = 2;
+        let t = Math.pow((Math.max(continuousLodLevel - 2, 0) / 15), e);
+        node.opacity = Scalar.lerp(1, 0.1, Scalar.clamp(t, 0, 1));
 
         this._onStage.get(tileKey, () => {
             this.add(node);
@@ -108,7 +109,7 @@ export default class IntervalTrack extends Track<'interval'> {
                 y: 0,
                 z: 0,
                 h: 35,
-                color: tile.lodLevel === 0 ? [0, 0, 1, 1.0] : [1, 0, 0, 1.0],
+                color: [74/0xff, 52/0xff, 226/0xff, 0.66],
             };
         }
 
