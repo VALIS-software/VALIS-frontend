@@ -1,24 +1,23 @@
 import { Strand } from "gff3/Strand";
 import { GeneClass, TranscriptClass } from "sirius/AnnotationTileset";
+import QueryBuilder from "sirius/QueryBuilder";
+import Animator from "../../animation/Animator";
+import App from "../../App";
 import UsageCache from "../../ds/UsageCache";
 import { Scalar } from "../../math/Scalar";
 import { AnnotationTileStore, Gene, MacroAnnotationTileStore, Transcript } from "../../model/data-store/AnnotationTileStore";
 import SharedTileStore from "../../model/data-store/SharedTileStores";
 import { TileState } from "../../model/data-store/TileStore";
 import TrackModel from "../../model/TrackModel";
-import GPUDevice, { AttributeLayout, AttributeType, VertexAttributeBuffer } from "../../rendering/GPUDevice";
-import { BlendMode, DrawContext, DrawMode } from "../../rendering/Renderer";
-import InstancingBase from "../core/InstancingBase";
+import { BlendMode, DrawContext } from "../../rendering/Renderer";
 import Object2D from "../core/Object2D";
 import { Rect } from "../core/Rect";
-import SharedResources from "../core/SharedResources";
 import Text from "../core/Text";
+import InteractiveStyling from "../dev/InteractiveStyling";
 import { OpenSansRegular } from "../font/Fonts";
 import TrackRow from "../TrackRow";
 import Track from "./Track";
-import Animator from "../../animation/Animator";
-import App from "../../App";
-import QueryBuilder from "sirius/QueryBuilder";
+import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
 
 /**
  * WIP Annotation tracks:
@@ -53,8 +52,6 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.yScrollNode.z = 0;
         this.yScrollNode.layoutW = 1;
         this.add(this.yScrollNode);
-        
-        this.color.set([0.1, 0.1, 0.1, 1]);
 
         this.initializeYDrag();
 
@@ -113,7 +110,7 @@ export class AnnotationTrack extends Track<'annotation'> {
         });
     }
 
-    protected _macroTileCache = new UsageCache<MacroGeneInstances>();
+    protected _macroTileCache = new UsageCache<IntervalInstances>();
     protected _annotationCache = new UsageCache<Object2D>();
     protected _onStageAnnotations = new UsageCache<Object2D>();
     protected updateDisplay() {
@@ -152,7 +149,7 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.macroAnnotationStore.getTiles(x0, x1, samplingDensity, true, (tile) => {
             if (tile.state !== TileState.Complete) {
                 // if the tile is incomplete then wait until complete and call updateAnnotations() again
-                this._pendingTiles.get(tile.key, () => this.createTileLoadingDependency(tile));
+                this._pendingTiles.get(this.contig + ':' + tile.key, () => this.createTileLoadingDependency(tile));
                 return;
             }
 
@@ -160,7 +157,7 @@ export class AnnotationTrack extends Track<'annotation'> {
             let tileObject = this._macroTileCache.get(this.contig + ':' + tile.key, () => {
                 // initialize macro gene instances
                 // create array of gene annotation data
-                let instanceData = new Array<MacroGeneInstance>();
+                let instanceData = new Array<IntervalInstance>();
                 let nonCodingColor = [82 / 0xff, 75 / 0xff, 165 / 0xff, 0.4];
                 let codingColor = [26 / 0xff, 174 / 0xff, 222 / 0xff, 0.4];
 
@@ -180,7 +177,7 @@ export class AnnotationTrack extends Track<'annotation'> {
                     });
                 }
 
-                let geneInstances = new MacroGeneInstances(instanceData);
+                let geneInstances = new IntervalInstances(instanceData);
                 geneInstances.y = 0;
                 geneInstances.z = 0.75;
                 geneInstances.mask = this;
@@ -204,7 +201,7 @@ export class AnnotationTrack extends Track<'annotation'> {
         this.annotationStore.getTiles(x0, x1, samplingDensity, true, (tile) => {
             if (tile.state !== TileState.Complete) {
                 // if the tile is incomplete then wait until complete and call updateAnnotations() again
-                this._pendingTiles.get(tile.key, () => this.createTileLoadingDependency(tile));
+                this._pendingTiles.get(this.contig + ':' + tile.key, () => this.createTileLoadingDependency(tile));
                 return;
             }
         
@@ -273,129 +270,6 @@ type TrackPointerState = {
     pointerOver: boolean,
 }
 
-type MacroGeneInstance = {
-    xFractional: number, y: number, z: number,
-    wFractional: number, h: number,
-    color: Array<number>,
-};
-
-class MacroGeneInstances extends InstancingBase<MacroGeneInstance> {
-
-    constructor(instances: Array<MacroGeneInstance>) {
-        super(
-            instances,
-            [
-                { name: 'position', type: AttributeType.VEC2 }
-            ],
-            [
-                { name: 'instancePosition', type: AttributeType.VEC3 },
-                { name: 'instanceSize', type: AttributeType.VEC2 },
-                { name: 'instanceColor', type: AttributeType.VEC4 },
-            ],
-            {
-                'instancePosition': (inst: MacroGeneInstance) => [inst.xFractional, inst.y, inst.z],
-                'instanceSize': (inst: MacroGeneInstance) => [inst.wFractional, inst.h],
-                'instanceColor': (inst: MacroGeneInstance) => inst.color,
-            }
-        );
-
-        this.transparent = true;
-        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
-    }
-
-    draw(context: DrawContext) {
-        context.uniform2f('groupSize', this.computedWidth, this.computedHeight);
-        context.uniform1f('groupOpacity', this.opacity);
-        context.uniformMatrix4fv('groupModel', false, this.worldTransformMat4);
-        context.extDrawInstanced(DrawMode.TRIANGLES, 6, 0, this.instanceCount);
-    }
-
-    protected allocateGPUVertexState(
-        device: GPUDevice,
-        attributeLayout: AttributeLayout,
-        instanceVertexAttributes: { [name: string]: VertexAttributeBuffer }
-    ) {
-        return device.createVertexState({
-            index: SharedResources.quadIndexBuffer,
-            attributeLayout: attributeLayout,
-            attributes: {
-                // vertices
-                'position': {
-                    buffer: SharedResources.quad1x1VertexBuffer,
-                    offsetBytes: 0,
-                    strideBytes: 2 * 4,
-                },
-                ...instanceVertexAttributes
-            }
-        });
-    }
-
-    protected getVertexCode() {
-        return `
-            #version 100
-
-            // for all instances
-            attribute vec2 position;
-            uniform mat4 groupModel;
-            uniform vec2 groupSize;
-            
-            // per instance attributes
-            attribute vec3 instancePosition;
-            attribute vec2 instanceSize;
-            attribute vec4 instanceColor;
-
-            varying vec2 vUv;
-
-            varying vec2 size;
-            varying vec4 color;
-
-            void main() {
-                vUv = position;
-                
-                // yz are absolute domPx units, x is in fractions of groupSize
-                vec3 pos = vec3(groupSize.x * instancePosition.x, instancePosition.yz);
-                size = vec2(groupSize.x * instanceSize.x, instanceSize.y);
-
-                color = instanceColor;
-
-                gl_Position = groupModel * vec4(vec3(position * size, 0.0) + pos, 1.0);
-            }
-        `;
-    }
-
-    protected getFragmentCode() {
-        return `
-            #version 100
-
-            precision highp float;
-
-            uniform float groupOpacity;
-
-            varying vec2 size;
-            varying vec4 color;
-
-            varying vec2 vUv;
-            
-            void main() {
-                const float blendFactor = 0.0; // full additive blending
-
-                vec2 domPx = vUv * size;
-            
-                const vec2 borderWidthPx = vec2(1.);
-                const float borderStrength = 0.3;
-
-                vec2 inner = step(borderWidthPx, domPx) * step(domPx, size - borderWidthPx);
-                float border = inner.x * inner.y;
-
-                vec4 c = color;
-                c.rgb += (1.0 - border) * vec3(borderStrength);
-
-                gl_FragColor = vec4(c.rgb, blendFactor) * c.a * groupOpacity;
-            }
-        `;
-    }
-
-}
 
 class GeneAnnotation extends Object2D {
 
@@ -429,10 +303,9 @@ class GeneAnnotation extends Object2D {
         spanMarker.color.set([138 / 0xFF, 136 / 0xFF, 191 / 0xFF, 0.38]);
         spanMarker.layoutW = 1;
         spanMarker.h = 10;
-        spanMarker.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
         spanMarker.transparent = true;
         this.add(spanMarker);
-        devColorFromElement('gene', spanMarker.color);
+        InteractiveStyling.colorFromElement('gene', spanMarker.color);
         /**/
         
         this.name = new Text(OpenSansRegular, gene.name, 16, [1, 1, 1, 1]);
@@ -501,7 +374,6 @@ class TranscriptAnnotation extends Object2D {
         background.cursorStyle = 'pointer';
         background.z = 0;
         background.transparent = true;
-        background.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
         background.layoutW = 1;
         background.layoutH = 1;
 
@@ -510,7 +382,7 @@ class TranscriptAnnotation extends Object2D {
 
         this.add(background);
 
-        devColorFromElement('transcript-background', background.color, () => {
+        InteractiveStyling.colorFromElement('transcript-background', background.color, () => {
             passiveOpacity = background.color[3];
             hoverOpacity = passiveOpacity * 3;
         });
@@ -549,7 +421,6 @@ class TranscriptAnnotation extends Object2D {
         spanMarker.layoutParentY = 0.5;
         spanMarker.z = 0.1;
         spanMarker.transparent = true;
-        spanMarker.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
         this.add(spanMarker);
         /**/
 
@@ -599,33 +470,6 @@ class TranscriptAnnotation extends Object2D {
 
 }
 
-//@! quick dev-time hack
-function devColorFromElement(id: string, colorArray: Float32Array, onChange?: (colorArray: Float32Array) => void) {
-    let target = document.getElementById(id);
-
-    let updateColor = () => {
-        let cssColor = target.style.color;
-        let result = cssColor.match(/\w+\((\d+), (\d+), (\d+)(, ([\d.]+))?\)/);
-        if (result == null) {
-            console.warn('Could not parse css color', cssColor);
-            return;
-        }
-        let rgb = result.slice(1, 4).map(v => parseFloat(v) / 255);
-        let a = result[5] ? parseFloat(result[5]) : 1.0;
-        colorArray.set(rgb);
-        colorArray[3] = a;
-
-        if (onChange != null) {
-            onChange(colorArray);
-        }
-    }
-
-    updateColor();
-
-    let observer = new MutationObserver((mutations) => mutations.forEach(updateColor));
-    observer.observe(target, { attributes: true, attributeFilter: ['style'] });
-}
-
 class Exon extends Rect {
 
     constructor() {
@@ -635,9 +479,8 @@ class Exon extends Rect {
         this.color[3] = 0.1;
 
         this.transparent = true;
-        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
 
-        devColorFromElement('exon', this.color);
+        InteractiveStyling.colorFromElement('exon', this.color);
     }
 
     draw(context: DrawContext) {
@@ -684,9 +527,8 @@ class UTR extends Rect {
         this.color[3] = 0.1;
 
         this.transparent = true;
-        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
 
-        devColorFromElement('utr', this.color);
+        InteractiveStyling.colorFromElement('utr', this.color);
     }
 
     draw(context: DrawContext) {
@@ -768,7 +610,7 @@ class CDS extends Rect {
         this.transparent = true;
         this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
 
-        devColorFromElement('cds', this.color);
+        InteractiveStyling.colorFromElement('cds', this.color);
     }
 
     draw(context: DrawContext) {

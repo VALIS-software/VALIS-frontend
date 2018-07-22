@@ -2,8 +2,8 @@
 
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
-import Collapsible from '../Shared/Collapsible/Collapsible.jsx';
-import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
+import Collapsible from '../Shared/Collapsible/Collapsible';
+import SearchResultsView from '../SearchResultsView/SearchResultsView';
 import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
 import '../Shared/Shared.scss';
 import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';

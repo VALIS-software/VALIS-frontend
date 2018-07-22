@@ -129,7 +129,7 @@ export class AppCanvas extends React.Component<Props, State> {
         const pixelRatio = this.props.pixelRatio || window.devicePixelRatio || 1;
 
         return (
-            <div className="viewer" style={{ position: 'relative' }}>
+            <div className="app-canvas" style={{ position: 'relative' }}>
                 <canvas
                     ref={(v) => this.canvas = v}
                     width={this.props.width * pixelRatio + 'px'}

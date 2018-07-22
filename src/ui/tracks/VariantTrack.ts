@@ -1,24 +1,21 @@
-import { SharedTileStore } from "../../model/data-store/SharedTileStores";
-import { VariantTileStore } from "../../model/data-store/VariantTileStore";
-import { TrackModel } from "../../model/TrackModel";
-import Track from "./Track";
-import Scalar from "../../math/Scalar";
-import { TileState } from "../../model/data-store/TileStore";
-import UsageCache from "../../ds/UsageCache";
-import InstancingBase from "../core/InstancingBase";
-import GPUDevice, { AttributeLayout, VertexAttributeBuffer, AttributeType } from "../../rendering/GPUDevice";
-import SharedResources from "../core/SharedResources";
-import { BlendMode, DrawMode, DrawContext } from "../../rendering/Renderer";
-import Object2D from "../core/Object2D";
-import { Text } from "../core/Text";
-import { OpenSansRegular } from "../font/Fonts";
-import TextClone from "./util/TextClone";
-import { Rect } from "../core/Rect";
+import { QueryBuilder } from "sirius/QueryBuilder";
 import { Animator } from "../../animation/Animator";
 import { App } from "../../App";
-import { QueryBuilder } from "sirius/QueryBuilder";
+import UsageCache from "../../ds/UsageCache";
+import Scalar from "../../math/Scalar";
+import { SharedTileStore } from "../../model/data-store/SharedTileStores";
+import { TileState } from "../../model/data-store/TileStore";
+import { VariantTileStore } from "../../model/data-store/VariantTileStore";
+import { TrackModel } from "../../model/TrackModel";
+import Object2D from "../core/Object2D";
+import { Rect } from "../core/Rect";
+import { Text } from "../core/Text";
+import { OpenSansRegular } from "../font/Fonts";
+import Track from "./Track";
+import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
+import TextClone from "./util/TextClone";
 
-export class VariantTrack extends Track<'variant'> {
+export default class VariantTrack extends Track<'variant'> {
 
     protected readonly macroLodBlendRange = 1;
     protected readonly macroLodThresholdLow = 8;
@@ -40,16 +37,16 @@ export class VariantTrack extends Track<'variant'> {
     }
 
     setContig(contig: string) {
-        let sourceKey = contig + JSON.stringify(this.model.query);
+        let typeKey = this.model.type + ':' + JSON.stringify(this.model.query);
         this.tileStore = SharedTileStore.getTileStore(
-            'variant',
-            sourceKey,
+            typeKey,
+            contig,
             (c) => new VariantTileStore(this.model, contig)
         )
         super.setContig(contig);
     }
 
-    protected _microTileCache = new UsageCache<MicroInstances>();
+    protected _microTileCache = new UsageCache<IntervalInstances>();
     protected _onStageAnnotations = new UsageCache<Object2D>();
     protected _sequenceLabelCache = new UsageCache<{
         root: Object2D, textParent: Object2D, text: TextClone,
@@ -162,7 +159,7 @@ export class VariantTrack extends Track<'variant'> {
                     }
 
                     let tileObject = this._microTileCache.get(this.contig + ':' + tile.key, () => {
-                        let instanceData = new Array<MicroInstance>();
+                        let instanceData = new Array<IntervalInstance>();
 
                         // GC -> G = deletion of G
                         // C -> A,TT = replace A, insert TT
@@ -217,7 +214,9 @@ export class VariantTrack extends Track<'variant'> {
                             });
                         }
 
-                        let instancesTile = new MicroInstances(instanceData);
+                        let instancesTile = new IntervalInstances(instanceData);
+                        instancesTile.minWidth = 1.0;
+                        instancesTile.blendFactor = 0.0; // full additive blending
                         instancesTile.y = tileY;
                         instancesTile.z = 0.75;
                         instancesTile.mask = this;
@@ -321,133 +320,3 @@ export class VariantTrack extends Track<'variant'> {
     }
 
 }
-
-type MicroInstance = {
-    xFractional: number, y: number, z: number,
-    wFractional: number, h: number,
-    color: Array<number>,
-};
-
-class MicroInstances extends InstancingBase<MicroInstance> {
-
-    constructor(instances: Array<MicroInstance>) {
-        super(
-            instances,
-            [
-                { name: 'position', type: AttributeType.VEC2 }
-            ],
-            [
-                { name: 'instancePosition', type: AttributeType.VEC3 },
-                { name: 'instanceSize', type: AttributeType.VEC2 },
-                { name: 'instanceColor', type: AttributeType.VEC4 },
-            ],
-            {
-                'instancePosition': (inst: MicroInstance) => [inst.xFractional, inst.y, inst.z],
-                'instanceSize': (inst: MicroInstance) => [inst.wFractional, inst.h],
-                'instanceColor': (inst: MicroInstance) => inst.color,
-            }
-        );
-
-        this.transparent = true;
-        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
-    }
-
-    draw(context: DrawContext) {
-        context.uniform2f('groupSize', this.computedWidth, this.computedHeight);
-        context.uniform1f('groupOpacity', this.opacity);
-        context.uniformMatrix4fv('groupModel', false, this.worldTransformMat4);
-        context.extDrawInstanced(DrawMode.TRIANGLES, 6, 0, this.instanceCount);
-    }
-
-    protected allocateGPUVertexState(
-        device: GPUDevice,
-        attributeLayout: AttributeLayout,
-        instanceVertexAttributes: { [name: string]: VertexAttributeBuffer }
-    ) {
-        return device.createVertexState({
-            index: SharedResources.quadIndexBuffer,
-            attributeLayout: attributeLayout,
-            attributes: {
-                // vertices
-                'position': {
-                    buffer: SharedResources.quad1x1VertexBuffer,
-                    offsetBytes: 0,
-                    strideBytes: 2 * 4,
-                },
-                ...instanceVertexAttributes
-            }
-        });
-    }
-
-    protected getVertexCode() {
-        return `
-            #version 100
-
-            // for all instances
-            attribute vec2 position;
-            uniform mat4 groupModel;
-            uniform vec2 groupSize;
-
-            // per instance attributes
-            attribute vec3 instancePosition;
-            attribute vec2 instanceSize;
-            attribute vec4 instanceColor;
-
-            varying vec2 vUv;
-
-            varying vec2 size;
-            varying vec4 color;
-
-            void main() {
-                vUv = position;
-
-                // yz are absolute domPx units, x is in fractions of groupSize
-                vec3 pos = vec3(groupSize.x * instancePosition.x, instancePosition.yz);
-                size = vec2(groupSize.x * instanceSize.x, instanceSize.y);
-
-                // apply a minimum size
-                size.x = max(size.x, 1.0);
-
-                color = instanceColor;
-
-                gl_Position = groupModel * vec4(vec3(position * size, 0.0) + pos, 1.0);
-            }
-        `;
-    }
-
-    protected getFragmentCode() {
-        return `
-            #version 100
-
-            precision highp float;
-
-            uniform float groupOpacity;
-
-            varying vec2 size;
-            varying vec4 color;
-
-            varying vec2 vUv;
-
-            void main() {
-                const float blendFactor = 1.0; // full additive blending
-
-                vec2 domPx = vUv * size;
-
-                const vec2 borderWidthPx = vec2(1.);
-                const float borderStrength = 0.3;
-
-                vec2 inner = step(borderWidthPx, domPx) * step(domPx, size - borderWidthPx);
-                float border = 1.0 - inner.x * inner.y;
-
-                vec4 c = color;
-                c.rgb += border * vec3(borderStrength);
-                c.a = mix(c.a, 0.8, border);
-
-                gl_FragColor = vec4(c.rgb, blendFactor) * c.a * groupOpacity;
-            }
-        `;
-    }
-
-}
-
-export default VariantTrack;

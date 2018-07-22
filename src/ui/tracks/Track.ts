@@ -24,7 +24,7 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
     protected displayNeedUpdate = true;
 
     constructor(protected model: TrackModel<ModelType>) {
-        super(0, 0, [0, 0, 0, 1]);
+        super(0, 0, [0.1, 0.1, 0.1, 1]);
 
         this.cursorStyle = this.defaultCursor;
     
