@@ -12,6 +12,8 @@ export type IntervalInstance = {
 export default class IntervalInstances extends InstancingBase<IntervalInstance> {
 
     minWidth: number = 0;
+    blendFactor: number = 1;
+    borderStrength: number = 0.3;
 
     constructor(instances: Array<IntervalInstance>) {
         super(
@@ -37,6 +39,9 @@ export default class IntervalInstances extends InstancingBase<IntervalInstance> 
 
     draw(context: DrawContext) {
         context.uniform1f('minWidth', this.minWidth);
+        context.uniform1f('blendFactor', this.blendFactor);
+        context.uniform1f('borderStrength', this.borderStrength);
+
         context.uniform2f('groupSize', this.computedWidth, this.computedHeight);
         context.uniform1f('groupOpacity', this.opacity);
         context.uniformMatrix4fv('groupModel', false, this.worldTransformMat4);
@@ -65,7 +70,7 @@ export default class IntervalInstances extends InstancingBase<IntervalInstance> 
 
     protected getVertexCode() {
         return `
-             #version 100
+            #version 100
 
             // for all instances
             attribute vec2 position;
@@ -106,26 +111,28 @@ export default class IntervalInstances extends InstancingBase<IntervalInstance> 
 
             precision highp float;
 
+            uniform float blendFactor;
+            uniform float borderStrength;
             uniform float groupOpacity;
 
             varying vec2 size;
             varying vec4 color;
 
             varying vec2 vUv;
-            
-            void main() {
-                const float blendFactor = 0.0; // full additive blending
 
+            void main() {
                 vec2 domPx = vUv * size;
-            
+
                 const vec2 borderWidthPx = vec2(1.);
-                const float borderStrength = 0.3;
 
                 vec2 inner = step(borderWidthPx, domPx) * step(domPx, size - borderWidthPx);
-                float border = inner.x * inner.y;
+                
+                float border = 1.0 - inner.x * inner.y;
 
                 vec4 c = color;
-                c.rgb += (1.0 - border) * vec3(borderStrength);
+
+                c.rgb += border * vec3(borderStrength);
+                c.a = mix(c.a, c.a + borderStrength, border);
 
                 gl_FragColor = vec4(c.rgb, blendFactor) * c.a * groupOpacity;
             }
