@@ -4,7 +4,9 @@ import * as PropTypes from "prop-types";
 import CircularProgress from "material-ui/CircularProgress";
 import SearchFilter from "../Shared/SearchFilter/SearchFilter";
 import GenomicLocation from "../Shared/GenomicLocation/GenomicLocation";
+import ArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import Pills from "../Shared/Pills/Pills";
+import FlatButton from 'material-ui/FlatButton';
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import { prettyPrint } from "../TraitDetails/TraitDetails";
@@ -27,6 +29,7 @@ class SearchResultsView extends React.Component {
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
     this.api = this.appModel.api;
+    this.savedQuery = null;
 
     this.cursor = 0;
     this.fetchedQuery = null;
@@ -40,6 +43,8 @@ class SearchResultsView extends React.Component {
       minHeight: 80,
     });
 
+    this.autoClickSingleResult = props.autoClickSingleResult;
+
     this.updateQueryModel(props.query);
   }
 
@@ -49,7 +54,17 @@ class SearchResultsView extends React.Component {
   }
 
   addQueryAsTrack = () => {
-    App.addVariantTrack(this.props.text, this.query.getFilteredQuery());
+    if (this.state.results[0].type === 'gene') {
+      App.addIntervalTrack(this.props.text, this.query.getFilteredQuery(), (e) => {
+        return {
+          startIndex: e.start - 1,
+          span: e.length
+        }
+      });
+    } else {
+      App.addVariantTrack(this.props.text, this.query.getFilteredQuery());
+    }
+    
   }
 
   fetch = (clearResults = false) => {
@@ -76,7 +91,7 @@ class SearchResultsView extends React.Component {
     SiriusApi.getQueryResults(queryJson, true, cursor, cursor + FETCH_SIZE).then(results => {
       this.props.appModel.popLoading();
       const singleResult = (results.result_start === 0 && results.result_end === 1 && results.reached_end === true);
-      if (singleResult) {
+      if (singleResult && this.autoClickSingleResult === true) {
         this.viewModel.popView();
         this.resultSelected(results.data[0]);
       } else {
@@ -106,6 +121,8 @@ class SearchResultsView extends React.Component {
   }
 
   updateQueryModel = (query) => {
+    this.autoClickSingleResult = false;
+    this.savedQuery = this.query;
     this.query = query;
     this.setState({
       showFilters: false,
@@ -120,6 +137,10 @@ class SearchResultsView extends React.Component {
     this.fetch(true);
   }
 
+  runLastQuery = () => {
+    this.updateQueryModel(this.savedQuery);
+  }
+
   resultSelected(result) {
     this.viewModel.displayEntityDetails(result);
   }
@@ -127,14 +148,20 @@ class SearchResultsView extends React.Component {
   renderRightInfo = (result) => {
     const ref = result.info.variant_ref;
     const alt = result.info.variant_alt;
-    const genomicType = (<Pills items={[result.type]} style={{ backgroundColor: 'grey' }} />);
+    
 
     const location = result.contig ? (<GenomicLocation interactive={true} contig={result.contig} start={result.start} end={result.end} />) : (<div/>);
 
     const mutation = null;
+    let typeStyle = { backgroundColor: 'grey'}
+    let typeName = result.type;
     if (result.type === EntityType.SNP) {
       mutation = (<span>{alt} <span className="allele-arrow">⟶</span> {ref}</span>);
+      typeName = 'variant';
+    } else {
+      typeStyle.float = 'right';
     }
+    const genomicType = (<Pills items={[]} style={typeStyle} />);
     return (<span className="right-info"><div>{location}</div><div>{genomicType} {mutation} </div></span>);
   }
 
@@ -186,7 +213,7 @@ class SearchResultsView extends React.Component {
       </div>
     </CellMeasurer >);
   }
-
+  
   render() {
     if (this.state.isLoading && this.state.results.length === 0) {
       return (<div id="search-results-view" className="search-results-view navigation-controller-loading">
@@ -196,15 +223,19 @@ class SearchResultsView extends React.Component {
       const style = {
         height: (this.state.height) + 'px',
       };
-      const feedbackButton = (<button style={{width: '120px'}}>Send us a request</button>);
+      const backButton = this.savedQuery ? (<div>
+        <FlatButton onClick={() => this.runLastQuery()} icon={(<ArrowBack />)} label="Back to results"/>
+      </div>) : null;
       return (<div id="search-results-view" className="search-results-view">
           <div style={style} className="search-results-list">
               <div className="search-results-empty">
                 <h3>No results found.</h3>
+                {backButton}
                 <div>
                    Think we are missing this data?
                    <UserFeedBackButton label="Submit Request"/>
                 </div>
+                
               </div>
           </div>
        </div>);
@@ -282,6 +313,7 @@ SearchResultsView.propTypes = {
   viewModel: PropTypes.object,
   query: PropTypes.object,
   text: PropTypes.string,
+  autoClickSingleResult: PropTypes.boolean,
 };
 
 export default SearchResultsView;

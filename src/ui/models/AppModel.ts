@@ -31,8 +31,8 @@ export default class AppModel extends EventCreator {
         return this.viewModel;
     }
 
-    public pushView = (view: React.ReactNode) => {
-        this.viewModel.pushView('', '', view);
+    public pushView = (view: React.ReactNode, title?: string) => {
+        this.viewModel.pushView(title || '', '', view);
     }
 
     public popView = () => {

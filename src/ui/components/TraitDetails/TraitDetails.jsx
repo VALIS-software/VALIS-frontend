@@ -4,7 +4,7 @@ import * as PropTypes from 'prop-types';
 import Collapsible from '../Shared/Collapsible/Collapsible';
 import Pills from '../Shared/Pills/Pills';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-import SearchResultsView from '../SearchResultsView/SearchResultsView';
+import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
 import SiriusApi from "sirius/SiriusApi";
 import QueryModel from '../../models/QueryModel';
 import QueryBuilder from "sirius/QueryBuilder";
@@ -125,7 +125,7 @@ class TraitDetails extends React.Component {
       return (<div key={link[0]} onClick={openLink} className="row">{link[0]}</div>);
     });
 
-    const associations = this.renderSearchLink('Associated Variants', this.buildTraitQuery(), 'Variants Associated with ' + name);
+    const associations = this.renderSearchLink('Associated Variants', this.buildTraitQuery(), 'variants→' + name);
 
     return (<div className="trait-details">
       {header}

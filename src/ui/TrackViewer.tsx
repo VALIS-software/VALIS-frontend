@@ -217,7 +217,7 @@ class TrackViewer extends Object2D {
     }
 
     addDatasetBrowser = () => {
-        this.appModel.pushView((<DatasetSelector appModel={this.appModel}/>));
+        this.appModel.pushView((<DatasetSelector appModel={this.appModel}/>), 'Add Track');
     }
 
     addPanel(location: GenomicLocation, animate: boolean = true) {

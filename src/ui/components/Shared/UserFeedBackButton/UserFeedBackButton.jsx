@@ -104,12 +104,12 @@ class UserFeedBackButton extends React.Component {
     ];
 
     const dialog = (<Dialog
-      title="Submit Feedback"
+      title="Contact Us"
       open={open}
       actions={actions}
       onRequestClose={this.handleRequestClose}
     >
-
+          <div>Send us your feedback, report bugs, or request new features.</div>
           <TextField
             floatingLabelText="Subject"
             value={subject}
@@ -119,16 +119,17 @@ class UserFeedBackButton extends React.Component {
             floatingLabelFocusStyle={{ color: blue500 }}
           />
           <TextField
-            floatingLabelText="Description"
+            floatingLabelText="Message"
             multiLine={true}
             value={description}
-            errorText={description ? '' : 'Please enter description here'}
+            errorText={description ? '' : 'Please enter your message here'}
             rows={4}
             onChange={this.handleChangeDescription}
             floatingLabelStyle={{ color: '#222222' }}
             floatingLabelFocusStyle={{ color: blue500 }}
             fullWidth={true}
           />
+          <small>(You can also email us: <a href="mailto:info@valis.bio">info@valis.bio</a>)</small>
     </Dialog>);
 
     let button = null;

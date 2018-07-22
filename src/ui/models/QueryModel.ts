@@ -78,7 +78,7 @@ export default class QueryModel  {
             if (datasets.length === 1) {
                 filteredQuery.filters['source'] = datasets[0];
             } else {
-                filteredQuery.filters['source'] = { "$in": datasets };
+                filteredQuery.filters['source'] = { "$all": datasets };
             }
         }
         if (filter.get(FilterType.TYPE)) {

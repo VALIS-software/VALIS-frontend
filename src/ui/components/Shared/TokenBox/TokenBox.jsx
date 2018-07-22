@@ -125,11 +125,21 @@ class TokenBox extends React.Component {
   }
 
   buildResultTitleFromTokens(tokens, searchString) {
-    if (!tokens || tokens.length === 0) return searchString;
+    let prefix = '';
+    if (tokens && tokens.length) {
+      if (tokens[0].value === 'eqtl') {
+        prefix = 'eQTLs→';
+      } else if (tokens[0].value === 'gene') {
+        prefix = 'genes→';
+      } else {
+        prefix = 'variants→'
+      }
+    }
+    if (!tokens || tokens.length === 0) return prefix + searchString;
     let quotedStrs = tokens.filter(token => token.quoted);
     let value = (quotedStrs.length > 0) ? quotedStrs[0].value : searchString;
     value = value.length > 18 ? value.slice(0, 15) + '...' : value;
-    return value;
+    return prefix + value;
   }
 
   singleResult = (results, searchText) => {
@@ -201,7 +211,14 @@ class TokenBox extends React.Component {
     const query = new QueryModel(query);
     const uid = `search-result-${window.performance.now()}`;
     this.appModel.trackMixPanel("Run search", { 'queryStr': queryStr });
-    const view = (<SearchResultsView key={uid} text={queryTitle} query={query} viewModel={this.viewModel} appModel={this.appModel} />);
+    const view = (<SearchResultsView 
+      key={uid} 
+      text={queryTitle} 
+      query={query} 
+      viewModel={this.viewModel} 
+      appModel={this.appModel} 
+      autoClickSingleResult={true}
+    />);
     this.viewModel.pushView('Search Results', query, view);
   }
 

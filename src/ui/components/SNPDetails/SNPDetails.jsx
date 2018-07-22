@@ -11,18 +11,21 @@ import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
 import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
 import QueryModel from '../../models/QueryModel';
 import SiriusApi from "sirius/SiriusApi";
+import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 // Styles
 import './SNPDetails.scss';
 import '../Shared/Shared.scss';
 
 function FrequencyBarChart(props) {
   const sorted = props.data.slice().sort(((a, b) => b.value - a.value));
+  
   const rows = sorted.map(row => {
-    const p = Math.max(1.0, (100.0 * row.value));
+    const isUnknown = typeof row.value === 'string' || row.value === undefined;
+    const p = isUnknown ? 0.0 : Math.max(1.0, (100.0 * row.value));
     const widthStyle = {
       width: `${p}%`,
     };
-    const label = (100.0 * row.value).toFixed(1) + '%';
+    const label = isUnknown ?  '?'  : (100.0 * row.value).toFixed(1) + '%';
     return (<tr key={row.key}>
       <td className="base-pair-label"> {row.key}</td>
       <td className="bar">
@@ -160,6 +163,14 @@ class SNPDetails extends React.Component {
         data[0].value = ref_percentage;
         variantFreqChart = (<FrequencyBarChart data={data} />);
       }
+    } else {
+      const ref = details.info.variant_ref;
+      const alt = details.info.variant_alt;
+      const data = [
+        {key: ref, value: undefined},
+        {key: alt, value: undefined}
+      ];
+      variantFreqChart = (<FrequencyBarChart data={data} />);
     }
 
     const snpRS = details.name.toLowerCase();
@@ -175,7 +186,7 @@ class SNPDetails extends React.Component {
       };
       return (<div key={link[0]} onClick={openLink} className="row">{link[0]}</div>);
     });
-
+    const dataError = (<UserFeedBackButton label="Report Data Error"/>);
     const nameShortened = name.length > 13 ? name.slice(0, 12) + "..." : name;
     const header = (<div className="sidebar-header">
       <span className="sidebar-name">{nameShortened}{zoomBtn}</span>
@@ -208,6 +219,9 @@ class SNPDetails extends React.Component {
           {tags}
           {mutationStatus}
           {sources}
+          <div className="section center">
+            {dataError}
+          </div>
         </div>
       </Collapsible>
       <AssociationList associations={this.state.relations} appModel={this.props.appModel} viewModel={this.props.viewModel} />

@@ -1,14 +1,16 @@
 // Dependencies
 import FlatButton from 'material-ui/FlatButton';
-import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
+import { Toolbar, ToolbarGroup, ToolbarTitle } from 'material-ui/Toolbar';
 import * as React from 'react';
 import AppModel from '../../models/AppModel';
 import ViewModel from '../../models/ViewModel';
 import TokenBox from '../Shared/TokenBox/TokenBox';
 import ShowChart from 'material-ui/svg-icons/editor/show-chart';
+import Menu from 'material-ui/svg-icons/navigation/menu';
 import UserProfileButton from '../Shared/UserProfileButton/UserProfileButton';
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 import AnalysisSelector from '../AnalysisSelector/AnalysisSelector';
+import IconButton from 'material-ui/IconButton';
 
 import './Header.scss';
 
@@ -35,7 +37,8 @@ class Header extends React.Component<Props, State> {
   const analyzeButton = (<FlatButton onClick={this.openAnalysis} label="Analysis" icon={(<ShowChart/>)}></FlatButton>);
     return (<div className="header">
       <Toolbar>
-        <ToolbarGroup firstChild={true}>
+        <ToolbarTitle text="VALIS"/>
+        <ToolbarGroup>
           <div className="search-box">
             <TokenBox appModel={this.props.appModel} viewModel={this.props.viewModel} />
           </div>
@@ -46,6 +49,7 @@ class Header extends React.Component<Props, State> {
           <div className="user-button">
             <UserProfileButton userProfile={this.props.userProfile} />
           </div>
+          <IconButton onClick={() => this.props.viewModel.showNavigationView()}><Menu /></IconButton>
         </ToolbarGroup>
       </Toolbar>
     </div>);
