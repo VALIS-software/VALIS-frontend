@@ -1,5 +1,5 @@
 import { Strand } from "gff3/Strand";
-import TileStore from "./data-store/TileStore";
+import GenericIntervalTileStore from "./data-store/GenericIntervalTileStore";
 
 export interface TrackTypeMap {
     'empty': {};
@@ -11,7 +11,8 @@ export interface TrackTypeMap {
         query?: any
     },
     'interval': {
+        query: any,
         tileStoreType: string,
-        tileStoreConstructor: (contig: string) => TileStore<Float32Array, void>
+        tileStoreConstructor: (contig: string) => GenericIntervalTileStore
     },
 }

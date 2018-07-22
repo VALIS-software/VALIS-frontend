@@ -1,9 +1,22 @@
 import { Tile, TileStore } from "./TileStore";
 import { SiriusApi } from "sirius/SiriusApi";
+import QueryBuilder from "sirius/QueryBuilder";
 
 export type TilePayload = Float32Array;
 
+/**
+ * GenericIntervalTileStore makes it possible to transform a query result into tiles containing intervals
+ * 
+ * It has two tile levels, micro and macro
+ * 
+ * Micro tiles have lod 0 and are used to store intervals with base-pair precision
+ * 
+ * Macro tile have lod level `this.macroLodLevel` and store many more intervals but with lower precision (not enough to display with base-pair precision)
+ */
 export default class GenericIntervalTileStore extends TileStore<TilePayload, void> {
+
+    microLodThreshold = 1;
+    macroLodLevel = 10;
 
     constructor(
         protected contig: string,
@@ -12,7 +25,7 @@ export default class GenericIntervalTileStore extends TileStore<TilePayload, voi
             startIndex: number,
             span: number
         },
-        protected tileSize: number = 1 << 15,
+        protected tileSize = 1 << 15
     ) {
         super(
             tileSize, // tile size
@@ -21,43 +34,38 @@ export default class GenericIntervalTileStore extends TileStore<TilePayload, voi
     }
 
     protected mapLodLevel(l: number) {
-        return l;
+        if (l <= this.microLodThreshold) {
+            return 0;
+        } else {
+            return this.macroLodLevel;
+        }
     }
 
     protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
-        /*
-        let tileQuery = new QueryBuilder(this.query);
-        // return SiriusApi.getQueryResults(this.query, true)
-        .then((r) => {
-            console.log('Query!', r.data);
-            
-            // allocate interval buffer
-            let intervals = new Float32Array(r.data.length * 2);
+        let startBase = tile.x + 1;
+        let endBase = startBase + tile.span;
+        
+        let queryBuilder = new QueryBuilder(this.query);
+        queryBuilder.filterStartBp({ '>=': startBase, '<=': endBase});
+        queryBuilder.filterContig(this.contig);
+        queryBuilder.setLimit(1000000);
 
-            for (let i = 0; i < r.data.length; i++) {
-                let entry = r.data[i];
-                let {startIndex, span} = this.resultTransform(entry);
-                intervals[i * 2 + 0] = startIndex;
-                intervals[i * 2 + 1] = span;
-            }
+        let tileQuery = queryBuilder.build();
 
-            return intervals;
-        });
-        */
+        return SiriusApi.getQueryResults(tileQuery, true)
+            .then((r) => {
+                // allocate interval buffer
+                let intervals = new Float32Array(r.data.length * 2);
 
-        // generate some random intervals
-        let nIntervals = 10;
-        let intervals = new Float32Array(nIntervals * 2);
+                for (let i = 0; i < r.data.length; i++) {
+                    let entry = r.data[i];
+                    let { startIndex, span } = this.resultTransform(entry);
+                    intervals[i * 2 + 0] = startIndex;
+                    intervals[i * 2 + 1] = span;
+                }
 
-        for (let i = 0; i < nIntervals; i++) {
-            let intervalStartIndex = Math.floor(Math.random() * tile.span + tile.x);
-            let intervalSpan = Math.round(Math.random() * 1e6);
-
-            intervals[i * 2 + 0] = intervalStartIndex;
-            intervals[i * 2 + 1] = intervalSpan;
-        }
-
-        return intervals;
+                return intervals;
+            });
     }
 
 }

@@ -1,30 +1,30 @@
-import Track from "./Track";
-import { TrackModel } from "../../model/TrackModel";
-import TileStore, { Tile } from "../../model/data-store/TileStore";
-import SharedTileStore from "../../model/data-store/SharedTileStores";
 import UsageCache from "../../ds/UsageCache";
-import GPUDevice, { AttributeType, AttributeLayout, VertexAttributeBuffer } from "../../rendering/GPUDevice";
-import InstancingBase from "../core/InstancingBase";
-import SharedResources from "../core/SharedResources";
-import { DrawMode, BlendMode, DrawContext } from "../../rendering/Renderer";
+import GenericIntervalTileStore from "../../model/data-store/GenericIntervalTileStore";
+import SharedTileStore from "../../model/data-store/SharedTileStores";
+import { Tile, TileState } from "../../model/data-store/TileStore";
+import { TrackModel } from "../../model/TrackModel";
 import { Object2D } from "../core/Object2D";
+import Track from "./Track";
+import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
+import { Scalar } from "../../math/Scalar";
 
 type TilePayload = Float32Array;
 
 export default class IntervalTrack extends Track<'interval'> {
 
-    protected tileStore: TileStore<TilePayload, void>;
+    protected tileStore: GenericIntervalTileStore;
     
     constructor(model: TrackModel<'interval'>) {
         super(model);
     }
 
     setContig(contig: string) {
+        let typeKey = this.model.tileStoreType + ':' + JSON.stringify(this.model.query);
         this.tileStore = SharedTileStore.getTileStore(
-            this.model.tileStoreType,
+            typeKey,
             contig,
             this.model.tileStoreConstructor
-        )
+        );
         super.setContig(contig);
     }
 
@@ -42,45 +42,24 @@ export default class IntervalTrack extends Track<'interval'> {
 
         if (widthPx > 0) {
             let basePairsPerDOMPixel = (span / widthPx);
+            let continuousLodLevel = Scalar.log2(Math.max(basePairsPerDOMPixel, 1));
 
             this.tileStore.getTiles(x0, x1, basePairsPerDOMPixel, true, (tile) => {
-                let tileKey = this.contig + ':' + tile.key;
-                let instancesTile = this._intervalTileCache.get(tileKey, () => {
-                    let nIntervals = tile.payload.length * 0.5;
+                if (tile.state === TileState.Complete) {
+                    this.displayTileNode(tile, 0.9, x0, span, continuousLodLevel);
+                } else {
+                    // if the tile is incomplete then wait until complete and call updateAnnotations() again
+                    this._pendingTiles.get(this.contig + ':' + tile.key, () => this.createTileLoadingDependency(tile));
 
-                    let instanceData = new Array<IntervalInstance>(nIntervals);
+                    // display a fallback tile if one is loaded at this location
+                    let gapCenterX = tile.x + tile.span * 0.5;
+                    let fallbackTile = this.tileStore.getTile(gapCenterX, 1 << this.tileStore.macroLodLevel, false);
 
-                    for (let i = 0; i < nIntervals; i++) {
-                        let intervalStartIndex = tile.payload[i * 2 + 0];
-                        let intervalSpan = tile.payload[i * 2 + 1];
-
-                        let fractionX = (intervalStartIndex - tile.x) / tile.span
-                        let wFractional = intervalSpan / tile.span;
-
-                        instanceData[i] = {
-                            xFractional: fractionX,
-                            wFractional: wFractional,
-                            y: 0,
-                            z: 1,
-                            h: 20,
-                            color: [1, 0, 0, 1],
-                        };
+                    if (fallbackTile.state === TileState.Complete) {
+                        // display fallback tile behind other tiles
+                        this.displayTileNode(fallbackTile, 0.3, x0, span, continuousLodLevel);
                     }
-
-                    let instancesTile = new IntervalInstances(instanceData);
-                    instancesTile.y = 20;
-                    instancesTile.mask = this;
-
-                    return instancesTile;
-                });
-
-                instancesTile.layoutParentX = (tile.x - x0) / span;
-                instancesTile.layoutW = tile.span / span;
-
-                this._onStage.get(tileKey, () => {
-                    this.add(instancesTile);
-                    return instancesTile;
-                });
+                }
             });
         }
 
@@ -90,132 +69,60 @@ export default class IntervalTrack extends Track<'interval'> {
         this.toggleLoadingIndicator(this._pendingTiles.count > 0, true);
     }
 
-    protected removeTile = (tile: IntervalInstances) => {
-        this.remove(tile);
-    }
+    protected displayTileNode(tile: Tile<TilePayload>, z: number, x0: number, span: number, continuousLodLevel: number) {
+        let tileKey = this.contig + ':' + z + ':' + tile.key;
 
-}
+        let node = this._intervalTileCache.get(tileKey, () => {
+            return this.createTileNode(tile);
+        });
 
-type IntervalInstance = {
-    xFractional: number, y: number, z: number,
-    wFractional: number, h: number,
-    color: Array<number>,
-};
+        node.layoutParentX = (tile.x - x0) / span;
+        node.layoutW = tile.span / span;
+        node.z = z;
 
-class IntervalInstances extends InstancingBase<IntervalInstance> {
+        // decrease opacity at large lods to prevent white-out as interval cluster together and overlap
+        node.opacity = Scalar.lerp(1, 0.1, Scalar.clamp(continuousLodLevel / 15, 0, 1));
+        node.transparent = node.opacity < 1; // try and display in opaque pass if we can
 
-    constructor(instances: Array<IntervalInstance>) {
-        super(
-            instances,
-            [
-                { name: 'position', type: AttributeType.VEC2 }
-            ],
-            [
-                { name: 'instancePosition', type: AttributeType.VEC3 },
-                { name: 'instanceSize', type: AttributeType.VEC2 },
-                { name: 'instanceColor', type: AttributeType.VEC4 },
-            ],
-            {
-                'instancePosition': (inst: IntervalInstance) => [inst.xFractional, inst.y, inst.z],
-                'instanceSize': (inst: IntervalInstance) => [inst.wFractional, inst.h],
-                'instanceColor': (inst: IntervalInstance) => inst.color,
-            }
-        );
-
-        this.transparent = true;
-        this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
-    }
-
-    draw(context: DrawContext) {
-        context.uniform2f('groupSize', this.computedWidth, this.computedHeight);
-        context.uniform1f('groupOpacity', this.opacity);
-        context.uniformMatrix4fv('groupModel', false, this.worldTransformMat4);
-        context.extDrawInstanced(DrawMode.TRIANGLES, 6, 0, this.instanceCount);
-    }
-
-    protected allocateGPUVertexState(
-        device: GPUDevice,
-        attributeLayout: AttributeLayout,
-        instanceVertexAttributes: { [name: string]: VertexAttributeBuffer }
-    ) {
-        return device.createVertexState({
-            index: SharedResources.quadIndexBuffer,
-            attributeLayout: attributeLayout,
-            attributes: {
-                // vertices
-                'position': {
-                    buffer: SharedResources.quad1x1VertexBuffer,
-                    offsetBytes: 0,
-                    strideBytes: 2 * 4,
-                },
-                ...instanceVertexAttributes
-            }
+        this._onStage.get(tileKey, () => {
+            this.add(node);
+            return node;
         });
     }
+    
+    protected createTileNode(tile: Tile<TilePayload>) {
+        let nIntervals = tile.payload.length * 0.5;
 
-    protected getVertexCode() {
-        return `
-            #version 100
+        let instanceData = new Array<IntervalInstance>(nIntervals);
 
-            // for all instances
-            attribute vec2 position;
-            uniform mat4 groupModel;
-            uniform vec2 groupSize;
-            
-            // per instance attributes
-            attribute vec3 instancePosition;
-            attribute vec2 instanceSize;
-            attribute vec4 instanceColor;
+        for (let i = 0; i < nIntervals; i++) {
+            let intervalStartIndex = tile.payload[i * 2 + 0];
+            let intervalSpan = tile.payload[i * 2 + 1];
 
-            varying vec2 vUv;
+            let fractionX = (intervalStartIndex - tile.x) / tile.span
+            let wFractional = intervalSpan / tile.span;
 
-            varying vec2 size;
-            varying vec4 color;
+            instanceData[i] = {
+                xFractional: fractionX,
+                wFractional: wFractional,
+                y: 0,
+                z: 0,
+                h: 35,
+                color: tile.lodLevel === 0 ? [0, 0, 1, 1.0] : [1, 0, 0, 1.0],
+            };
+        }
 
-            void main() {
-                vUv = position;
-                
-                // yz are absolute domPx units, x is in fractions of groupSize
-                vec3 pos = vec3(groupSize.x * instancePosition.x, instancePosition.yz);
-                size = vec2(groupSize.x * instanceSize.x, instanceSize.y);
+        let instancesTile = new IntervalInstances(instanceData);
+        instancesTile.minWidth = 0.5;
+        instancesTile.blendFactor = 0.2; // full additive
+        instancesTile.y = 5;
+        instancesTile.mask = this;
 
-                color = instanceColor;
-
-                gl_Position = groupModel * vec4(vec3(position * size, 0.0) + pos, 1.0);
-            }
-        `;
+        return instancesTile;
     }
 
-    protected getFragmentCode() {
-        return `
-            #version 100
-
-            precision highp float;
-
-            uniform float groupOpacity;
-
-            varying vec2 size;
-            varying vec4 color;
-
-            varying vec2 vUv;
-            
-            void main() {
-                const float blendFactor = 0.0; // full additive blending
-
-                vec2 domPx = vUv * size;
-            
-                const vec2 borderWidthPx = vec2(1.);
-                const float borderStrength = 0.3;
-
-                vec2 inner = step(borderWidthPx, domPx) * step(domPx, size - borderWidthPx);
-                float border = inner.x * inner.y;
-
-                vec4 c = color;
-                c.rgb += (1.0 - border) * vec3(borderStrength);
-
-                gl_FragColor = vec4(c.rgb, blendFactor) * c.a * groupOpacity;
-            }
-        `;
+    protected removeTile = (tile: IntervalInstances) => {
+        this.remove(tile);
     }
 
 }
