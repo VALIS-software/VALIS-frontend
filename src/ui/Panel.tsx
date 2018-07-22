@@ -378,7 +378,6 @@ export class Panel extends Object2D {
     }
 
     protected onTileDragEnd = (e: InteractionEvent) => {
-
         e.stopPropagation();
 
         // if total drag distance, preventDefault so that pointerup isn't fired for other nodes
