@@ -2,18 +2,17 @@ import React = require("react");
 import IconButton from "material-ui/IconButton";
 import SvgAdd from "material-ui/svg-icons/content/add";
 import Animator from "../animation/Animator";
+import { GenomicLocation } from "../model/GenomicLocation";
 import TrackModel from "../model/TrackModel";
+import DatasetSelector from "./components/DatasetSelector/DatasetSelector";
 import Object2D from "./core/Object2D";
 import ReactObject from "./core/ReactObject";
 import Rect from "./core/Rect";
+import AppModel from "./models/AppModel";
 import Panel from "./Panel";
 import TrackRow from "./TrackRow";
 import { DEFAULT_SPRING } from "./UIConstants";
 
-import AppModel from "../ui/models/AppModel";
-import DatasetSelector from "../ui/components/DatasetSelector/DatasetSelector";
-import { InteractionEvent } from "./core/InteractionEvent";
-import { GenomicLocation } from "../model/GenomicLocation";
 
 type Row = {
     trackRow: TrackRow, // track row pseudo object, positioning properties can be animated
