@@ -36,9 +36,6 @@ export class Panel extends Object2D {
         this.updatePanelHeader();
     }
 
-    get yOffset() { return this._yOffset; }
-
-    protected _yOffset: number = 0;
     protected _closable = false;
     protected _closing = false;
 
