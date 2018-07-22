@@ -1,6 +1,11 @@
 @import "../../../variables.scss";
 
 .snp-details {
+  .center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
   .snp-type-wrapper {
     font-size: 18px;
     margin-top: 8px;
@@ -24,13 +29,13 @@
     width: 100%;
     .label {
       width: 32px;
-      color: darkgray;
+      font-size: $valis-font-size-info-section-header;
       font-weight: 100;
     }
 
     .base-pair-label {
       width: 18px;
-      font-size: $valis-font-size-small-description;
+      font-size: $valis-font-size-info-section-header;
       font-weight: bold;
     }
 

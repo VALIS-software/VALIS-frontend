@@ -49,7 +49,17 @@ class SearchResultsView extends React.Component {
   }
 
   addQueryAsTrack = () => {
-    App.addVariantTrack(this.props.text, this.query.getFilteredQuery());
+    if (this.state.results[0].type === 'gene') {
+      App.addIntervalTrack(this.props.text, this.query.getFilteredQuery(), (e) => {
+        return {
+          startIndex: e.start - 1,
+          span: e.length
+        }
+      });
+    } else {
+      App.addVariantTrack(this.props.text, this.query.getFilteredQuery());
+    }
+    
   }
 
   fetch = (clearResults = false) => {
