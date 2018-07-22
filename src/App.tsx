@@ -328,7 +328,6 @@ export class App extends React.Component<Props, State> {
 			span: number
 		}
 	) {
-		console.log('addIntervalTrack', query);
 		this.state.trackViewer.addTrackRow({
 			name: title,
 			type: 'interval',
