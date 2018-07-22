@@ -11,6 +11,7 @@ export enum ViewEvent {
     PUSH_VIEW,
     POP_VIEW,
     CLOSE_VIEW,
+    SHOW_VIEW,
     DISPLAY_ENTITY_DETAILS,
     DISPLAY_TRACK_RESULTS,
 }
@@ -27,14 +28,19 @@ export class ViewModel extends EventCreator {
             info: info,
             view: elem
         });
+        this.notifyListeners(ViewEvent.SHOW_VIEW);
     }
 
     popView() {
         this.notifyListeners(ViewEvent.POP_VIEW);
     }
 
-    closeView() {
+    closeNavigationView() {
         this.notifyListeners(ViewEvent.CLOSE_VIEW);
+    }
+
+    showNavigationView() {
+        this.notifyListeners(ViewEvent.SHOW_VIEW);
     }
 
     displayTrackSearchResults(viewGuid: string) {

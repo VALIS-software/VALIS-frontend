@@ -134,7 +134,7 @@ export class App extends React.Component<Props, State> {
 
 		this.viewModel.addListener(this.pushView, ViewEvent.PUSH_VIEW);
 		this.viewModel.addListener(this.popView, ViewEvent.POP_VIEW);
-		this.viewModel.addListener(this.closeView, ViewEvent.CLOSE_VIEW);
+
 		this.viewModel.addListener(
 			(e: { data: { id: string, type: EntityType } }) => {
 				if (e.data != null) this.displayDetails(e.data);
@@ -258,10 +258,6 @@ export class App extends React.Component<Props, State> {
 
 	protected popView = () => {
 		this.setState({ views: this.state.views.slice(0, -1) });
-	}
-
-	protected closeView = () => {
-		this.setState({ views: [] });
 	}
 
 	protected displayRegion(contig: string, startBase: number, endBase: number) {

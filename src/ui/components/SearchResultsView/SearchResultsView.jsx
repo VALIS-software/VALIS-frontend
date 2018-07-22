@@ -40,6 +40,8 @@ class SearchResultsView extends React.Component {
       minHeight: 80,
     });
 
+    this.autoClickSingleResult = props.autoClickSingleResult;
+
     this.updateQueryModel(props.query);
   }
 
@@ -86,7 +88,7 @@ class SearchResultsView extends React.Component {
     SiriusApi.getQueryResults(queryJson, true, cursor, cursor + FETCH_SIZE).then(results => {
       this.props.appModel.popLoading();
       const singleResult = (results.result_start === 0 && results.result_end === 1 && results.reached_end === true);
-      if (singleResult) {
+      if (singleResult && this.autoClickSingleResult === true) {
         this.viewModel.popView();
         this.resultSelected(results.data[0]);
       } else {
@@ -116,6 +118,7 @@ class SearchResultsView extends React.Component {
   }
 
   updateQueryModel = (query) => {
+    this.autoClickSingleResult = false;
     this.query = query;
     this.setState({
       showFilters: false,
@@ -137,14 +140,20 @@ class SearchResultsView extends React.Component {
   renderRightInfo = (result) => {
     const ref = result.info.variant_ref;
     const alt = result.info.variant_alt;
-    const genomicType = (<Pills items={[result.type]} style={{ backgroundColor: 'grey' }} />);
+    
 
     const location = result.contig ? (<GenomicLocation interactive={true} contig={result.contig} start={result.start} end={result.end} />) : (<div/>);
 
     const mutation = null;
+    let typeStyle = { backgroundColor: 'grey'}
+    let typeName = result.type;
     if (result.type === EntityType.SNP) {
       mutation = (<span>{alt} <span className="allele-arrow">⟶</span> {ref}</span>);
+      typeName = 'variant';
+    } else {
+      typeStyle.float = 'right';
     }
+    const genomicType = (<Pills items={[]} style={typeStyle} />);
     return (<span className="right-info"><div>{location}</div><div>{genomicType} {mutation} </div></span>);
   }
 
@@ -292,6 +301,7 @@ SearchResultsView.propTypes = {
   viewModel: PropTypes.object,
   query: PropTypes.object,
   text: PropTypes.string,
+  autoClickSingleResult: PropTypes.boolean,
 };
 
 export default SearchResultsView;

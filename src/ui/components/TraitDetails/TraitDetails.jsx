@@ -3,7 +3,7 @@ import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import Collapsible from '../Shared/Collapsible/Collapsible';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-import SearchResultsView from '../SearchResultsView/SearchResultsView';
+import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
 import SiriusApi from "sirius/SiriusApi";
 import QueryModel from '../../models/QueryModel';
 import SiriusApi from "sirius/SiriusApi";
@@ -73,8 +73,8 @@ class TraitDetails extends React.Component {
 
   loadQuery(title, query, queryTitle) {
     this.appModel.trackMixPanel("Run search", { 'query': JSON.stringify(query) });
-    const queryModel = new QueryModel(query);
-    const view = (<SearchResultsView text={title} query={queryModel} viewModel={this.viewModel} appModel={this.appModel} />);
+    const queryModel = new QueryModel(query, null, queryTitle);
+    const view = (<SearchResultsView text={queryTitle} query={queryModel} viewModel={this.viewModel} appModel={this.appModel} />);
     this.viewModel.pushView(title, query, view);
   }
 
@@ -110,7 +110,7 @@ class TraitDetails extends React.Component {
       return (<div key={link[0]} onClick={openLink} className="row">{link[0]}</div>);
     });
 
-    const associations = this.renderSearchLink('Variants associated with ' + name, this.buildTraitQuery(), name);
+    const associations = this.renderSearchLink('Variants associated with ' + name, this.buildTraitQuery(), 'variants→' + name);
 
     return (<div className="trait-details">
       {header}

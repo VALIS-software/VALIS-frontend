@@ -6,9 +6,11 @@ import AppModel from '../../models/AppModel';
 import ViewModel from '../../models/ViewModel';
 import TokenBox from '../Shared/TokenBox/TokenBox';
 import ShowChart from 'material-ui/svg-icons/editor/show-chart';
+import Menu from 'material-ui/svg-icons/navigation/menu';
 import UserProfileButton from '../Shared/UserProfileButton/UserProfileButton';
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 import AnalysisSelector from '../AnalysisSelector/AnalysisSelector';
+import IconButton from 'material-ui/IconButton';
 
 import './Header.scss';
 
@@ -46,6 +48,7 @@ class Header extends React.Component<Props, State> {
           <div className="user-button">
             <UserProfileButton userProfile={this.props.userProfile} />
           </div>
+          <IconButton onClick={() => this.props.viewModel.showNavigationView()}><Menu /></IconButton>
         </ToolbarGroup>
       </Toolbar>
     </div>);

@@ -8,7 +8,7 @@ import IconButton from "material-ui/IconButton";
 
 // Styles
 import "./NavigationController.scss";
-import ViewModel from "../../models/ViewModel";
+import ViewModel, { ViewEvent } from "../../models/ViewModel";
 import View from "../../View";
 
 type Props = {
@@ -16,13 +16,29 @@ type Props = {
   views: Array<View>
 }
 
-type State = {}
+type State = { visible: boolean }
 
 class NavigationController extends React.Component<Props, State> {
 
   constructor(props: Props, ctx?: any) {
     super(props, ctx);
-    this.state = {};
+    this.state = {
+      visible: false,
+    };
+    props.viewModel.addListener(this.showView, ViewEvent.SHOW_VIEW);
+    props.viewModel.addListener(this.closeView, ViewEvent.CLOSE_VIEW);
+  }
+
+  showView = () => {
+    this.setState({
+      visible: true
+    });
+  }
+
+  closeView = () => {
+    this.setState({
+      visible: false,
+    });
   }
 
   render() {
@@ -35,7 +51,7 @@ class NavigationController extends React.Component<Props, State> {
           </IconButton>
         );
     const closeButton = (
-      <IconButton onClick={() => this.props.viewModel.closeView()}>
+      <IconButton onClick={() => this.props.viewModel.closeNavigationView()}>
         <NavigationClose />
       </IconButton>
     );
@@ -47,7 +63,7 @@ class NavigationController extends React.Component<Props, State> {
     const view = visible ? curr.view : <div />;
 
     return (
-      <Drawer className="navigation-controller" width={400} openSecondary={true} open={visible}>
+      <Drawer className="navigation-controller" width={400} openSecondary={true} open={visible && this.state.visible}>
         <AppBar
           title={title}
           iconElementLeft={navButton}
