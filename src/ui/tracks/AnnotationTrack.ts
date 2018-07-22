@@ -39,8 +39,6 @@ export class AnnotationTrack extends Track<'annotation'> {
 
     protected annotationStore: AnnotationTileStore;
     protected macroAnnotationStore: AnnotationTileStore;
-    protected yScrollNode: Object2D;
-    protected dragEnabled: boolean;
 
     protected pointerState: TrackPointerState = {
         pointerOver: false,
@@ -48,15 +46,8 @@ export class AnnotationTrack extends Track<'annotation'> {
 
     constructor(model: TrackModel<'annotation'>) {
         super(model);
-
-        this.yScrollNode = new Object2D();
-        this.yScrollNode.z = 0;
-        this.yScrollNode.layoutW = 1;
-        this.add(this.yScrollNode);
         
         this.color.set([0.1, 0.1, 0.1, 1]);
-
-        this.initializeYDrag();
 
         this.addInteractionListener('pointerenter', (e) => {
             this.pointerState.pointerOver = true;
@@ -79,36 +70,6 @@ export class AnnotationTrack extends Track<'annotation'> {
             (c) => { return new MacroAnnotationTileStore(c); }
         );
         super.setContig(contig);
-    }
-
-    private _lastComputedHeight: number;
-    applyTransformToSubNodes(root?: boolean) {
-        const h = this.getComputedHeight();
-        if (h !== this._lastComputedHeight) {
-            this.dragEnabled = (h >= (TrackRow.expandedTrackHeight - 10));
-            if (!this.dragEnabled) this.yScrollNode.y = 0;
-        }
-        super.applyTransformToSubNodes(root);
-    }
-
-    protected initializeYDrag() {
-        // scroll follows the primary pointer only
-        let pointerY0 = 0;
-        let scrollY0 = 0;
-        
-        this.addInteractionListener('dragstart', (e) => {
-            if (!e.isPrimary) return;
-            if (e.buttonState !== 1) return;
-            pointerY0 = e.localY;
-            scrollY0 = this.yScrollNode.y;
-        });
-
-        this.addInteractionListener('dragmove', (e) => {
-            if (!e.isPrimary) return;
-            if (e.buttonState !== 1) return;
-            let dy = pointerY0 - e.localY;
-            this.yScrollNode.y = Math.min(scrollY0 - dy, 0);
-        });
     }
 
     protected _macroTileCache = new UsageCache<MacroGeneInstances>();
@@ -242,11 +203,11 @@ export class AnnotationTrack extends Track<'annotation'> {
     }
 
     protected addAnnotation = (annotation: Object2D) => {
-        this.yScrollNode.add(annotation);
+        this.add(annotation);
     }
 
     protected removeAnnotation = (annotation: Object2D) => {
-        this.yScrollNode.remove(annotation);
+        this.remove(annotation);
     }
 
     protected deleteAnnotation = (annotation: Object2D) => {
