@@ -38,6 +38,7 @@ class TrackViewer extends Object2D {
     protected rows = new Array<Row>();
 
     protected panelEdges = new Array<number>();
+    protected rowOffsetY: number = 0;
 
     /** used to collectively position panels and track tiles */
     protected grid: Object2D;
@@ -58,6 +59,8 @@ class TrackViewer extends Object2D {
         this.grid = new Rect(0, 0, [0.9, 0.9, 0.9, 1]); // grid is Rect type for debug display
         this.grid.render = false;
         this.add(this.grid);
+
+        this.initializeDragPanning();
         this.initializeGridResizing();
 
         this.addPanelButton = new ReactObject(
@@ -65,9 +68,12 @@ class TrackViewer extends Object2D {
                 this.addPanel({ contig: 'chr1', x0: 0, x1: 249e6}, true);
             }} />,
             this.panelHeaderHeight,
-            this.panelHeaderHeight
+            this.panelHeaderHeight,
         );
-        this.addPanelButton.x = this.spacing.x * 0.5 ;
+        this.addPanelButton.x =  this.spacing.x * 0.5;
+        this.addPanelButton.containerStyle = {
+            zIndex: 3,
+        }
         this.addPanelButton.layoutParentX = 1;
         this.addPanelButton.layoutY = -1;
         this.addPanelButton.y = -this.xAxisHeight - this.spacing.x * 0.5;
@@ -76,16 +82,47 @@ class TrackViewer extends Object2D {
         this.addDataTrackButton = new ReactObject(
             <AddDataTrackButton onClick={this.addDatasetBrowser} />,
             this.panelHeaderHeight,
-            this.panelHeaderHeight
+            this.panelHeaderHeight,
         );
         this.addDataTrackButton.x = -this.trackHeaderWidth + this.spacing.x * 0.5;
         this.addDataTrackButton.layoutParentX = 0;
         this.addDataTrackButton.layoutY = -1;
         this.addDataTrackButton.w = this.trackHeaderWidth;
         this.addDataTrackButton.y = this.spacing.y * 0.5 - this.xAxisHeight - this.spacing.y;
+        this.addDataTrackButton.containerStyle = {
+            zIndex: 3,
+        }
         this.grid.add(this.addDataTrackButton);
 
+        const leftTrackMask = new ReactObject(<div 
+            style={
+                {
+                    backgroundColor: '#fff',
+                    zIndex: 2,
+                    width: '100%',
+                    height: '100%',
+                }
+            }
+        />, this.trackHeaderWidth  + this.spacing.x, this.panelHeaderHeight + this.xAxisHeight - 0.5 * this.spacing.y);
+        this.add(leftTrackMask);
+
+        const rightTrackMask = new ReactObject(<div 
+            style={
+                {
+                    backgroundColor: '#fff',
+                    zIndex: 2,
+                    width: '100%',
+                    height: '100%',
+                }
+            }
+        />, this.panelHeaderHeight + 1.5 * this.spacing.x, this.panelHeaderHeight + this.xAxisHeight - 0.5 * this.spacing.y);
+        rightTrackMask.layoutParentX = 1;
+        rightTrackMask.x = -this.panelHeaderHeight - 1.5 * this.spacing.x;
+        this.add(rightTrackMask);
+
         this.layoutGridContainer();
+
+        window.addEventListener('resize', this.onResize);
     }
 
     setAppModel(appModel: AppModel) {
@@ -107,7 +144,7 @@ class TrackViewer extends Object2D {
 
     // track-viewer state deltas
     addTrackRow(model: TrackModel, heightPx: number = this.defaultTrackHeight, animate: boolean = true) {
-        // create a tack and add the header element to the grid
+        // create a track and add the header element to the grid
 
         const rowHeightSetter = (row: TrackRow, h:number) => { this.setRowHeight(row, h, true)};
         const rowHeightGetter = (row: TrackRow) : number => this.getRowHeight(row);
@@ -208,8 +245,18 @@ class TrackViewer extends Object2D {
 
         this.panels.add(panel);
 
-        panel.resizeHandle.addInteractionListener('dragstart', (e) => { e.preventDefault(); this.startResizingPanel(panel); });
-        panel.resizeHandle.addInteractionListener('dragend', (e) => { e.preventDefault(); this.endResizingPanel(panel); });
+        panel.resizeHandle.addInteractionListener('dragstart', (e) => {
+            if (e.isPrimary && e.buttonState === 1) {
+                e.preventDefault();
+                this.startResizingPanel(panel);
+            }
+        });
+        panel.resizeHandle.addInteractionListener('dragend', (e) => {
+            if (e.isPrimary) {
+                e.preventDefault();
+                this.endResizingPanel(panel);
+            }
+        });
 
         panel.addEventListener('axisPointerUpdate', (axisPointers) => {
             for (let p of this.panels) {
@@ -398,7 +445,7 @@ class TrackViewer extends Object2D {
                     Animator.springTo(trackRow, { y: y, h: h }, DEFAULT_SPRING);
                 } else {
                     Animator.stop(trackRow, ['y', 'h']);
-                    trackRow.y = y;
+                    trackRow.y = y + this.rowOffsetY;
                     trackRow.h = h;
                 }
             }
@@ -407,7 +454,7 @@ class TrackViewer extends Object2D {
         }
 
         // we manually set the grid height since it doesn't automatically wrap to content
-        this.grid.h = y + this.spacing.y * 0.5;
+        this.grid.h = y + this.spacing.y * 0.5 + this.rowOffsetY;
     }
 
     /**
@@ -478,6 +525,51 @@ class TrackViewer extends Object2D {
         // (grid height is set dynamically when laying out tracks)
     }
 
+    // limits rowOffsetY to only overflow region
+    protected applyOverflowLimits() {
+        let maxOffset = 0;
+
+        // determine minOffset from grid overflow
+        // assumes grid.h is up to date (requires calling layoutTrackRows(false))
+        let trackViewerHeight = this.getComputedHeight();
+        let gridViewportHeight = trackViewerHeight - this.grid.y;
+        
+        // compute total row-height
+        let rowHeight = 0;
+        for (let row of this.rows) {
+            rowHeight += row.heightPx;
+        }
+
+        let overflow = rowHeight - gridViewportHeight;
+        let minOffset = -overflow;
+
+        this.rowOffsetY = Math.min(Math.max(this.rowOffsetY, minOffset), maxOffset);
+    }
+
+    protected onResize = (e: Event) => {
+        this.applyOverflowLimits();
+        this.layoutTrackRows(false);
+    }
+
+    protected initializeDragPanning() {
+        let dragStartY: number = undefined;
+        let yOffsetStart: number = undefined;
+        this.addEventListener('dragstart', (e) => {
+            dragStartY = e.localY;
+            yOffsetStart = this.rowOffsetY;
+        });
+
+        this.addEventListener('dragmove', (e) => {
+            if (this._resizingPanels.size > 0 || this._resizingRows.size > 0) return;
+            let dy = e.localY - dragStartY;
+
+            this.rowOffsetY = yOffsetStart + dy;
+
+            this.applyOverflowLimits();
+
+            this.layoutTrackRows(false);
+        });
+    }
 
     // local state for grid-resizing
     private _resizingPanels = new Set<Panel>();
@@ -485,7 +577,6 @@ class TrackViewer extends Object2D {
         row: Row,
         initialHeightPx: number
     }>();
-
     /**
      * Setup event listeners to enable resizing of panels and tracks
      */
@@ -524,6 +615,8 @@ class TrackViewer extends Object2D {
         });
 
         this.grid.addInteractionListener('dragmove', (e) => {
+            let resized = false;
+
             let resizing = (this._resizingPanels.size + this._resizingRows.size) > 0;
             if (resizing) {
                 e.preventDefault();
@@ -544,16 +637,22 @@ class TrackViewer extends Object2D {
                         this.layoutPanels(false, p);
                     }
                 }
+
+                resized = true;
             }
 
             if (e.isPrimary) {
                 for (let entry of this._resizingRows) {
                     let deltaY = e.localY - localY0;
                     entry.row.heightPx = Math.max(entry.initialHeightPx + deltaY, this.minTrackHeight);
+
+                    resized = true;
                 }
             }
 
-            this.layoutTrackRows(false);
+            if (resized) {
+                this.layoutTrackRows(false);
+            }
         });
 
         this.grid.addInteractionListener('dragend', (e) => {
@@ -589,12 +688,15 @@ class TrackViewer extends Object2D {
                 this._resizingRows.delete(entry);
             }
         }
+
+        this.applyOverflowLimits();
+        this.layoutTrackRows(false);
     }
 
 }
 
 function AddPanelButton(props: {
-    onClick: () => void
+    onClick: () => void,
 }) {
     return <div
     style={{

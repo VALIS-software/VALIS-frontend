@@ -68,6 +68,10 @@ export class Panel extends Object2D {
         this.header = new ReactObject();
         this.fillX(this.header);
         this.header.h = this.panelHeaderHeight;
+        this.header.containerStyle = {
+            zIndex: 3,
+            backgroundColor: '#fff',
+        }
         this.header.layoutY = -1;
         this.header.y = -this.xAxisHeight - this.spacing.y * 0.5;
         this.add(this.header);
@@ -77,6 +81,7 @@ export class Panel extends Object2D {
         this.xAxis = new XAxis(this.x0, this.x1, 11, OpenSansRegular, offset, 1, 1);
         this.xAxis.minDisplay = 0;
         this.xAxis.maxDisplay = Infinity;
+        this.xAxis.y = -this.spacing.y;
         this.xAxis.h = this.xAxisHeight;
         this.xAxis.layoutY = -1;
         this.fillX(this.xAxis);
@@ -109,7 +114,6 @@ export class Panel extends Object2D {
         track.addInteractionListener('wheel', this.onTileWheel);
         track.addInteractionListener('pointermove', this.onTilePointerMove);
         track.addInteractionListener('pointerleave', this.onTileLeave);
-
         track.setContig(this.contig);
         track.setRange(this.x0, this.x1);
 
@@ -334,14 +338,15 @@ export class Panel extends Object2D {
     // drag state
     protected _dragXF0: number;
     protected _dragX00: number;
+  
     // track total drag distance to hint whether or not we should cancel some interactions
     protected _lastDragLX: number;
     protected _dragDist: number;
+
     protected onTileDragStart = (e: InteractionEvent) => {
         if (e.buttonState !== 1) return;
 
         e.preventDefault();
-        e.stopPropagation();
 
         this._dragXF0 = e.fractionX;
         this._dragX00 = this.x0;
@@ -356,7 +361,6 @@ export class Panel extends Object2D {
         if (e.buttonState !== 1) return;
 
         e.preventDefault();
-        e.stopPropagation();
 
         this.tileDragging = true;
 
@@ -370,7 +374,6 @@ export class Panel extends Object2D {
         this._lastDragLX = e.localX;
 
         this.setRange(x0, x1);
-
         this.setActiveAxisPointer(e);
     }
 

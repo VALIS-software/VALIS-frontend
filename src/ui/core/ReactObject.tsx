@@ -6,7 +6,12 @@ export class ReactObject extends Object2D {
     reactUid: number;
     set content(n: React.ReactNode) { this._content = n; this.eventEmitter.emit('setContent', n); };
     get content() { return this._content; };
+    
+    set containerStyle(style: React.CSSProperties) { this._containerStyle = style; this.eventEmitter.emit('setContent', this._content); };
+    get containerStyle() { return this._containerStyle; };
+
     protected _content: React.ReactNode;
+    protected _containerStyle: React.CSSProperties;
 
     constructor(content?: React.ReactNode, w?: number, h?: number) {
         super();
@@ -49,7 +54,8 @@ export class ReactObjectContainer extends React.Component<{
         content: React.ReactNode,
         worldTransform: Float32Array,
         computedWidth: number,
-        computedHeight: number
+        computedHeight: number,
+        style: React.CSSProperties,
     }> {
 
     constructor(props: {
@@ -64,7 +70,8 @@ export class ReactObjectContainer extends React.Component<{
             content: props.reactObject.content,
             worldTransform: reactObjectInternal.worldTransformMat4,
             computedWidth: reactObjectInternal.computedWidth,
-            computedHeight: reactObjectInternal.computedHeight
+            computedHeight: reactObjectInternal.computedHeight,
+            style: props.reactObject.containerStyle,
         }        
     }
 
@@ -93,6 +100,7 @@ export class ReactObjectContainer extends React.Component<{
         return <div
             className="react-object-container"
             style={{
+                ...this.state.style,
                 position: 'absolute',
                 transform: `matrix3d(
                     ${sx} , 0     , 0     , 0 ,
@@ -102,7 +110,6 @@ export class ReactObjectContainer extends React.Component<{
                 )`,
                 width: this.state.computedWidth,
                 height: this.state.computedHeight,
-                zIndex: 1,
                 // willChange: 'transform, width, height',
             }}
         >
