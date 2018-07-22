@@ -16,6 +16,18 @@ import { App } from '../../../App';
 // Styles
 import "./GWASSelector.scss";
 
+const logmin = 0;
+const logmax = 0.01;
+const power = 10;
+
+function transform(value) {
+  return (Math.exp(power * value / logmax) - 1) / (Math.exp(power) - 1) * logmax;
+}
+
+function reverse(value) {
+  return (1 / power) * Math.log(((Math.exp(power) - 1) * value / logmax) + 1) * logmax;
+}
+
 class GWASSelector extends React.Component {
   constructor(props) {
     super(props);
@@ -28,7 +40,7 @@ class GWASSelector extends React.Component {
       searchTrait: "",
       searchSourceValue: 0,
       traits: [],
-      pvalue: 0.05,
+      pvalue: 0.01,
     };
   }
 
@@ -68,7 +80,7 @@ class GWASSelector extends React.Component {
 
   handleUpdatePValue = (event, value) => {
     this.setState({
-      pvalue: value
+      pvalue: transform(value)
     });
   }
 
@@ -118,13 +130,13 @@ class GWASSelector extends React.Component {
         <br /> <br />
         <div>
           {" "}
-          {"P-Value < "} {this.state.pvalue}{" "}
+          {"P-Value < "} {this.state.pvalue.toExponential(3)}{" "}
         </div>
         <Slider
-          min={0}
-          max={0.1}
-          step={0.001}
-          value={this.state.pvalue}
+          min={logmin}
+          max={logmax}
+          step={(logmax - logmin) / 200}
+          value={reverse(this.state.pvalue)}
           onChange={this.handleUpdatePValue}
           disabled={this.state.searchSourceValue === 2}
         />
