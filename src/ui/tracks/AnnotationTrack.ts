@@ -20,6 +20,7 @@ import Animator from "../../animation/Animator";
 import App from "../../App";
 import QueryBuilder from "sirius/QueryBuilder";
 import InteractiveStyling from "../dev/InteractiveStyling";
+import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
 
 /**
  * WIP Annotation tracks:
@@ -112,7 +113,7 @@ export class AnnotationTrack extends Track<'annotation'> {
         });
     }
 
-    protected _macroTileCache = new UsageCache<MacroGeneInstances>();
+    protected _macroTileCache = new UsageCache<IntervalInstances>();
     protected _annotationCache = new UsageCache<Object2D>();
     protected _onStageAnnotations = new UsageCache<Object2D>();
     protected updateDisplay() {
@@ -159,7 +160,7 @@ export class AnnotationTrack extends Track<'annotation'> {
             let tileObject = this._macroTileCache.get(this.contig + ':' + tile.key, () => {
                 // initialize macro gene instances
                 // create array of gene annotation data
-                let instanceData = new Array<MacroGeneInstance>();
+                let instanceData = new Array<IntervalInstance>();
                 let nonCodingColor = [82 / 0xff, 75 / 0xff, 165 / 0xff, 0.4];
                 let codingColor = [26 / 0xff, 174 / 0xff, 222 / 0xff, 0.4];
 
@@ -179,7 +180,7 @@ export class AnnotationTrack extends Track<'annotation'> {
                     });
                 }
 
-                let geneInstances = new MacroGeneInstances(instanceData);
+                let geneInstances = new IntervalInstances(instanceData);
                 geneInstances.y = 0;
                 geneInstances.z = 0.75;
                 geneInstances.mask = this;
@@ -272,128 +273,6 @@ type TrackPointerState = {
     pointerOver: boolean,
 }
 
-type MacroGeneInstance = {
-    xFractional: number, y: number, z: number,
-    wFractional: number, h: number,
-    color: Array<number>,
-};
-
-class MacroGeneInstances extends InstancingBase<MacroGeneInstance> {
-
-    constructor(instances: Array<MacroGeneInstance>) {
-        super(
-            instances,
-            [
-                { name: 'position', type: AttributeType.VEC2 }
-            ],
-            [
-                { name: 'instancePosition', type: AttributeType.VEC3 },
-                { name: 'instanceSize', type: AttributeType.VEC2 },
-                { name: 'instanceColor', type: AttributeType.VEC4 },
-            ],
-            {
-                'instancePosition': (inst: MacroGeneInstance) => [inst.xFractional, inst.y, inst.z],
-                'instanceSize': (inst: MacroGeneInstance) => [inst.wFractional, inst.h],
-                'instanceColor': (inst: MacroGeneInstance) => inst.color,
-            }
-        );
-
-        this.transparent = true;
-    }
-
-    draw(context: DrawContext) {
-        context.uniform2f('groupSize', this.computedWidth, this.computedHeight);
-        context.uniform1f('groupOpacity', this.opacity);
-        context.uniformMatrix4fv('groupModel', false, this.worldTransformMat4);
-        context.extDrawInstanced(DrawMode.TRIANGLES, 6, 0, this.instanceCount);
-    }
-
-    protected allocateGPUVertexState(
-        device: GPUDevice,
-        attributeLayout: AttributeLayout,
-        instanceVertexAttributes: { [name: string]: VertexAttributeBuffer }
-    ) {
-        return device.createVertexState({
-            index: SharedResources.quadIndexBuffer,
-            attributeLayout: attributeLayout,
-            attributes: {
-                // vertices
-                'position': {
-                    buffer: SharedResources.quad1x1VertexBuffer,
-                    offsetBytes: 0,
-                    strideBytes: 2 * 4,
-                },
-                ...instanceVertexAttributes
-            }
-        });
-    }
-
-    protected getVertexCode() {
-        return `
-            #version 100
-
-            // for all instances
-            attribute vec2 position;
-            uniform mat4 groupModel;
-            uniform vec2 groupSize;
-            
-            // per instance attributes
-            attribute vec3 instancePosition;
-            attribute vec2 instanceSize;
-            attribute vec4 instanceColor;
-
-            varying vec2 vUv;
-
-            varying vec2 size;
-            varying vec4 color;
-
-            void main() {
-                vUv = position;
-                
-                // yz are absolute domPx units, x is in fractions of groupSize
-                vec3 pos = vec3(groupSize.x * instancePosition.x, instancePosition.yz);
-                size = vec2(groupSize.x * instanceSize.x, instanceSize.y);
-
-                color = instanceColor;
-
-                gl_Position = groupModel * vec4(vec3(position * size, 0.0) + pos, 1.0);
-            }
-        `;
-    }
-
-    protected getFragmentCode() {
-        return `
-            #version 100
-
-            precision highp float;
-
-            uniform float groupOpacity;
-
-            varying vec2 size;
-            varying vec4 color;
-
-            varying vec2 vUv;
-            
-            void main() {
-                const float blendFactor = 0.0; // full additive blending
-
-                vec2 domPx = vUv * size;
-            
-                const vec2 borderWidthPx = vec2(1.);
-                const float borderStrength = 0.3;
-
-                vec2 inner = step(borderWidthPx, domPx) * step(domPx, size - borderWidthPx);
-                float border = inner.x * inner.y;
-
-                vec4 c = color;
-                c.rgb += (1.0 - border) * vec3(borderStrength);
-
-                gl_FragColor = vec4(c.rgb, blendFactor) * c.a * groupOpacity;
-            }
-        `;
-    }
-
-}
 
 class GeneAnnotation extends Object2D {
 
