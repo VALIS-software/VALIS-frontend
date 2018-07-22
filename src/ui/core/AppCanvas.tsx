@@ -136,7 +136,11 @@ export class AppCanvas extends React.Component<Props, State> {
             height: canvasHeight,
         };
         return (
-            <div className="viewer" style={containerStyle}>
+          
+          
+          
+          
+            <div className="app-canvas" style={containerStyle}>
                 <canvas
                     ref={(v) => this.canvas = v}
                     width={canvasWidth}

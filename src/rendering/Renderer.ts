@@ -3,7 +3,7 @@
  * - State grouping: Often we want hierarchical state - i.e, set viewport for this node _and_ all of its children
  */
 
-import GPUDevice, { GPUDeviceInternal, GPUProgram, GPUProgramInternal, GPUTexture, GPUTextureInternal, GPUVertexState, VertexAttribute, VertexStateDescriptor, AttributeLayout, shaderTypeLength, shaderTypeRows, GPUVertexStateInternal } from '../rendering/GPUDevice';
+import GPUDevice, { GPUDeviceInternal, GPUProgram, GPUProgramInternal, GPUTexture, GPUTextureInternal, GPUVertexState, VertexAttribute, VertexStateDescriptor, AttributeLayout, shaderTypeLength, shaderTypeRows, GPUVertexStateInternal } from './GPUDevice';
 import RenderPass from './RenderPass';
 import { Renderable, RenderableInternal } from './Renderable';
 

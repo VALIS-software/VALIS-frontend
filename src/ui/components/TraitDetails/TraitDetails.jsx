@@ -3,7 +3,7 @@ import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import Collapsible from '../Shared/Collapsible/Collapsible';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
+import SearchResultsView from '../SearchResultsView/SearchResultsView';
 import SiriusApi from "sirius/SiriusApi";
 import QueryModel from '../../models/QueryModel';
 import SiriusApi from "sirius/SiriusApi";
