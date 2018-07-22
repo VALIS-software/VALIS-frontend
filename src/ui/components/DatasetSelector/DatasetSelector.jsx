@@ -57,12 +57,12 @@ const fixedTrackData = [
   {
     "track_type": TRACK_TYPE_SEQUENCE,
     "title": "Sequence",
-    "description": "Nucleobase sequence of the forward strand."
+    "description": "Nucleobase sequence of the forward strand (ENSEMBL)."
   },
   {
     "track_type": TRACK_TYPE_GENES,
     "title": "Gene Annotations",
-    "description": "Filterable gene annotation track."
+    "description": "Filterable gene annotation track. (ENSEMBL)"
   },
   {
     "track_type": "premium",
