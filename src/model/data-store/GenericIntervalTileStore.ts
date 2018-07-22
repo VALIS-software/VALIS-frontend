@@ -49,8 +49,11 @@ export default class GenericIntervalTileStore extends TileStore<TilePayload, voi
         let endBase = startBase + tile.span;
         
         let queryBuilder = new QueryBuilder(this.query);
-        queryBuilder.filterStartBp({ '>=': startBase, '<=': endBase});
         queryBuilder.filterContig(this.contig);
+
+        queryBuilder.filterStartBp({ '>=': startBase, '<=': endBase});
+        // @! to be correct we also need OR filterEndBp({ '>=': startBase, '<=': endBase})
+        
         queryBuilder.setLimit(1000000);
 
         let tileQuery = queryBuilder.build();
