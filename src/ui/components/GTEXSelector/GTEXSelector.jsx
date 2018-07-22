@@ -88,7 +88,7 @@ class GTEXSelector extends React.Component {
     this.appModel.trackMixPanel("Add GTEX Track", { "query": query });
     const biosample = this.state.availableBiosamples[this.state.biosampleValue];
     // QYD: The results of this query is "Edges" instead of GenomeNodes, we might need a new method for displaying
-    App.addVariantTrack(`${biosample} eQTLs`, query.toEdges);
+    App.addVariantTrack(`${biosample} eQTLs`, query);
     this.props.viewModel.closeView();
   }
 
