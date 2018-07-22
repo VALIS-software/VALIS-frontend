@@ -1,7 +1,7 @@
 // Dependencies
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import QueryBuilder  from "sirius/QueryBuilder";
+import QueryBuilder from "sirius/QueryBuilder";
 import Pills from '../Shared/Pills/Pills';
 import SearchResultsView from '../SearchResultsView/SearchResultsView';
 import AssociationList from '../Shared/AssociationList/AssociationList';
