@@ -70,7 +70,7 @@ class ExACSelector extends React.Component {
     this.appModel.trackMixPanel("Add ExAC Track", { "query": query });
     const tagValue = this.state.availableVariantTags[this.state.variantTagValue];
     App.addVariantTrack(`${tagValue} (ExAC)`, query);
-    this.props.viewModel.closeView();
+    this.props.viewModel.closeNavigationView();
   }
 
   componentDidMount() {
