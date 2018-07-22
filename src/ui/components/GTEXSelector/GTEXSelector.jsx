@@ -15,6 +15,18 @@ import { DATA_SOURCE_GTEX } from "../../helpers/constants";
 
 let biosamplesCached = null;
 
+const logmin = 0;
+const logmax = 0.01;
+const power = 30;
+
+function transform(value) {
+  return (Math.exp(power * value / logmax) - 1) / (Math.exp(power) - 1) * logmax;
+}
+
+function reverse(value) {
+  return (1 / power) * Math.log(((Math.exp(power) - 1) * value / logmax) + 1) * logmax;
+}
+
 class GTEXSelector extends React.Component {
   constructor(props) {
     super(props);
@@ -25,7 +37,7 @@ class GTEXSelector extends React.Component {
     this.state = {
       title: "",
       biosampleValue: null,
-      pvalue: 0.05,
+      pvalue: 0.01,
       loading: true,
       availableBiosamples: [],
     };
@@ -63,7 +75,7 @@ class GTEXSelector extends React.Component {
 
   handleUpdatePValue = (event, value) => {
     this.setState({
-      pvalue: value
+      pvalue: transform(value)
     });
   }
 
@@ -80,6 +92,9 @@ class GTEXSelector extends React.Component {
     builder.filterSource(DATA_SOURCE_GTEX);
     builder.filterBiosample(this.state.availableBiosamples[this.state.biosampleValue]);
     builder.filterMaxPValue(this.state.pvalue);
+    const edgeQuery = builder.build();
+    builder.newGenomeQuery();
+    builder.addToEdge(edgeQuery);
     return builder.build();
   }
 
@@ -132,13 +147,13 @@ class GTEXSelector extends React.Component {
         <br/>
         <div>
           {" "}
-          {"P-Value < "} {this.state.pvalue}{" "}
+          {"P-Value < "} {this.state.pvalue.toExponential(3)}{" "}
         </div>
         <Slider
-          min={0}
-          max={0.1}
-          step={0.0001}
-          value={this.state.pvalue}
+          min={logmin}
+          max={logmax}
+          step={(logmax - logmin) / 200}
+          value={reverse(this.state.pvalue)}
           onChange={this.handleUpdatePValue}
         />
         <RaisedButton

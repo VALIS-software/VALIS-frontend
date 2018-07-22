@@ -12,7 +12,7 @@ import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-vir
 import { prettyPrint } from "../TraitDetails/TraitDetails";
 import SiriusApi from "sirius/SiriusApi";
 import { FilterType } from "../../models/QueryModel";
-
+import { QueryType } from "sirius/QueryBuilder";
 
 
 // Styles
@@ -269,7 +269,7 @@ class SearchResultsView extends React.Component {
     }
 
     let addTrackButton = null;
-    if (this.state.results && this.state.results[0].type !== 'trait') {
+    if (this.state.results && this.query && this.query.query && this.query.query.type === QueryType.GENOME) {
       addTrackButton = (<button className="float-left" onClick={this.addQueryAsTrack}>Add as Track</button>);
     }
 
