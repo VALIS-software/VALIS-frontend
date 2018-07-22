@@ -189,6 +189,12 @@ export class SiriusApi {
         });
     }
 
+    static getIntervalTrackData(contig: string, startBp: number, endBp: number, query: any) {
+        return axios.post(`${this.apiUrl}/interval_track_data/${contig}/${startBp}/${endBp}`, query).then(data => {
+            return data.data;
+        });
+    }
+
     static getSuggestions(termType: string, searchText: string, maxResults = 100) {
         maxResults = Math.round(maxResults);
         const cacheKey = `${termType}|${searchText}|${maxResults}`;
