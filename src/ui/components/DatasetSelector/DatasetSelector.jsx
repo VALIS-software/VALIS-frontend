@@ -27,33 +27,33 @@ import "./DatasetSelector.scss";
 
 const fixedTrackData = [
   {
-    "track_type": TRACK_TYPE_GWAS, 
-    "title": "Genome Wide Associations", 
+    "track_type": TRACK_TYPE_GWAS,
+    "title": "Genome Wide Associations",
     "description": "Add variants related to traits or diseases from the EMBL-EBI GWAS database."
-  }, 
+  },
   {
-    "track_type": TRACK_TYPE_ENCODE, 
-    "title": "ENCODE DNA Elements", 
+    "track_type": TRACK_TYPE_ENCODE,
+    "title": "ENCODE DNA Elements",
     "description": "Comprehensive parts list of functional elements in the human genome."
-  }, 
+  },
   {
-    "track_type": TRACK_TYPE_EQTL, 
-    "title": "GTeX eQTLs", 
+    "track_type": TRACK_TYPE_EQTL,
+    "title": "GTeX eQTLs",
     "description": "Quantitative trait loci from 53 human tissues curated from the Genotype-Tissue Expression project."
-  },  
+  },
   // {
-  //   "track_type": TRACK_TYPE_TCGA, 
-  //   "title": "TCGA Variants", 
+  //   "track_type": TRACK_TYPE_TCGA,
+  //   "title": "TCGA Variants",
   //   "description": "Search germline and somatic mutations from The Cancer Genome Atlas."
-  // },  
+  // },
   {
-    "track_type": TRACK_TYPE_EXAC, 
-    "title": "ExAC Variants", 
+    "track_type": TRACK_TYPE_EXAC,
+    "title": "ExAC Variants",
     "description": "Search labeled variants of over 60k exomes from the Exome Aggregation Consortium."
-  }, 
+  },
   {
-    "track_type": "premium", 
-    "title": "Custom Track", 
+    "track_type": "premium",
+    "title": "Custom Track",
     "description": "Import and analyze your own VCF, BAM, GFF, BED or bigwig files."
   }
 ];
@@ -97,19 +97,19 @@ class DatasetSelector extends React.Component {
       this.viewModel.pushView(
         "GTEx eQTL's",
         null,
-        <GTEXSelector appModel={this.appModel} />
+        <GTEXSelector appModel={this.appModel} viewModel={this.viewModel} />
       );
     }else if (trackType === TRACK_TYPE_TCGA) {
       this.viewModel.pushView(
         "TCGA Variants",
         null,
-        <TCGASelector appModel={this.appModel} />
+        <TCGASelector appModel={this.appModel} viewModel={this.viewModel} />
       );
     }else if (trackType === TRACK_TYPE_EXAC) {
       this.viewModel.pushView(
         "ExAC Variants",
         null,
-        <ExACSelector appModel={this.appModel} />
+        <ExACSelector appModel={this.appModel} viewModel={this.viewModel} />
       );
     }else if (trackType === TRACK_TYPE_SEQUENCE) {
       this.viewModel.pushView(
@@ -125,7 +125,7 @@ class DatasetSelector extends React.Component {
       this.viewModel.pushView(
         "Boolean Tracks",
         null,
-        <BooleanTrackSelector appModel={this.appModel} />
+        <BooleanTrackSelector appModel={this.appModel} viewModel={this.viewModel} />
       );
     } else if (trackType === 'premium') {
       this.setState({

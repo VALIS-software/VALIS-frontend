@@ -17,7 +17,6 @@ class ExACSelector extends React.Component {
     super(props);
     if (props.appModel) {
       this.appModel = props.appModel;
-      this.api = this.appModel.api;
     }
     this.state = {
       variantTagValue: null,
@@ -30,7 +29,7 @@ class ExACSelector extends React.Component {
     builder.newInfoQuery();
     builder.filterSource(DATA_SOURCE_ExAC);
     const infoQuery = builder.build();
-    this.api.getDistinctValues('info.variant_tags', infoQuery).then(data => {
+    SiriusApi.getDistinctValues('info.variant_tags', infoQuery).then(data => {
       this.setState({
         availableVariantTags: data,
         loading: false,

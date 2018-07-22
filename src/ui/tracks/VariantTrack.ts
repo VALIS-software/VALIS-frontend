@@ -40,7 +40,7 @@ export class VariantTrack extends Track<'variant'> {
     }
 
     setContig(contig: string) {
-        let sourceKey = contig + JSON.stringify(this.model.toEdges);
+        let sourceKey = contig + JSON.stringify(this.model.query);
         this.tileStore = SharedTileStore.getTileStore(
             'variant',
             sourceKey,
@@ -64,15 +64,15 @@ export class VariantTrack extends Track<'variant'> {
         const span = x1 - x0;
         const widthPx = this.getComputedWidth();
         if (widthPx > 0) {
-            
+
             let basePairsPerDOMPixel = (span / widthPx);
             let continuousLodLevel = Scalar.log2(Math.max(basePairsPerDOMPixel, 1));
 
             let macroOpacity: number = Scalar.linstep(this.macroLodThresholdLow, this.macroLodThresholdHigh, continuousLodLevel);
             let microOpacity: number = 1.0 - macroOpacity;
 
-            // when no filter is provided, show micro-view at all scales
-            if (this.model.toEdges != null) {
+            // when query is provided, show micro-view at all scales
+            if (this.model.query) {
                 microOpacity = 1;
                 macroOpacity = 0;
             }
@@ -168,7 +168,7 @@ export class VariantTrack extends Track<'variant'> {
                         // C -> A,TT = replace A, insert TT
                         // ATCCTG -> A { A: 0.005591 }
                         // GCCGCCC -> GCCGCCCCCGCCC, G, GCCGCCCCCGCCCCCGCCC {GCCGCCCCCGCCC: 0.031, G: 0.00009917, GCCGCCCCCGCCCCCGCCC: 0.00006611}
-                        
+
                         for (let variant of tile.payload) {
                             let fractionX = (variant.baseIndex - tile.x) / tile.span;
 
@@ -251,7 +251,7 @@ export class VariantTrack extends Track<'variant'> {
         root.mask = this;
         root.opacity = 0;
         root.z = 0.5;
-        
+
         // highlight on mouse-over
         const springStrength = 250;
         root.addInteractionListener('pointermove', (e) => {
@@ -260,7 +260,7 @@ export class VariantTrack extends Track<'variant'> {
                 Animator.springTo(root, {opacity: 0.6}, springStrength);
             } else {
                 root.cursorStyle = null;
-                Animator.springTo(root, { opacity: 0 }, springStrength);    
+                Animator.springTo(root, { opacity: 0 }, springStrength);
             }
         });
         root.addInteractionListener('pointerleave', () => {
@@ -276,7 +276,7 @@ export class VariantTrack extends Track<'variant'> {
                 onClick();
             }
         });
-        
+
         // add a 0-sized element centered in the root
         // this is used to position the text
         let textParent = new Object2D();
@@ -387,7 +387,7 @@ class MicroInstances extends InstancingBase<MicroInstance> {
             attribute vec2 position;
             uniform mat4 groupModel;
             uniform vec2 groupSize;
-            
+
             // per instance attributes
             attribute vec3 instancePosition;
             attribute vec2 instanceSize;
@@ -400,7 +400,7 @@ class MicroInstances extends InstancingBase<MicroInstance> {
 
             void main() {
                 vUv = position;
-                
+
                 // yz are absolute domPx units, x is in fractions of groupSize
                 vec3 pos = vec3(groupSize.x * instancePosition.x, instancePosition.yz);
                 size = vec2(groupSize.x * instanceSize.x, instanceSize.y);
@@ -427,12 +427,12 @@ class MicroInstances extends InstancingBase<MicroInstance> {
             varying vec4 color;
 
             varying vec2 vUv;
-            
+
             void main() {
                 const float blendFactor = 1.0; // full additive blending
 
                 vec2 domPx = vUv * size;
-            
+
                 const vec2 borderWidthPx = vec2(1.);
                 const float borderStrength = 0.3;
 
