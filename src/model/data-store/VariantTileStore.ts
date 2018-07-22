@@ -2,6 +2,7 @@ import QueryBuilder from "sirius/QueryBuilder";
 import SiriusApi from "sirius/SiriusApi";
 import { TrackModel } from "../TrackModel";
 import { Tile, TileStore } from "./TileStore";
+import { start } from "repl";
 
 // Tile payload is a list of genes extended with nesting
 type VariantGenomeNode = {
@@ -61,21 +62,14 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
     protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
         let startBase = tile.x + 1;
         let endBase = startBase + tile.span;
-
-        let builder = new QueryBuilder();
-        if (this.model.query) {
-            builder = new QueryBuilder(this.model.query);
-        } else {
+        let snpQuery = this.model.query;
+        if (!snpQuery) {
+            const builder = new QueryBuilder();
             builder.newGenomeQuery();
+            builder.filterType('SNP');
+            snpQuery = builder.build();
         }
-        builder.filterType('SNP');
-        builder.filterContig(this.contig);
-        builder.filterStartBp({'>=': startBase, '<=': endBase});
-        builder.setLimit(1000000);
-
-        const snpQuery = builder.build();
-
-        return SiriusApi.getQueryResults(snpQuery, true).then((data) => {
+        return SiriusApi.getVariantTrackData(this.contig, startBase, endBase, snpQuery).then((data) => {
             let variants: Array<VariantGenomeNode> = data.data;
             return variants.map((v) => { return {
                 id: v.id,

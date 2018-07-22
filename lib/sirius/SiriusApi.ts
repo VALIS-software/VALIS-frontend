@@ -1,5 +1,5 @@
 /**
- * Temporary API for development 
+ * Temporary API for development
  */
 import axios, { AxiosRequestConfig, CancelToken } from 'axios';
 
@@ -86,7 +86,7 @@ export class SiriusApi {
             for (let i = 0; i < baseCount; i++) {
                 compressedArray[i * 4 + 0] = Math.round(Math.min((payloadArray[i * 4 + 0] - min) * scaleFactor, 1.) * 0xFF); // A
                 compressedArray[i * 4 + 1] = Math.round(Math.min((payloadArray[i * 4 + 3] - min) * scaleFactor, 1.) * 0xFF); // C
-                compressedArray[i * 4 + 2] = Math.round(Math.min((payloadArray[i * 4 + 2] - min) * scaleFactor, 1.) * 0xFF); // G 
+                compressedArray[i * 4 + 2] = Math.round(Math.min((payloadArray[i * 4 + 2] - min) * scaleFactor, 1.) * 0xFF); // G
                 compressedArray[i * 4 + 3] = Math.round(Math.min((payloadArray[i * 4 + 1] - min) * scaleFactor, 1.) * 0xFF); // T
             }
 
@@ -179,6 +179,12 @@ export class SiriusApi {
             requestUrl = `${requestUrl}?` + options.join('&');
         }
         return axios.post(requestUrl, query).then(data => {
+            return data.data;
+        });
+    }
+
+    static getVariantTrackData(contig: string, startBp: number, endBp: number, query: any) {
+        return axios.post(`${this.apiUrl}/variant_track_data/${contig}/${startBp}/${endBp}`, query).then(data => {
             return data.data;
         });
     }
