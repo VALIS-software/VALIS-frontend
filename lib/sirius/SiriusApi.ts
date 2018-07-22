@@ -183,6 +183,13 @@ export class SiriusApi {
         });
     }
 
+    // this special API is created for the "all-variants" track
+    static getAllVariantTrackData(contig: string, startBp: number, endBp: number) {
+        return axios.get(`${this.apiUrl}/all_variant_track_data/${contig}/${startBp}/${endBp}`).then(data => {
+            return data.data;
+        });
+    }
+
     static getVariantTrackData(contig: string, startBp: number, endBp: number, query: any) {
         return axios.post(`${this.apiUrl}/variant_track_data/${contig}/${startBp}/${endBp}`, query).then(data => {
             return data.data;

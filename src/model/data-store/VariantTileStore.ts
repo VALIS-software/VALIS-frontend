@@ -60,22 +60,24 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
     }
 
     protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
-        let startBase = tile.x + 1;
-        let endBase = startBase + tile.span;
-        let snpQuery = this.model.query;
+        const startBase = tile.x + 1;
+        const endBase = startBase + tile.span;
+        const snpQuery = this.model.query;
+        let ApiPromise;
         if (!snpQuery) {
-            const builder = new QueryBuilder();
-            builder.newGenomeQuery();
-            builder.filterType('SNP');
-            snpQuery = builder.build();
+            // use special API created for the "all variants track"
+            ApiPromise = SiriusApi.getAllVariantTrackData(this.contig, startBase, endBase);
+        } else {
+            ApiPromise = SiriusApi.getVariantTrackData(this.contig, startBase, endBase, snpQuery);
         }
-        return SiriusApi.getVariantTrackData(this.contig, startBase, endBase, snpQuery).then((data) => {
+        // use general API to laod other variants, the number of results should be no more than 10M.
+        return ApiPromise.then((data) => {
             let variants: Array<VariantGenomeNode> = data.data;
             return variants.map((v) => { return {
                 id: v.id,
                 baseIndex: v.start - 1,
-                refSequence: v.info.variant_ref,
-                alts: v.info.allele_frequencies,
+                refSequence: v.info.variant_ref ? v.info.variant_ref: '',
+                alts: v.info.allele_frequencies ? v.info.allele_frequencies: {},
             } });
         });
     }
