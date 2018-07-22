@@ -2,11 +2,11 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import Collapsible from '../Shared/Collapsible/Collapsible';
+import Pills from '../Shared/Pills/Pills';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import SearchResultsView from '../SearchResultsView/SearchResultsView';
 import SiriusApi from "sirius/SiriusApi";
 import QueryModel from '../../models/QueryModel';
-import SiriusApi from "sirius/SiriusApi";
 import QueryBuilder from "sirius/QueryBuilder";
 
 // Styles
@@ -16,7 +16,7 @@ import { QueryBuilder } from 'sirius/QueryBuilder';
 
 export const prettyPrint = (string) => {
   if (string.toUpperCase() === string) {
-    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();  
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
   }
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
@@ -82,6 +82,19 @@ class TraitDetails extends React.Component {
     return (<Collapsible onClick={() => this.loadQuery(title, query, queryTitle)} title={title} disabled={true} isLink={true}/>);
   }
 
+  renderSectionPills(title, data) {
+    if (!data) {
+      return null;
+    }
+    if (! Array.isArray(data)) {
+      data = [data];
+    }
+    return (<div className="section">
+      <div className="section-header"> {title} </div>
+      <div><Pills items={data} /></div>
+    </div>);
+  }
+
   render() {
     if (this.state.error) {
       return (<ErrorDetails error={this.state.error} />);
@@ -100,6 +113,8 @@ class TraitDetails extends React.Component {
       <div className="sidebar-description">{this.state.details.info.description}</div>
     </div>);
 
+    const sources = this.renderSectionPills("Sources", details.source);
+
     const linksData = [];
     linksData.push(['OMIM', `https://omim.org/search/?search=${escape(name)}`]);
 
@@ -110,16 +125,13 @@ class TraitDetails extends React.Component {
       return (<div key={link[0]} onClick={openLink} className="row">{link[0]}</div>);
     });
 
-    const associations = this.renderSearchLink('Variants associated with ' + name, this.buildTraitQuery(), name);
+    const associations = this.renderSearchLink('Associated Variants', this.buildTraitQuery(), name);
 
     return (<div className="trait-details">
       {header}
       <Collapsible title="Basic Info" open={true}>
         <div className="section-wrapper">
-          <div className="section">
-            <div className="section-header"> Source </div>
-            {details.source}
-          </div>
+          {sources}
         </div>
       </Collapsible>
       <Collapsible title="External References" open={false}>
