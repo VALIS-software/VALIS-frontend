@@ -1,12 +1,9 @@
-- Interval track for encode
-
 - Variants:
-    - Complete variant queries
     - Improve colors and rendering
 
 - Preload high sequence lods to avoid black when zooming out
 
-    
+
 - Integrate latest UI
     --- PR
     - Fill out viewModel.js and appModel.ts functionality
