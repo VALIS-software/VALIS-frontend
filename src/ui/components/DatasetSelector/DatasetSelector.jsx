@@ -26,6 +26,7 @@ const TRACK_TYPE_GENES = 'track_type_gene';
 
 // Styles
 import "./DatasetSelector.scss";
+import GeneAnnotationSelector from "../GeneAnnotationSelector/GeneAnnotationSelector";
 
 const fixedTrackData = [
   {
@@ -56,7 +57,12 @@ const fixedTrackData = [
   {
     "track_type": TRACK_TYPE_SEQUENCE,
     "title": "Sequence",
-    "description": "Nucleobase sequence."
+    "description": "Nucleobase sequence of the forward strand."
+  },
+  {
+    "track_type": TRACK_TYPE_GENES,
+    "title": "Gene Annotations",
+    "description": "Filterable gene annotation track."
   },
   {
     "track_type": "premium",
@@ -127,7 +133,11 @@ class DatasetSelector extends React.Component {
     } else if (trackType === TRACK_TYPE_SEQUENCE) {
       App.addTrack({ name: '→ Sequence', type: 'sequence' });
     } else if (trackType === TRACK_TYPE_GENES) {
-
+      this.viewModel.pushView(
+        "Gene Annotations",
+        null,
+        <GeneAnnotationSelector />
+      );
     } else if (trackType === 'premium') {
       this.setState({
         showUpgrade: true,
