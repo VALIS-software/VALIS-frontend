@@ -232,6 +232,19 @@ class ENCODESelector extends React.Component<Props, State> {
     });
   }
 
+
+  buildTitle() {
+    const biosample = this.state.availableBiosamples[this.state.biosampleValue];
+    const genomeType = this.state.availableTypes[this.state.genomeTypeValue];
+    const targets = [];
+    for (let i = 0; i < this.state.checked.length; i++) {
+      if (this.state.checked[i] === true) {
+        targets.push(this.state.availableTargets[i]);
+      }
+    }
+    return `${biosample} ${genomeType}` + (targets.length ? ` (${targets.join(',')})` : '');
+  }
+
   buildQuery = () => {
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
@@ -259,7 +272,7 @@ class ENCODESelector extends React.Component<Props, State> {
   addQueryTrack = () => {
     const query = this.buildQuery();
     this.appModel.trackMixPanel("Add ENCODE Track", { "query": query });
-    App.addIntervalTrack(this.state.title, query, (e) => {
+    App.addIntervalTrack(this.buildTitle(), query, (e) => {
       return {
         startIndex: e.start - 1,
         span: e.length
