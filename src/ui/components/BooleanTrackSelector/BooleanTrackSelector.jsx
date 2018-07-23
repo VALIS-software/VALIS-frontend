@@ -79,6 +79,17 @@ class BooleanTrackSelector extends React.Component {
     });
   }
 
+  getOutputQueryType() {
+      const queryA = this.state.availableAnnotationTracks[this.state.trackAValue];
+      const queryB = this.state.availableAnnotationTracks[this.state.trackBValue];
+      const op = this.state.availableOperators[this.state.operatorValue];
+      if (op === 'intersect' || op === 'window') {
+        return queryA.type;
+      } else {
+        return 'interval';
+      }
+  }
+
   buildQuery() {
     const { availableOperators, operatorValue, availableAnnotationTracks,
       trackAValue, trackBValue, windowSize } = this.state;
@@ -100,12 +111,17 @@ class BooleanTrackSelector extends React.Component {
 
   addQueryTrack() {
     const query = this.buildQuery();
-    App.addIntervalTrack(this.state.title, query, (e) => {
-      return {
-        startIndex: e.start - 1,
-        span: e.length
-      }
-    }, false);
+    
+    if (this.getOutputQueryType() === 'interval') {
+      App.addIntervalTrack(this.state.title, query, (e) => {
+        return {
+          startIndex: e.start - 1,
+          span: e.length
+        }
+      }, false);
+    } else {
+      App.addVariantTrack(this.state.title, query);
+    }
   }
 
   componentDidMount() {
