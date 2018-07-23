@@ -345,7 +345,7 @@ export class App extends React.Component<Props, State> {
 
 		let title = 'Search';
 		const uid = `search-result-#${this._searchIncrementalId++}`;
-		const view = (<SearchResultsView key={uid} text={title} query={queryModel} viewModel={this.viewModel} appModel={this.appModel} />);
+		const view = (<SearchResultsView key={uid} text={title} query={queryModel} viewModel={this.viewModel} appModel={this.appModel} autoClickSingleResult={true}/>);
 
 		this.appModel.trackMixPanel("Automated search", { 'queryStr': JSON.stringify(queryObject) });
 		this.viewModel.pushView('Search Results', queryModel, view);
