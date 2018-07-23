@@ -14,12 +14,12 @@ import "./AnalysisSelector.scss";
 
 const fixedAnalysisData = [
   {
-    "track_type": 'premium', // TRACK_TYPE_BOOLEAN, 
+    "track_type": TRACK_TYPE_BOOLEAN, 
     "title": "∩ Intersect Tracks", 
     "description": "Filter track elements to those near another tracks elements."
   }, 
   {
-    "track_type": 'premium', // TRACK_TYPE_BOOLEAN, 
+    "track_type": TRACK_TYPE_BOOLEAN, 
     "title": "∪ Union Tracks", 
     "description": "Union the contents of two different tracks into a single track."
   },

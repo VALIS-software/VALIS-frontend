@@ -315,6 +315,26 @@ class TrackViewer extends Object2D {
         }
     }
 
+    getQueryRows() : Map<string, any> {
+        const ret = new Map<string, any>();
+        this.rows.forEach(row => {
+            let name = null;
+            let query = null;
+            const type = row.trackRow.model.type;
+            if (type === 'interval') {
+                name = (row.trackRow.model as TrackModel<'interval'>).name;
+                query = (row.trackRow.model as TrackModel<'interval'>).query;
+            } else if (type === 'variant') {
+                name = (row.trackRow.model as TrackModel<'variant'>).name;
+                query = (row.trackRow.model as TrackModel<'variant'>).query;
+            }
+            if (query && name) {
+                ret.set(name, { query: JSON.parse(JSON.stringify(query)), type: type });
+            }
+        });
+        return ret;
+    }
+
     getPanel(index: number): null | Panel {
         let i = 0;
         for (let panel of this.panels) {

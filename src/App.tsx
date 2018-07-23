@@ -350,6 +350,10 @@ export class App extends React.Component<Props, State> {
 		});
 	}
 
+	protected getQueryTracks() : Map<string, any> {
+		return this.state.trackViewer.getQueryRows();
+	}
+
 	protected _searchIncrementalId = 0;
 	protected search(queryObject: any) {
 		const queryModel = new QueryModel(queryObject);
@@ -367,6 +371,9 @@ export class App extends React.Component<Props, State> {
 
 	private static appInstance: App;
 
+	static getQueryTracks() : Map<string, any> {
+		return this.appInstance.getQueryTracks();
+	}
 	static displayRegion(contig: string, startBase: number, endBase: number) {
 		this.appInstance.displayRegion(contig, startBase, endBase);
 	}
