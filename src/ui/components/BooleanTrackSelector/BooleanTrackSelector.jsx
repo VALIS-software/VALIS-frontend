@@ -10,6 +10,7 @@ import QueryBuilder from "sirius/QueryBuilder";
 
 // Styles
 import './BooleanTrackSelector.scss';
+import { App } from '../../../App';
 
 const logmin = 0;
 const logmax = 5 * Math.pow(10, 6);
@@ -99,16 +100,23 @@ class BooleanTrackSelector extends React.Component {
 
   addQueryTrack() {
     const query = this.buildQuery();
-    this.appModel.addAnnotationTrack(this.state.title, query);
+    App.addIntervalTrack(this.state.title, query, (e) => {
+      return {
+        startIndex: e.start - 1,
+        span: e.length
+      }
+    }, false);
   }
 
   componentDidMount() {
     const availableOperators = ['intersect', 'window', 'union'];
     const availableAnnotationTracks = [];
-    for (const track of this.appModel.getTracks()) {
-      if (track.annotationTrack !== null) {
-        availableAnnotationTracks.push(track.annotationTrack);
-      }
+    for (const trackInfo of App.getQueryTracks()) {
+      availableAnnotationTracks.push({
+        queryTitle: trackInfo[0],
+        query: trackInfo[1].query,
+        type: trackInfo[1].type
+      });
     }
     this.setState({
       availableOperators: availableOperators,
@@ -125,9 +133,9 @@ class BooleanTrackSelector extends React.Component {
     }
     const availableAnnotationTrackItems = [];
     for (let i = 0; i < availableAnnotationTracks.length; i++) {
-      const annotationId = availableAnnotationTracks[i].annotationId;
+      const queryTitle = availableAnnotationTracks[i].queryTitle;
       const queryId = JSON.stringify(availableAnnotationTracks[i].query);
-      availableAnnotationTrackItems.push(<MenuItem value={i} key={queryId} primaryText={annotationId} />);
+      availableAnnotationTrackItems.push(<MenuItem value={i} key={queryId} primaryText={queryTitle} />);
     }
     return (
       <div className="track-editor">
