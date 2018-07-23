@@ -104,7 +104,7 @@ class GTEXSelector extends React.Component {
     const biosample = this.state.availableBiosamples[this.state.biosampleValue];
     // QYD: The results of this query is "Edges" instead of GenomeNodes, we might need a new method for displaying
     App.addVariantTrack(`${biosample} eQTLs`, query);
-    this.props.viewModel.closeView();
+    this.props.viewModel.closeNavigationView();
   }
 
   componentDidMount() {
@@ -156,12 +156,13 @@ class GTEXSelector extends React.Component {
           value={reverse(this.state.pvalue)}
           onChange={this.handleUpdatePValue}
         />
+        <br />
         <RaisedButton
           label="Add Track"
           primary={true}
           onClick={() => this.addQueryTrack()}
           disabled={!this.state.biosampleValue}
-          style={{width: '95%'}}
+          style={{ position: "absolute", bottom: "10px", width: "90%" }}
         />
       </div>
     );

@@ -8,6 +8,7 @@ import QueryBuilder from "sirius/QueryBuilder";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import SiriusApi from "sirius/SiriusApi";
 import { DATA_SOURCE_TCGA } from "../../helpers/constants";
+import { App } from '../../../App';
 
 // Styles
 import "./TCGASelector.scss";
@@ -24,18 +25,18 @@ class TCGASelector extends React.Component {
       title: "",
       biosampleValue: null,
       availableBiosamples: [],
+      variantTagValue: null,
+      availableVariantTags: [],
     };
   }
 
   updateAvailableBiosamples = () => {
     if (this.selectedBiosample) return;
     const builder = new QueryBuilder();
-    builder.newGenomeQuery();
-    builder.filterType('SNP');
+    builder.newInfoQuery();
     builder.filterSource(DATA_SOURCE_TCGA);
-    
-    const distinctQuery = builder.build();
-    SiriusApi.getDistinctValues('info.tumor_tissue_sites', distinctQuery).then(data => {
+    const infoQuery = builder.build();
+    SiriusApi.getDistinctValues('info.biosample', infoQuery).then(data => {
       // Keep the current selection of biosample
       let newBiosampleValue = null;
       if (this.state.biosampleValue !== null) {
@@ -71,20 +72,64 @@ class TCGASelector extends React.Component {
     }
   }
 
+  updateAvailableVariantTags = () => {
+    const builder = new QueryBuilder();
+    builder.newInfoQuery();
+    builder.filterSource(DATA_SOURCE_TCGA);
+    const infoQuery = builder.build();
+    SiriusApi.getDistinctValues('info.variant_tags', infoQuery).then(data => {
+      this.setState({
+        availableVariantTags: data,
+        loading: false,
+      });
+    }, err => {
+      this.appModel.error(this, err);
+      this.setState({
+        error: err,
+        loading: false,
+      });
+    });
+  }
+
+  handelUpdateVariantTag = (event, index, value) => {
+    this.setState({
+      variantTagValue: value
+    });
+  }
 
   buildQuery = () => {
-    
+    const builder = new QueryBuilder();
+    builder.newGenomeQuery();
+    // QYD: TCGA also have some {type: 'variants'}, which are not SNPs
+    // builder.filterType({'$in': ['SNP', 'variant']});
+    // We will limit to SNPs for now to avoid confusion
+    builder.filterType('SNP');
+    builder.filterSource(DATA_SOURCE_TCGA);
+    const biosample = this.state.availableBiosamples[this.state.biosampleValue];
+    builder.filterBiosample(biosample);
+    if (this.state.variantTagValue !== null) {
+      const variantTag = this.state.availableVariantTags[this.state.variantTagValue];
+      builder.filterVariantTag(variantTag);
+    }
+    return builder.build();
   }
 
   addQueryTrack = () => {
     const query = this.buildQuery();
     this.appModel.trackMixPanel("Add TCGA Track", { "query": query });
-    this.appModel.addAnnotationTrack(this.state.title, query);
+    const biosample = this.state.availableBiosamples[this.state.biosampleValue];
+    let variantTag = '';
+    if (this.state.variantTagValue !== null) {
+      variantTag = this.state.availableVariantTags[this.state.variantTagValue];
+    }
+    App.addVariantTrack(`${biosample} ${variantTag} (TCGA)`, query);
+    this.props.viewModel.closeNavigationView();
   }
 
   componentDidMount() {
-    // use api to pull all available biosamples
+    // use api to pull all available biosamples and variant_tags for TCGA
     this.updateAvailableBiosamples();
+    this.updateAvailableVariantTags();
   }
 
   render() {
@@ -93,6 +138,7 @@ class TCGASelector extends React.Component {
     }
     const {
       availableBiosamples,
+      availableVariantTags,
     } = this.state;
 
     const biosampleItems = [<MenuItem value={null} primaryText="" key={-1} />];
@@ -101,6 +147,14 @@ class TCGASelector extends React.Component {
         <MenuItem value={i} key={i} primaryText={availableBiosamples[i]} />
       );
     }
+
+    const variantTagItems = [<MenuItem value={null} primaryText="" key={-1} />];
+    for (let i = 0; i < availableVariantTags.length; i++) {
+      variantTagItems.push(
+        <MenuItem value={i} key={i} primaryText={availableVariantTags[i]} />
+      );
+    }
+
     return (
       <div className="track-editor">
         <SelectField
@@ -112,11 +166,21 @@ class TCGASelector extends React.Component {
         >
           {biosampleItems}
         </SelectField>
+        <br/>
+        <SelectField
+          value={this.state.variantTagValue}
+          floatingLabelText="Variant Tag"
+          onChange={this.handelUpdateVariantTag}
+          maxHeight={200}
+        >
+          {variantTagItems}
+        </SelectField>
+        <br/>
         <RaisedButton
           label="Add Track"
           primary={true}
           onClick={() => this.addQueryTrack()}
-          disabled={!this.state.title}
+          disabled={this.state.biosampleValue === null}
           style={{ position: "absolute", bottom: "10px", width: "90%" }}
         />
       </div>

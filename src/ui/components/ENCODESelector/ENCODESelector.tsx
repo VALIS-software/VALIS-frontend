@@ -10,27 +10,14 @@ import SiriusApi from "sirius/SiriusApi";
 import App from "../../../App";
 import { CHROMOSOME_NAMES, DATA_SOURCE_ENCODE } from "../../helpers/constants";
 import AppModel from "../../models/AppModel";
+import ViewModel from "../../models/ViewModel";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 // Styles
 import "./ENCODESelector.scss";
 
-const logmax = Math.pow(10, 6);
-const power = 12;
-
-function transform(value: number) {
-  return Math.round(
-    (Math.exp(12 * value / logmax) - 1) / (Math.exp(power) - 1) * logmax
-  );
-}
-
-function reverse(value: number) {
-  return (
-    1 / power * Math.log((Math.exp(power) - 1) * value / logmax + 1) * logmax
-  );
-}
-
 type Props = {
   appModel: AppModel,
+  viewModel: ViewModel,
 }
 
 type State = {
@@ -245,12 +232,6 @@ class ENCODESelector extends React.Component<Props, State> {
     });
   }
 
-  handleUpdateMaxNumber = (event: any, value: any) => {
-    this.setState({
-      maxnumber: transform(value)
-    });
-  }
-
   buildQuery = () => {
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
@@ -284,6 +265,7 @@ class ENCODESelector extends React.Component<Props, State> {
         span: e.length
       }
     });
+    this.props.viewModel.closeNavigationView();
   }
 
   componentDidMount() {

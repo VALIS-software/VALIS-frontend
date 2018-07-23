@@ -47,13 +47,6 @@ class ExACSelector extends React.Component {
     this.setState({
       variantTagValue: value
     });
-    if (!this.state.fixTitle) {
-      const newTitle =
-        value === null ? "" : this.state.availableVariantTags[value];
-      this.setState({
-        title: newTitle
-      });
-    }
   }
 
 
@@ -70,7 +63,7 @@ class ExACSelector extends React.Component {
     this.appModel.trackMixPanel("Add ExAC Track", { "query": query });
     const tagValue = this.state.availableVariantTags[this.state.variantTagValue];
     App.addVariantTrack(`${tagValue} (ExAC)`, query);
-    this.props.viewModel.closeView();
+    this.props.viewModel.closeNavigationView();
   }
 
   componentDidMount() {
@@ -103,12 +96,13 @@ class ExACSelector extends React.Component {
         >
           {variantTagItems}
         </SelectField>
+        <br />
         <RaisedButton
           label="Add Track"
           primary={true}
           onClick={() => this.addQueryTrack()}
           disabled={this.state.variantTagValue === null}
-          style={{width: '95%'}}
+          style={{ position: "absolute", bottom: "10px", width: "90%" }}
         />
       </div>
     );
