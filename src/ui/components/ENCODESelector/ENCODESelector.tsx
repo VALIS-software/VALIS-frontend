@@ -23,7 +23,6 @@ type Props = {
 type State = {
   biosampleValue: any,
   error: any,
-  title: any,
   genomeTypeValue: any,
   chromoNameValue: number,
   minLength: number,
@@ -32,7 +31,6 @@ type State = {
   availableBiosamples: Array<any>,
   availableTargets: Array<any>,
   checked: Array<any>,
-  fixTitle: boolean,
 }
 
 class ENCODESelector extends React.Component<Props, State> {
@@ -49,7 +47,6 @@ class ENCODESelector extends React.Component<Props, State> {
       this.appModel = props.appModel;
     }
     this.state = {
-      title: "",
       biosampleValue: null,
       genomeTypeValue: null,
       chromoNameValue: 0,
@@ -60,7 +57,6 @@ class ENCODESelector extends React.Component<Props, State> {
       availableTargets: [],
       checked: [],
       error: undefined,
-      fixTitle: undefined
     };
   }
 
@@ -165,24 +161,10 @@ class ENCODESelector extends React.Component<Props, State> {
     });
   }
 
-  handleUpdateTitle = (event: any) => {
-    this.setState({
-      title: event.target.value,
-      fixTitle: true
-    });
-  }
-
   handelUpdateBiosample = (event: any, index: any, value: any) => {
     this.setState({
       biosampleValue: value
     });
-    if (!this.state.fixTitle) {
-      const newTitle =
-        value === null ? "" : this.state.availableBiosamples[value];
-      this.setState({
-        title: newTitle
-      });
-    }
     // Update the available types and targets
     if (value !== null) {
       this.selectedBiosample = this.state.availableBiosamples[value];
@@ -355,7 +337,7 @@ class ENCODESelector extends React.Component<Props, State> {
           label="Add Track"
           primary={true}
           onClick={() => this.addQueryTrack()}
-          disabled={!this.state.title}
+          disabled={this.state.biosampleValue === null || this.state.genomeTypeValue === null}
           style={{ position: "absolute", bottom: "10px", width: "90%" }}
         />
       </div>
