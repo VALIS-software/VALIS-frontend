@@ -39,7 +39,7 @@ export type TilePayload = Array<{
     id: string,
     baseIndex: number,
     refSequence: string,
-    alts: { [sequence: string]: number }
+    alts: string[]
 }>;
 
 export class VariantTileStore extends TileStore<TilePayload, void> {
@@ -77,7 +77,7 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
                 id: v.id,
                 baseIndex: v.start - 1,
                 refSequence: v.info.variant_ref ? v.info.variant_ref: '',
-                alts: v.info.allele_frequencies ? v.info.allele_frequencies: {},
+                alts: v.info.variant_alt ? v.info.variant_alt.split(','): [],
             } });
         });
     }
