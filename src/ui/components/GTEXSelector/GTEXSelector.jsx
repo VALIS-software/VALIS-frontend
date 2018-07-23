@@ -161,7 +161,7 @@ class GTEXSelector extends React.Component {
           label="Add Track"
           primary={true}
           onClick={() => this.addQueryTrack()}
-          disabled={!this.state.biosampleValue}
+          disabled={this.state.biosampleValue === null}
           style={{ position: "absolute", bottom: "10px", width: "90%" }}
         />
       </div>
