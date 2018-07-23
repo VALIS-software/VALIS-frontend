@@ -126,7 +126,6 @@ class TokenBox extends React.Component {
     ['TRAIT', 'GENE', 'CELL_TYPE', 'TUMOR_SITE'].forEach(rule => {
       suggestionMap.set(rule, (searchText, maxResults) => {
         return this.getThrottledResultPromise(rule, searchText, maxResults).then(d=> {
-          console.log(d);
           return d;
         });
       });
