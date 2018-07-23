@@ -2,6 +2,7 @@ import { Strand } from "gff3/Strand";
 import { Dialog, FlatButton, IconButton } from "material-ui";
 import { MuiThemeProvider } from "material-ui/styles";
 import { ContentReport } from "material-ui/svg-icons";
+import CircularProgress from "material-ui/CircularProgress";
 import * as React from "react";
 import EntityType from "sirius/EntityType";
 import SiriusApi from "sirius/SiriusApi";
@@ -108,7 +109,6 @@ export class App extends React.Component<Props, State> {
 	}
 
 	componentDidMount() {
-		this.startFrameLoop();
 
 		// Get User Profile, redirect if not logged in
 		SiriusApi.getUserProfile().then((userProfile: any) => {
@@ -120,6 +120,8 @@ export class App extends React.Component<Props, State> {
 			this.setState({
 				userProfile: userProfile,
 			})
+			// We only start the FrameLoop after log in
+			this.startFrameLoop();
 		}, (err: object) => {
 			window.location.href = '/login';
 		});
@@ -165,6 +167,12 @@ export class App extends React.Component<Props, State> {
 	}
 
 	render() {
+		if (this.state.userProfile === null) {
+			return (<div className="centered">
+						<CircularProgress size={150} thickness={10} />
+					</div>);
+		}
+
 		const errorButton = this.state.errors.length > 0 ? (<div className="error-button"><IconButton onClick={this.displayErrors} tooltip="Clear"><ContentReport /></IconButton></div>) : (<div />);
 
 		let errorDialog = (<div />);
