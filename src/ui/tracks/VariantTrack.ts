@@ -107,13 +107,12 @@ export default class VariantTrack extends Track<'variant'> {
 
                             let color: Array<number> = [1, 0, 0, 1.0]; // default to deletion
 
-                            for (let altSequence in variant.alts) {
+                            for (let altSequence of variant.alts) {
                                 let altSpan = altSequence.length;
 
-                                let altFreq = variant.alts[altSequence];
                                 let lengthDelta = altSpan - refSpan;
 
-                                // generate color from altFreq and lengthDelta
+                                // generate color from lengthDelta
                                 let opacity = 1;
                                 if (lengthDelta === 0) {
                                     color = [1.0, 1.0, 1.0, opacity];
@@ -195,16 +194,15 @@ export default class VariantTrack extends Track<'variant'> {
                             let color: Array<number> = [1, 0, 0, 1.0]; // default to deletion
 
                             let altIndex = 0;
-                            for (let altSequence in variant.alts) {
+                            for (let altSequence of variant.alts) {
                                 let altSpan = altSequence.length;
 
-                                let altFreq = variant.alts[altSequence];
                                 let lengthDelta = altSpan - refSpan;
 
-                                // generate color from altFreq and lengthDelta
-                                let opacity = altFreq <= 0 ? 0 : Math.sqrt(altFreq);
+                                // generate color from lengthDelta
+                                let opacity = 0.7;
                                 if (lengthDelta === 0) {
-                                    color = [1, 1, 1, opacity];
+                                    color = [0.8, 0.8, 0.8, opacity];
                                 } else if (lengthDelta < 0) {
                                     color = [1, 0, 0, opacity];
                                 } else {
