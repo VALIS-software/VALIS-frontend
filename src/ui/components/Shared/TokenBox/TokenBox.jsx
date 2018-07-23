@@ -12,9 +12,9 @@ import buildQueryParser from "sirius/queryparser";
 import SiriusApi from "sirius/SiriusApi";
 import QueryModel from "../../../models/QueryModel";
 
-const immutable = require('immutable');
-
 import './TokenBox.scss';
+
+const DEBOUNCE_TIME = 200;
 
 class TokenBox extends React.Component {
   constructor(props) {
@@ -23,7 +23,9 @@ class TokenBox extends React.Component {
     this.viewModel = props.viewModel;
 
     this.queryParser = buildQueryParser(this.getSuggestionHandlers());
-
+    
+    this.timeOfLastRequest = null;
+    this.lastRequest = null;
 
     this.state = {
       tokens: [],
@@ -100,17 +102,31 @@ class TokenBox extends React.Component {
         } else {
           this.getSuggestions(newTokens, true);
         }
-        
-        
     }
   };
+
+  getThrottledResultPromise(rule, searchText, maxResults) {
+    const currTime = Date.now();
+    this.timeOfLastRequest = currTime;
+    this.lastRequest = new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (currTime < this.timeOfLastRequest) resolve(this.lastRequest);
+        else {
+          resolve(SiriusApi.getSuggestions(rule, searchText, maxResults).then(results => {
+            return results.map(value => { return { rule: rule, value: value}; });
+          }));
+        }
+      }, DEBOUNCE_TIME);
+    });
+    return this.lastRequest;
+  }
 
   getSuggestionHandlers() {
     const suggestionMap = new Map();
     ['TRAIT', 'GENE', 'CELL_TYPE', 'TUMOR_SITE'].forEach(rule => {
       suggestionMap.set(rule, (searchText, maxResults) => {
-        return SiriusApi.getSuggestions(rule, searchText, maxResults).then(results => {
-          return results.map(value => { return { rule: rule, value: value}; });
+        return this.getThrottledResultPromise(rule, searchText, maxResults).then(d=> {
+          return d;
         });
       });
     });
