@@ -168,7 +168,9 @@ export class App extends React.Component<Props, State> {
 
 	render() {
 		if (this.state.userProfile === null) {
-			return (<CircularProgress size={80} thickness={5} />);
+			return (<div className="centered">
+						<CircularProgress size={150} thickness={10} />
+					</div>);
 		}
 
 		const errorButton = this.state.errors.length > 0 ? (<div className="error-button"><IconButton onClick={this.displayErrors} tooltip="Clear"><ContentReport /></IconButton></div>) : (<div />);
