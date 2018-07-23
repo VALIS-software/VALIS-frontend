@@ -23,6 +23,10 @@ import { App } from '../../../App';
 
 const FETCH_SIZE = 30;
 
+function truncate(str, length) {
+  return str.length < length ? str : str.slice(length) + '...';
+}
+
 class SearchResultsView extends React.Component {
   constructor(props) {
     super(props);
@@ -59,7 +63,7 @@ class SearchResultsView extends React.Component {
           startIndex: e.start - 1,
           span: e.length
         }
-      });
+      }, false);
     } else {
       App.addVariantTrack(this.props.text, this.query.getFilteredQuery());
     }
@@ -155,12 +159,21 @@ class SearchResultsView extends React.Component {
     let typeStyle = { backgroundColor: 'grey'}
     let typeName = result.type;
     if (result.type === EntityType.SNP) {
-      mutation = (<span>{alt} <span className="allele-arrow">⟶</span> {ref}</span>);
-      typeName = 'variant';
+      const isInsertion = alt.split(",").filter(d => d.length > ref.length).length > 0;
+      if(isInsertion) {
+        typeName = 'insertion';
+        mutation = (<span>+ {truncate(alt, 3)}</span>);
+      } else if (!alt || ref.length > alt.length) {
+        typeName = 'deletion';
+        mutation = (<span>✗ {truncate(ref, 3)}</span>);
+      } else {
+        typeName = 'SNP';
+        mutation = (<span>{alt} <span className="allele-arrow">⟶</span> {ref}</span>);
+      }
     } else {
       typeStyle.float = 'right';
     }
-    const genomicType = (<Pills items={[]} style={typeStyle} />);
+    const genomicType = (<Pills items={[typeName]} style={typeStyle} />);
     return (<span className="right-info"><div>{location}</div><div>{genomicType} {mutation} </div></span>);
   }
 

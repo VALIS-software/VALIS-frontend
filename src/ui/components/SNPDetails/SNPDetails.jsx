@@ -4,6 +4,7 @@ import * as React from 'react';
 import QueryBuilder from "sirius/QueryBuilder";
 import Pills from '../Shared/Pills/Pills';
 import SearchResultsView from '../SearchResultsView/SearchResultsView';
+import GenericEntityDetails from '../GenericEntityDetails/GenericEntityDetails';
 import AssociationList from '../Shared/AssociationList/AssociationList';
 import Collapsible from '../Shared/Collapsible/Collapsible';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
@@ -227,6 +228,9 @@ class SNPDetails extends React.Component {
       <AssociationList associations={this.state.relations} appModel={this.props.appModel} viewModel={this.props.viewModel} />
       <Collapsible title="External References" open={false}>
         {links}
+      </Collapsible>
+      <Collapsible title="View Raw Data" open={false}>
+        <GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={this.props.snpId}/>
       </Collapsible>
     </div>);
   }

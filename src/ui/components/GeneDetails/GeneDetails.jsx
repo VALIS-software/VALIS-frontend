@@ -4,6 +4,7 @@ import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import Collapsible from '../Shared/Collapsible/Collapsible';
 import SearchResultsView from '../SearchResultsView/SearchResultsView';
+import GenericEntityDetails from '../GenericEntityDetails/GenericEntityDetails';
 import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
 import '../Shared/Shared.scss';
 import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
@@ -213,6 +214,9 @@ class GeneDetails extends React.Component {
       {gwasList}
       {intersectSNPList}
       {eqtlList}
+      <Collapsible title="View Raw Data" open={false}>
+        <GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={this.props.geneId}/>
+      </Collapsible>
     </div>);
   }
 }
