@@ -25,7 +25,6 @@ type State = {
   error: any,
   genomeTypeValue: any,
   chromoNameValue: number,
-  minLength: number,
   maxnumber: number,
   availableTypes: Array<any>,
   availableBiosamples: Array<any>,
@@ -50,7 +49,6 @@ class ENCODESelector extends React.Component<Props, State> {
       biosampleValue: null,
       genomeTypeValue: null,
       chromoNameValue: 0,
-      minLength: 10,
       maxnumber: 1000000,
       availableTypes: [],
       availableBiosamples: [],
@@ -208,13 +206,6 @@ class ENCODESelector extends React.Component<Props, State> {
     });
   }
 
-  handleUpdateMinLength = (event: any, value: any) => {
-    this.setState({
-      minLength: value
-    });
-  }
-
-
   buildTitle() {
     const biosample = this.state.availableBiosamples[this.state.biosampleValue];
     const genomeType = this.state.availableTypes[this.state.genomeTypeValue];
@@ -245,7 +236,6 @@ class ENCODESelector extends React.Component<Props, State> {
       }
     }
     builder.filterTargets(targets);
-    builder.filterLength({ ">": this.state.minLength });
     builder.setLimit(this.state.maxnumber);
     const genomeQuery = builder.build();
     return genomeQuery;
