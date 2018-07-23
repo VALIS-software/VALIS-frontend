@@ -156,12 +156,13 @@ class GTEXSelector extends React.Component {
           value={reverse(this.state.pvalue)}
           onChange={this.handleUpdatePValue}
         />
+        <br />
         <RaisedButton
           label="Add Track"
           primary={true}
           onClick={() => this.addQueryTrack()}
           disabled={!this.state.biosampleValue}
-          style={{width: '95%'}}
+          style={{ position: "absolute", bottom: "10px", width: "90%" }}
         />
       </div>
     );
