@@ -107,9 +107,7 @@ export class App extends React.Component<Props, State> {
 		App.appInstance = this;
 	}
 
-	componentDidMount() {
-		this.startFrameLoop();
-
+	componentWillMount() {
 		// Get User Profile, redirect if not logged in
 		SiriusApi.getUserProfile().then((userProfile: any) => {
 			if (!userProfile.name) {
@@ -123,6 +121,10 @@ export class App extends React.Component<Props, State> {
 		}, (err: object) => {
 			window.location.href = '/login';
 		});
+	}
+
+	componentDidMount() {
+		this.startFrameLoop();
 
 		// add event listeners
 		window.addEventListener('resize', this.onResize);
