@@ -54,7 +54,7 @@ class GWASDetails extends React.Component {
       return (<div />);
     }
     // Fall back to GenericEntityDetails since other source like ClinVar don't have detailed information
-    if (this.state.details.source !== DATA_SOURCE_GWAS) {
+    if (this.state.details.source.indexOf(DATA_SOURCE_GWAS) < 0) {
       return (<GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={this.state.loadedAssocId} />)
     }
 
@@ -98,6 +98,9 @@ class GWASDetails extends React.Component {
       </Collapsible>
       <Collapsible title="SNP Info" open={false}>
         {snpView}
+      </Collapsible>
+      <Collapsible title="View Raw Data" open={false}>
+        <GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={this.props.assocId}/>
       </Collapsible>
     </div>);
   }

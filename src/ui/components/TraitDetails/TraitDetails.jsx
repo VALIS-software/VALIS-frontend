@@ -5,6 +5,7 @@ import Collapsible from '../Shared/Collapsible/Collapsible';
 import Pills from '../Shared/Pills/Pills';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
+import GenericEntityDetails from '../GenericEntityDetails/GenericEntityDetails';
 import SiriusApi from "sirius/SiriusApi";
 import QueryModel from '../../models/QueryModel';
 import QueryBuilder from "sirius/QueryBuilder";
@@ -138,6 +139,9 @@ class TraitDetails extends React.Component {
         {links}
       </Collapsible>
       {associations}
+      <Collapsible title="View Raw Data" open={false}>
+        <GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={this.props.traitId}/>
+      </Collapsible>
     </div>);
   }
 }
