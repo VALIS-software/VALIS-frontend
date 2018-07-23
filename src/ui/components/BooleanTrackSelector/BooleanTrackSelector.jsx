@@ -85,6 +85,8 @@ class BooleanTrackSelector extends React.Component {
       const op = this.state.availableOperators[this.state.operatorValue];
       if (op === 'intersect' || op === 'window') {
         return queryA.type;
+      } else if (queryA.type === queryB.type === 'variant'){
+        return 'variant';
       } else {
         return 'interval';
       }
