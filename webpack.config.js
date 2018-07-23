@@ -6,11 +6,13 @@ const outputDirectory = `${__dirname}/dist`;
 module.exports = (env) => {
 	env = env || {};
 
+	let releaseMode = !!(env.production || env.deploy);
+
 	const config = {
 		context: path.resolve(__dirname, "src"),
 		entry: "./index.tsx",
 
-		mode: (env.production || env.deploy) ? "production" : "development",
+		mode: releaseMode ? "production" : "development",
 
 		output: {
 			filename: "static/bundle.js",
@@ -18,7 +20,7 @@ module.exports = (env) => {
 		},
 
 		// Enable sourcemaps for debugging webpack's output.
-		devtool: "source-map",
+		devtool: releaseMode ? false : "source-map",
 
 		resolve: {
 			// Add '.ts' and '.tsx' as resolvable extensions.
