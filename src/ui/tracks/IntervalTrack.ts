@@ -11,11 +11,14 @@ import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
 type TilePayload = Float32Array;
 
 export default class IntervalTrack extends Track<'interval'> {
+    
+    blendEnabled: boolean = true;
 
     protected tileStore: GenericIntervalTileStore;
-    
+
     constructor(model: TrackModel<'interval'>) {
         super(model);
+        this.setBlendMode(model.blendEnabled);
     }
 
     setContig(contig: string) {
@@ -26,6 +29,10 @@ export default class IntervalTrack extends Track<'interval'> {
             this.model.tileStoreConstructor
         );
         super.setContig(contig);
+    }
+
+    setBlendMode(enabled: boolean) {
+        this.blendEnabled = enabled;
     }
 
     protected _pendingTiles = new UsageCache<Tile<any>>();
@@ -83,7 +90,7 @@ export default class IntervalTrack extends Track<'interval'> {
         // decrease opacity at large lods to prevent white-out as interval cluster together and overlap
         let e = 2;
         let t = Math.pow((Math.max(continuousLodLevel - 2, 0) / 15), e);
-        node.opacity = Scalar.lerp(1, 0.1, Scalar.clamp(t, 0, 1));
+        node.opacity = this.blendEnabled ? Scalar.lerp(1, 0.1, Scalar.clamp(t, 0, 1)) : 1.0;
 
         this._onStage.get(tileKey, () => {
             this.add(node);
@@ -102,7 +109,6 @@ export default class IntervalTrack extends Track<'interval'> {
 
             let fractionX = (intervalStartIndex - tile.x) / tile.span
             let wFractional = intervalSpan / tile.span;
-
             instanceData[i] = {
                 xFractional: fractionX,
                 wFractional: wFractional,

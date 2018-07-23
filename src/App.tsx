@@ -326,8 +326,10 @@ export class App extends React.Component<Props, State> {
 		resultTransform: (entry: any) => {
 			startIndex: number,
 			span: number
-		}
+		},
+		blendEnabled?: boolean
 	) {
+		if (blendEnabled === undefined) blendEnabled = true;
 		this.addTrack({
 			name: title,
 			type: 'interval',
@@ -335,7 +337,8 @@ export class App extends React.Component<Props, State> {
 			query: query,
 			tileStoreConstructor: (contig) => {
 				return new GenericIntervalTileStore(contig, query, resultTransform);
-			}
+			},
+			blendEnabled: blendEnabled
 		});
 	}
 
@@ -374,9 +377,10 @@ export class App extends React.Component<Props, State> {
 		resultTransform: (entry: any) => {
 			startIndex: number,
 			span: number
-		}
+		},
+		blendEnabled?: boolean,
 	) {
-		this.appInstance.addIntervalTrack(title, query, resultTransform);
+		this.appInstance.addIntervalTrack(title, query, resultTransform, blendEnabled);
 	}
 
 	static search(queryObject: any) {
