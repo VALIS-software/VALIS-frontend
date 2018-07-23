@@ -59,7 +59,7 @@ class SearchResultsView extends React.Component {
           startIndex: e.start - 1,
           span: e.length
         }
-      });
+      }, false);
     } else {
       App.addVariantTrack(this.props.text, this.query.getFilteredQuery());
     }
