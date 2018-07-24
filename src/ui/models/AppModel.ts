@@ -46,10 +46,6 @@ export default class AppModel extends EventCreator {
 
     public getTracks = () => {
         return this.tracks;
-    };
-
-    public getContigs = () => {
-        return CHROMOSOME_NAMES;
     }
 
     public updateLoadingState = (wasLoading: boolean) => {
