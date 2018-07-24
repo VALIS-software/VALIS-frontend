@@ -9,6 +9,7 @@ export class TileStore<TilePayload, BlockPayload> {
     constructor(
         readonly tileWidth: number = 1024,
         readonly tilesPerBlock: number = 8,
+        public maximumX: number = Infinity,
     ) {
         this.blockSize = tileWidth * tilesPerBlock;
     }
@@ -23,6 +24,10 @@ export class TileStore<TilePayload, BlockPayload> {
         // clamp to positive numbers
         x0 = Math.max(x0, 0);
         x1 = Math.max(x1, 0);
+
+        // apply max X
+        x0 = Math.min(x0, this.maximumX);
+        x1 = Math.min(x1, this.maximumX);
 
         // guard illegal span
         if (x1 <= x0) return;
@@ -72,6 +77,7 @@ export class TileStore<TilePayload, BlockPayload> {
         requestData: boolean
     ): Tile<TilePayload> {
         x = Math.max(0, x);
+        x = Math.min(0, this.maximumX);
 
         let lodLevelFractional = Scalar.log2(Math.max(samplingDensity, 1));
         let lodLevel = Math.floor(lodLevelFractional);
