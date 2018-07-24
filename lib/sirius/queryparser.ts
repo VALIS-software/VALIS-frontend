@@ -175,7 +175,9 @@ function buildSNPrsQuery(parsePath: ParsedToken[]): any {
 }
 
 function buildFullTextQuery(inputText: string) : any {
-    if (inputText.length > 5) {
+    const isAllUpper = inputText === inputText.toUpperCase();
+    const suffixIsNumber = !isNaN(+inputText[inputText.length - 1]);
+    if (inputText.length > 5 && !isAllUpper && !suffixIsNumber) {
         builder.newInfoQuery();
         builder.filterType('trait');
         builder.searchText(inputText);

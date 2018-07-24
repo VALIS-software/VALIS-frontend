@@ -173,7 +173,7 @@ class BooleanTrackSelector extends React.Component {
         </SelectField><br /> <br />
         <SelectField
           value={this.state.trackAValue}
-          floatingLabelText="Annotation Track A"
+          floatingLabelText="Source Track"
           onChange={this.handleUpdateTrackA}
           maxHeight={200}
         >
@@ -181,7 +181,7 @@ class BooleanTrackSelector extends React.Component {
         </SelectField><br /> <br />
         <SelectField
           value={this.state.trackBValue}
-          floatingLabelText="Annotation Track B"
+          floatingLabelText="Filter Track"
           onChange={this.handleUpdateTrackB}
           maxHeight={200}
         >
