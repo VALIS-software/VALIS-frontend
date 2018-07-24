@@ -12,6 +12,7 @@ import AppModel from "./models/AppModel";
 import Panel from "./Panel";
 import TrackRow from "./TrackRow";
 import { DEFAULT_SPRING } from "./UIConstants";
+import { SiriusApi } from "sirius/SiriusApi";
 
 
 type Row = {
@@ -231,12 +232,15 @@ class TrackViewer extends Object2D {
         edges.push(newEdge);
 
         // create panel object and add header to the scene graph
-        let panel = new Panel((p) => this.closePanel(p, true), this.spacing, this.panelHeaderHeight, this.xAxisHeight, this.appModel.getContigs());
+        let panel = new Panel((p) => this.closePanel(p, true), this.spacing, this.panelHeaderHeight, this.xAxisHeight);
         panel.setContig(location.contig);
         panel.setRange(location.x0, location.x1);
         panel.column = newColumnIndex; // @! should use array of panels instead of column field
         panel.layoutH = 1; // fill the full grid height
         this.grid.add(panel);
+
+        // set available contigs to navigate to from the API
+        SiriusApi.getContigsSorted().then((contigs) => panel.setAvailableContigs(contigs));
 
         // initialize tracks for this panel
        for (let row of this.rows) {
