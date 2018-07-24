@@ -31,6 +31,10 @@ export default class GenericIntervalTileStore extends TileStore<TilePayload, voi
             tileSize, // tile size
             1
         );
+
+        SiriusApi.getContigInfo(contig).then((info) => {
+            this.maximumX = info.length - 1;
+        });
     }
 
     protected mapLodLevel(l: number) {

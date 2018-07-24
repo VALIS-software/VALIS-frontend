@@ -1,5 +1,7 @@
 import IconButton from "material-ui/IconButton";
 import SvgEdit from "material-ui/svg-icons/image/edit";
+import SvgChevronLeft from "material-ui/svg-icons/navigation/chevron-left";
+import SvgChevronRight from "material-ui/svg-icons/navigation/chevron-right";
 import SvgCancel from "material-ui/svg-icons/navigation/cancel";
 import SvgCheck from "material-ui/svg-icons/navigation/check";
 import SvgClose from "material-ui/svg-icons/navigation/close";
@@ -54,6 +56,8 @@ export class Panel extends Object2D {
 
     protected formattedContig: string;
     protected isEditing: boolean = false;
+
+    protected availableContigs: Array<string>;
 
     constructor(
         protected onClose: (t: Panel) => void,
@@ -187,6 +191,11 @@ export class Panel extends Object2D {
             tile.setRange(x0, x1);
         }
 
+        this.updatePanelHeader();
+    }
+
+    setAvailableContigs(contigs: Array<string>) {
+        this.availableContigs = contigs;
         this.updatePanelHeader();
     }
 
@@ -429,9 +438,20 @@ export class Panel extends Object2D {
         obj.w = -this.spacing.x;
     }
 
+    protected availableContigAtOffset = (contig: string, offset: number) => {
+        if (this.availableContigs != null) {
+            const idx = this.availableContigs.indexOf(contig);
+            if (idx < 0) return this.availableContigs[0];
+            let newIdx = (idx + offset) % this.availableContigs.length;
+            if (newIdx < 0) newIdx += this.availableContigs.length;
+            return this.availableContigs[newIdx];
+        } else {
+            return this.contig;
+        }
+    }
+
     protected updatePanelHeader() {
         let rangeString = `${XAxis.formatValue(this.x0, 8)}bp to ${XAxis.formatValue(this.x1, 8)}bp`;
-
         const startBp = Math.floor(this.x0).toFixed(0);
         const endBp = Math.ceil(this.x1).toFixed(0);
         let rangeSpecifier = `${this.contig}:${startBp}-${endBp}`;
@@ -442,11 +462,14 @@ export class Panel extends Object2D {
             rangeString={ rangeString }
             rangeSpecifier={ rangeSpecifier }
             enableClose = { this._closable && !this.closing } 
+            enableContigNavigation = { this.availableContigs != null }
             onClose = { this.onClose } 
             isEditing = { this.isEditing }
             onEditCancel = { () => this.finishEditing() }
             onEditSave = { (rangeSpecifier: string) => this.finishEditing(rangeSpecifier) }
             onEditStart = { () => this.startEditing() }
+            onNextContig = { () =>  this.setContig(this.availableContigAtOffset(this.contig, 1)) }
+            onPreviousContig={() => this.setContig(this.availableContigAtOffset(this.contig, -1)) }
         />;
     }
 
@@ -486,11 +509,14 @@ interface PanelProps {
     rangeString: string,
     rangeSpecifier: string,
     enableClose: boolean,
+    enableContigNavigation: boolean,
     isEditing: boolean,
     onEditStart: () => void,
     onEditSave: (rangeSpecifier: string) => void,
     onEditCancel: () => void,
-    onClose: (panel: Panel) => void
+    onClose: (panel: Panel) => void,
+    onNextContig: (panel: Panel) => void,
+    onPreviousContig: (panel: Panel) => void
 }
 
 class PanelHeader extends React.Component<PanelProps,{}> {
@@ -515,16 +541,38 @@ class PanelHeader extends React.Component<PanelProps,{}> {
         const iconHoverColor = 'rgb(255, 255, 255)';
         const iconViewBoxSize = '0 0 32 32';
         
-        const closeIcon = this.props.enableClose ?
-            (<div style={{
+        const closeIcon = this.props.enableClose ? (
+            <div style={{
                 position: 'absolute',
                 right: 0
             }}>
                 <IconButton onClick={() => this.props.onClose(this.props.panel)}>
                     <SvgClose color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' />
                 </IconButton>
-            </div>) : null
+            </div>
+        ) : null;
 
+        const previousIcon =(
+            <div style={{
+                position: 'absolute',
+                left: 0
+            }}>
+                <IconButton onClick={() => this.props.onPreviousContig(this.props.panel)}>
+                    <SvgChevronLeft color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' />
+                </IconButton>
+            </div>
+        );
+
+        const nextIcon = (
+            <div style={{
+                position: 'absolute',
+                right: 0
+            }}>
+                <IconButton onClick={() => this.props.onNextContig(this.props.panel)}>
+                    <SvgChevronRight color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' />
+                </IconButton>
+            </div>
+        );
 
         if (this.props.isEditing) {
             headerContents = (<div style={headerContainerStyle} >
@@ -555,16 +603,17 @@ class PanelHeader extends React.Component<PanelProps,{}> {
                 {closeIcon}
             </div>);
         } else {
-            headerContents = (<div style={headerContainerStyle} onClick={() => this.props.onEditStart()}>
-                <span><b>{this.props.contig}</b> {this.props.rangeString}</span>
-                <span style={headerStyle}>
+            headerContents = (<div style={headerContainerStyle}>
+                {this.props.enableContigNavigation ? previousIcon : null}
+                <span onClick={() => this.props.onEditStart()}><b>{this.props.contig}</b> {this.props.rangeString}</span>
+                <span style={headerStyle} onClick={() => this.props.onEditStart()}>
                     <SvgEdit 
                         viewBox={iconViewBoxSize}
                         color={iconColor}
                         hoverColor={iconHoverColor} 
                     />
                 </span>
-                {closeIcon}
+                {this.props.enableContigNavigation ? nextIcon : null}
             </div>);
         }
 

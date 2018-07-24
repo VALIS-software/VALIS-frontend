@@ -31,6 +31,10 @@ export default class AppModel extends EventCreator {
         return this.viewModel;
     }
 
+    public toggleView = () => {
+        this.viewModel.closeNavigationView();
+    }
+
     public pushView = (view: React.ReactNode, title?: string) => {
         this.viewModel.pushView(title || '', '', view);
     }
@@ -41,7 +45,7 @@ export default class AppModel extends EventCreator {
 
     public getTracks = () => {
         return this.tracks;
-    };
+    }
 
     public updateLoadingState = (wasLoading: boolean) => {
         const isLoading = this.tracksLoading > 0;

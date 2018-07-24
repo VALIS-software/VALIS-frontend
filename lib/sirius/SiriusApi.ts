@@ -126,6 +126,69 @@ export class SiriusApi {
         });
     }
 
+    private static _contigInfoPromise: Promise<{
+        [contig: string]: {
+            start: number, // start base (i.e. startIndex + 1)
+            length: number,
+        }
+    }>;
+    private static getContigInfoPromise() {
+        if (this._contigInfoPromise == null) {
+            // initialize the promise
+            this._contigInfoPromise = axios.get(`${SiriusApi.apiUrl}/contig_info`).then(data => {
+                let infoArray: Array<{
+                    name: string,
+                    start: number,
+                    length: number,
+                }> = data.data;
+
+                // create contig info map
+                let contigInfoMap: { [contig: string]: {
+                    start: number,
+                    length: number,
+                } } = {};
+                for (let item of infoArray) {
+                    contigInfoMap[item.name] = {
+                        start: item.start,
+                        length: item.length
+                    }
+                }
+
+                return contigInfoMap;
+            });
+        }
+
+        return this._contigInfoPromise;
+    }
+
+    static getContigInfo(contig: string): Promise<{ length: number }> {
+        return this.getContigInfoPromise().then((infoMap) => {
+            let info = infoMap[contig];
+            if (info == null) {
+                throw `No contig info available for "${contig}"`;
+            } else {
+                return info;
+            }
+        });
+    }
+
+    static getContigs(): Promise<Array<string>> {
+        return this.getContigInfoPromise().then((infoMap) => Object.keys(infoMap));
+    }
+
+    private static _sortedContigsPromise: Promise<Array<string>>;
+    static getContigsSorted(): Promise<Array<string>> {
+        if (this._sortedContigsPromise == null) {
+            this._sortedContigsPromise = this.getContigs().then((contigs) => {
+                let sortedNaturally = contigs.sort((a, b) => {
+                    return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+                });
+                return sortedNaturally;
+            });
+        }
+        return this._sortedContigsPromise;
+    }
+
     static getGraphs() {
         return axios.get(`${this.apiUrl}/graphs`).then(data => {
             return data.data;
