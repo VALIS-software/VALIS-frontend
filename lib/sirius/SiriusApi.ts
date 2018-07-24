@@ -126,6 +126,36 @@ export class SiriusApi {
         });
     }
 
+    private static _contigInfoPromise: Promise<{ [contig: string]: { length: number } }>;
+    private static getContigInfoPromise() {
+        if (this._contigInfoPromise == null) {
+            // initialize the promise
+            this._contigInfoPromise = axios.get(`${SiriusApi.apiUrl}/contig_info`).then(data => {
+                let infoArray: Array<{ name: string, length: number }> = data.data;
+
+                // create contig info map
+                let contigInfoMap: { [contig: string]: { length: number } } = {};
+                for (let item of infoArray) {
+                    contigInfoMap[item.name] = {
+                        length: item.length
+                    }
+                }
+
+                return contigInfoMap;
+            });
+        }
+
+        return this._contigInfoPromise;
+    }
+
+    static getContigInfo(contig: string): Promise<{ length: number }> {
+        return this.getContigInfoPromise().then((infoMap) => infoMap[contig]);
+    }
+
+    static getContigs(): Promise<Array<string>> {
+        return this.getContigInfoPromise().then((infoMap) => Object.keys(infoMap));
+    }
+
     static getGraphs() {
         return axios.get(`${this.apiUrl}/graphs`).then(data => {
             return data.data;
