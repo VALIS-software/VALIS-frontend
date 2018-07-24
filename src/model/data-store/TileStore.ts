@@ -76,8 +76,8 @@ export class TileStore<TilePayload, BlockPayload> {
         samplingDensity: number,
         requestData: boolean
     ): Tile<TilePayload> {
-        x = Math.max(0, x);
-        x = Math.min(0, this.maximumX);
+        x = Math.max(x, 0);
+        x = Math.min(x, this.maximumX);
 
         let lodLevelFractional = Scalar.log2(Math.max(samplingDensity, 1));
         let lodLevel = Math.floor(lodLevelFractional);
