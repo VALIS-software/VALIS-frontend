@@ -19,7 +19,7 @@ export function EntityDetails(props: {
     let elem = null;
     if (entityType === EntityType.SNP) {
         elem = (<SNPDetails viewModel={props.viewModel} appModel={props.appModel} snpId={dataID} />);
-    } else if (entityType === EntityType.GENE) {
+    } else if ( entityType === EntityType.GENE || entityType === EntityType.PSUDOGENE || entityType === EntityType.NCRNAGENE ) {
         elem = (<GeneDetails viewModel={props.viewModel} appModel={props.appModel} geneId={dataID} />);
     } else if (entityType === EntityType.TRAIT) {
         elem = (<TraitDetails viewModel={props.viewModel} appModel={props.appModel} traitId={dataID} />);
