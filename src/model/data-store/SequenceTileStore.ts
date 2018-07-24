@@ -1,6 +1,7 @@
 import SiriusApi from "sirius/SiriusApi";
 import GPUDevice, { ColorSpaceConversion, GPUTexture, TextureDataType, TextureFormat, TextureMagFilter, TextureMinFilter, TextureWrapMode } from "../../rendering/GPUDevice";
 import TileStore, { Tile } from "./TileStore";
+import Scalar from "../../math/Scalar";
 
 export type TilePayload = {
     array: Uint8Array,
@@ -21,6 +22,16 @@ export class SequenceTileStore extends TileStore<TilePayload, BlockPayload> {
 
     constructor(protected sourceId: string) {
         super(1024, 8);
+
+        SiriusApi.getContigInfo(sourceId).then((info) => {
+            this.maximumX = info.length - 1;
+
+            // pre-load the sequence at a high lod level to avoid displaying nothing when zooming out
+            let minLength = 512;
+            this.getTiles(0, this.maximumX, info.length / minLength, true, () => {});
+        }).catch(() => {
+            console.warn(`Could not determine sequence length`);
+        });
     }
 
     // skip odd lod levels to trade visual fidelity for improved load time and performance

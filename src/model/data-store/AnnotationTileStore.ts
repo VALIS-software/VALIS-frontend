@@ -18,8 +18,12 @@ export type TilePayload = Array<Gene>;
 
 export class AnnotationTileStore extends TileStore<TilePayload, void> {
 
-    constructor(protected sourceId: string, tileSize: number = 1 << 20, protected macro: boolean = false) {
+    constructor(protected contig: string, tileSize: number = 1 << 20, protected macro: boolean = false) {
         super(tileSize, 1);
+        
+        SiriusApi.getContigInfo(contig).then((info) => {
+            this.maximumX = info.length - 1;
+        });
     }
 
     protected mapLodLevel(l: number) {
@@ -27,7 +31,7 @@ export class AnnotationTileStore extends TileStore<TilePayload, void> {
     }
 
     protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
-        return SiriusApi.loadAnnotations(this.sourceId, this.macro, tile.x, tile.span).then((flatFeatures) => {
+        return SiriusApi.loadAnnotations(this.contig, this.macro, tile.x, tile.span).then((flatFeatures) => {
             // convert flat list of features into a nested structure which is easier to work with for rendering
             let payload: TilePayload = new Array();
             let activeGene: TilePayload[0];

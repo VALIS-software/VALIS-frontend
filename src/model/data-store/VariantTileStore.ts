@@ -49,6 +49,10 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
             1 << 15, // tile size
             1
         );
+    
+        SiriusApi.getContigInfo(contig).then((info) => {
+            this.maximumX = info.length - 1;
+        });
     }
 
     protected mapLodLevel(l: number) {
