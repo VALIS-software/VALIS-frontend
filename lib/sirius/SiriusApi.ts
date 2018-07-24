@@ -126,17 +126,30 @@ export class SiriusApi {
         });
     }
 
-    private static _contigInfoPromise: Promise<{ [contig: string]: { length: number } }>;
+    private static _contigInfoPromise: Promise<{
+        [contig: string]: {
+            start: number, // start base (i.e. startIndex + 1)
+            length: number,
+        }
+    }>;
     private static getContigInfoPromise() {
         if (this._contigInfoPromise == null) {
             // initialize the promise
             this._contigInfoPromise = axios.get(`${SiriusApi.apiUrl}/contig_info`).then(data => {
-                let infoArray: Array<{ name: string, length: number }> = data.data;
+                let infoArray: Array<{
+                    name: string,
+                    start: number,
+                    length: number,
+                }> = data.data;
 
                 // create contig info map
-                let contigInfoMap: { [contig: string]: { length: number } } = {};
+                let contigInfoMap: { [contig: string]: {
+                    start: number,
+                    length: number,
+                } } = {};
                 for (let item of infoArray) {
                     contigInfoMap[item.name] = {
+                        start: item.start,
                         length: item.length
                     }
                 }
