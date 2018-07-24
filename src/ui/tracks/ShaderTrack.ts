@@ -31,7 +31,7 @@ export class ShaderTrack<TilePayload, BlockPayload> extends Track {
             this.tileStoreType,
             contig,
             this.tileStoreConstructor
-        )
+        );
         super.setContig(contig);
     }
 

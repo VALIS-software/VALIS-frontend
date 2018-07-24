@@ -9,6 +9,7 @@ export class TileStore<TilePayload, BlockPayload> {
     constructor(
         readonly tileWidth: number = 1024,
         readonly tilesPerBlock: number = 8,
+        public maximumX: number = Infinity,
     ) {
         this.blockSize = tileWidth * tilesPerBlock;
     }
@@ -23,6 +24,10 @@ export class TileStore<TilePayload, BlockPayload> {
         // clamp to positive numbers
         x0 = Math.max(x0, 0);
         x1 = Math.max(x1, 0);
+
+        // apply max X
+        x0 = Math.min(x0, this.maximumX);
+        x1 = Math.min(x1, this.maximumX);
 
         // guard illegal span
         if (x1 <= x0) return;
@@ -71,7 +76,8 @@ export class TileStore<TilePayload, BlockPayload> {
         samplingDensity: number,
         requestData: boolean
     ): Tile<TilePayload> {
-        x = Math.max(0, x);
+        x = Math.max(x, 0);
+        x = Math.min(x, this.maximumX);
 
         let lodLevelFractional = Scalar.log2(Math.max(samplingDensity, 1));
         let lodLevel = Math.floor(lodLevelFractional);
@@ -183,6 +189,7 @@ export class TileStore<TilePayload, BlockPayload> {
     private tileLoadFailed(tile: Tile<TilePayload>, reason: any) {
         const tileInternal = tile as any as TileInternal<TilePayload>;
         tileInternal._state = TileState.Empty;
+        tileInternal.emitLoadFailed(reason);
         console.warn(`Tile payload request failed: ${reason}`, tile);
     }
 
@@ -259,12 +266,14 @@ export enum TileState {
 
 export interface TileEventMap<Payload> {
     'complete': (tile: Tile<Payload>, payload: Payload) => void;
+    'load-failed': (tile: Tile<Payload>, reason: string) => void;
 }
 
 type TileInternal<Payload> = {
     _state: TileState;
     _payload: Payload;
     emitComplete(): void;
+    emitLoadFailed(reason: string): void;
 }
 
 export class Tile<Payload> {
@@ -316,6 +325,10 @@ export class Tile<Payload> {
 
     protected emitComplete() {
         this.eventEmitter.emit('complete', this, this._payload);
+    }
+
+    protected emitLoadFailed(reason: string) {
+        this.eventEmitter.emit('load-failed', this, reason);
     }
 
 }

@@ -1,6 +1,5 @@
 import EventCreator from "./eventCreator.js";
 import ViewModel from "./ViewModel";
-import { CHROMOSOME_NAMES } from '../helpers/constants';
 
 export enum AppEvent {
     AddTrack,
@@ -46,10 +45,6 @@ export default class AppModel extends EventCreator {
 
     public getTracks = () => {
         return this.tracks;
-    };
-
-    public getContigs = () => {
-        return CHROMOSOME_NAMES;
     }
 
     public updateLoadingState = (wasLoading: boolean) => {
