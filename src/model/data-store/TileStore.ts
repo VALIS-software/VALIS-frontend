@@ -189,6 +189,7 @@ export class TileStore<TilePayload, BlockPayload> {
     private tileLoadFailed(tile: Tile<TilePayload>, reason: any) {
         const tileInternal = tile as any as TileInternal<TilePayload>;
         tileInternal._state = TileState.Empty;
+        tileInternal.emitLoadFailed(reason);
         console.warn(`Tile payload request failed: ${reason}`, tile);
     }
 
@@ -265,12 +266,14 @@ export enum TileState {
 
 export interface TileEventMap<Payload> {
     'complete': (tile: Tile<Payload>, payload: Payload) => void;
+    'load-failed': (tile: Tile<Payload>, reason: string) => void;
 }
 
 type TileInternal<Payload> = {
     _state: TileState;
     _payload: Payload;
     emitComplete(): void;
+    emitLoadFailed(reason: string): void;
 }
 
 export class Tile<Payload> {
@@ -322,6 +325,10 @@ export class Tile<Payload> {
 
     protected emitComplete() {
         this.eventEmitter.emit('complete', this, this._payload);
+    }
+
+    protected emitLoadFailed(reason: string) {
+        this.eventEmitter.emit('load-failed', this, reason);
     }
 
 }
