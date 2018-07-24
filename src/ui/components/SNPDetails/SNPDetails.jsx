@@ -19,7 +19,7 @@ import '../Shared/Shared.scss';
 
 function FrequencyBarChart(props) {
   const sorted = props.data.slice().sort(((a, b) => b.value - a.value));
-  
+
   const rows = sorted.map(row => {
     const isUnknown = typeof row.value === 'string' || row.value === undefined;
     const p = isUnknown ? 0.0 : Math.max(1.0, (100.0 * row.value));
@@ -54,7 +54,7 @@ function GeneLink(props) {
     } else {
       const builder = new QueryBuilder();
       builder.newGenomeQuery();
-      builder.filterType('gene');
+      // builder.filterType({'$in': ['gene', 'psudogene', 'ncRNA_gene']});
       builder.filterName(props.geneName);
       builder.setLimit(1);
       const query = builder.build();

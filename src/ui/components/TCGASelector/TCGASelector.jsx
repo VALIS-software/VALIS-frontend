@@ -100,10 +100,7 @@ class TCGASelector extends React.Component {
   buildQuery = () => {
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
-    // QYD: TCGA also have some {type: 'variants'}, which are not SNPs
-    // builder.filterType({'$in': ['SNP', 'variant']});
-    // We will limit to SNPs for now to avoid confusion
-    builder.filterType('SNP');
+    builder.filterType({'$in': ['SNP', 'variant']});
     builder.filterSource(DATA_SOURCE_TCGA);
     const biosample = this.state.availableBiosamples[this.state.biosampleValue];
     builder.filterBiosample(biosample);

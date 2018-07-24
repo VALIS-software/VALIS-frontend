@@ -79,7 +79,7 @@ class GeneDetails extends React.Component {
     }
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
-    builder.filterType('SNP');
+    builder.filterType({'$in': ['SNP', 'variant']});
     builder.filterContig(details.contig);
     builder.filterStartBp({'>=': details.start, '<=': details.end});
     return builder.build();

@@ -17,7 +17,7 @@ export function EntityDetails(props: {
     const dataID: string = props.entity.id;
     const entityType: string = props.entity.type;
     let elem = null;
-    if (entityType === EntityType.SNP) {
+    if (entityType === EntityType.SNP || entityType === EntityType.VARIANT) {
         elem = (<SNPDetails viewModel={props.viewModel} appModel={props.appModel} snpId={dataID} />);
     } else if ( entityType === EntityType.GENE || entityType === EntityType.PSUDOGENE || entityType === EntityType.NCRNAGENE ) {
         elem = (<GeneDetails viewModel={props.viewModel} appModel={props.appModel} geneId={dataID} />);
