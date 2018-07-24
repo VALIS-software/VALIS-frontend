@@ -1,5 +1,7 @@
 import IconButton from "material-ui/IconButton";
 import SvgEdit from "material-ui/svg-icons/image/edit";
+import SvgChevronLeft from "material-ui/svg-icons/navigation/chevron-left";
+import SvgChevronRight from "material-ui/svg-icons/navigation/chevron-right";
 import SvgCancel from "material-ui/svg-icons/navigation/cancel";
 import SvgCheck from "material-ui/svg-icons/navigation/check";
 import SvgClose from "material-ui/svg-icons/navigation/close";
@@ -60,6 +62,7 @@ export class Panel extends Object2D {
         protected readonly spacing: { x: number, y: number },
         protected readonly panelHeaderHeight: number,
         protected readonly xAxisHeight: number,
+        protected readonly contigs: string[],
     ) {
         super();
         // a panel has nothing to render on its own
@@ -431,11 +434,18 @@ export class Panel extends Object2D {
 
     protected updatePanelHeader() {
         let rangeString = `${XAxis.formatValue(this.x0, 8)}bp to ${XAxis.formatValue(this.x1, 8)}bp`;
-
         const startBp = Math.floor(this.x0).toFixed(0);
         const endBp = Math.ceil(this.x1).toFixed(0);
         let rangeSpecifier = `${this.contig}:${startBp}-${endBp}`;
 
+        const getContigAtOffset = (contig: string, offset: number) => {
+            const idx = this.contigs.indexOf(contig);
+            if (idx < 0) return this.contigs[0];
+            let newIdx = (idx + offset) % this.contigs.length;
+            if (newIdx < 0) newIdx += this.contigs.length;
+            return this.contigs[newIdx];
+
+        }
         this.header.content = <PanelHeader 
             panel={ this }
             contig={ this.formattedContig }
@@ -447,6 +457,8 @@ export class Panel extends Object2D {
             onEditCancel = { () => this.finishEditing() }
             onEditSave = { (rangeSpecifier: string) => this.finishEditing(rangeSpecifier) }
             onEditStart = { () => this.startEditing() }
+            onNextContig = { () =>  this.setContig(getContigAtOffset(this.contig, 1)) }
+            onPreviousContig = { () => this.setContig(getContigAtOffset(this.contig, -1)) }
         />;
     }
 
@@ -490,7 +502,9 @@ interface PanelProps {
     onEditStart: () => void,
     onEditSave: (rangeSpecifier: string) => void,
     onEditCancel: () => void,
-    onClose: (panel: Panel) => void
+    onClose: (panel: Panel) => void,
+    onNextContig: (panel: Panel) => void,
+    onPreviousContig: (panel: Panel) => void
 }
 
 class PanelHeader extends React.Component<PanelProps,{}> {
@@ -525,6 +539,26 @@ class PanelHeader extends React.Component<PanelProps,{}> {
                 </IconButton>
             </div>) : null
 
+        const previousIcon =
+        (<div style={{
+            position: 'absolute',
+            left: 0
+        }}>
+            <IconButton onClick={() => this.props.onPreviousContig(this.props.panel)}>
+                <SvgChevronLeft color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' />
+            </IconButton>
+        </div>)
+
+        const nextIcon = 
+        (<div style={{
+            position: 'absolute',
+            right: 0
+        }}>
+            <IconButton onClick={() => this.props.onNextContig(this.props.panel)}>
+                <SvgChevronRight color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' />
+            </IconButton>
+        </div>)
+
 
         if (this.props.isEditing) {
             headerContents = (<div style={headerContainerStyle} >
@@ -555,16 +589,17 @@ class PanelHeader extends React.Component<PanelProps,{}> {
                 {closeIcon}
             </div>);
         } else {
-            headerContents = (<div style={headerContainerStyle} onClick={() => this.props.onEditStart()}>
-                <span><b>{this.props.contig}</b> {this.props.rangeString}</span>
-                <span style={headerStyle}>
+            headerContents = (<div style={headerContainerStyle}>
+                {previousIcon}
+                <span onClick={() => this.props.onEditStart()}><b>{this.props.contig}</b> {this.props.rangeString}</span>
+                <span style={headerStyle} onClick={() => this.props.onEditStart()}>
                     <SvgEdit 
                         viewBox={iconViewBoxSize}
                         color={iconColor}
                         hoverColor={iconHoverColor} 
                     />
                 </span>
-                {closeIcon}
+                {nextIcon}
             </div>);
         }
 

@@ -231,7 +231,7 @@ class TrackViewer extends Object2D {
         edges.push(newEdge);
 
         // create panel object and add header to the scene graph
-        let panel = new Panel((p) => this.closePanel(p, true), this.spacing, this.panelHeaderHeight, this.xAxisHeight);
+        let panel = new Panel((p) => this.closePanel(p, true), this.spacing, this.panelHeaderHeight, this.xAxisHeight, this.appModel.getContigs());
         panel.setContig(location.contig);
         panel.setRange(location.x0, location.x1);
         panel.column = newColumnIndex; // @! should use array of panels instead of column field
