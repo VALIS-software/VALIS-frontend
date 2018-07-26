@@ -175,6 +175,7 @@ function buildSNPrsQuery(parsePath: ParsedToken[]): any {
 }
 
 function buildFullTextQuery(inputText: string) : any {
+    if (!inputText) return null;
     const isAllUpper = inputText === inputText.toUpperCase();
     const suffixIsNumber = !isNaN(+inputText[inputText.length - 1]);
     if (inputText.length > 5 && !isAllUpper && !suffixIsNumber) {
@@ -186,7 +187,7 @@ function buildFullTextQuery(inputText: string) : any {
         builder.filterType('gene');
         builder.filterName(inputText.toUpperCase());
     }
-    
+
     return builder.build();
 }
 

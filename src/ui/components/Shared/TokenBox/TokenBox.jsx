@@ -23,7 +23,7 @@ class TokenBox extends React.Component {
     this.viewModel = props.viewModel;
 
     this.queryParser = buildQueryParser(this.getSuggestionHandlers());
-    
+
     this.timeOfLastRequest = null;
     this.lastRequest = null;
 
@@ -166,12 +166,12 @@ class TokenBox extends React.Component {
     const searchText = this.buildQueryStringFromTokens(tokens);
     this.searchText = searchText;
     const result = this.queryParser.getSuggestions(searchText);
-    
+
     this.appModel.pushLoading();
     result.suggestions.then(results => {
       if (this.searchText !== searchText) return;
       this.appModel.popLoading();
-      
+
       // if a fuzzy match exists or no additional suggestions, just show the suggestion
       const fuzzyMatchExists = this.singleResult(results, searchText);
       const showCurrentResults = fuzzyMatchExists || !result.additionalSuggestions || searchText.length === 0;
@@ -218,7 +218,11 @@ class TokenBox extends React.Component {
   }
 
   runCurrentSearch = () => {
-    this.pushSearchResultsView(this.state.tokens, this.state.searchString, this.state.query);
+    const newToken = {
+      value: this.state.searchString,
+      quoted: this.state.quoteInput
+    };
+    this.pushSearchResultsView(this.state.tokens.concat([newToken]), this.state.searchString, this.state.query);
   }
 
   pushSearchResultsView = (tokens, searchString, query) => {
@@ -227,12 +231,12 @@ class TokenBox extends React.Component {
     const query = new QueryModel(query);
     const uid = `search-result-${window.performance.now()}`;
     this.appModel.trackMixPanel("Run search", { 'queryStr': queryStr });
-    const view = (<SearchResultsView 
-      key={uid} 
-      text={queryTitle} 
-      query={query} 
-      viewModel={this.viewModel} 
-      appModel={this.appModel} 
+    const view = (<SearchResultsView
+      key={uid}
+      text={queryTitle}
+      query={query}
+      viewModel={this.viewModel}
+      appModel={this.appModel}
       autoClickSingleResult={true}
     />);
     this.viewModel.pushView('Search Results', query, view);
