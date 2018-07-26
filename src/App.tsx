@@ -117,6 +117,10 @@ export class App extends React.Component<Props, State> {
 			}
 			// assign identity of mixpanel
 			mixpanel.identify(userProfile.name);
+			mixpanel.people.set({
+				"$email": userProfile.name,
+				"$last_login": new Date(),
+			});
 			this.setState({
 				userProfile: userProfile,
 			})
