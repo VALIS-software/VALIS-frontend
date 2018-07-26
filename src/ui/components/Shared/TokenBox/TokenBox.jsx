@@ -101,12 +101,41 @@ class TokenBox extends React.Component {
           this.setState({
             query: testParse.query
           });
-          this.pushSearchResultsView(newTokens, newString, testParse.query);
+          // use existing tokens here to be consistent with this.runCurrentSearch()
+          this.pushSearchResultsView(this.state.tokens, newString, testParse.query);
         } else {
           this.getSuggestions(newTokens, true);
         }
     }
   };
+
+  handleSelectItem = (chosenRequest, index) => {
+    this.setState({
+      searchString: chosenRequest
+    });
+    // const {dataSource} = this.state;
+
+    const token = {
+      value: chosenRequest,
+      quoted: this.state.quoteInput
+    };
+    const newTokens = this.state.tokens.concat([token]);
+    const newString= this.buildQueryStringFromTokens(newTokens);
+    const testParse = this.queryParser.getSuggestions(newString);
+    if (testParse.query !== null) {
+      this.setState({
+        query: testParse.query
+      })
+      this.pushSearchResultsView(this.state.tokens, newString, testParse.query);
+    } else {
+      this.setState({
+        tokens: newTokens
+      })
+      this.refs.autoComplete.setState({ searchText: '' });
+      this.getSuggestions(newTokens, true);
+    }
+
+  }
 
   getThrottledResultPromise(rule, searchText, maxResults) {
     const currTime = Date.now();
@@ -221,12 +250,7 @@ class TokenBox extends React.Component {
   }
 
   runCurrentSearch = () => {
-    // add last token to make it consistent with clicking selection
-    const newToken = {
-      value: this.state.searchString,
-      quoted: this.state.quoteInput
-    };
-    this.pushSearchResultsView(this.state.tokens.concat([newToken]), this.state.searchString, this.state.query);
+    this.pushSearchResultsView(this.state.tokens, this.state.searchString, this.state.query);
   }
 
   pushSearchResultsView = (tokens, searchString, query) => {
@@ -314,6 +338,7 @@ class TokenBox extends React.Component {
       dataSource={this.state.dataSource}
       dataSourceConfig={{text: 'value', value: 'value'}}
       onUpdateInput={this.handleUpdateInput}
+      onNewRequest={this.handleSelectItem}
     />);
     const style = {
       position: 'absolute',
