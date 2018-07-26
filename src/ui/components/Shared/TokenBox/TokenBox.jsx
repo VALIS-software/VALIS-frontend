@@ -98,6 +98,9 @@ class TokenBox extends React.Component {
         const newString= this.buildQueryStringFromTokens(newTokens);
         const testParse = this.queryParser.getSuggestions(newString);
         if (testParse.query !== null && params.source === 'click') {
+          this.setState({
+            query: testParse.query
+          });
           this.pushSearchResultsView(newTokens, newString, testParse.query);
         } else {
           this.getSuggestions(newTokens, true);
@@ -218,6 +221,7 @@ class TokenBox extends React.Component {
   }
 
   runCurrentSearch = () => {
+    // add last token to make it consistent with clicking selection
     const newToken = {
       value: this.state.searchString,
       quoted: this.state.quoteInput
