@@ -37,7 +37,6 @@ export type Suggestion = {
     additionalSuggestions: Promise<SingleSuggestion[]>,
     query: any,
     isQuoted: boolean,
-    hintText: string
 };
 
 const EOF: TokenType = 'EOF';
@@ -175,6 +174,7 @@ function buildSNPrsQuery(parsePath: ParsedToken[]): any {
 }
 
 function buildFullTextQuery(inputText: string) : any {
+    if (!inputText) return null;
     const isAllUpper = inputText === inputText.toUpperCase();
     const suffixIsNumber = !isNaN(+inputText[inputText.length - 1]);
     if (inputText.length > 5 && !isAllUpper && !suffixIsNumber) {
@@ -186,7 +186,7 @@ function buildFullTextQuery(inputText: string) : any {
         builder.filterType('gene');
         builder.filterName(inputText.toUpperCase());
     }
-    
+
     return builder.build();
 }
 
@@ -323,7 +323,6 @@ export class QueryParser {
         const maxDepth: number = maxParse.path.length;
         const finalSuggestions: SuggestionResultPromise[] = [];
         let quoteSuggestion: boolean = false;
-        let hintText = '';
         results.filter(x => x.path.length === maxDepth).forEach(subPath => {
             let rule: Rule = subPath.rule;
             let tokenText: string = subPath.value;
@@ -353,10 +352,9 @@ export class QueryParser {
         } else if (maxParse.path.length === 0) {
             // if no prefixes match, then we just want to return raw query completions!
             query = buildFullTextQuery(inputText);
-            const geneSuggestions = this.suggestions.get('GENE')(inputText, maxSuggestions/2);
-            const traitSuggestions = this.suggestions.get('TRAIT')(inputText, maxSuggestions/2);
+            const geneSuggestions = this.suggestions.get('GENE')(inputText, maxSuggestions/4);
+            const traitSuggestions = this.suggestions.get('TRAIT')(inputText, maxSuggestions/4);
             additionalSuggestions = mergeResults([geneSuggestions, traitSuggestions]);
-            hintText = 'gene, trait or rs#'
         }
         return {
             tokens: maxParse.path,
@@ -364,7 +362,6 @@ export class QueryParser {
             additionalSuggestions: additionalSuggestions,
             query: query,
             isQuoted: quoteSuggestion,
-            hintText: hintText,
         }
     }
 
