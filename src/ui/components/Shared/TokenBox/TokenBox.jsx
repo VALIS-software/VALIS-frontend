@@ -128,19 +128,16 @@ class TokenBox extends React.Component {
         newTokens = this.state.tokens.concat([token]);
       }
       this.setState({
-          tokens: newTokens
+          tokens: newTokens,
+          dataSource: []
       });
       // update search string
       const newString = this.buildQueryStringFromTokens(newTokens);
-      this.setState({
-        searchString: newString
-      });
       // if query is ready, run search
       const testParse = this.queryParser.getSuggestions(newString);
       if (testParse.query !== null) {
         this.pushSearchResultsView(newTokens, newString, testParse.query);
       } else {
-        // if no query available, get next suggestions
         this.getSuggestions(newTokens, true);
       }
     }
@@ -216,22 +213,22 @@ class TokenBox extends React.Component {
       // if a fuzzy match exists or no additional suggestions, just show the suggestion
       const fuzzyMatchExists = this.singleResult(results, searchText);
       const showCurrentResults = fuzzyMatchExists || !result.additionalSuggestions || searchText.length === 0;
-          if (showCurrentResults) {
+      if (showCurrentResults) {
+        this.setState({
+          dataSource: results,
+        });
+      } else if (result.additionalSuggestions){
+        // if we have additional suggestions (full text search)
+        // fire them iff they are newer than any other promise
+        this.appModel.pushLoading();
+        result.additionalSuggestions.then(additionalResults => {
+          this.appModel.popLoading();
             this.setState({
-              dataSource: results,
+              dataSource: additionalResults,
             });
-          } else if (result.additionalSuggestions){
-            // if we have additional suggestions (full text search)
-            // fire them iff they are newer than any other promise
-            this.appModel.pushLoading();
-            result.additionalSuggestions.then(additionalResults => {
-              this.appModel.popLoading();
-                this.setState({
-                  dataSource: additionalResults,
-                });
-            }, err => {
-              this.appModel.popLoading();
-            });
+        }, err => {
+          this.appModel.popLoading();
+        });
         }
       }, err => {
       this.appModel.popLoading();
@@ -312,7 +309,12 @@ class TokenBox extends React.Component {
     // convert the last token into search text
     this.autoComplete.current.setState({ searchText: clickedToken.value });
     this.autoComplete.current.focus();
-    this.getSuggestions(tokens, true);
+    // the fakeToken here is a trick to get suggestions for the current editing token
+    const fakeToken = {
+      value: clickedToken.value.slice(0, -1),
+      quoted: clickedToken.quoted
+    }
+    this.getSuggestions(newTokens.concat([fakeToken]), true);
   }
 
   handleRemoveToken(idx) {

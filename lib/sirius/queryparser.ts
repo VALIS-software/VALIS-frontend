@@ -352,8 +352,8 @@ export class QueryParser {
         } else if (maxParse.path.length === 0) {
             // if no prefixes match, then we just want to return raw query completions!
             query = buildFullTextQuery(inputText);
-            const geneSuggestions = this.suggestions.get('GENE')(inputText, maxSuggestions/2);
-            const traitSuggestions = this.suggestions.get('TRAIT')(inputText, maxSuggestions/2);
+            const geneSuggestions = this.suggestions.get('GENE')(inputText, maxSuggestions/4);
+            const traitSuggestions = this.suggestions.get('TRAIT')(inputText, maxSuggestions/4);
             additionalSuggestions = mergeResults([geneSuggestions, traitSuggestions]);
         }
         return {
