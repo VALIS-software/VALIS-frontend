@@ -131,7 +131,7 @@ class DatasetSelector extends React.Component {
         <BooleanTrackSelector appModel={this.appModel} viewModel={this.viewModel} />
       );
     } else if (trackType === TRACK_TYPE_SEQUENCE) {
-      App.addTrack({ name: '→ Sequence', type: 'sequence' });
+      App.addTrack({ name: 'GRCh38', type: 'sequence' });
     } else if (trackType === TRACK_TYPE_GENES) {
       this.viewModel.pushView(
         "Gene Annotations",
