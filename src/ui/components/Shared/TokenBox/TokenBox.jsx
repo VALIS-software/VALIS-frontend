@@ -61,11 +61,25 @@ class TokenBox extends React.Component {
 
   clearSearchText() {
     this.autoComplete.current.setState({ searchText: '' });
+    this.setState({
+      searchString: ''
+    })
+  }
+
+  onChange = (evt) => {
+    const formValue = evt.target.value;
+    if (formValue.length === 0 && evt.key === 'Backspace') {
+      this.popToken();
+    }
   }
 
   handleUpdateInput = (value, dataSource, params) => {
     // click selection will be handled in this.handleSelectItem()
     if (params.source === 'click') return;
+    // store text input
+    this.setState({
+      searchString: value
+    })
     // try to find a perfect match
     const match = this.perfectMatch(dataSource, value);
     const isGeneOrTrait = match && (match.rule === 'GENE' || match.rule === 'TRAIT');
@@ -255,7 +269,31 @@ class TokenBox extends React.Component {
   }
 
   runCurrentSearch = () => {
-    this.pushSearchResultsView(this.state.tokens, this.state.searchString, this.state.query);
+    // put text input as new token
+    let newTokens = this.state.tokens;
+    const text = this.state.searchString;
+    if (text !== '') {
+      // check if their is a matching choice
+      const sourceValues = this.state.dataSource.map(d => {return d.value.toLowerCase()});
+      const idx = sourceValues.indexOf(text);
+      if (idx !== -1) {
+        const item = this.state.dataSource[idx];
+        // if the entered text match one item, treat this as clicking the item
+        this.handleSelectItem(item, idx);
+        return;
+      }
+      // create a new token and continue
+      const token = {
+        value: text,
+        quoted: false
+      }
+      newTokens = newTokens.concat([token]);
+      this.clearSearchText();
+      this.setState({
+        tokens: newTokens
+      })
+    }
+    this.pushSearchResultsView(newTokens, '', this.state.query);
   }
 
   pushSearchResultsView = (tokens, searchString, query) => {
