@@ -342,7 +342,8 @@ class TokenBox extends React.Component {
     const newTokens = tokens.slice(0,idx);
     // remove tokens after clicked one
     this.setState({
-      tokens: newTokens
+      tokens: newTokens,
+      searchString: clickedToken.value
     })
     // convert the last token into search text
     this.autoComplete.current.setState({ searchText: clickedToken.value });
