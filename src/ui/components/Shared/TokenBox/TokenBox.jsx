@@ -66,7 +66,7 @@ class TokenBox extends React.Component {
     })
   }
 
-  onChange = (evt) => {
+  handleKeyDown = (evt) => {
     const formValue = evt.target.value;
     if (formValue.length === 0 && evt.key === 'Backspace') {
       this.popToken();
@@ -390,8 +390,8 @@ class TokenBox extends React.Component {
     return key.value.toLowerCase().indexOf(searchText.toLowerCase()) !== -1 || searchText === '';
   }
 
-  menuKeyDown = (evt) => {
-    if (evt.key === 'Enter' || evt.key === 'Tab' || evt.key === 'Space') {
+  handleMenuKeyDown = (evt) => {
+    if (evt.key === 'Enter' || evt.key === 'Tab' || evt.key === ' ') {
       const text = evt.target.textContent;
       const sourceValues = this.state.dataSource.map(d => {return d.value});
       const idx = sourceValues.indexOf(text);
@@ -413,7 +413,7 @@ class TokenBox extends React.Component {
     const input = (<AutoComplete
       id='search-box'
       ref={this.autoComplete}
-      onKeyDown={this.onChange}
+      onKeyDown={this.handleKeyDown}
       openOnFocus={true}
       open={this.state.open}
       filter={AutoComplete.fuzzyFilter}
@@ -423,7 +423,7 @@ class TokenBox extends React.Component {
       dataSourceConfig={{text: 'value', value: 'value'}}
       onUpdateInput={this.handleUpdateInput}
       onNewRequest={this.handleSelectItem}
-      menuProps={{onKeyDown: this.menuKeyDown}}
+      menuProps={{onKeyDown: this.handleMenuKeyDown}}
     />);
     const style = {
       position: 'absolute',
