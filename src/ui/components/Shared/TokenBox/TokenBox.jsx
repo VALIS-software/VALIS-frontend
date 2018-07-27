@@ -256,7 +256,7 @@ class TokenBox extends React.Component {
 
     if (!result.query && openOnLoad) {
       setTimeout(() => {
-        this.autoComplete.current.refs.searchTextField.input.focus();
+        this.autoComplete.current.focus();
       }, 100);
     }
   }
@@ -398,6 +398,8 @@ class TokenBox extends React.Component {
       const idx = sourceValues.indexOf(text);
       const item = this.state.dataSource[idx];
       this.handleSelectItem(item, idx);
+    } else if (evt.key === 'Escape') {
+      this.autoComplete.current.focus();
     }
   }
 
