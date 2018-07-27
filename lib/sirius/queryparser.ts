@@ -37,7 +37,6 @@ export type Suggestion = {
     additionalSuggestions: Promise<SingleSuggestion[]>,
     query: any,
     isQuoted: boolean,
-    hintText: string
 };
 
 const EOF: TokenType = 'EOF';
@@ -324,7 +323,6 @@ export class QueryParser {
         const maxDepth: number = maxParse.path.length;
         const finalSuggestions: SuggestionResultPromise[] = [];
         let quoteSuggestion: boolean = false;
-        let hintText = '';
         results.filter(x => x.path.length === maxDepth).forEach(subPath => {
             let rule: Rule = subPath.rule;
             let tokenText: string = subPath.value;
@@ -357,7 +355,6 @@ export class QueryParser {
             const geneSuggestions = this.suggestions.get('GENE')(inputText, maxSuggestions/2);
             const traitSuggestions = this.suggestions.get('TRAIT')(inputText, maxSuggestions/2);
             additionalSuggestions = mergeResults([geneSuggestions, traitSuggestions]);
-            hintText = 'gene, trait or rs#'
         }
         return {
             tokens: maxParse.path,
@@ -365,7 +362,6 @@ export class QueryParser {
             additionalSuggestions: additionalSuggestions,
             query: query,
             isQuoted: quoteSuggestion,
-            hintText: hintText,
         }
     }
 
