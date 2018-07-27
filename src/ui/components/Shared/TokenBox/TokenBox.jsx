@@ -19,6 +19,7 @@ const DEBOUNCE_TIME = 200;
 class TokenBox extends React.Component {
   constructor(props) {
     super(props);
+    this.autoComplete = React.createRef();
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
 
@@ -59,82 +60,92 @@ class TokenBox extends React.Component {
     return dataSource[idx];
   }
 
+  clearSearchText() {
+    this.autoComplete.current.setState({ searchText: '' });
+  }
+
+  onChange = (evt) => {
+    const formValue = evt.target.value;
+    if (formValue.length === 0 && evt.key === 'Backspace') {
+      this.popToken();
+    } else if (evt.key === 'Enter' && this.state.query) {
+      this.runCurrentSearch();
+    }
+  }
+
   handleUpdateInput = (value, dataSource, params) => {
+    // click selection will be handled in this.handleSelectItem()
+    if (params.source === 'click') return;
     this.setState({
       searchString: value,
     });
-
     const match = this.perfectMatch(dataSource, value);
-    const isGeneOrTrait = match && (match.rule === 'GENE' || match.rule === 'TRAIT');
-
-    if (match && !isGeneOrTrait && (!this.state.quoteInput || params.source === 'click')) {
-      // clear the search box:
-      this.refs.autoComplete.setState({ searchText: '' });
-
-      // update the current tokens list:
-      this.state.tokens.push({
-        value: match.value,
+    if (match !== null && !this.state.quoteInput) {
+      const token = {
+        value: value,
         quoted: this.state.quoteInput
-      });
+      };
+      const newTokens = this.state.tokens.concat([token]);
+      // clear the text in search box
+      this.clearSearchText();
+      // update the current tokens list
       this.setState({
-        tokens: this.state.tokens.slice(0),
+        tokens: newTokens,
         dataSource: [],
       });
-
-      // fetch new suggestions:
-      let showSuggestions = true;
-      if (this.state.tokens[this.state.tokens.length - 1].quoted && this.state.query) {
-        showSuggestions = false;
-      }
-
-      this.getSuggestions(this.state.tokens, showSuggestions);
+      // fetch new suggestions if not quoted or no query parsed yet:
+      const showSuggestions = (!token.quoted) || (!this.state.query)
+      this.getSuggestions(newTokens, showSuggestions);
     } else {
-        // fetch new suggestions:
-        const newTokens = this.state.tokens.slice(0);
-        newTokens.push({
-          value: value,
-          quoted: this.state.quoteInput,
-        });
-        const newString= this.buildQueryStringFromTokens(newTokens);
-        const testParse = this.queryParser.getSuggestions(newString);
-        if (testParse.query !== null && params.source === 'click') {
-          this.setState({
-            query: testParse.query
-          });
-          // use existing tokens here to be consistent with this.runCurrentSearch()
-          this.pushSearchResultsView(this.state.tokens, newString, testParse.query);
-        } else {
-          this.getSuggestions(newTokens, true);
-        }
+      this.getSuggestions(newTokens, true);
     }
   };
 
   handleSelectItem = (chosenRequest, index) => {
-    this.setState({
-      searchString: chosenRequest
-    });
-    // const {dataSource} = this.state;
-
+    // enter key event is handled in this.onChange()
+    if (index === -1) return;
+    // prepare new tokens
     const token = {
-      value: chosenRequest,
+      value: chosenRequest.value,
       quoted: this.state.quoteInput
     };
-    const newTokens = this.state.tokens.concat([token]);
-    const newString= this.buildQueryStringFromTokens(newTokens);
+    // build the new tokens
+    let newTokens;
+    if (this.state.tokens.length === 0) {
+      if (chosenRequest.rule === 'GENE') {
+        newTokens = [
+          {value: 'gene', quoted: false},
+          {value: 'named', quoted: false},
+          token
+        ];
+      } else if (chosenRequest.rule === 'TRAIT') {
+        newTokens = [
+          {value: 'trait', quoted: false},
+          token
+        ];
+      } else {
+        newTokens = [token];
+      }
+    } else {
+      newTokens = this.state.tokens.concat([token]);
+    }
+    this.setState({
+        tokens: newTokens
+    });
+    // update search string
+    const newString = this.buildQueryStringFromTokens(newTokens);
+    this.setState({
+      searchString: newString
+    });
+    // if query is ready, run search
     const testParse = this.queryParser.getSuggestions(newString);
     if (testParse.query !== null) {
-      this.setState({
-        query: testParse.query
-      })
       this.pushSearchResultsView(this.state.tokens, newString, testParse.query);
     } else {
-      this.setState({
-        tokens: newTokens
-      })
-      this.refs.autoComplete.setState({ searchText: '' });
+      // if no query available, get next suggestions
+      this.autoComplete.current.setState({ searchText: '' });
       this.getSuggestions(newTokens, true);
     }
-
   }
 
   getThrottledResultPromise(rule, searchText, maxResults) {
@@ -237,7 +248,7 @@ class TokenBox extends React.Component {
 
     if (!result.query && openOnLoad) {
       setTimeout(() => {
-        this.refs.autoComplete.refs.searchTextField.input.focus();
+        this.autoComplete.current.refs.searchTextField.input.focus();
       }, 100);
     }
   }
@@ -278,7 +289,7 @@ class TokenBox extends React.Component {
       open: false,
       query: null,
     });
-    this.refs.autoComplete.setState({ searchText: '' });
+    this.autoComplete.current.setState({ searchText: '' });
     this.getSuggestions([]);
   }
 
@@ -293,20 +304,33 @@ class TokenBox extends React.Component {
     }
   }
 
-  onChange = (evt) => {
-    const formValue = evt.target.value;
-    if (formValue.length === 0 && evt.key === 'Backspace') {
-      this.popToken();
-    } else if (evt.key === 'Enter' && this.state.query) {
-      this.runCurrentSearch();
-    }
+  handleClickLastToken = () => {
+    const { tokens } = this.state;
+    const lastToken = tokens[tokens.length - 1];
+    const newTokens = tokens.slice(0, -1);
+    // remove one token from list
+    this.setState({
+      tokens: newTokens
+    })
+    // convert the last token into search text
+    this.autoComplete.current.setState({ searchText: lastToken.value });
   }
 
-  renderToken(tokenText) {
-    return (<li key={tokenText} className="token">
-      <Chip
-      >{tokenText}</Chip>
-    </li>);
+  renderTokenChips() {
+    const {tokens} = this.state;
+    if (tokens.length === 0) return [];
+    const tokenChips = [];
+    for (const i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      let onClick = null;
+      if (i === tokens.length - 1) {
+        onClick = this.handleClickLastToken;
+      }
+      tokenChips.push(<li key={i} className="token">
+        <Chip onClick={onClick}> {token.value} </Chip>
+      </li>);
+    }
+    return tokenChips;
   }
 
   filter = (searchText, key) => {
@@ -317,18 +341,13 @@ class TokenBox extends React.Component {
     if (this.state.error) {
       return (<ErrorDetails error={this.state.error} />);
     }
-    const elements = [];
-    for (let i = 0; i < this.state.tokens.length; i++) {
-      const token = this.state.tokens[i];
-      elements.push(this.renderToken(token.value));
-    }
-
+    const tokenChips = this.renderTokenChips();
 
     // TODO: the AutoComplete component auto-closes when you click a menu item
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
     const input = (<AutoComplete
       id='search-box'
-      ref='autoComplete'
+      ref={this.autoComplete}
       onKeyDown={this.onChange}
       openOnFocus={true}
       open={this.state.open}
@@ -356,7 +375,7 @@ class TokenBox extends React.Component {
       {clearButton}
       {searchButton}
     </div>);
-    return (<div className="token-box">{elements}<div>{input}</div>{status}</div>);
+    return (<div className="token-box">{tokenChips}<div>{input}</div>{status}</div>);
   }
 }
 
