@@ -18,10 +18,12 @@ import { OpenSansRegular } from "../font/Fonts";
 import TrackRow from "../TrackRow";
 import Track from "./Track";
 import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
+import { SiriusApi } from "sirius/SiriusApi";
+import { EntityType } from "sirius/EntityType";
 
 /**
  * WIP Annotation tracks:
- * 
+ *
  * Todo:
  * - Convert micro-scale annotations to use instancing (and text batching)
  * - Merge shaders where possible and clean up
@@ -45,7 +47,7 @@ export class AnnotationTrack extends Track<'annotation'> {
 
     constructor(model: TrackModel<'annotation'>) {
         super(model);
-      
+
         this.color.set([0.1, 0.1, 0.1, 1]);
 
         this.addInteractionListener('pointerenter', (e) => {
@@ -89,7 +91,7 @@ export class AnnotationTrack extends Track<'annotation'> {
 
             let macroOpacity: number = Scalar.linstep(this.macroLodThresholdLow, this.macroLodThresholdHigh, continuousLodLevel);
             let microOpacity: number = 1.0 - macroOpacity;
-            
+
             if (microOpacity > 0) {
                 this.updateMicroAnnotations(x0, x1, span, basePairsPerDOMPixel, continuousLodLevel, microOpacity);
             }
@@ -165,7 +167,7 @@ export class AnnotationTrack extends Track<'annotation'> {
                 this._pendingTiles.get(this.contig + ':' + tile.key, () => this.createTileLoadingDependency(tile));
                 return;
             }
-        
+
             for (let gene of tile.payload) {
                 // @! temp performance hack, only use node when visible
                 // (don't need to do this when using instancing)
@@ -223,7 +225,7 @@ export class AnnotationTrack extends Track<'annotation'> {
         length: number,
     }) => {
         return feature.soClass + '\x1F' + feature.name + '\x1F' + feature.startIndex + '\x1F' + feature.length;
-    }    
+    }
 
 }
 
@@ -268,7 +270,7 @@ class GeneAnnotation extends Object2D {
         this.add(spanMarker);
         InteractiveStyling.colorFromElement('gene', spanMarker.color);
         /**/
-        
+
         this.name = new Text(OpenSansRegular, gene.name, 16, [1, 1, 1, 1]);
         this.name.layoutY = -1;
         this.name.y = -5;
@@ -277,7 +279,7 @@ class GeneAnnotation extends Object2D {
         let transcriptOffset = 5;
         let transcriptHeight = 20;
         let transcriptSpacing = 10;
-        
+
         for (let i = 0; i < gene.transcripts.length; i++) {
             let transcript = gene.transcripts[i];
 
@@ -297,11 +299,24 @@ class GeneAnnotation extends Object2D {
             console.warn(`Cannot search for a gene with no name`, this.gene);
             return;
         }
-
-        let queryBuilder = new QueryBuilder();
-        queryBuilder.newGenomeQuery();
-        queryBuilder.filterName(this.gene.name.toUpperCase());
-        App.search(queryBuilder.build());
+        // we want to directly open the details view of the entity here
+        // @to-do After we switch to use the /reference API
+        // 1. Directly use id of the entity data (no query needed), similar to VariantTrack
+        // 2. Open gene details when clicking on gene, transcript details when clicking transcript, exon details when clicking exon
+        const builder = new QueryBuilder();
+        builder.newGenomeQuery();
+        builder.filterName(this.gene.name.toUpperCase());
+        builder.setLimit(1);
+        const geneQuery = builder.build();
+        SiriusApi.getQueryResults(geneQuery, false).then(results => {
+            if (results.data.length > 0) {
+                const entity = results.data[0];
+                App.displayEntityDetails(entity);
+            } else {
+                // this is a temporary solution
+                alert("Data not found");
+            }
+        });
     }
 
 }
@@ -459,10 +474,10 @@ class Exon extends Rect {
             uniform vec4 color;
 
             varying vec2 vUv;
-            
+
             void main() {
                 vec2 domPx = vUv * size;
-            
+
                 const vec2 borderWidthPx = vec2(1.);
                 const float borderStrength = 0.3;
 
@@ -508,10 +523,10 @@ class UTR extends Rect {
             uniform float pixelRatio;
 
             varying vec2 vUv;
-            
+
             void main() {
                 vec2 domPx = vUv * size;
-            
+
                 const vec2 borderWidthPx = vec2(1.);
 
                 vec2 inner = step(borderWidthPx, domPx) * step(domPx, size - borderWidthPx);
@@ -522,7 +537,7 @@ class UTR extends Rect {
                 const float widthPx = 2.;
                 const float wavelengthPx = 7.584;
                 const float lineStrength = 0.25;
-                
+
                 vec2 centerPx = domPx - size * 0.5;
 
                 float lPx = centerPx.x * cos(angle) - centerPx.y * sin(angle);
@@ -562,7 +577,7 @@ class CDS extends Rect {
         if (defaultStartTone !== startTone) {
             this.phase += 3;
         }
-        
+
         this.reverse = strand === Strand.Negative ? 1.0 : 0.0;
 
         this.color.set([228, 25, 255].map(v => v/255));
@@ -614,10 +629,10 @@ class CDS extends Rect {
                 waveAvg = mix(waveAvg, 0., clamp(2. - wavelengthPixels, 0., 1.0));
                 return waveAvg;
             }
-            
+
             void main() {
                 vec2 domPx = vUv * size;
-            
+
                 const vec2 borderWidthPx = vec2(1.);
                 vec2 inner = step(borderWidthPx, domPx) * step(domPx, size - borderWidthPx);
                 float border = inner.x * inner.y;
@@ -678,7 +693,7 @@ class TranscriptSpan extends Rect {
             float distanceToSegment(vec2 a, vec2 b, vec2 p) {
                 p -= a; b -= a;                        // go to A referential
                 float q = dot(p, b) / dot(b, b) ;      // projection of P on line AB: normalized ordinate
-                b *= clamp(q, 0., 1.);                 // point on segment AB closest to P 
+                b *= clamp(q, 0., 1.);                 // point on segment AB closest to P
                 return length( p - b);                 // distance to P
             }
 
@@ -687,7 +702,7 @@ class TranscriptSpan extends Rect {
                 float e = pixelSize.x * 0.5;
                 return smoothstep(r - e, r + e, f);
             }
-            
+
             void main() {
                 vec2 x = vec2(vUv.x, vUv.y - 0.5);
 
@@ -739,7 +754,7 @@ class TranscriptSpan extends Rect {
                 gl_FragColor = vec4(0., 0., l, 1.); return;
 
                 float r = size.x / size.y;
-                
+
                 vec2 x = vec2(vUv.x, vUv.y - 0.5);
                 x.x *= r;
                 x *= 1.0; x.x = fract(x.x);

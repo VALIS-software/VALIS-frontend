@@ -3,23 +3,19 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import Collapsible from '../Shared/Collapsible/Collapsible';
-import SearchResultsView from '../SearchResultsView/SearchResultsView';
 import GenericEntityDetails from '../GenericEntityDetails/GenericEntityDetails';
 import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
-import '../Shared/Shared.scss';
 import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
-import QueryModel from '../../models/QueryModel';
 import SiriusApi from "sirius/SiriusApi";
 import QueryBuilder from "sirius/QueryBuilder";
 import EntityType from "sirius/EntityType";
-
+import App from "../../../App";
 
 // Styles
 import './GeneDetails.scss';
-import QueryModel from '../../models/QueryModel';
-
 
 function prettyPrint(str) {
+  if (!str) return '';
   let idx = str.indexOf('[Source:');
   if (idx >= 0) {
     return str.slice(0, idx);
@@ -109,10 +105,8 @@ class GeneDetails extends React.Component {
   }
 
   loadQuery(title, query) {
-    this.appModel.trackMixPanel("Run search", { 'query': JSON.stringify(query) });
-    const queryModel = new QueryModel(query);
-    const view = (<SearchResultsView text={title} query={queryModel} viewModel={this.viewModel} appModel={this.appModel} />);
-    this.viewModel.pushView(title, query, view);
+    this.appModel.trackMixPanel("Run gene search link", { 'query': JSON.stringify(query) });
+    App.displaySearchResults(query, title);
   }
 
   renderSearchLink(title, query) {

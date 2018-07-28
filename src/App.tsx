@@ -141,20 +141,6 @@ export class App extends React.Component<Props, State> {
 		this.viewModel.addListener(this.pushView, ViewEvent.PUSH_VIEW);
 		this.viewModel.addListener(this.popView, ViewEvent.POP_VIEW);
 
-		this.viewModel.addListener(
-			(e: { data: { id: string, type: EntityType } }) => {
-				if (e.data != null) this.displayDetails(e.data);
-			},
-			ViewEvent.DISPLAY_ENTITY_DETAILS
-		);
-		this.viewModel.addListener(
-			(e: { data: string }) => {
-				if (e.data !== null) this.displayTrackSearchResults(e.data);
-			},
-			ViewEvent.DISPLAY_TRACK_RESULTS
-		);
-		// this.viewModel.addListener(this.clickTrackElement, ViewEvent.TRACK_ELEMENT_CLICKED);
-		// this.viewModel.addListener(this.showTrackSettings, ViewEvent.EDIT_TRACK_VIEW_SETTINGS);
 	}
 
 	componentWillUnmount() {
@@ -282,7 +268,7 @@ export class App extends React.Component<Props, State> {
 		panel0.setRange(startIndex, endIndex);
 	}
 
-	protected displayDetails(entity: { id: string, type: EntityType }) {
+	protected displayEntityDetails(entity: { id: string, type: EntityType }) {
 		this.viewModel.pushView(
 			'',
 			entity.id,
@@ -290,9 +276,12 @@ export class App extends React.Component<Props, State> {
 		);
 	}
 
-	protected displayTrackSearchResults = (trackGuid: string) => {
-		const view = (<SearchResultsView trackGuid={trackGuid} viewModel={this.viewModel} appModel={this.appModel} />);
-		this.viewModel.pushView('Search Results', trackGuid, view);
+	protected _searchIncrementalId = 0;
+	protected displaySearchResults(queryObject: any, text: string = 'Search') {
+		const queryModel = new QueryModel(queryObject);
+		const uid = `search-result-#${this._searchIncrementalId++}`;
+		const view = (<SearchResultsView key={uid} text={text} query={queryModel} viewModel={this.viewModel} appModel={this.appModel}/>);
+		this.viewModel.pushView('Search Results', queryModel, view);
 	}
 
 	protected displayErrors = () => {
@@ -358,18 +347,6 @@ export class App extends React.Component<Props, State> {
 		return this.state.trackViewer.getQueryRows();
 	}
 
-	protected _searchIncrementalId = 0;
-	protected search(queryObject: any) {
-		const queryModel = new QueryModel(queryObject);
-
-		let title = 'Search';
-		const uid = `search-result-#${this._searchIncrementalId++}`;
-		const view = (<SearchResultsView key={uid} text={title} query={queryModel} viewModel={this.viewModel} appModel={this.appModel} autoClickSingleResult={true}/>);
-
-		this.appModel.trackMixPanel("Automated search", { 'queryStr': JSON.stringify(queryObject) });
-		this.viewModel.pushView('Search Results', queryModel, view);
-	}
-
 	// global app methods, assumes a single instance of App
 	static readonly canvasPixelRatio = window.devicePixelRatio || 1;
 
@@ -402,8 +379,12 @@ export class App extends React.Component<Props, State> {
 		this.appInstance.addIntervalTrack(title, query, resultTransform, blendEnabled);
 	}
 
-	static search(queryObject: any) {
-		this.appInstance.search(queryObject);
+	static displayEntityDetails(entity: { id: string, type: EntityType }) {
+		this.appInstance.displayEntityDetails(entity);
+	}
+
+	static displaySearchResults(queryObject: any, text: string = 'Search') {
+		this.appInstance.displaySearchResults(queryObject, text);
 	}
 
 }

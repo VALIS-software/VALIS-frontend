@@ -90,9 +90,7 @@ class GWASDetails extends React.Component {
             <div className="section-header"> Replication Sample Size </div>
             <p>{info['REPLICATION SAMPLE SIZE']}</p>
             <div className="section-header"> p-value </div>
-            <p>
-              <div>{info['p-value']}</div>
-            </p>
+            <p>{info['p-value']}</p>
           </div>
         </div>
       </Collapsible>

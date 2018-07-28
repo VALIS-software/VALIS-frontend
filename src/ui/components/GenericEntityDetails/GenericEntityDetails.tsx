@@ -15,6 +15,7 @@ import ZoomToButton from "../Shared/ZoomToButton/ZoomToButton";
 
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import SiriusApi from "sirius/SiriusApi";
+import App from "../../../App";
 
 
 // Styles
@@ -81,7 +82,7 @@ class GenericEntityDetails extends React.Component<any, any> {
     }
 
     handleClickRelation(relation: any) {
-        this.viewModel.displayEntityDetails(relation);
+        App.displayEntityDetails(relation);
     }
 
     render() {

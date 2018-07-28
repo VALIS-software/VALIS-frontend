@@ -3,19 +3,19 @@ import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import QueryBuilder from "sirius/QueryBuilder";
 import Pills from '../Shared/Pills/Pills';
-import SearchResultsView from '../SearchResultsView/SearchResultsView';
 import GenericEntityDetails from '../GenericEntityDetails/GenericEntityDetails';
 import AssociationList from '../Shared/AssociationList/AssociationList';
 import Collapsible from '../Shared/Collapsible/Collapsible';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
 import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
-import QueryModel from '../../models/QueryModel';
 import SiriusApi from "sirius/SiriusApi";
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
+import App from "../../../App";
 // Styles
 import './SNPDetails.scss';
 import '../Shared/Shared.scss';
+import { EntityType } from 'sirius/EntityType';
 
 function FrequencyBarChart(props) {
   const sorted = props.data.slice().sort(((a, b) => b.value - a.value));
@@ -49,17 +49,25 @@ FrequencyBarChart.propTypes = {
 function GeneLink(props) {
   const openLink = () => {
     if (props.geneId) {
-      const geneId = `Ggeneid_${props.geneId}`;
-      props.viewModel.displayEntityDetails(geneId);
+      const entity = {id: props.geneId, type: EntityType.GENE}
+      App.displayEntityDetails(entity);
     } else {
       const builder = new QueryBuilder();
       builder.newGenomeQuery();
       // builder.filterType({'$in': ['gene', 'psudogene', 'ncRNA_gene']});
       builder.filterName(props.geneName);
       builder.setLimit(1);
-      const query = builder.build();
-      const view = (<SearchResultsView text={props.geneName} query={new QueryModel(query)} viewModel={props.viewModel} appModel={props.appModel} />);
-      props.viewModel.pushView('Search Results', query, view);
+      const geneQuery = builder.build();
+      const geneQuery = builder.build();
+      SiriusApi.getQueryResults(geneQuery, false).then(results => {
+        if (results.data.length > 0) {
+          const entity = results.data[0];
+          App.displayEntityDetails(entity);
+        } else {
+          // this is a temporary solution
+          alert("Data not found");
+        }
+      });
     }
   };
   return (<a className="gene-link" onClick={openLink}>{props.geneName}</a>);
