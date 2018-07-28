@@ -19,7 +19,6 @@ import TrackRow from "../TrackRow";
 import Track from "./Track";
 import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
 import { SiriusApi } from "sirius/SiriusApi";
-import { EntityType } from "sirius/EntityType";
 
 /**
  * WIP Annotation tracks:
