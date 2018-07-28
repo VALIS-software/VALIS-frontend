@@ -163,7 +163,7 @@ export class GPUDevice {
 		const gl = this.gl;
 		const extVao = this.extVao;
 
-		let indexDataType = vertexStateDescriptor.index != null ? vertexStateDescriptor.index.dataType : null;
+		let indexDataType = vertexStateDescriptor.indexBuffer != null ? vertexStateDescriptor.indexBuffer.dataType : null;
 
 		let vaoSupported = extVao != null;
 
@@ -465,8 +465,8 @@ export class GPUDevice {
 		const gl = this.gl;
 
 		// set index
-		if (vertexStateDescriptor.index != null) {
-			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vertexStateDescriptor.index.native);
+		if (vertexStateDescriptor.indexBuffer != null) {
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vertexStateDescriptor.indexBuffer.native);
 		} else {
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 		}
@@ -720,7 +720,7 @@ export type VertexAttributeBuffer = {
 export type VertexAttribute = VertexAttributeConstant | VertexAttributeBuffer; 
 
 export type VertexStateDescriptor = {
-	index?: GPUIndexBuffer,
+	indexBuffer?: GPUIndexBuffer,
 	attributeLayout: AttributeLayout,
 	attributes: { [name: string]: VertexAttribute }
 }

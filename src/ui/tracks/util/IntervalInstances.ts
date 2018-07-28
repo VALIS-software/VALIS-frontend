@@ -53,7 +53,7 @@ export default class IntervalInstances extends InstancingBase<IntervalInstance> 
         instanceVertexAttributes: { [name: string]: VertexAttributeBuffer }
     ) {
         return device.createVertexState({
-            index: SharedResources.quadIndexBuffer,
+            indexBuffer: SharedResources.quadIndexBuffer,
             attributeLayout: attributeLayout,
             attributes: {
                 // vertices

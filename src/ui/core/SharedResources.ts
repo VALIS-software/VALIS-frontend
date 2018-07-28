@@ -107,7 +107,7 @@ export class SharedResources {
         });
 
         this.unitQuadVertexState = device.createVertexState({
-            index: this.quadIndexBuffer,
+            indexBuffer: this.quadIndexBuffer,
             attributeLayout: this.quadAttributeLayout,
             attributes: {
                 'position': {
@@ -128,7 +128,7 @@ export class SharedResources {
         });
 
         this.quad1x1VertexState = device.createVertexState({
-            index: this.quadIndexBuffer,
+            indexBuffer: this.quadIndexBuffer,
             attributeLayout: this.quadAttributeLayout,
             attributes: {
                 'position': {
