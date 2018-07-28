@@ -32,7 +32,6 @@ class SearchResultsView extends React.Component {
     super(props);
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
-    this.api = this.appModel.api;
     this.savedQuery = null;
 
     this.cursor = 0;
@@ -46,14 +45,12 @@ class SearchResultsView extends React.Component {
       fixedWidth: true,
       minHeight: 80,
     });
-
-    this.updateQueryModel(props.query);
   }
 
   componentDidMount() {
+    this.updateQueryModel(this.props.query);
     const height = document.getElementById('search-results-view').clientHeight;
     this.setState({ height });
-    this.autoClickSingleResult = this.props.autoClickSingleResult;
   }
 
   addQueryAsTrack = () => {
@@ -67,7 +64,7 @@ class SearchResultsView extends React.Component {
     } else {
       App.addVariantTrack(this.props.text, this.query.getFilteredQuery());
     }
-    
+
   }
 
   fetch = (clearResults = false) => {
@@ -93,20 +90,13 @@ class SearchResultsView extends React.Component {
     const queryJson = this.fetchedQuery.getFilteredQuery();
     SiriusApi.getQueryResults(queryJson, true, cursor, cursor + FETCH_SIZE).then(results => {
       this.props.appModel.popLoading();
-      const singleResult = (results.result_start === 0 && results.result_end === 1 && results.reached_end === true);
-      if (singleResult && this.autoClickSingleResult === true) {
-        this.viewModel.popView();
-        this.resultSelected(results.data[0]);
-      } else {
-        let newResults = this.state.results.slice(0);
-        newResults = newResults.concat(results.data);
-        this.cursor += results.data.length;
-        this.setState({
-          results: newResults,
-          hasMore: !results.reached_end,
-          isLoading: false,
-        });
-      }
+      const newResults = this.state.results.concat(results.data);
+      this.cursor += results.data.length;
+      this.setState({
+        results: newResults,
+        hasMore: !results.reached_end,
+        isLoading: false,
+      });
     }, (err) => {
       this.props.appModel.error(this, err);
       this.props.appModel.popLoading();
@@ -124,7 +114,6 @@ class SearchResultsView extends React.Component {
   }
 
   updateQueryModel = (query) => {
-    this.autoClickSingleResult = false;
     this.savedQuery = this.query;
     this.query = query;
     this.setState({
@@ -144,14 +133,10 @@ class SearchResultsView extends React.Component {
     this.updateQueryModel(this.savedQuery);
   }
 
-  resultSelected(result) {
-    this.viewModel.displayEntityDetails(result);
-  }
-
   renderRightInfo = (result) => {
     const ref = result.info.variant_ref;
     const alt = result.info.variant_alt;
-    
+
 
     const location = result.contig ? (<GenomicLocation interactive={true} contig={result.contig} start={result.start} end={result.end} />) : (<div/>);
 
@@ -208,7 +193,7 @@ class SearchResultsView extends React.Component {
     </div>);
 
     const openResult = () => {
-      this.props.viewModel.displayEntityDetails(result);
+      App.displayEntityDetails(result);
     }
     return (<CellMeasurer
       cache={this._cache}
@@ -225,7 +210,7 @@ class SearchResultsView extends React.Component {
       </div>
     </CellMeasurer >);
   }
-  
+
   render() {
     if (this.state.isLoading && this.state.results.length === 0) {
       return (<div id="search-results-view" className="search-results-view navigation-controller-loading">
@@ -247,7 +232,7 @@ class SearchResultsView extends React.Component {
                    Think we are missing this data?
                    <UserFeedBackButton label="Submit Request"/>
                 </div>
-                
+
               </div>
           </div>
        </div>);
@@ -325,7 +310,6 @@ SearchResultsView.propTypes = {
   viewModel: PropTypes.object,
   query: PropTypes.object,
   text: PropTypes.string,
-  autoClickSingleResult: PropTypes.bool,
 };
 
 export default SearchResultsView;

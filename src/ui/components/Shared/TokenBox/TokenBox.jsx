@@ -6,11 +6,11 @@ import IconButton from 'material-ui/IconButton';
 import ActionSearch from 'material-ui/svg-icons/action/search';
 import SvgClose from "material-ui/svg-icons/navigation/close";
 import CircularProgress from "material-ui/CircularProgress";
-import SearchResultsView from '../../SearchResultsView/SearchResultsView';
 import ErrorDetails from "../ErrorDetails/ErrorDetails";
 import buildQueryParser from "sirius/queryparser";
 import SiriusApi from "sirius/SiriusApi";
-import QueryModel from "../../../models/QueryModel";
+import QueryBuilder from "sirius/QueryBuilder";
+import { App } from '../../../../App';
 
 import './TokenBox.scss';
 
@@ -21,7 +21,6 @@ class TokenBox extends React.Component {
     super(props);
     this.autoComplete = React.createRef();
     this.appModel = props.appModel;
-    this.viewModel = props.viewModel;
 
     this.queryParser = buildQueryParser(this.getSuggestionHandlers());
 
@@ -150,7 +149,11 @@ class TokenBox extends React.Component {
       // if query is ready, run search
       const testParse = this.queryParser.getSuggestions(newString);
       if (testParse.query !== null) {
-        this.pushSearchResultsView(newTokens, newString, testParse.query);
+        this.setState({
+          query: testParse.query
+        })
+        // choose to display single result details or display search results
+        this.displaySearchResults(newTokens, this.state.query, true);
       } else {
         this.getSuggestions(newTokens, true);
       }
@@ -293,24 +296,69 @@ class TokenBox extends React.Component {
         tokens: newTokens
       })
     }
-    this.pushSearchResultsView(newTokens, '', this.state.query);
+    this.displaySearchResults(newTokens, this.state.query);
   }
 
-  pushSearchResultsView = (tokens, searchString, query) => {
-    let queryStr = this.buildQueryStringFromTokens(tokens);
-    let queryTitle = this.buildResultTitleFromTokens(tokens, searchString);
-    const query = new QueryModel(query);
-    const uid = `search-result-${window.performance.now()}`;
+  displaySearchResults = (tokens, query, fromSelect = false) => {
+    // track queryStr
+    const queryStr = this.buildQueryStringFromTokens(tokens);
     this.appModel.trackMixPanel("Run search", { 'queryStr': queryStr });
-    const view = (<SearchResultsView
-      key={uid}
-      text={queryTitle}
-      query={query}
-      viewModel={this.viewModel}
-      appModel={this.appModel}
-      autoClickSingleResult={true}
-    />);
-    this.viewModel.pushView('Search Results', query, view);
+    // choose displaying single details or search results based on search rule
+    const builder = new QueryBuilder();
+    if (tokens.length === 3 && tokens[0].value === 'gene' && tokens[1].value === 'named') {
+      // if it's a gene named query, run it and directly display results
+      builder.newGenomeQuery();
+      builder.filterName(tokens[2].value);
+      builder.setLimit(1);
+      const geneQuery = builder.build();
+      SiriusApi.getQueryResults(geneQuery, false).then(results => {
+        if (results.data.length > 0) {
+          const entity = results.data[0];
+          App.displayEntityDetails(entity);
+        } else {
+          // fall back to display 0 search results
+          this.pushSearchResultsView(tokens, query);
+        }
+      });
+    } else if (tokens.length === 1 && tokens[0].value.slice(0,2).toLowerCase() === 'rs') {
+      // if it's a snp query
+      builder.newGenomeQuery();
+      builder.filterID('Gsnp_' + tokens[0].value.toLowerCase());
+      builder.setLimit(1);
+      const snpQuery = builder.build();
+      SiriusApi.getQueryResults(snpQuery, false).then(results => {
+        if (results.data.length > 0) {
+          const entity = results.data[0];
+          App.displayEntityDetails(entity);
+        } else {
+          // fall back to display 0 search results
+          this.pushSearchResultsView(tokens, query);
+        }
+      });
+    } else if (fromSelect && tokens.length === 2 && tokens[0].value === 'trait') {
+      // if it's a trait query, and is from clicking a selection
+      builder.newInfoQuery();
+      builder.filterName(tokens[1].value);
+      builder.setLimit(1);
+      const traitQuery = builder.build();
+      SiriusApi.getQueryResults(traitQuery, false).then(results => {
+        if (results.data.length > 0) {
+          const entity = results.data[0];
+          App.displayEntityDetails(entity);
+        } else {
+          // fall back to display 0 search results
+          this.pushSearchResultsView(tokens, query);
+        }
+      });
+    } else {
+      this.pushSearchResultsView(tokens, query);
+    }
+  }
+
+
+  pushSearchResultsView = (tokens, query) => {
+    let queryTitle = this.buildResultTitleFromTokens(tokens, '');
+    App.displaySearchResults(query, queryTitle);
   }
 
   clearSearch = () => {
@@ -450,7 +498,6 @@ class TokenBox extends React.Component {
 
 TokenBox.propTypes = {
   appModel: PropTypes.object,
-  viewModel: PropTypes.object
 };
 
 export default TokenBox;

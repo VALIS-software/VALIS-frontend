@@ -5,15 +5,12 @@ export enum ViewEvent {
     CLICK,
     SELECTION,
     EDIT_TRACK_VIEW_SETTINGS,
-    TRACK_ELEMENT_CLICKED,
     ADD_DATASET_BROWSER,
     DATA_SET_SELECTED,
     PUSH_VIEW,
     POP_VIEW,
     CLOSE_VIEW,
     SHOW_VIEW,
-    DISPLAY_ENTITY_DETAILS,
-    DISPLAY_TRACK_RESULTS,
 }
 
 export class ViewModel extends EventCreator {
@@ -43,20 +40,8 @@ export class ViewModel extends EventCreator {
         this.notifyListeners(ViewEvent.SHOW_VIEW);
     }
 
-    displayTrackSearchResults(viewGuid: string) {
-        this.notifyListeners(ViewEvent.DISPLAY_TRACK_RESULTS, viewGuid);
-    }
-
-    clickTrackElement(element: any) {
-        this.notifyListeners(ViewEvent.TRACK_ELEMENT_CLICKED, element);
-    }
-
     dataSetSelected(trackType: any) {
         this.notifyListeners(ViewEvent.DATA_SET_SELECTED, trackType);
-    }
-
-    displayEntityDetails(entity: any) {
-        this.notifyListeners(ViewEvent.DISPLAY_ENTITY_DETAILS, entity);
     }
 
 }

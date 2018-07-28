@@ -14,6 +14,7 @@ import { OpenSansRegular } from "../font/Fonts";
 import Track from "./Track";
 import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
 import TextClone from "./util/TextClone";
+import { EntityType } from "sirius/EntityType";
 
 export default class VariantTrack extends Track<'variant'> {
 
@@ -294,10 +295,8 @@ export default class VariantTrack extends Track<'variant'> {
         let cacheKey = this.contig + ':' + startIndex + ',' + altIndex + ',' + charIndex;
         let label = this._sequenceLabelCache.get(cacheKey, () => {
             return this.createBaseLabel(baseCharacter, color, () => {
-                let queryBuilder = new QueryBuilder();
-                queryBuilder.newGenomeQuery();
-                queryBuilder.filterID(variantId);
-                App.search(queryBuilder.build());
+                const entity = {id: variantId, type: EntityType.SNP}
+                App.displayEntityDetails(entity);
             });
         });
 

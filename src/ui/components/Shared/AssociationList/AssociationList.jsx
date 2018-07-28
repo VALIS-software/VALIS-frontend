@@ -3,6 +3,7 @@ import * as PropTypes from 'prop-types';
 import Collapsible from '../Collapsible/Collapsible';
 import './AssociationList.scss';
 import EntityType from "sirius/EntityType";
+import App from "../../../../App";
 
 
 class AssociationList extends React.Component {
@@ -26,7 +27,7 @@ class AssociationList extends React.Component {
     if (gwasAssociations.length > 0) {
       const studies = gwasAssociations.map(r => {
         const openGwas = () => {
-          this.props.viewModel.displayEntityDetails(r);
+          App.displayEntityDetails(r);
         };
         return (<div key={r.id} onClick={openGwas} className="row">{r.description}</div>);
       });
@@ -41,7 +42,7 @@ class AssociationList extends React.Component {
       if (eqtlAssociations.length > 0) {
         const eqtls = eqtlAssociations.map(r => {
           const openEqtl = () => {
-            this.props.viewModel.displayEntityDetails(r);
+            App.displayEntityDetails(r);
           };
           return (<div key={r.id} onClick={openEqtl} className="row">{r.title}</div>);
         });
