@@ -239,6 +239,7 @@ class TokenBox extends React.Component {
         // fire them iff they are newer than any other promise
         this.appModel.pushLoading();
         result.additionalSuggestions.then(additionalResults => {
+          if (this.searchText !== searchText) return;
           this.appModel.popLoading();
             this.setState({
               dataSource: additionalResults,
