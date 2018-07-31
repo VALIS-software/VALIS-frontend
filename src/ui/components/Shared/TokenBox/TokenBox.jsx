@@ -153,7 +153,7 @@ class TokenBox extends React.Component {
           query: testParse.query
         })
         // choose to display single result details or display search results
-        this.displaySearchResults(newTokens, this.state.query, true);
+        this.displaySearchResults(newTokens, testParse.query, true);
       } else {
         this.getSuggestions(newTokens, true);
       }
