@@ -53,6 +53,7 @@ class TraitDetails extends React.Component {
     const edgeQuery = builder.build();
     builder.newGenomeQuery();
     builder.addToEdge(edgeQuery);
+    builder.setSpecialGWASQuery();
     return builder.build();
   }
 

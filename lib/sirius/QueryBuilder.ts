@@ -173,6 +173,21 @@ export class QueryBuilder {
     this.query.arithmetics.push(ar);
   }
 
+  setSpecialGWASQuery() {
+    if (this.query.type !== QueryType.GENOME) {
+      throw new Error('setSpecialGWASQuery should be applied to a Genome Query.');
+    }
+    if (!this.query.toEdges || this.query.toEdges < 1) {
+      throw new Error('GWAS query should have at least 1 edge.');
+    }
+    for (const edge of this.query.toEdges) {
+      if (!edge.toNode || edge.toNode.type !== QueryType.INFO) {
+        throw new Error('The edge of GWAS query should connect to InfoNode.');
+      }
+    }
+    this.query.specialGWASQuery = true;
+  }
+
   build() {
     return JSON.parse(JSON.stringify(this.query));
   }

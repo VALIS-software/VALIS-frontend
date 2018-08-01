@@ -84,10 +84,10 @@ function buildVariantQuery(parsePath: ParsedToken[]): any {
         const traitQuery = builder.build();
         builder.newEdgeQuery();
         builder.setToNode(traitQuery);
-        builder.filterMaxPValue(0.05);
         const edgeQuery = builder.build();
         builder.newGenomeQuery();
         builder.addToEdge(edgeQuery);
+        builder.setSpecialGWASQuery();
         return builder.build();
     }
 }

@@ -231,6 +231,9 @@ export class SiriusApi {
         if (full) {
             requestUrl = `${this.apiUrl}/query/full`;
         }
+        if (query.specialGWASQuery) {
+            requestUrl = `${this.apiUrl}/query/gwas`;
+        }
         const options = [];
         if (startIdx !== null) {
             options.push(`result_start=${startIdx}`);

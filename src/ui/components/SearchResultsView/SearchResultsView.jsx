@@ -140,9 +140,10 @@ class SearchResultsView extends React.Component {
 
     const location = result.contig ? (<GenomicLocation interactive={true} contig={result.contig} start={result.start} end={result.end} />) : (<div/>);
 
-    const mutation = null;
+    let mutation = null;
     let typeStyle = { backgroundColor: 'grey'}
     let typeName = result.type;
+    let pValue = null;
     if (result.type === EntityType.SNP) {
       const isInsertion = alt.split(",").filter(d => d.length > ref.length).length > 0;
       if(isInsertion) {
@@ -155,11 +156,18 @@ class SearchResultsView extends React.Component {
         typeName = 'SNP';
         mutation = (<span>{alt} <span className="allele-arrow">⟶</span> {ref}</span>);
       }
+      if('p-value' in result.info) {
+        pValue = (<div>
+          <Pills items={['p-value']} style={typeStyle} />
+          <span> {result.info['p-value'].toExponential()} </span>
+          </div>
+        );
+      }
     } else {
       typeStyle.float = 'right';
     }
     const genomicType = (<Pills items={[typeName]} style={typeStyle} />);
-    return (<span className="right-info"><div>{location}</div><div>{genomicType} {mutation} </div></span>);
+    return (<span className="right-info"><div>{location}</div><div>{genomicType} {mutation}{pValue}</div></span>);
   }
 
   rowRenderer = ({ index, key, parent, style }) => {
