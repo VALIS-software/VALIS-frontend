@@ -141,18 +141,14 @@ class SearchResultsView extends React.Component {
   renderRightInfo = (result) => {
     const ref = result.info.variant_ref;
     const alt = result.info.variant_alt;
-
-
+    
     const location = result.contig ? (<GenomicLocation interactive={true} contig={result.contig} start={result.start} end={result.end} />) : (<div/>);
 
     let mutation = null;
     let typeStyle = { backgroundColor: 'grey'}
     let typeName = result.type;
     let pValue = null;
-    
-    let alleleFrequencies = null;
-    
-    
+
     if (result.type === EntityType.SNP) {
       // determine the allele_frequencies
       const allele_frequencies = result.info.allele_frequencies;
