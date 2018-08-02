@@ -303,9 +303,13 @@ export class App extends React.Component<Props, State> {
 
 	protected trackMixPanel = (event: any) => {
 		if (event.data !== null) {
-			const msg: string = event.data.msg;
-			const details: any = event.data.details;
-			mixpanel.track(msg, details);
+			// skip tracking for dev account
+			const uProf = this.state.userProfile;
+			if (uProf && uProf.user_id) {
+				const msg: string = event.data.msg;
+				const details: any = event.data.details;
+				mixpanel.track(msg, details);
+			}
 		}
 	}
 
