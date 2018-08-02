@@ -133,6 +133,11 @@ class SearchResultsView extends React.Component {
     this.updateQueryModel(this.savedQuery);
   }
 
+  renderAltPercentage = (alt, freq) => {
+    const altString = (100.0 * freq).toFixed(0) + '%';
+    return <span key={alt}> <span>{alt}</span> <span className="small"> {altString} </span></span>;
+  }
+
   renderRightInfo = (result) => {
     const ref = result.info.variant_ref;
     const alt = result.info.variant_alt;
@@ -144,20 +149,28 @@ class SearchResultsView extends React.Component {
     let typeStyle = { backgroundColor: 'grey'}
     let typeName = result.type;
     let pValue = null;
+    
+    let alleleFrequencies = null;
+    
+    
     if (result.type === EntityType.SNP) {
-      const isInsertion = alt.split(",").filter(d => d.length > ref.length).length > 0;
-      if(isInsertion) {
-        typeName = 'insertion';
-        mutation = (<span>+ {truncate(alt, 3)}</span>);
-      } else if (!alt || ref.length > alt.length) {
-        typeName = 'deletion';
-        mutation = (<span>✗ {truncate(ref, 3)}</span>);
+      // determine the allele_frequencies
+      const allele_frequencies = result.info.allele_frequencies;
+      if (allele_frequencies) {
+        let ref_freq = 1.0;
+        const altParts = [];
+        for (const allele in allele_frequencies) {
+          altParts.push(this.renderAltPercentage(allele, allele_frequencies[allele]));
+          ref_freq = ref_freq - allele_frequencies[allele];
+        };
+        const refPart = this.renderAltPercentage(ref, ref_freq);
+        // render the mutation with AF
+        mutation = (<span>{altParts} <span className="allele-arrow">→</span> {refPart} </span>);
       } else {
-        typeName = 'SNP';
-        mutation = (<span>{alt} <span className="allele-arrow">⟶</span> {ref}</span>);
+        mutation = (<span>{alt} <span className="allele-arrow">→</span> {ref}</span>);
       }
       if('p-value' in result.info) {
-        pValue = (<div>
+        pValue = (<div className="right-row">
           <Pills items={['p-value']} style={typeStyle} />
           <span> {result.info['p-value'].toExponential()} </span>
           </div>
@@ -167,7 +180,10 @@ class SearchResultsView extends React.Component {
       typeStyle.float = 'right';
     }
     const genomicType = (<Pills items={[typeName]} style={typeStyle} />);
-    return (<span className="right-info"><div>{location}</div><div>{genomicType} {mutation}{pValue}</div></span>);
+    return (<span className="right-info">{pValue}
+      <div className="right-row">{genomicType} {mutation}</div>
+      <div className="right-row">{location}</div>
+    </span>);
   }
 
   rowRenderer = ({ index, key, parent, style }) => {

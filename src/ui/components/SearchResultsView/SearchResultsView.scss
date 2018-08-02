@@ -41,8 +41,18 @@ $filter-header-height: 48px;
 			.right-info { 
 				float: right;
 				margin-right: 4px;
+				min-width: 100px;
+				.right-row{
+					font-size: 13px;
+					padding: 1px;
+					margin: 1px;
+					.small {
+						font-size: 10px;
+					}
+				}
 				.allele-arrow {
 					color: $valis-grey-dark;
+					font-weight: bold;
 				}
 			}
 			.result-info {
