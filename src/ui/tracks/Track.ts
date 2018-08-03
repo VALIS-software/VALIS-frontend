@@ -48,10 +48,11 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
         this.toggleLoadingIndicator(false, false);
         
         let focusRegionColor = [.1, .1, .1, 1.0];
+        let focusRegionOpacity = 0.7;
         this.focusRegionRectLeft = new Rect(0, 0, focusRegionColor);
         this.focusRegionRectRight = new Rect(0, 0, focusRegionColor);
 
-        this.focusRegionRectLeft.opacity = this.focusRegionRectRight.opacity = 0.6;
+        this.focusRegionRectLeft.opacity = this.focusRegionRectRight.opacity = focusRegionOpacity;
         this.focusRegionRectLeft.layoutH = this.focusRegionRectRight.layoutH = 1.0;
         this.focusRegionRectLeft.z = this.focusRegionRectRight.z = 1.9;
         this.add(this.focusRegionRectLeft);
@@ -110,11 +111,11 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
 
     setFocusRegion(x0_fractional: number, x1_fractional: number) {        
         this.focusRegionRectLeft.layoutParentX = 0;
-        this.focusRegionRectLeft.layoutW = Math.min(x0_fractional, x1_fractional);
+        this.focusRegionRectLeft.layoutW = Math.max(Math.min(x0_fractional, x1_fractional), 0);
         this.focusRegionRectLeft.render = true;
 
         this.focusRegionRectRight.layoutParentX = Math.max(x0_fractional, x1_fractional);
-        this.focusRegionRectRight.layoutW = 1.0 - this.focusRegionRectRight.layoutParentX;
+        this.focusRegionRectRight.layoutW = Math.max(1.0 - this.focusRegionRectRight.layoutParentX, 0);
         this.focusRegionRectRight.render = true;
     }
 

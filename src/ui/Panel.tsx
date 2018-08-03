@@ -171,6 +171,9 @@ export class Panel extends Object2D {
         x0 = isFinite(x0) ? x0 : this.x0;
         x1 = isFinite(x1) ? x1 : this.x1;
 
+        x0 = Math.min(x0, x1);
+        x1 = Math.max(x0, x1);
+
         // if range is below allowed minimum, override without changing center
         let span = x1 - x0;
         if (span < this.minRange) {
@@ -486,6 +489,10 @@ export class Panel extends Object2D {
 
                 let x0 = Math.min(selectedRegionX0, selectedRegionX1);
                 let x1 = Math.max(selectedRegionX0, selectedRegionX1);
+
+                // clamp to existing range (so it must be a zoom in)
+                x0 = Math.max(x0, this.x0);
+                x1 = Math.min(x1, this.x1);
                 
                 // zoom into region
                 this.setRange(x0, x1, true);
