@@ -19,6 +19,9 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
     protected activeAxisPointerColor = [1, 1, 1, 0.8];
     protected secondaryAxisPointerColor = [0.2, 0.2, 0.2, 1];
 
+    protected focusRegionRectLeft: Rect;
+    protected focusRegionRectRight: Rect;
+
     protected loadingIndicator: LoadingIndicator;
 
     protected displayNeedUpdate = true;
@@ -43,6 +46,19 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
         // @! depth-box, should be at top, maybe layoutParentZ = 1
         // - be careful to avoid conflict with cursor
         this.toggleLoadingIndicator(false, false);
+        
+        let focusRegionColor = [.1, .1, .1, 1.0];
+        let focusRegionOpacity = 0.7;
+        this.focusRegionRectLeft = new Rect(0, 0, focusRegionColor);
+        this.focusRegionRectRight = new Rect(0, 0, focusRegionColor);
+
+        this.focusRegionRectLeft.opacity = this.focusRegionRectRight.opacity = focusRegionOpacity;
+        this.focusRegionRectLeft.layoutH = this.focusRegionRectRight.layoutH = 1.0;
+        this.focusRegionRectLeft.z = this.focusRegionRectRight.z = 1.9;
+        this.add(this.focusRegionRectLeft);
+        this.add(this.focusRegionRectRight);
+        // disabled by default
+        this.disableFocusRegion();
     }
 
     setContig(contig: string) {
@@ -91,6 +107,21 @@ export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> ex
 
         this.remove(axisPointer);
         delete this.axisPointers[id];
+    }
+
+    setFocusRegion(x0_fractional: number, x1_fractional: number) {        
+        this.focusRegionRectLeft.layoutParentX = 0;
+        this.focusRegionRectLeft.layoutW = Math.max(Math.min(x0_fractional, x1_fractional), 0);
+        this.focusRegionRectLeft.render = true;
+
+        this.focusRegionRectRight.layoutParentX = Math.max(x0_fractional, x1_fractional);
+        this.focusRegionRectRight.layoutW = Math.max(1.0 - this.focusRegionRectRight.layoutParentX, 0);
+        this.focusRegionRectRight.render = true;
+    }
+
+    disableFocusRegion() {
+        this.focusRegionRectLeft.render = false;
+        this.focusRegionRectRight.render = false;
     }
 
     private _lastComputedWidth: number;

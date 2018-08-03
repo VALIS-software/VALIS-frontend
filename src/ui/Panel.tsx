@@ -13,6 +13,12 @@ import Rect from "./core/Rect";
 import { OpenSansRegular } from "./font/Fonts";
 import Track, { AxisPointerStyle } from "./tracks/Track";
 import XAxis from "./XAxis";
+import Animator from "../animation/Animator";
+
+enum DragMode {
+    Move,
+    SelectRegion,
+}
 
 export class Panel extends Object2D {
 
@@ -115,6 +121,7 @@ export class Panel extends Object2D {
         track.addInteractionListener('dragstart', this.onTileDragStart);
         track.addInteractionListener('dragmove', this.onTileDragMove);
         track.addInteractionListener('dragend', this.onTileDragEnd);
+        track.addInteractionListener('pointerup', this.onTileDragEnd);
         track.addInteractionListener('wheel', this.onTileWheel);
         track.addInteractionListener('pointermove', this.onTilePointerMove);
         track.addInteractionListener('pointerleave', this.onTileLeave);
@@ -131,6 +138,7 @@ export class Panel extends Object2D {
         track.removeInteractionListener('dragstart', this.onTileDragStart);
         track.removeInteractionListener('dragmove', this.onTileDragMove);
         track.removeInteractionListener('dragend', this.onTileDragEnd);
+        track.removeInteractionListener('pointerup', this.onTileDragEnd);
         track.removeInteractionListener('wheel', this.onTileWheel);
         track.removeInteractionListener('pointermove', this.onTilePointerMove);
         track.removeInteractionListener('pointerleave', this.onTileLeave);
@@ -158,10 +166,13 @@ export class Panel extends Object2D {
         this.updatePanelHeader();
     }
 
-    setRange(x0: number, x1: number) {
-        // if range is not a finite number then default to 0 - 1
-        x0 = isFinite(x0) ? x0 : 0;
-        x1 = isFinite(x1) ? x1 : 1;
+    setRange(x0: number, x1: number, animate: boolean = false) {
+        // if range is not a finite number then default to current values
+        x0 = isFinite(x0) ? x0 : this.x0;
+        x1 = isFinite(x1) ? x1 : this.x1;
+
+        x0 = Math.min(x0, x1);
+        x1 = Math.max(x0, x1);
 
         // if range is below allowed minimum, override without changing center
         let span = x1 - x0;
@@ -172,26 +183,20 @@ export class Panel extends Object2D {
             span = this.minRange;
         }
 
-        (this.x0 as any) = x0;
-        (this.x1 as any) = x1;
-
-        this.xAxis.setRange(x0, x1);
-        
-        // control axis text length by number of visible base pairs
-        // when viewing a small number of bases the exact span is likely required
-        if (span < 150) {
-            this.xAxis.maxTextLength = Infinity;
-        } else if (span < 1e5) {
-            this.xAxis.maxTextLength = 6;
+        if (animate) {
+            let t = 10000;
+            let criticalFriction = (Math.sqrt(t) * 2);
+            let f = criticalFriction * 3;
+            Animator.springTo(
+                this._rangeAnimationObject,
+                { x0: x0, x1: x1 },
+                {tension: t, friction: f}, 
+            );
         } else {
-            this.xAxis.maxTextLength = 4;
+            Animator.stop(this._rangeAnimationObject);
+            this._rangeAnimationObject.x0 = x0;
+            this._rangeAnimationObject.x1 = x1;
         }
-
-        for (let tile of this.tracks) {
-            tile.setRange(x0, x1);
-        }
-
-        this.updatePanelHeader();
     }
 
     setAvailableContigs(contigs: Array<string>) {
@@ -229,6 +234,47 @@ export class Panel extends Object2D {
         }
     }
 
+    private _rangeAnimationObject = {
+        _setRangeInternal: (x0: number, x1: number) => { this.setRangeImmediate(x0, x1) },
+        _x0: this.x0,
+        _x1: this.x1,
+
+        set x0(x: number) {
+            this._x0 = x;
+            this._setRangeInternal(this._x0, this._x1);
+        },
+        set x1(x: number) {
+            this._x1 = x;
+            this._setRangeInternal(this._x0, this._x1);
+        },
+        get x0() { return this._x0; },
+        get x1() { return this._x1; },
+    }
+
+    private setRangeImmediate(x0: number, x1: number) {
+        (this.x0 as any) = x0;
+        (this.x1 as any) = x1;
+
+        // control axis text length by number of visible base pairs
+        // when viewing a small number of bases the exact span is likely required
+        let span = x1 - x0;
+        if (span < 150) {
+            this.xAxis.maxTextLength = Infinity;
+        } else if (span < 1e5) {
+            this.xAxis.maxTextLength = 6;
+        } else {
+            this.xAxis.maxTextLength = 4;
+        }
+
+        this.xAxis.setRange(x0, x1);
+
+        for (let track of this.tracks) {
+            track.setRange(x0, x1);
+        }
+
+        this.updatePanelHeader();
+    }
+
     protected onTileLeave = (e: InteractionEvent) => {
         this.tileHovering = false;
         if (!this.tileDragging) {
@@ -238,6 +284,7 @@ export class Panel extends Object2D {
 
     protected onTilePointerMove = (e: InteractionEvent) => {
         this.tileHovering = true;
+        this._dragMode = undefined;
         this.setActiveAxisPointer(e);
     }
 
@@ -345,53 +392,123 @@ export class Panel extends Object2D {
     }
 
     // drag state
+    protected _dragMode: DragMode | undefined;
     protected _dragXF0: number;
     protected _dragX00: number;
   
     // track total drag distance to hint whether or not we should cancel some interactions
     protected _lastDragLX: number;
-    protected _dragDist: number;
+    protected _dragDistLocal: number;
 
     protected onTileDragStart = (e: InteractionEvent) => {
+        this._dragMode = undefined;
+
         if (e.buttonState !== 1) return;
 
-        e.preventDefault();
+        // determine drag mode
+        if (e.shiftKey) {
+            this._dragMode = DragMode.SelectRegion;
+        } else {
+            // default drag
+            this._dragMode = DragMode.Move;
+        }
 
+        // common
         this._dragXF0 = e.fractionX;
         this._dragX00 = this.x0;
 
         this._lastDragLX = e.localX;
-        this._dragDist = 0;
+        this._dragDistLocal = 0;
 
-        this.tileDragging = true;
+        switch (this._dragMode) {
+            case DragMode.SelectRegion: {
+                e.preventDefault();
+                for (let track of this.tracks) {
+                    track.setFocusRegion(this._dragXF0, this._dragXF0);
+                }
+                break;
+            }
+            case DragMode.Move: {
+                e.preventDefault();
+
+                this.tileDragging = true;
+                break;
+            }
+        }
     }
 
     protected onTileDragMove = (e: InteractionEvent) => {
         if (e.buttonState !== 1) return;
 
-        e.preventDefault();
-
-        this.tileDragging = true;
-
-        let span = this.x1 - this.x0;
-
-        let dxf = e.fractionX - this._dragXF0;
-        let x0 = this._dragX00 + span * (-dxf);
-        let x1 = x0 + span;
-
-        this._dragDist += Math.abs(e.localX - this._lastDragLX);
+        this._dragDistLocal += Math.abs(e.localX - this._lastDragLX);
         this._lastDragLX = e.localX;
 
-        this.setRange(x0, x1);
+        switch (this._dragMode) {
+            case DragMode.SelectRegion: {
+                e.preventDefault();
+                // selected region in fractional units
+                let selectedRegionF0 = this._dragXF0;
+                let selectedRegionF1 = e.fractionX;
+                for (let track of this.tracks) {
+                    track.setFocusRegion(selectedRegionF0, selectedRegionF1);
+                }
+                break;
+            }
+            case DragMode.Move: {
+                e.preventDefault();
+
+                this.tileDragging = true;
+
+                let span = this.x1 - this.x0;
+
+                let dxf = e.fractionX - this._dragXF0;
+                let x0 = this._dragX00 + span * (-dxf);
+                let x1 = x0 + span;
+
+                this.setRange(x0, x1);
+                break;
+            }
+        }
+
+        // update axis pointer position because we probably prevented default
         this.setActiveAxisPointer(e);
     }
 
     protected onTileDragEnd = (e: InteractionEvent) => {
         e.stopPropagation();
 
-        // if total drag distance, preventDefault so that pointerup isn't fired for other nodes
-        if (this._dragDist > 4) {
-            e.preventDefault();
+        switch (this._dragMode) {
+            case DragMode.SelectRegion: {
+                e.preventDefault();
+
+                // determine selected region in absolute units (base pairs)
+                let span = this.x1 - this.x0;
+            
+                let selectedRegionX0 = this.x0 + span * this._dragXF0;
+                let selectedRegionX1 = this.x0 + span * e.fractionX;
+
+                let x0 = Math.min(selectedRegionX0, selectedRegionX1);
+                let x1 = Math.max(selectedRegionX0, selectedRegionX1);
+
+                // clamp to existing range (so it must be a zoom in)
+                x0 = Math.max(x0, this.x0);
+                x1 = Math.min(x1, this.x1);
+                
+                // zoom into region
+                this.setRange(x0, x1, true);
+                break;
+            }
+            case DragMode.Move: {
+                // if total drag distance, preventDefault so that pointerup isn't fired for other nodes
+                if (this._dragDistLocal > 4) {
+                    e.preventDefault();
+                }
+                break;
+            }
+        }
+
+        for (let track of this.tracks) {
+            track.disableFocusRegion();
         }
 
         this.tileDragging = false;
@@ -399,6 +516,8 @@ export class Panel extends Object2D {
         if (!this.tileHovering) {
             this.removeActiveAxisPointer(e);
         }
+
+        this._dragMode = undefined;
     }
 
     protected setActiveAxisPointer(e: InteractionEvent) {
