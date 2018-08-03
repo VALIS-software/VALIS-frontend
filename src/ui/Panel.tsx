@@ -186,7 +186,7 @@ export class Panel extends Object2D {
         if (animate) {
             let t = 10000;
             let criticalFriction = (Math.sqrt(t) * 2);
-            let f = criticalFriction * 4;
+            let f = criticalFriction * 3;
             Animator.springTo(
                 this._rangeAnimationObject,
                 { x0: x0, x1: x1 },
