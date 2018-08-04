@@ -31,7 +31,7 @@ class SearchResultsView extends React.Component {
     this.viewModel = props.viewModel;
 
     this.cursor = 0;
-    this.fetchedqueryModel = null;
+    this.fetchedQueryModel = null;
 
     this.state = {
       isLoading: true,
