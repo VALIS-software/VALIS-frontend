@@ -7,9 +7,7 @@ export enum FilterType {
     DATASET,
     TYPE,
     VARIANT_TAG,
-    ALLELE_FREQUENCY,
-    P_VALUE,
-    CHROMOSOME
+    CONTIG
 }
 
 type FilterValueSet = Set<FilterValue>;
@@ -18,20 +16,77 @@ export default class QueryModel  {
     query: any;
     filters: Map<FilterType, FilterValueSet>;
 
-    constructor(query: any, filters?: Map<FilterType, FilterValueSet>, displayTitle?: string) {
-        this.query = Object.assign({}, query);
-        this.filters = filters ? filters : Map<FilterType, FilterValueSet>();
+    constructor(query: any) {
+        this.query = JSON.parse(JSON.stringify(query));
+        this.filters = Map<FilterType, FilterValueSet>();
+        this.extractQueryFilters();
+    }
+
+    extractQueryFilters(): void {
+        // This function will extract certain filters from the query.filters and put into this.filters
+        // There are unlimited ways the filters can be formated, we support string and `$in`: array here.
+        const qft = this.query.filters;
+        // data source
+        if ('source' in qft) {
+            const qf = qft.source;
+            if (typeof qf === 'string') {
+                this.filters = this.filters.set(FilterType.DATASET, Set([qf]));
+            } else if (typeof qf === 'object' && qf instanceof Object) {
+                if ('$all' in qf) {
+                    this.filters = this.filters.set(FilterType.DATASET, Set(qf['$all']));
+                } else if ('$in' in qf) {
+                    this.filters = this.filters.set(FilterType.DATASET, Set(qf['$in']));
+                }
+            }
+            delete qft.source;
+        }
+        // type
+        if ('type' in qft) {
+            const qf = qft.type;
+            if (typeof qf === 'string') {
+                this.filters = this.filters.set(FilterType.TYPE, Set([qf]));
+            } else if (typeof qf === 'object' && qf instanceof Object) {
+                if ('$in' in qf) {
+                    this.filters = this.filters.set(FilterType.TYPE, Set(qf['$in']));
+                }
+            }
+            delete qft.type;
+        }
+        // variant tag
+        if ('info.variant_tags' in qft) {
+            const qf = qft['info.variant_tags'];
+            if (typeof qf === 'string') {
+                this.filters = this.filters.set(FilterType.VARIANT_TAG, Set([qf]));
+            } else if (typeof qf === 'object' && qf instanceof Object) {
+                if ('$in' in qf) {
+                    this.filters = this.filters.set(FilterType.VARIANT_TAG, Set(qf['$in']));
+                }
+            }
+            delete qft['info.variant_tags'];
+        }
+        // CONTIG
+        if ('contig' in qft) {
+            const qf = qft.contig;
+            if (typeof qf === 'string') {
+                this.filters = this.filters.set(FilterType.CONTIG, Set([qf]));
+            } else if (typeof qf === 'object' && qf instanceof Object) {
+                if ('$in' in qf) {
+                    this.filters = this.filters.set(FilterType.CONTIG, Set(qf['$in']));
+                }
+            }
+            delete qft.contig;
+        }
     }
 
     toggleSelected(filterType: FilterType, filterValue: FilterValue) : QueryModel {
         if (this.filters.has(filterType) && this.filters.get(filterType).has(filterValue)) {
             let previousFilters = this.filters.get(filterType);
-            const newFilterSet = this.filters.set(filterType, previousFilters.remove(filterValue));
-            return new QueryModel(this.query, newFilterSet);
+            this.filters = this.filters.set(filterType, previousFilters.remove(filterValue));
+            return this;
         } else {
             let previousFilters = this.filters.get(filterType) ? this.filters.get(filterType) : Set<FilterValue>();
-            const newFilterSet = this.filters.set(filterType, previousFilters.add(filterValue));
-            return new QueryModel(this.query, newFilterSet);
+            this.filters = this.filters.set(filterType, previousFilters.add(filterValue));
+            return this;
         }
     }
 
@@ -39,12 +94,29 @@ export default class QueryModel  {
         return QueryModel.applyFilterToQuery(this.query, this.filters);
     }
 
-    setQuery(query: any) : QueryModel {
-        return new QueryModel(query, this.filters);
+    setQuery(query: any) : void {
+        this.query = query;
     }
 
-    setFilters(filters: Map<FilterType, FilterValueSet>) : QueryModel {
-        return new QueryModel(this.query, filters);
+    setFilters(filters: Map<FilterType, FilterValueSet>) : void {
+        this.filters = filters;
+    }
+
+    printFilters(): string {
+        let filterStrs: string[] = [];
+        if (this.filters.get(FilterType.DATASET)) {
+            filterStrs.push(this.filters.get(FilterType.DATASET).join(','));
+        }
+        if (this.filters.get(FilterType.TYPE)) {
+            filterStrs.push(this.filters.get(FilterType.TYPE).join(','));
+        }
+        if (this.filters.get(FilterType.VARIANT_TAG)) {
+            filterStrs.push(this.filters.get(FilterType.VARIANT_TAG).join(','));
+        }
+        if (this.filters.get(FilterType.CONTIG)) {
+            filterStrs.push(this.filters.get(FilterType.CONTIG).join(','));
+        }
+        return filterStrs.join('; ');
     }
 
     noneSelected(filterType: FilterType) {
@@ -101,9 +173,8 @@ export default class QueryModel  {
                 filteredQuery.filters['info.variant_tags'] = { "$in": tags };
             }
         }
-
-        if (filter.get(FilterType.CHROMOSOME)) {
-            const contigs = filter.get(FilterType.CHROMOSOME).toArray();
+        if (filter.get(FilterType.CONTIG)) {
+            const contigs = filter.get(FilterType.CONTIG).toArray();
             if (contigs.length === 1) {
                 filteredQuery.filters.contig = contigs[0];
             } else {

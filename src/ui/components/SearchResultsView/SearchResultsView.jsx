@@ -4,16 +4,13 @@ import * as PropTypes from "prop-types";
 import CircularProgress from "material-ui/CircularProgress";
 import SearchFilter from "../Shared/SearchFilter/SearchFilter";
 import GenomicLocation from "../Shared/GenomicLocation/GenomicLocation";
-import ArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import Pills from "../Shared/Pills/Pills";
-import FlatButton from 'material-ui/FlatButton';
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import { prettyPrint } from "../TraitDetails/TraitDetails";
 import SiriusApi from "sirius/SiriusApi";
-import { FilterType } from "../../models/QueryModel";
+import QueryModel, { FilterType } from "../../models/QueryModel";
 import { QueryType } from "sirius/QueryBuilder";
-
 
 // Styles
 import "./SearchResultsView.scss";
@@ -24,7 +21,7 @@ import { App } from '../../../App';
 const FETCH_SIZE = 30;
 
 function truncate(str, length) {
-  return str.length < length ? str : str.slice(length) + '...';
+  return str.length <= length ? str : str.slice(0,length-1) + '...';
 }
 
 class SearchResultsView extends React.Component {
@@ -32,14 +29,14 @@ class SearchResultsView extends React.Component {
     super(props);
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
-    this.savedQuery = null;
 
     this.cursor = 0;
-    this.fetchedQuery = null;
+    this.fetchedQueryModel = null;
 
     this.state = {
       isLoading: true,
       results: [],
+      query: props.query,
     };
     this._cache = new CellMeasurerCache({
       fixedWidth: true,
@@ -48,23 +45,25 @@ class SearchResultsView extends React.Component {
   }
 
   componentDidMount() {
-    this.updateQueryModel(this.props.query);
+    this.updateQueryModel();
     const height = document.getElementById('search-results-view').clientHeight;
     this.setState({ height });
   }
 
   addQueryAsTrack = () => {
+    let trackTitle = this.props.text;
+    const filterStr = this.queryModel.printFilters();
+    if (filterStr) trackTitle = [trackTitle, '|', filterStr].join(' ');
     if (this.state.results[0].type === 'gene') {
-      App.addIntervalTrack(this.props.text, this.query.getFilteredQuery(), (e) => {
+      App.addIntervalTrack(trackTitle, this.queryModel.getFilteredQuery(), (e) => {
         return {
           startIndex: e.start - 1,
           span: e.length
         }
       }, false);
     } else {
-      App.addVariantTrack(this.props.text, this.query.getFilteredQuery());
+      App.addVariantTrack(trackTitle, this.queryModel.getFilteredQuery());
     }
-
   }
 
   fetch = (clearResults = false) => {
@@ -84,11 +83,11 @@ class SearchResultsView extends React.Component {
     this.props.appModel.pushLoading();
 
     // update the current fetched query
-    this.fetchedQuery = this.query;
+    this.fetchedQueryModel = this.queryModel;
 
     const cursor = this.cursor;
-    const queryJson = this.fetchedQuery.getFilteredQuery();
-    SiriusApi.getQueryResults(queryJson, true, cursor, cursor + FETCH_SIZE).then(results => {
+    const query = this.fetchedQueryModel.getFilteredQuery();
+    SiriusApi.getQueryResults(query, true, cursor, cursor + FETCH_SIZE).then(results => {
       this.props.appModel.popLoading();
       const newResults = this.state.results.concat(results.data);
       this.cursor += results.data.length;
@@ -113,35 +112,27 @@ class SearchResultsView extends React.Component {
     });
   }
 
-  updateQueryModel = (query) => {
-    this.savedQuery = this.query;
-    this.query = query;
+  updateQueryModel = () => {
+    this.queryModel = new QueryModel(this.state.query);
     this.setState({
       showFilters: false,
     });
-
-    // update the track:
-    // if (this.props.trackGuid) {
-    //   this.props.appModel.setTrackFilter(this.props.trackGuid, this.filters);
-    // }
-
     // reload the data if needed
     this.fetch(true);
   }
 
-  runLastQuery = () => {
-    this.updateQueryModel(this.savedQuery);
-  }
-
   renderAltPercentage = (alt, freq) => {
     const altString = (100.0 * freq).toFixed(0) + '%';
-    return <span key={alt}> <span>{alt}</span> <span className="small"> {altString} </span></span>;
+    return <span key={alt}> <span>{truncate(alt,3)}</span> <span className="small"> {altString} </span></span>;
+  }
+
+  pushNewSearchResults = (queryModel) => {
+    App.displaySearchResults(queryModel.getFilteredQuery(), this.props.text);
   }
 
   renderRightInfo = (result) => {
     const ref = result.info.variant_ref;
     const alt = result.info.variant_alt;
-    
     const location = result.contig ? (<GenomicLocation interactive={true} contig={result.contig} start={result.start} end={result.end} />) : (<div/>);
 
     let mutation = null;
@@ -163,7 +154,7 @@ class SearchResultsView extends React.Component {
         // render the mutation with AF
         mutation = (<span>{altParts} <span className="allele-arrow">→</span> {refPart} </span>);
       } else {
-        mutation = (<span>{alt} <span className="allele-arrow">→</span> {ref}</span>);
+        mutation = (<span>{truncate(alt,3)} <span className="allele-arrow">→</span> {truncate(ref,3)}</span>);
       }
       if('p-value' in result.info) {
         pValue = (<div className="right-row">
@@ -240,14 +231,10 @@ class SearchResultsView extends React.Component {
       const style = {
         height: (this.state.height) + 'px',
       };
-      const backButton = this.savedQuery ? (<div>
-        <FlatButton onClick={() => this.runLastQuery()} icon={(<ArrowBack />)} label="Back to results"/>
-      </div>) : null;
       return (<div id="search-results-view" className="search-results-view">
           <div style={style} className="search-results-list">
               <div className="search-results-empty">
                 <h3>No results found.</h3>
-                {backButton}
                 <div>
                    Think we are missing this data?
                    <UserFeedBackButton label="Submit Request"/>
@@ -274,19 +261,19 @@ class SearchResultsView extends React.Component {
           enabledFilters.push(FilterType.VARIANT_TAG);
         }
         if (type !== 'trait') {
-          enabledFilters.push(FilterType.CHROMOSOME);
+          enabledFilters.push(FilterType.CONTIG);
         }
       }
       filterMenu = (<SearchFilter
-        query={this.query}
-        onFinish={this.updateQueryModel}
+        queryModel={this.queryModel}
+        onFinish={this.pushNewSearchResults}
         onCancel={this.toggleFilters}
         enabledFilters={enabledFilters}
       />);
     }
 
     let addTrackButton = null;
-    if (this.state.results && this.query && this.query.query && this.query.query.type === QueryType.GENOME) {
+    if (this.state.results && this.queryModel && this.queryModel.query && this.queryModel.query.type === QueryType.GENOME) {
       addTrackButton = (<button className="float-left" onClick={this.addQueryAsTrack}>Add as Track</button>);
     }
 
@@ -313,7 +300,7 @@ class SearchResultsView extends React.Component {
               rowHeight={this._cache.rowHeight}
               deferredMeasurementCache={this._cache}
               width={400}
-              query={this.state.query}
+              queryModel={this.state.queryModel}
               onRowsRendered={onRowsRendered}
               rowRenderer={this.rowRenderer}
             />
@@ -328,7 +315,7 @@ SearchResultsView.propTypes = {
   trackGuid: PropTypes.string,
   appModel: PropTypes.object,
   viewModel: PropTypes.object,
-  query: PropTypes.object,
+  queryModel: PropTypes.object,
   text: PropTypes.string,
 };
 

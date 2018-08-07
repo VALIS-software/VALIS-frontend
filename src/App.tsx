@@ -17,7 +17,6 @@ import NavigationController from "./ui/components/NavigationController/Navigatio
 import SearchResultsView from "./ui/components/SearchResultsView/SearchResultsView";
 import { AppCanvas } from "./ui/core/AppCanvas";
 import AppModel, { AppEvent } from "./ui/models/AppModel";
-import QueryModel from "./ui/models/QueryModel";
 import ViewModel, { ViewEvent } from "./ui/models/ViewModel";
 import BasicTheme from "./ui/themes/BasicTheme";
 import TrackViewer from "./ui/TrackViewer";
@@ -277,11 +276,10 @@ export class App extends React.Component<Props, State> {
 	}
 
 	protected _searchIncrementalId = 0;
-	protected displaySearchResults(queryObject: any, text: string = 'Search') {
-		const queryModel = new QueryModel(queryObject);
+	protected displaySearchResults(query: any, text: string = 'Search') {
 		const uid = `search-result-#${this._searchIncrementalId++}`;
-		const view = (<SearchResultsView key={uid} text={text} query={queryModel} viewModel={this.viewModel} appModel={this.appModel}/>);
-		this.viewModel.pushView('Search Results', queryModel, view);
+		const view = (<SearchResultsView key={uid} text={text} query={query} viewModel={this.viewModel} appModel={this.appModel}/>);
+		this.viewModel.pushView('Search Results', query, view);
 	}
 
 	protected displayErrors = () => {
@@ -387,8 +385,8 @@ export class App extends React.Component<Props, State> {
 		this.appInstance.displayEntityDetails(entity);
 	}
 
-	static displaySearchResults(queryObject: any, text: string = 'Search') {
-		this.appInstance.displaySearchResults(queryObject, text);
+	static displaySearchResults(query: any, text: string = 'Search') {
+		this.appInstance.displaySearchResults(query, text);
 	}
 
 }

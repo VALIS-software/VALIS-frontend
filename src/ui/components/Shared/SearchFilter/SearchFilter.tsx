@@ -16,8 +16,8 @@ type State = {
 }
 
 type Props = {
-    query: QueryModel,
-    onFinish: (query: QueryModel) => void,
+    queryModel: QueryModel,
+    onFinish: (queryModel: QueryModel) => void,
     onCancel: () => void,
     enabledFilters: Array<FilterType>
 }
@@ -26,11 +26,11 @@ const rootFilterOptions = [
     { title: 'By Dataset', type: FilterType.DATASET },
     { title: 'By Type', type: FilterType.TYPE },
     { title: 'By Variant Effect', type: FilterType.VARIANT_TAG },
-    { title: 'By Chromosome', type: FilterType.CHROMOSOME },
+    { title: 'By Chromosome', type: FilterType.CONTIG },
 ];
 
 class SearchFilter extends React.Component<Props, State> {
-    protected editedQuery: QueryModel;
+    protected editedQueryModel: QueryModel;
     protected filterOptionsLoading : Map<FilterType, FilterValuePromise>;
     
     constructor(props: Props) {
@@ -41,7 +41,7 @@ class SearchFilter extends React.Component<Props, State> {
             filterOptions: new Map(),
             filterOptionsLoading: new Map(),
         }
-        this.editedQuery = this.props.query;
+        this.editedQueryModel = this.props.queryModel;
     }
 
     closeCurrentFilterMenu = () => {
@@ -74,7 +74,7 @@ class SearchFilter extends React.Component<Props, State> {
                 builder.newGenomeQuery();
                 const genomeQuery = builder.build();
                 promise = SiriusApi.getDistinctValues('type', genomeQuery)
-            } else if (type === FilterType.CHROMOSOME) {
+            } else if (type === FilterType.CONTIG) {
                 promise = new Promise(((resolve, reject) => {
                     resolve(CHROMOSOME_NAMES);
                 }));
@@ -92,8 +92,8 @@ class SearchFilter extends React.Component<Props, State> {
         }
     }
 
-    updateQuery(query: QueryModel) {
-        this.editedQuery = query;
+    updateQueryModel(queryModel: QueryModel) {
+        this.editedQueryModel = queryModel;
         this.forceUpdate();
     }
 
@@ -101,7 +101,7 @@ class SearchFilter extends React.Component<Props, State> {
         let menuItems = null;
         let menuOptions = (<div className="clearfix">
             <button onClick={() => this.closeCurrentFilterMenu()} className="float-left">Back</button>
-            <button onClick={() => this.props.onFinish(this.editedQuery)} className="float-right">Apply</button>
+            <button onClick={() => this.props.onFinish(this.editedQueryModel)} className="float-right">Apply</button>
         </div>);
         if (this.state.currFilterMenu === null) {
             // show the filter selector
@@ -120,8 +120,8 @@ class SearchFilter extends React.Component<Props, State> {
                 menuItems = (<div> Loading...</div>);
             } else {
                 menuItems = filterTypes.map(item => {
-                    const check = this.editedQuery.isSelected(this.state.currFilterMenu, item) ? (<span className="float-right">✔</span>) : (<div />);
-                    return (<div key={item} onClick={() => this.updateQuery(this.editedQuery.toggleSelected(this.state.currFilterMenu, item))} className="filter-type-chooser">{item}{check}</div>);
+                    const check = this.editedQueryModel.isSelected(this.state.currFilterMenu, item) ? (<span className="float-right">✔</span>) : (<div />);
+                    return (<div key={item} onClick={() => this.updateQueryModel(this.editedQueryModel.toggleSelected(this.state.currFilterMenu, item))} className="filter-type-chooser">{item}{check}</div>);
                 });
             }
         }

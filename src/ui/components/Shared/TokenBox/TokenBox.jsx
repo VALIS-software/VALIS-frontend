@@ -318,7 +318,7 @@ class TokenBox extends React.Component {
           App.displayEntityDetails(entity);
         } else {
           // fall back to display 0 search results
-          this.pushSearchResultsView(tokens, query);
+          this.pushSearchResultsView(tokens, geneQuery);
         }
       });
     } else if (tokens.length === 1 && tokens[0].value.slice(0,2).toLowerCase() === 'rs') {
@@ -333,7 +333,7 @@ class TokenBox extends React.Component {
           App.displayEntityDetails(entity);
         } else {
           // fall back to display 0 search results
-          this.pushSearchResultsView(tokens, query);
+          this.pushSearchResultsView(tokens, snpQuery);
         }
       });
     } else if (fromSelect && tokens.length === 2 && tokens[0].value === 'trait') {
@@ -348,7 +348,7 @@ class TokenBox extends React.Component {
           App.displayEntityDetails(entity);
         } else {
           // fall back to display 0 search results
-          this.pushSearchResultsView(tokens, query);
+          this.pushSearchResultsView(tokens, traitQuery);
         }
       });
     } else {
