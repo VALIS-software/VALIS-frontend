@@ -25,6 +25,7 @@ export default class QueryModel  {
     extractQueryFilters(): void {
         // This function will extract certain filters from the query.filters and put into this.filters
         // There are unlimited ways the filters can be formated, we support string and `$in`: array here.
+        if (!this.query || !this.query.filters) return;
         const qft = this.query.filters;
         // data source
         if ('source' in qft) {
