@@ -413,22 +413,24 @@ export function buildQueryParser(suggestions: Map<Rule, SuggestionResultProvider
     terminals.set('NUMBER', /^\d+$/g);
 
     const expansions = new Map<Rule, Rule>();
-    expansions.set('VARIANT_QUERY', [ALL, 'VARIANTS', 'INFLUENCING_TRAIT_OR_NAMED_RS', EOF]);
+
     expansions.set('NAMED_GENE_OR_INFLUENCEING_TRAIT', [ANY, 'INFLUENCING_TRAIT', 'NAMED_GENE']);
     expansions.set('INFLUENCING_GENE_OR_NAMED_RS', [ANY, 'INFLUENCING_GENE', 'NAMED_SNP_RS']);
     expansions.set('INFLUENCING_TRAIT_OR_NAMED_RS', [ANY, 'INFLUENCING_TRAIT', 'NAMED_SNP_RS']);
     expansions.set('INFLUENCING_TRAIT', [ALL, 'INFLUENCING', 'TRAIT']);
     expansions.set('INFLUENCING_GENE', [ALL, 'INFLUENCING', 'GENE']);
     expansions.set('NAMED_GENE', [ALL, 'NAMED', 'GENE']);
-    expansions.set('NAMED_SNP_RS', [ALL, 'NAMED', 'SNP_RS_QUERY']);
-    expansions.set('GENE_QUERY', [ALL, 'GENE_T', 'NAMED_GENE_OR_INFLUENCEING_TRAIT', EOF]);
+    expansions.set('NAMED_SNP_RS', [ALL, 'NAMED', 'RS_T']);
     expansions.set('ANNOTATION_TYPE', [ANY, 'PROMOTER', 'ENHANCER']);
     expansions.set('CELL_ANNOTATION', [ALL, 'ANNOTATION_TYPE', 'OF', 'TARGET', 'IN', 'CELL_TYPE']);
-    expansions.set('ANNOTATION_QUERY', [ALL, 'CELL_ANNOTATION', EOF]);
+    // The root query rules
+    expansions.set('VARIANT_QUERY', [ALL, 'VARIANTS', 'INFLUENCING_TRAIT_OR_NAMED_RS', EOF]);
+    expansions.set('GENE_QUERY', [ALL, 'GENE_T', 'NAMED_GENE_OR_INFLUENCEING_TRAIT', EOF]);
     expansions.set('TRAIT_QUERY', [ALL, 'TRAIT_T', 'TRAIT', EOF]);
     expansions.set('EQTL_QUERY', [ALL, 'EQTL', 'INFLUENCING_GENE_OR_NAMED_RS', EOF]);
+    expansions.set('ANNOTATION_QUERY', [ALL, 'CELL_ANNOTATION', EOF]);
     // expansions.set('PATIENT_QUERY', [ALL, 'PATIENT_T', 'WITH_TUMOR', 'TUMOR_SITE', EOF]);
-    expansions.set('SNP_RS_QUERY', [ALL, 'RS_T', EOF]);
+    // expansions.set('SNP_RS_QUERY', [ALL, 'RS_T', EOF]);
     expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'TRAIT_QUERY', 'EQTL_QUERY', 'ANNOTATION_QUERY']);
 
     // return empty result for rs prefix queries
