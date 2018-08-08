@@ -54,15 +54,16 @@ class SearchResultsView extends React.Component {
     let trackTitle = this.props.text;
     const filterStr = this.queryModel.printFilters();
     if (filterStr) trackTitle = [trackTitle, '|', filterStr].join(' ');
-    if (this.state.results[0].type === 'gene') {
+    const resultType = this.state.results[0].type;
+    if (['SNP', 'variant'].indexOf(resultType) > -1) {
+      App.addVariantTrack(trackTitle, this.queryModel.getFilteredQuery());
+    } else {
       App.addIntervalTrack(trackTitle, this.queryModel.getFilteredQuery(), (e) => {
         return {
           startIndex: e.start - 1,
           span: e.length
         }
       }, false);
-    } else {
-      App.addVariantTrack(trackTitle, this.queryModel.getFilteredQuery());
     }
   }
 
