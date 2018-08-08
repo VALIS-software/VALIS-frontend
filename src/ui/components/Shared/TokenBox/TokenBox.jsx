@@ -178,7 +178,7 @@ class TokenBox extends React.Component {
 
   getSuggestionHandlers() {
     const suggestionMap = new Map();
-    ['TRAIT', 'GENE', 'CELL_TYPE', 'TUMOR_SITE'].forEach(rule => {
+    ['TRAIT', 'GENE', 'CELL_TYPE', 'TUMOR_SITE', 'TARGET'].forEach(rule => {
       suggestionMap.set(rule, (searchText, maxResults) => {
         return this.getThrottledResultPromise(rule, searchText, maxResults).then(d=> {
           return d;
@@ -202,13 +202,13 @@ class TokenBox extends React.Component {
         prefix = 'eQTLs→';
       } else if (tokens[0].value === 'gene') {
         prefix = 'genes→';
-      } else {
+      } else if (tokens[0].value === 'variants') {
         prefix = 'variants→'
       }
     }
     if (!tokens || tokens.length === 0) return prefix + searchString;
     let quotedStrs = tokens.filter(token => token.quoted);
-    let value = (quotedStrs.length > 0) ? quotedStrs[0].value : searchString;
+    let value = (quotedStrs.length > 0) ? quotedStrs.map(x => x.value).join(' | ') : searchString;
     value = value.length > 18 ? value.slice(0, 15) + '...' : value;
     return prefix + value;
   }
@@ -325,6 +325,21 @@ class TokenBox extends React.Component {
       // if it's a snp query
       builder.newGenomeQuery();
       builder.filterID('Gsnp_' + tokens[0].value.toLowerCase());
+      builder.setLimit(1);
+      const snpQuery = builder.build();
+      SiriusApi.getQueryResults(snpQuery, false).then(results => {
+        if (results.data.length > 0) {
+          const entity = results.data[0];
+          App.displayEntityDetails(entity);
+        } else {
+          // fall back to display 0 search results
+          this.pushSearchResultsView(tokens, snpQuery);
+        }
+      });
+    } else if (tokens.length === 3 && tokens[0].value === 'variants' && tokens[1].value === 'named') {
+      // if it's a snp query
+      builder.newGenomeQuery();
+      builder.filterID('Gsnp_' + tokens[2].value.toLowerCase());
       builder.setLimit(1);
       const snpQuery = builder.build();
       SiriusApi.getQueryResults(snpQuery, false).then(results => {

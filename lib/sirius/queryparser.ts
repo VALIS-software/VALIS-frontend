@@ -89,6 +89,12 @@ function buildVariantQuery(parsePath: ParsedToken[]): any {
         builder.addToEdge(edgeQuery);
         builder.setSpecialGWASQuery();
         return builder.build();
+    } else if (token.rule === 'NAMED') {
+        const snpRS = TRIM(parsePath[1].value.toLowerCase());
+        builder.newGenomeQuery();
+        builder.filterID('Gsnp_' + snpRS);
+        const snpQuery = builder.build();
+        return snpQuery;
     }
 }
 
@@ -129,10 +135,12 @@ function buildGeneQuery(parsePath: ParsedToken[]): any {
 }
 
 function buildCellQuery(parsePath: ParsedToken[]): any {
-    const cellType = STRIP_QUOTES(parsePath[2].value);
     const annotationType = (parsePath[0].rule == 'PROMOTER') ? "Promoter-like" : "Enhancer-like";
+    const targets = [STRIP_QUOTES(parsePath[2].value)];
+    const cellType = STRIP_QUOTES(parsePath[4].value);
     builder.newGenomeQuery();
     builder.filterType(annotationType);
+    builder.filterTargets(targets);
     builder.filterBiosample(cellType);
     builder.setLimit(2000000);
     return builder.build();
@@ -152,6 +160,15 @@ function buildEQTLQuery(parsePath: ParsedToken[]): any {
         builder.addToEdge(edgeQuery);
         builder.setLimit(1000000);
         return builder.build();
+    } else if (token.rule === 'NAMED') {
+        const snpRS = TRIM(parsePath[1].value.toLowerCase());
+        builder.newGenomeQuery();
+        builder.filterID('Gsnp_' + snpRS);
+        const snpQuery = builder.build();
+        builder.newEdgeQuery();
+        builder.setToNode(snpQuery, true);
+        const edgeQuery = builder.build();
+        return edgeQuery;
     }
 }
 
@@ -385,29 +402,34 @@ export function buildQueryParser(suggestions: Map<Rule, SuggestionResultProvider
     terminals.set('IN', /in/g);
     terminals.set('PROMOTER', /promoters/g);
     terminals.set('ENHANCER', /enhancers/g);
+    terminals.set('TARGET', /"(.+?)"/g);
     terminals.set('CELL_TYPE', /"(.+?)"/g);
     terminals.set('EQTL', /eqtl/g);
     terminals.set('NAMED', /named/g);
     terminals.set('TUMOR_SITE', /"(.+?)"/g);
     terminals.set('PATIENT_T', /patient/g);
     terminals.set('WITH_TUMOR', /with tumor/g);
-    terminals.set('RS_T', /rs(.*)/g);
+    terminals.set('RS_T', /rs\d+$/g);
     terminals.set('NUMBER', /^\d+$/g);
 
     const expansions = new Map<Rule, Rule>();
-    expansions.set('VARIANT_QUERY', [ALL, 'VARIANTS', 'INFLUENCING', 'TRAIT', EOF]);
-    expansions.set('NAMED_OR_INFLUENCEING', [ANY, 'INFLUENCING_TRAIT', 'NAMED_GENE']);
+    expansions.set('VARIANT_QUERY', [ALL, 'VARIANTS', 'INFLUENCING_TRAIT_OR_NAMED_RS', EOF]);
+    expansions.set('NAMED_GENE_OR_INFLUENCEING_TRAIT', [ANY, 'INFLUENCING_TRAIT', 'NAMED_GENE']);
+    expansions.set('INFLUENCING_GENE_OR_NAMED_RS', [ANY, 'INFLUENCING_GENE', 'NAMED_SNP_RS']);
+    expansions.set('INFLUENCING_TRAIT_OR_NAMED_RS', [ANY, 'INFLUENCING_TRAIT', 'NAMED_SNP_RS']);
     expansions.set('INFLUENCING_TRAIT', [ALL, 'INFLUENCING', 'TRAIT']);
+    expansions.set('INFLUENCING_GENE', [ALL, 'INFLUENCING', 'GENE']);
     expansions.set('NAMED_GENE', [ALL, 'NAMED', 'GENE']);
-    expansions.set('GENE_QUERY', [ALL, 'GENE_T', 'NAMED_OR_INFLUENCEING', EOF]);
+    expansions.set('NAMED_SNP_RS', [ALL, 'NAMED', 'SNP_RS_QUERY']);
+    expansions.set('GENE_QUERY', [ALL, 'GENE_T', 'NAMED_GENE_OR_INFLUENCEING_TRAIT', EOF]);
     expansions.set('ANNOTATION_TYPE', [ANY, 'PROMOTER', 'ENHANCER']);
-    expansions.set('CELL_ANNOTATION', [ALL, 'ANNOTATION_TYPE', 'IN', 'CELL_TYPE']);
+    expansions.set('CELL_ANNOTATION', [ALL, 'ANNOTATION_TYPE', 'OF', 'TARGET', 'IN', 'CELL_TYPE']);
     expansions.set('ANNOTATION_QUERY', [ALL, 'CELL_ANNOTATION', EOF]);
     expansions.set('TRAIT_QUERY', [ALL, 'TRAIT_T', 'TRAIT', EOF]);
-    expansions.set('EQTL_QUERY', [ALL, 'EQTL', 'INFLUENCING', 'GENE', EOF]);
-    expansions.set('PATIENT_QUERY', [ALL, 'PATIENT_T', 'WITH_TUMOR', 'TUMOR_SITE', EOF]);
+    expansions.set('EQTL_QUERY', [ALL, 'EQTL', 'INFLUENCING_GENE_OR_NAMED_RS', EOF]);
+    // expansions.set('PATIENT_QUERY', [ALL, 'PATIENT_T', 'WITH_TUMOR', 'TUMOR_SITE', EOF]);
     expansions.set('SNP_RS_QUERY', [ALL, 'RS_T', EOF]);
-    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'TRAIT_QUERY', 'EQTL_QUERY', 'SNP_RS_QUERY']);
+    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'TRAIT_QUERY', 'EQTL_QUERY', 'ANNOTATION_QUERY']);
 
     // return empty result for rs prefix queries
     suggestions.set('RS_T', (q: string, num: number) => new Promise((resolve, reject) => resolve([])));
