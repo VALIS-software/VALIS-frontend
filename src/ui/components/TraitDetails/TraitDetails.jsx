@@ -7,7 +7,6 @@ import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
 import GenericEntityDetails from '../GenericEntityDetails/GenericEntityDetails';
 import SiriusApi from "sirius/SiriusApi";
-import QueryModel from '../../models/QueryModel';
 import QueryBuilder from "sirius/QueryBuilder";
 
 // Styles
@@ -75,8 +74,7 @@ class TraitDetails extends React.Component {
 
   loadQuery(title, query, queryTitle) {
     this.appModel.trackMixPanel("Run search", { 'query': JSON.stringify(query) });
-    const queryModel = new QueryModel(query);
-    const view = (<SearchResultsView text={queryTitle} query={queryModel} viewModel={this.viewModel} appModel={this.appModel} />);
+    const view = (<SearchResultsView text={queryTitle} query={query} viewModel={this.viewModel} appModel={this.appModel} />);
     this.viewModel.pushView(queryTitle, query, view);
   }
 
