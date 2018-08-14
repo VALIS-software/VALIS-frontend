@@ -19,9 +19,11 @@ import { AppCanvas } from "./ui/core/AppCanvas";
 import AppModel, { AppEvent } from "./ui/models/AppModel";
 import ViewModel, { ViewEvent } from "./ui/models/ViewModel";
 import BasicTheme from "./ui/themes/BasicTheme";
-import TrackViewer from "./ui/TrackViewer";
+import TrackViewer, { PersistentTrackViewerState } from "./ui/TrackViewer";
 import View from "./ui/View";
 import GenericIntervalTileStore from "./model/data-store/GenericIntervalTileStore";
+import Persistable from "./model/Persistable";
+import LZString = require("lz-string");
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
@@ -46,7 +48,11 @@ type State = {
 	userProfile: null | any,
 }
 
-export class App extends React.Component<Props, State> {
+type PersistentAppState = {
+	trackViewer: PersistentTrackViewerState
+}
+
+export class App extends React.Component<Props, State> implements Persistable<PersistentAppState> {
 
 	readonly headerHeight: number = 50;
 	readonly headerMargin: number = 30;
@@ -54,9 +60,17 @@ export class App extends React.Component<Props, State> {
 	protected appModel: AppModel;
 	protected viewModel: ViewModel;
 	protected appCanvas: AppCanvas;
+	protected trackViewer: TrackViewer;
 
 	constructor(props: Props) {
 		super(props);
+
+		if (App.appInstance != null) {
+			console.error('Multiple instances of App are not allowed');
+			return;
+		}
+
+		App.appInstance = this;
 
 		// initialize telemetry
 		mixpanel.init("641d46068eb631cfc8ba590288fe4679");
@@ -67,8 +81,8 @@ export class App extends React.Component<Props, State> {
 		this.appModel.setViewModel(this.viewModel);
 
 		// initialize UI
-		let trackViewer = new TrackViewer();
-		trackViewer.setAppModel(this.appModel);
+		this.trackViewer = new TrackViewer();
+		this.trackViewer.setAppModel(this.appModel);
 
 		// initialize with some dummy data
 		let tracks: Array<TrackModel> = [
@@ -79,14 +93,14 @@ export class App extends React.Component<Props, State> {
 		];
 		let i = 0;
 		for (let model of tracks) {
-			trackViewer.addTrackRow(model, undefined, false);
+			this.trackViewer.addTrackRow(model, undefined, false);
 		}
 
 		for (let panel of [
 			// { name: 'Chromosome 1', x0: 1358.4e3, x1: 1358.6e3}
 			{ contig: 'chr1', x0: 0, x1: 249e6 }
 		]) {
-			trackViewer.addPanel(panel, false);
+			this.trackViewer.addPanel(panel, false);
 		}
 
 		this.state = {
@@ -94,21 +108,36 @@ export class App extends React.Component<Props, State> {
 			headerHeight: this.headerHeight,
 			viewerWidth: window.innerWidth,
 			viewerHeight: this.canvasHeight(),
-			trackViewer: trackViewer,
+			trackViewer: this.trackViewer,
 			displayErrors: false,
 			errors: [],
 			userProfile: null,
 		};
 
-		if (App.appInstance != null) {
-			console.error('Multiple instances of App are not allowed');
-		}
+		// @! remove
+		(window as any).getAppState = () => this.getPersistentState();
+		(window as any).setAppState = (s: any) => this.setPersistentState(s);
 
-		App.appInstance = this;
+		// on persistent state changed
+		// get app state from URL
+		if (this.hasStateInUrl()) {
+			this.readPersistentUrlState();
+		} else {
+			this.writePersistentUrlState();
+		}
+	}
+
+	getPersistentState(): PersistentAppState {
+		return {
+			trackViewer: this.trackViewer.getPersistentState()
+		}
+	}
+
+	setPersistentState(state: PersistentAppState) {
+		this.trackViewer.setPersistentState(state.trackViewer);
 	}
 
 	componentDidMount() {
-
 		// Get User Profile, redirect if not logged in
 		SiriusApi.getUserProfile().then((userProfile: any) => {
 			if (!userProfile.name) {
@@ -139,7 +168,6 @@ export class App extends React.Component<Props, State> {
 
 		this.viewModel.addListener(this.pushView, ViewEvent.PUSH_VIEW);
 		this.viewModel.addListener(this.popView, ViewEvent.POP_VIEW);
-
 	}
 
 	componentWillUnmount() {
@@ -249,6 +277,10 @@ export class App extends React.Component<Props, State> {
 		});
 	}
 
+	protected onPersistentStateChanged = () => {
+		this.writePersistentUrlState();
+	}
+
 	protected pushView = (e: {data: View}) => {
 		this.setState({ views: this.state.views.concat([e.data]) });
 	}
@@ -349,6 +381,40 @@ export class App extends React.Component<Props, State> {
 		return this.state.trackViewer.getQueryRows();
 	}
 
+	protected writePersistentUrlState() {
+		let stateObject = this.getPersistentState();
+		let originalString = JSON.stringify(stateObject);
+		let stateUrl = '#' + LZString.compressToBase64(originalString);
+		// @! replace with pushState for back/forward support
+		history.replaceState(stateObject, document.title, stateUrl);
+	}
+
+	/**
+	 * @throws
+	 */
+	protected readPersistentUrlState() {
+		try {
+			this.setPersistentState(this.getStateObject(window.location));
+		} catch (e) {
+			console.warn(`State url is invalid: ${e}`);
+		}
+	}
+
+	protected hasStateInUrl() {
+		return !!window.location.hash;
+	}
+	/**
+	 * @throws string
+	 */
+	protected getStateObject(url: { hash: string }): any {
+		let stateString = url.hash.substring(1);
+		let jsonString = LZString.decompressFromBase64(stateString);
+		if (jsonString == null) {
+			throw `Invalid state string`;
+		}
+		return JSON.parse(LZString.decompressFromBase64(stateString));	
+	}
+ 
 	// global app methods, assumes a single instance of App
 	static readonly canvasPixelRatio = window.devicePixelRatio || 1;
 

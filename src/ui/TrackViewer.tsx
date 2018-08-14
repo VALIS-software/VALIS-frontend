@@ -13,14 +13,25 @@ import Panel from "./Panel";
 import TrackRow from "./TrackRow";
 import { DEFAULT_SPRING } from "./UIConstants";
 import { SiriusApi } from "sirius/SiriusApi";
+import Persistable from "../model/Persistable";
 
+export type PersistentTrackViewerState = {
+    panels: Array<{
+        location: GenomicLocation,
+        width: number
+    }>,
+    trackRows: Array<{
+        model: TrackModel,
+        heightPx: number
+    }>
+}
 
 type Row = {
     trackRow: TrackRow, // track row pseudo object, positioning properties can be animated
     heightPx: number, // updated instantaneously; not animated
 }
 
-class TrackViewer extends Object2D {
+class TrackViewer extends Object2D implements Persistable<PersistentTrackViewerState> {
 
     // layout settings
     readonly trackHeaderWidth: number = 180;
@@ -213,7 +224,13 @@ class TrackViewer extends Object2D {
         // animate height to 0 and delete the row when complete
         row.heightPx = 0;
 
-        Animator.addAnimationCompleteCallback(trackRow, 'h', this.deleteTrackRow, true);
+        if (animate) {
+            Animator.addAnimationCompleteCallback(trackRow, 'h', this.deleteTrackRow, true);
+        } else {
+            Animator.stop(trackRow);
+            this.deleteTrackRow(trackRow);
+        }
+
         this.layoutTrackRows(animate);
     }
 
@@ -310,6 +327,7 @@ class TrackViewer extends Object2D {
             Animator.addAnimationCompleteCallback(panel, 'layoutW', this.deletePanel, true);
             Animator.springTo(panel, { layoutW: 0 }, DEFAULT_SPRING);
         } else {
+            Animator.stop(panel);
             this.deletePanel(panel);
         }
 
@@ -349,6 +367,73 @@ class TrackViewer extends Object2D {
         }
 
         return null;
+    }
+
+    getPersistentState(): PersistentTrackViewerState {
+        let panels = new Array();
+        for (let panel of this.panels) {
+            let width = this.panelEdges[panel.column + 1] - this.panelEdges[panel.column];
+            panels.push({
+                location: {
+                    contig: panel.contig,
+                    x0: panel.x0,
+                    x1: panel.x1
+                },
+                width
+            });
+        }
+
+        let trackRows = new Array();
+        for (let row of this.rows) {
+            trackRows.push({
+                model: row.trackRow.model,
+                height: row.heightPx
+            });
+        }
+
+        return {
+            panels: panels,
+            trackRows: trackRows
+        }
+    }
+
+    setPersistentState(state: PersistentTrackViewerState) {
+        // Panels
+        // clear current panels
+        let currentPanels = new Set(this.panels);
+        for (let panel of currentPanels) {
+            this.closePanel(panel, false);
+        }
+
+        // create panels
+        for (let i = 0; i < state.panels.length; i++) {
+            let panelState = state.panels[i];
+            this.addPanel(panelState.location, false);
+        }
+
+        // set panel edges from state widths
+        let e = 0;
+        for (let i = 0; i < state.panels.length; i++) {
+            let panelState = state.panels[i];
+            this.panelEdges[i] = e;
+            e += panelState.width;
+        }
+
+        this.layoutPanels(false);
+
+        // TrackRows
+        // clear current rows
+        let currentRows = new Set(this.rows);
+        for (let row of currentRows) {
+            this.closeTrackRow(row.trackRow, false);
+        }
+
+        // create rows
+        for (let row of state.trackRows) {
+            this.addTrackRow(row.model, row.heightPx, false);
+        }
+
+        this.layoutTrackRows(false);
     }
 
     /**
