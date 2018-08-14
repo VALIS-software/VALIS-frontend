@@ -19,7 +19,6 @@ export default class AppModel extends EventCreator {
         super();
     }
 
-    private tracks: any[] = [];
     private tracksLoading: number = 0;
     private viewModel: ViewModel = null;
 
@@ -41,10 +40,6 @@ export default class AppModel extends EventCreator {
 
     public popView = () => {
         this.viewModel.popView();
-    }
-
-    public getTracks = () => {
-        return this.tracks;
     }
 
     public updateLoadingState = (wasLoading: boolean) => {
