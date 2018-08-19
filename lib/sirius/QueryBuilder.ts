@@ -188,6 +188,11 @@ export class QueryBuilder {
     this.query.specialGWASQuery = true;
   }
 
+  // Specify reading from user files
+  setUserFileID(fileID: string) {
+    this.query.userFileID = fileID;
+  }
+
   build() {
     return JSON.parse(JSON.stringify(this.query));
   }

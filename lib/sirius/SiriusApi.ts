@@ -315,6 +315,31 @@ export class SiriusApi {
         return payloadBytes;
     }
 
+    static uploadFile(fileType: string, file: any, onUploadProgress: any = null) {
+        const data = new FormData();
+        data.append("file", file);
+        data.append("fileType", fileType);
+        const config = {
+            onUploadProgress: onUploadProgress,
+        }
+        return axios.post(`${this.apiUrl}/user_files`, data, config);
+    }
+
+    static getUserFiles() {
+        return axios.get(`${this.apiUrl}/user_files`).then(data => {
+            return data.data;
+        });
+    }
+
+    static deleteUserFile(fileID: string) {
+        const requestConfig = {
+            params: {
+                fileID: fileID
+            },
+        };
+        return axios.delete(`${this.apiUrl}/user_files`, requestConfig);
+    }
+
 }
 
 enum ArrayFormat {

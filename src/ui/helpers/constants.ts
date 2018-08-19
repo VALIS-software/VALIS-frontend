@@ -35,6 +35,8 @@ const DATA_SOURCES = [
   DATA_SOURCE_GTEX
 ];
 
+const FILE_TYPE_23andMe = '23andme';
+
 export {
   CHROMOSOME_NAMES,
   DATA_SOURCE_GENOME,
@@ -50,4 +52,5 @@ export {
   DATA_SOURCE_ENSEMBL,
   DATA_SOURCE_GTEX,
   DATA_SOURCES,
+  FILE_TYPE_23andMe,
 };
