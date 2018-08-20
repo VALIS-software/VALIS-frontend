@@ -13,32 +13,16 @@ import View from "../../View";
 
 type Props = {
   viewModel: ViewModel,
-  views: Array<View>
+  views: Array<View>,
+  visible: boolean
 }
 
-type State = { visible: boolean }
+type State = {  }
 
 class NavigationController extends React.Component<Props, State> {
 
   constructor(props: Props, ctx?: any) {
     super(props, ctx);
-    this.state = {
-      visible: false,
-    };
-    props.viewModel.addListener(this.showView, ViewEvent.SHOW_VIEW);
-    props.viewModel.addListener(this.closeView, ViewEvent.CLOSE_VIEW);
-  }
-
-  showView = () => {
-    this.setState({
-      visible: true
-    });
-  }
-
-  closeView = () => {
-    this.setState({
-      visible: false,
-    });
   }
 
   render() {
@@ -63,7 +47,7 @@ class NavigationController extends React.Component<Props, State> {
     const view = visible ? curr.view : <div />;
 
     return (
-      <Drawer className="navigation-controller" width={400} openSecondary={true} open={visible && this.state.visible}>
+      <Drawer className="navigation-controller" width={400} openSecondary={true} open={visible && this.props.visible}>
         <AppBar
           title={title}
           iconElementLeft={navButton}
