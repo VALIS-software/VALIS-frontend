@@ -25,6 +25,8 @@ import GenericIntervalTileStore from "./model/data-store/GenericIntervalTileStor
 import Persistable from "./model/Persistable";
 import LZString = require("lz-string");
 
+const deepEqual = require('fast-deep-equal');
+
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
 (window as any).mixpanel = require('mixpanel-browser');
@@ -46,10 +48,28 @@ type State = {
 	errors: Array<any>,
 
 	userProfile: null | any,
+
+	sidebarVisible: boolean,
+}
+
+enum SidebarViewType {
+	None = 0,
+	EntityDetails = 1,
+	SearchResults = 2,
 }
 
 type PersistentAppState = {
-	trackViewer: PersistentTrackViewerState
+	/** TrackViewer state */
+	t: PersistentTrackViewerState,
+	/** Sidebar view state */
+	s: {
+		/** Sidebar view type */
+		t: SidebarViewType,
+		/** Sidebar view */
+		h?: string,
+		/** Sidebar view props */
+		p?: any,
+	}
 }
 
 export class App extends React.Component<Props, State> implements Persistable<PersistentAppState> {
@@ -61,6 +81,8 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	protected viewModel: ViewModel;
 	protected appCanvas: AppCanvas;
 	protected trackViewer: TrackViewer;
+
+	protected _currentPersistentState: PersistentAppState;
 
 	constructor(props: Props) {
 		super(props);
@@ -112,29 +134,62 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			displayErrors: false,
 			errors: [],
 			userProfile: null,
+			sidebarVisible: false,
 		};
 
 		// @! remove
 		(window as any).getAppState = () => this.getPersistentState();
 		(window as any).setAppState = (s: any) => this.setPersistentState(s);
-
-		// on persistent state changed
-		// get app state from URL
-		if (this.hasStateInUrl()) {
-			this.readPersistentUrlState();
-		} else {
-			this.writePersistentUrlState();
-		}
 	}
 
 	getPersistentState(): PersistentAppState {
+		// default to no sidebar view open
+		let currentSidebarView: PersistentAppState['s'] = {
+			t: SidebarViewType.None,
+		}
+
+		let lastView = this.state.views[this.state.views.length - 1];
+		if (this.state.sidebarVisible && lastView != null) {
+			let lastReactView = lastView.view;
+
+			if (lastReactView != null && (lastReactView as any).type != null) {
+				let type = (lastReactView as any).type;
+				currentSidebarView.h = lastView.title;
+
+				if (type === EntityDetails) {
+					currentSidebarView.t = SidebarViewType.EntityDetails;
+					currentSidebarView.p = (lastReactView as React.ReactElement<any>).props.entity;
+				} else if (type === SearchResultsView) {
+					currentSidebarView.t = SidebarViewType.SearchResults;
+					currentSidebarView.p = {
+						q: lastView.info, // search query
+					}
+				}
+			}
+		}
+
 		return {
-			trackViewer: this.trackViewer.getPersistentState()
+			t: this.trackViewer.getPersistentState(),
+			s: currentSidebarView
 		}
 	}
 
 	setPersistentState(state: PersistentAppState) {
-		this.trackViewer.setPersistentState(state.trackViewer);
+		this.trackViewer.setPersistentState(state.t);
+
+		switch (state.s.t) {
+			case SidebarViewType.None: {
+				break;
+			}
+			case SidebarViewType.EntityDetails: {
+				this.displayEntityDetails(state.s.p);
+				break;
+			}
+			case SidebarViewType.SearchResults: {
+				this.displaySearchResults(state.s.p.q);
+				break;
+			}
+		}
 	}
 
 	componentDidMount() {
@@ -160,14 +215,30 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 		// add event listeners
 		window.addEventListener('resize', this.onResize);
+		// handle browser back to a previously pushed state
+		window.addEventListener('popstate', this.onPopState);
 
-		// @! refactor todo
 		this.appModel.addListener(this.reportFailure, AppEvent.Failure);
 		this.appModel.addListener(this.trackMixPanel, AppEvent.TrackMixPanel);
-		// this.appModel.addListener(this.updateLoadingState, AppEvent.LoadingStateChanged);
+		this.viewModel.addListener(this.onPushView, ViewEvent.PUSH_VIEW);
+		this.viewModel.addListener(this.onPopView, ViewEvent.POP_VIEW);
+		this.viewModel.addListener(this.onShowView, ViewEvent.SHOW_VIEW);
+		this.viewModel.addListener(this.onCloseView, ViewEvent.CLOSE_VIEW);
 
-		this.viewModel.addListener(this.pushView, ViewEvent.PUSH_VIEW);
-		this.viewModel.addListener(this.popView, ViewEvent.POP_VIEW);
+		// on persistent state changed
+		// get app state from URL
+		if (this.hasStateInUrl()) {
+			try {
+				this.setPersistentState(this.getStateObject(window.location));
+			} catch (e) {
+				console.warn(`State url is invalid: ${e}`);
+			}
+		}
+
+		this._currentPersistentState = this.getPersistentState();
+
+		// set initial history state
+		history.replaceState(this._currentPersistentState, document.title);
 	}
 
 	componentWillUnmount() {
@@ -175,6 +246,14 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 		// remove event listeners
 		window.removeEventListener('resize', this.onResize);
+		window.removeEventListener('popstate', this.onPopState);
+
+		this.appModel.removeListener(this.reportFailure);
+		this.appModel.removeListener(this.trackMixPanel);
+		this.viewModel.removeListener(this.onPushView);
+		this.viewModel.removeListener(this.onPopView);
+		this.viewModel.removeListener(this.onShowView);
+		this.viewModel.removeListener(this.onCloseView);
 
 		// release shared resources
 		SharedTileStore.clearAll();
@@ -229,7 +308,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						content={this.state.trackViewer}
 						pixelRatio={App.canvasPixelRatio}
 					/>
-					<NavigationController viewModel={this.viewModel} views={this.state.views} />
+					<NavigationController viewModel={this.viewModel} views={this.state.views} visible={this.state.sidebarVisible}/>
 					{errorButton}
 					{errorDialog}
 				</div>
@@ -248,6 +327,8 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		window.cancelAnimationFrame(this._frameLoopHandle);
 	}
 
+	protected _lastStateChangeT_ms = -Infinity;
+	protected _urlStateNeedsUpdate = false;
 	protected frameLoop = () => {
 		this._frameLoopHandle = window.requestAnimationFrame(this.frameLoop);
 
@@ -262,6 +343,21 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		Animator.step();
 
 		this.appCanvas.renderCanvas();
+		
+		// manage writing persistent state to the url
+		// if the persistent state hasn't changed for some time then update the url
+		let latestState = this.getPersistentState();
+		if (!deepEqual(latestState, this._currentPersistentState)) {
+			this._currentPersistentState = latestState;
+			this._lastStateChangeT_ms = t_ms;
+			this._urlStateNeedsUpdate = true;
+		} else if (this._urlStateNeedsUpdate) {
+			let timeWithoutStateChange_ms = (t_ms - this._lastStateChangeT_ms);
+			if (timeWithoutStateChange_ms > 100) {
+				this.writePersistentUrlState(this._currentPersistentState);
+				this._urlStateNeedsUpdate = false;
+			}
+		}
 	}
 
 	protected canvasHeight() {
@@ -277,16 +373,28 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		});
 	}
 
-	protected onPersistentStateChanged = () => {
-		this.writePersistentUrlState();
+	protected onPopState = (e: PopStateEvent) => {
+		if (e.state != null) {
+			this.setPersistentState(e.state);
+		} else {
+			console.warn('onPopState(): history state was null', e);
+		}
 	}
 
-	protected pushView = (e: {data: View}) => {
+	protected onPushView = (e: {data: View}) => {
 		this.setState({ views: this.state.views.concat([e.data]) });
 	}
 
-	protected popView = () => {
+	protected onPopView = () => {
 		this.setState({ views: this.state.views.slice(0, -1) });
+	}
+
+	protected onShowView = () => {
+		this.setState({sidebarVisible: true});
+	}
+
+	protected onCloseView = () => {
+		this.setState({ sidebarVisible: false });
 	}
 
 	protected displayRegion(contig: string, startBase: number, endBase: number) {
@@ -381,23 +489,12 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		return this.state.trackViewer.getQueryRows();
 	}
 
-	protected writePersistentUrlState() {
-		let stateObject = this.getPersistentState();
+	protected writePersistentUrlState(stateObject: PersistentAppState) {
 		let originalString = JSON.stringify(stateObject);
 		let stateUrl = '#' + LZString.compressToBase64(originalString);
-		// @! replace with pushState for back/forward support
+		console.log(`writePersistentUrlState() JSON: ${originalString.length}, compressed: ${stateUrl.length - 1}`)
+		// @! replace with pushState for back/forward support (this requires some extra work to get right)
 		history.replaceState(stateObject, document.title, stateUrl);
-	}
-
-	/**
-	 * @throws
-	 */
-	protected readPersistentUrlState() {
-		try {
-			this.setPersistentState(this.getStateObject(window.location));
-		} catch (e) {
-			console.warn(`State url is invalid: ${e}`);
-		}
 	}
 
 	protected hasStateInUrl() {
