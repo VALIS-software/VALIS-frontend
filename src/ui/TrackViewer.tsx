@@ -16,15 +16,11 @@ import { SiriusApi } from "sirius/SiriusApi";
 import Persistable from "../model/Persistable";
 
 export type PersistentTrackViewerState = {
-    panels: Array<{
-        location: GenomicLocation,
-        width: number
-    }>,
-    trackRows: Array<{
-        model: TrackModel,
-        heightPx: number
-    }>
-}
+    /** Panel data: [[panel.contig, panel.x0, panel.x1, width], ...] */
+    p: Array<Array<any>>,
+    /** Track row data: [[row.trackRow.model, row.heightPx], ...] */
+    t: Array<Array<any>>
+};
 
 type Row = {
     trackRow: TrackRow, // track row pseudo object, positioning properties can be animated
@@ -370,30 +366,23 @@ class TrackViewer extends Object2D implements Persistable<PersistentTrackViewerS
     }
 
     getPersistentState(): PersistentTrackViewerState {
-        let panels = new Array();
+        let panels: PersistentTrackViewerState['p'] = new Array();
         for (let panel of this.panels) {
             let width = this.panelEdges[panel.column + 1] - this.panelEdges[panel.column];
-            panels.push({
-                location: {
-                    contig: panel.contig,
-                    x0: panel.x0,
-                    x1: panel.x1
-                },
-                width
-            });
+            panels.push([panel.contig, panel.x0, panel.x1, width]);
         }
 
-        let trackRows = new Array();
+        let trackRows: PersistentTrackViewerState['t'] = new Array();
         for (let row of this.rows) {
-            trackRows.push({
-                model: row.trackRow.model,
-                height: row.heightPx
-            });
+            trackRows.push([
+                row.trackRow.model,
+                row.heightPx
+            ]);
         }
 
         return {
-            panels: panels,
-            trackRows: trackRows
+            p: panels,
+            t: trackRows
         }
     }
 
@@ -406,17 +395,21 @@ class TrackViewer extends Object2D implements Persistable<PersistentTrackViewerS
         }
 
         // create panels
-        for (let i = 0; i < state.panels.length; i++) {
-            let panelState = state.panels[i];
-            this.addPanel(panelState.location, false);
+        for (let i = 0; i < state.p.length; i++) {
+            let panelState = state.p[i];
+            this.addPanel({
+                contig: panelState[0],
+                x0: panelState[1],
+                x1: panelState[2]
+            }, false);
         }
 
         // set panel edges from state widths
         let e = 0;
-        for (let i = 0; i < state.panels.length; i++) {
-            let panelState = state.panels[i];
+        for (let i = 0; i < state.p.length; i++) {
+            let panelState = state.p[i];
             this.panelEdges[i] = e;
-            e += panelState.width;
+            e += panelState[3];
         }
 
         this.layoutPanels(false);
@@ -429,8 +422,8 @@ class TrackViewer extends Object2D implements Persistable<PersistentTrackViewerS
         }
 
         // create rows
-        for (let row of state.trackRows) {
-            this.addTrackRow(row.model, row.heightPx, false);
+        for (let row of state.t) {
+            this.addTrackRow(row[0], row[1], false);
         }
 
         this.layoutTrackRows(false);
