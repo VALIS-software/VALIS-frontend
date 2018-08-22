@@ -24,6 +24,8 @@ type State = {}
 
 class Header extends React.Component<Props, State> {
 
+  protected tokenBoxRef: TokenBox;
+
   constructor(props: Props) {
     super(props);
     this.state = {};
@@ -33,6 +35,30 @@ class Header extends React.Component<Props, State> {
     this.props.viewModel.pushView('Analysis', '', (<AnalysisSelector appModel={this.props.appModel} />));
   }
 
+  getTokenBoxState() {
+    if (this.tokenBoxRef != null) {
+      return {
+        tokens: this.tokenBoxRef.state.tokens,
+        text: this.tokenBoxRef.state.searchString,
+      }
+    } else {
+      return {
+        tokens: [],
+        text: ''
+      }
+    }
+  }
+
+  setTokenBoxState(state: { tokens: Array<any>, text: string}) {
+    if (this.tokenBoxRef != null) {
+      this.tokenBoxRef.setState({
+        tokens: state.tokens,
+        searchString: state.text,
+      });
+      this.tokenBoxRef.autoComplete.current.setState({ searchText: state.text });
+    }
+  }
+
   render() {
   const analyzeButton = (<FlatButton onClick={this.openAnalysis} label="Analysis" icon={(<ShowChart/>)}></FlatButton>);
     return (<div className="header">
@@ -40,7 +66,7 @@ class Header extends React.Component<Props, State> {
         <ToolbarTitle text="VALIS"/>
         <ToolbarGroup>
           <div className="search-box">
-            <TokenBox appModel={this.props.appModel} viewModel={this.props.viewModel} />
+            <TokenBox appModel={this.props.appModel} viewModel={this.props.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>
           </div>
         </ToolbarGroup>
         <ToolbarGroup>
