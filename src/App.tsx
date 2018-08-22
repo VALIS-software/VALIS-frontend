@@ -82,6 +82,8 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	protected appCanvas: AppCanvas;
 	protected trackViewer: TrackViewer;
 
+	protected headerRef: Header;
+
 	protected _currentPersistentState: PersistentAppState;
 
 	constructor(props: Props) {
@@ -162,7 +164,12 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 				} else if (type === SearchResultsView) {
 					currentSidebarView.t = SidebarViewType.SearchResults;
 					currentSidebarView.p = {
-						q: lastView.info, // search query
+						q: lastView.info, // search query object
+						t: (lastReactView as SearchResultsView).props.text
+					}
+					// token box state
+					if (this.headerRef != null) {
+						currentSidebarView.p.h = this.headerRef.getTokenBoxState();
 					}
 				}
 			}
@@ -176,17 +183,21 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 	setPersistentState(state: PersistentAppState) {
 		this.trackViewer.setPersistentState(state.t);
-
+		let viewProps = state.s.p;
 		switch (state.s.t) {
 			case SidebarViewType.None: {
 				break;
 			}
 			case SidebarViewType.EntityDetails: {
-				this.displayEntityDetails(state.s.p);
+				this.displayEntityDetails(viewProps);
 				break;
 			}
 			case SidebarViewType.SearchResults: {
-				this.displaySearchResults(state.s.p.q);
+				this.displaySearchResults(viewProps.q, viewProps.t);
+				// set TokenBox state
+				if (viewProps.h != null && this.headerRef != null) {
+					this.headerRef.setTokenBoxState(viewProps.h);
+				}
 				break;
 			}
 		}
@@ -300,7 +311,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		return (
 			<MuiThemeProvider muiTheme={BasicTheme}>
 				<div>
-					<Header viewModel={this.viewModel} appModel={this.appModel} userProfile={this.state.userProfile} />
+					<Header viewModel={this.viewModel} appModel={this.appModel} userProfile={this.state.userProfile} ref={(v) => this.headerRef = v}/>
 					<AppCanvas
 						ref={(v) => this.appCanvas = v}
 						width={this.state.viewerWidth}
