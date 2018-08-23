@@ -1,8 +1,8 @@
 import { Strand } from "gff3/Strand";
-import { Dialog, FlatButton, IconButton } from "material-ui";
+import { Dialog, FlatButton, IconButton, Snackbar } from "material-ui";
+import CircularProgress from "material-ui/CircularProgress";
 import { MuiThemeProvider } from "material-ui/styles";
 import { ContentReport, SocialShare } from "material-ui/svg-icons";
-import CircularProgress from "material-ui/CircularProgress";
 import * as React from "react";
 import EntityType from "sirius/EntityType";
 import SiriusApi from "sirius/SiriusApi";
@@ -10,6 +10,7 @@ import Animator from "./animation/Animator";
 // styles
 import "./App.scss";
 import { SharedTileStore } from "./model/data-store/SharedTileStores";
+import Persistable from "./model/Persistable";
 import { TrackModel } from "./model/TrackModel";
 import { EntityDetails } from "./ui/components/EntityDetails/EntityDetails";
 import Header from "./ui/components/Header/Header";
@@ -21,8 +22,6 @@ import ViewModel, { ViewEvent } from "./ui/models/ViewModel";
 import BasicTheme from "./ui/themes/BasicTheme";
 import TrackViewer, { PersistentTrackViewerState } from "./ui/TrackViewer";
 import View from "./ui/View";
-import GenericIntervalTileStore from "./model/data-store/GenericIntervalTileStore";
-import Persistable from "./model/Persistable";
 import LZString = require("lz-string");
 
 const deepEqual = require('fast-deep-equal');
@@ -52,6 +51,8 @@ type State = {
 	userProfile: null | any,
 
 	sidebarVisible: boolean,
+
+	appReady: boolean,
 }
 
 enum SidebarViewType {
@@ -141,6 +142,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			displayShareDialog: false,
 			userProfile: null,
 			sidebarVisible: false,
+			appReady: false,
 		};
 	}
 
@@ -195,7 +197,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			case SidebarViewType.SearchResults: {
 				this.displaySearchResults(viewProps.q, viewProps.t);
 				// set TokenBox state
-				if (viewProps.h != null && this.headerRef != null) {
+				if ((viewProps.h != null) && (this.headerRef != null)) {
 					this.headerRef.setTokenBoxState(viewProps.h);
 				}
 				break;
@@ -216,22 +218,9 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		this.viewModel.addListener(this.onShowView, ViewEvent.SHOW_VIEW);
 		this.viewModel.addListener(this.onCloseView, ViewEvent.CLOSE_VIEW);
 
-		// on persistent state changed
-		// get app state from URL
-		if (this.hasStateInUrl()) {
-			try {
-				this.setPersistentState(this.getStateObject(window.location));
-			} catch (e) {
-				console.warn(`State url is invalid: ${e}`);
-			}
-		}
-
-		this._currentPersistentState = this.getPersistentState();
-
-		// set initial history state
-		history.replaceState(this._currentPersistentState, document.title);
-
 		// Get User Profile, redirect if not logged in
+		// @! this isn't a good way to handle login – it causes a number of problems
+		// should be handled server-side instead
 		SiriusApi.getUserProfile().then((userProfile: any) => {
 			if (!userProfile.name) {
 				window.location.href = '/login';
@@ -244,9 +233,8 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			});
 			this.setState({
 				userProfile: userProfile,
+				appReady: true,
 			})
-			// We only start the FrameLoop after log in
-			this.startFrameLoop();
 		}, (err: object) => {
 			window.location.href = '/login';
 		});
@@ -271,6 +259,29 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	}
 
 	componentDidUpdate(prevProps: Props, prevState: State, snapshot: any) {
+		if (!prevState.appReady && this.state.appReady) {
+			this.onMainAppReady();
+		}
+	}
+
+	onMainAppReady() {
+		// We only start the FrameLoop after log in
+		this.startFrameLoop();
+
+		// on persistent state changed
+		// get app state from URL
+		if (this.hasStateInUrl()) {
+			try {
+				this.setPersistentState(this.getStateObject(window.location));
+			} catch (e) {
+				console.warn(`State url is invalid: ${e}`);
+			}
+		}
+
+		this._currentPersistentState = this.getPersistentState();
+
+		// set initial history state
+		history.replaceState(this._currentPersistentState, document.title);
 	}
 
 	render() {
@@ -320,31 +331,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 		const shareLink = window.location.href;
 
-		const shareDialog = (<Dialog
-			title="Sharing Link"
-			modal={false}
-			open={this.state.displayShareDialog}
-			onRequestClose={() => this.setState({displayShareDialog: false})}
-			autoScrollBodyContent={true}
-			actions={[<FlatButton
-				label="Close"
-				primary={true}
-				onClick={() => this.setState({ displayShareDialog: false })}
-			/>]}
-		>
-			<textarea
-				style={{width: '100%', fontSize: '1.0em'}}
-				onClick={(e) => {
-					if (e.target instanceof HTMLTextAreaElement) {
-						let textarea = e.target;
-						textarea.select();
-					}
-				}}
-				value={shareLink}
-				readOnly={true}
-			/>
-		</Dialog>)
-
 		return (
 			<MuiThemeProvider muiTheme={BasicTheme}>
 				<div>
@@ -359,7 +345,11 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 					<NavigationController viewModel={this.viewModel} views={this.state.views} visible={this.state.sidebarVisible}/>
 
 					{errorDialog}
-					{shareDialog}
+					<ShareLinkDialog
+						shareLink={shareLink}
+						open={this.state.displayShareDialog}
+						handleClose={() => this.setState({displayShareDialog: false})}
+					/>
 
 					<div className="page-buttons">
 						{errorButton}
@@ -597,3 +587,77 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 }
 
 export default App;
+
+type ShareLinkDialogProps = { shareLink: string, open: boolean, handleClose: () => void };
+type ShareLinkDialogState = { clipboardNotificationContext: null | string };
+
+class ShareLinkDialog extends React.Component<ShareLinkDialogProps, ShareLinkDialogState> {
+
+	constructor(props: ShareLinkDialogProps, ctx?: any) {
+		super(props, ctx);
+		this.state = {
+			clipboardNotificationContext: null
+		}
+	}
+
+	render() {
+		let shareLinkTextareaRef: HTMLTextAreaElement;
+
+		return (<Dialog
+			title="Sharing Link"
+			modal={false}
+			open={this.props.open}
+			onRequestClose={this.props.handleClose}
+			autoScrollBodyContent={true}
+			actions={[
+				<FlatButton
+					label="Copy to Clipboard"
+					primary={false}
+					onClick={() => {
+						shareLinkTextareaRef.focus();
+						shareLinkTextareaRef.select();
+						if (document.execCommand('copy')) {
+							this.setState({
+								clipboardNotificationContext: 'Copied!'
+							});
+						} else {
+							this.setState({
+								clipboardNotificationContext: 'Error copying to clipboard'
+							});
+						}
+					}}
+				/>,
+				<FlatButton
+					label="Close"
+					primary={true}
+					onClick={this.props.handleClose}
+				/>
+			]}
+			contentStyle={{ overflow: 'hidden' }}
+		>
+			<textarea
+				ref={(v) => shareLinkTextareaRef = v}
+				style={{ width: '100%', fontSize: '1.0em' }}
+				onClick={(e) => {
+					if (e.target instanceof HTMLTextAreaElement) {
+						let textarea = e.target;
+						textarea.select();
+					}
+				}}
+				value={this.props.shareLink}
+				readOnly={true}
+			/>
+			<Snackbar
+				open={(this.state.clipboardNotificationContext != null)}
+				autoHideDuration={1000}
+				message={this.state.clipboardNotificationContext || ''}
+				onRequestClose={(r) => {
+					this.setState({
+						clipboardNotificationContext: null
+					});
+				}}
+			/>
+		</Dialog>)
+	}
+
+}
