@@ -115,12 +115,7 @@ class BooleanTrackSelector extends React.Component {
     const query = this.buildQuery();
     
     if (this.getOutputQueryType() === 'interval') {
-      App.addIntervalTrack(this.state.title, query, (e) => {
-        return {
-          startIndex: e.start - 1,
-          span: e.length
-        }
-      }, false);
+      App.addIntervalTrack(this.state.title, query, false);
     } else {
       App.addVariantTrack(this.state.title, query);
     }

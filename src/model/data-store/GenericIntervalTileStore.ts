@@ -21,10 +21,6 @@ export default class GenericIntervalTileStore extends TileStore<TilePayload, voi
     constructor(
         protected contig: string,
         protected query: any,
-        protected resultTransform: (entry: any) => {
-            startIndex: number,
-            span: number
-        },
         protected tileSize = 1 << 15
     ) {
         super(
@@ -58,9 +54,8 @@ export default class GenericIntervalTileStore extends TileStore<TilePayload, voi
 
             for (let i = 0; i < r.data.length; i++) {
                 let entry = r.data[i];
-                let { startIndex, span } = this.resultTransform(entry);
-                intervals[i * 2 + 0] = startIndex;
-                intervals[i * 2 + 1] = span;
+                intervals[i * 2 + 0] = entry.start - 1;
+                intervals[i * 2 + 1] = entry.length;
             }
             return intervals;
         });

@@ -26,7 +26,7 @@ export default class IntervalTrack extends Track<'interval'> {
         this.tileStore = SharedTileStore.getTileStore(
             typeKey,
             contig,
-            this.model.tileStoreConstructor
+            (contig) => new GenericIntervalTileStore(contig, this.model.query)
         );
         super.setContig(contig);
     }

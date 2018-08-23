@@ -477,10 +477,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	protected addIntervalTrack(
 		title: string,
 		query: any,
-		resultTransform: (entry: any) => {
-			startIndex: number,
-			span: number
-		},
 		blendEnabled?: boolean
 	) {
 		if (blendEnabled === undefined) blendEnabled = true;
@@ -489,9 +485,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			type: 'interval',
 			tileStoreType: 'interval',
 			query: query,
-			tileStoreConstructor: (contig) => {
-				return new GenericIntervalTileStore(contig, query, resultTransform);
-			},
 			blendEnabled: blendEnabled
 		});
 	}
@@ -546,13 +539,9 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	static addIntervalTrack(
 		title: string,
 		query: any,
-		resultTransform: (entry: any) => {
-			startIndex: number,
-			span: number
-		},
 		blendEnabled?: boolean,
 	) {
-		this.appInstance.addIntervalTrack(title, query, resultTransform, blendEnabled);
+		this.appInstance.addIntervalTrack(title, query, blendEnabled);
 	}
 
 	static displayEntityDetails(entity: { id: string, type: EntityType }) {
