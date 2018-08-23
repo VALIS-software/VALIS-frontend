@@ -1,7 +1,7 @@
 import { Strand } from "gff3/Strand";
 import { Dialog, FlatButton, IconButton } from "material-ui";
 import { MuiThemeProvider } from "material-ui/styles";
-import { ContentReport } from "material-ui/svg-icons";
+import { ContentReport, SocialShare } from "material-ui/svg-icons";
 import CircularProgress from "material-ui/CircularProgress";
 import * as React from "react";
 import EntityType from "sirius/EntityType";
@@ -44,8 +44,10 @@ type State = {
 
 	trackViewer: TrackViewer;
 
-	displayErrors: boolean,
+	displayErrorDialog: boolean,
 	errors: Array<any>,
+
+	displayShareDialog: boolean,
 
 	userProfile: null | any,
 
@@ -58,6 +60,7 @@ enum SidebarViewType {
 	SearchResults = 2,
 }
 
+// Persistent app state field names are minified to reduce json size
 type PersistentAppState = {
 	/** TrackViewer state */
 	t: PersistentTrackViewerState,
@@ -133,15 +136,12 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			viewerWidth: window.innerWidth,
 			viewerHeight: this.canvasHeight(),
 			trackViewer: this.trackViewer,
-			displayErrors: false,
+			displayErrorDialog: false,
 			errors: [],
+			displayShareDialog: false,
 			userProfile: null,
 			sidebarVisible: false,
 		};
-
-		// @! remove
-		(window as any).getAppState = () => this.getPersistentState();
-		(window as any).setAppState = (s: any) => this.setPersistentState(s);
 	}
 
 	getPersistentState(): PersistentAppState {
@@ -204,26 +204,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	}
 
 	componentDidMount() {
-		// Get User Profile, redirect if not logged in
-		SiriusApi.getUserProfile().then((userProfile: any) => {
-			if (!userProfile.name) {
-				window.location.href = '/login';
-			}
-			// assign identity of mixpanel
-			mixpanel.identify(userProfile.name);
-			mixpanel.people.set({
-				"$email": userProfile.name,
-				"$last_login": new Date(),
-			});
-			this.setState({
-				userProfile: userProfile,
-			})
-			// We only start the FrameLoop after log in
-			this.startFrameLoop();
-		}, (err: object) => {
-			window.location.href = '/login';
-		});
-
 		// add event listeners
 		window.addEventListener('resize', this.onResize);
 		// handle browser back to a previously pushed state
@@ -250,6 +230,26 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 		// set initial history state
 		history.replaceState(this._currentPersistentState, document.title);
+
+		// Get User Profile, redirect if not logged in
+		SiriusApi.getUserProfile().then((userProfile: any) => {
+			if (!userProfile.name) {
+				window.location.href = '/login';
+			}
+			// assign identity of mixpanel
+			mixpanel.identify(userProfile.name);
+			mixpanel.people.set({
+				"$email": userProfile.name,
+				"$last_login": new Date(),
+			});
+			this.setState({
+				userProfile: userProfile,
+			})
+			// We only start the FrameLoop after log in
+			this.startFrameLoop();
+		}, (err: object) => {
+			window.location.href = '/login';
+		});
 	}
 
 	componentWillUnmount() {
@@ -280,7 +280,18 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 					</div>);
 		}
 
-		const errorButton = this.state.errors.length > 0 ? (<div className="error-button"><IconButton onClick={this.displayErrors} tooltip="Clear"><ContentReport /></IconButton></div>) : (<div />);
+		const errorButton = this.state.errors.length > 0 ? (
+				<IconButton onClick={this.displayErrors} tooltip="Errors" tooltipPosition="top-center">
+					<ContentReport />
+				</IconButton>
+			) :
+			(<div />);
+
+		const shareButton = (
+			<IconButton onClick={() => this.setState({ displayShareDialog: true })} tooltip="Share" tooltipPosition="top-center">
+				<SocialShare />
+			</IconButton>
+		);
 
 		let errorDialog = (<div />);
 		if (this.state.errors.length) {
@@ -288,7 +299,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			const errorList = this.state.errors.map((error: object) => {
 				return (<div key={'error' + (++id)}>{JSON.stringify(error)}<hr /></div>);
 			});
-
 
 			const actions = [<FlatButton
 				label="Cancel"
@@ -299,7 +309,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			errorDialog = (<Dialog
 				title="Errors"
 				modal={false}
-				open={this.state.displayErrors}
+				open={this.state.displayErrorDialog}
 				onRequestClose={this.hideErrors}
 				autoScrollBodyContent={true}
 				actions={actions}
@@ -307,6 +317,33 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 				{errorList}
 			</Dialog>);
 		}
+
+		const shareLink = window.location.href;
+
+		const shareDialog = (<Dialog
+			title="Sharing Link"
+			modal={false}
+			open={this.state.displayShareDialog}
+			onRequestClose={() => this.setState({displayShareDialog: false})}
+			autoScrollBodyContent={true}
+			actions={[<FlatButton
+				label="Close"
+				primary={true}
+				onClick={() => this.setState({ displayShareDialog: false })}
+			/>]}
+		>
+			<textarea
+				style={{width: '100%', fontSize: '1.0em'}}
+				onClick={(e) => {
+					if (e.target instanceof HTMLTextAreaElement) {
+						let textarea = e.target;
+						textarea.select();
+					}
+				}}
+				value={shareLink}
+				readOnly={true}
+			/>
+		</Dialog>)
 
 		return (
 			<MuiThemeProvider muiTheme={BasicTheme}>
@@ -320,8 +357,14 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						pixelRatio={App.canvasPixelRatio}
 					/>
 					<NavigationController viewModel={this.viewModel} views={this.state.views} visible={this.state.sidebarVisible}/>
-					{errorButton}
+
 					{errorDialog}
+					{shareDialog}
+
+					<div className="page-buttons">
+						{errorButton}
+						{shareButton}
+					</div>
 				</div>
 			</MuiThemeProvider>
 		);
@@ -434,11 +477,11 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	}
 
 	protected displayErrors = () => {
-		this.setState({displayErrors: true});
+		this.setState({displayErrorDialog: true});
 	}
 
 	protected hideErrors = () => {
-		this.setState({ displayErrors: false });
+		this.setState({ displayErrorDialog: false });
 	}
 
 	protected reportFailure = (evt: any) => {
@@ -496,7 +539,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	protected writePersistentUrlState(stateObject: PersistentAppState) {
 		let originalString = JSON.stringify(stateObject);
 		let stateUrl = '#' + LZString.compressToBase64(originalString);
-		console.log(`writePersistentUrlState() JSON: ${originalString.length}, compressed: ${stateUrl.length - 1}`)
 		// @! replace with pushState for back/forward support (this requires some extra work to get right)
 		history.replaceState(stateObject, document.title, stateUrl);
 	}
