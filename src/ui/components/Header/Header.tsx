@@ -1,17 +1,23 @@
 // Dependencies
+import * as React from 'react';
+// Material-UI
+import IconButton from 'material-ui/IconButton';
 import FlatButton from 'material-ui/FlatButton';
 import { Toolbar, ToolbarGroup, ToolbarTitle } from 'material-ui/Toolbar';
-import * as React from 'react';
-import AppModel from '../../models/AppModel';
-import ViewModel from '../../models/ViewModel';
-import TokenBox from '../Shared/TokenBox/TokenBox';
+// Material-UI Icons
 import ShowChart from 'material-ui/svg-icons/editor/show-chart';
 import Menu from 'material-ui/svg-icons/navigation/menu';
+import CloudUpload from "material-ui/svg-icons/file/cloud-upload";
+// components
+import TokenBox from '../Shared/TokenBox/TokenBox';
 import UserProfileButton from '../Shared/UserProfileButton/UserProfileButton';
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 import AnalysisSelector from '../AnalysisSelector/AnalysisSelector';
-import IconButton from 'material-ui/IconButton';
-
+import UserFilesPanel from '../UserFilesPanel/UserFilesPanel';
+// Models
+import AppModel from '../../models/AppModel';
+import ViewModel from '../../models/ViewModel';
+// Styles
 import './Header.scss';
 
 type Props = {
@@ -58,9 +64,14 @@ class Header extends React.Component<Props, State> {
       this.tokenBoxRef.autoComplete.current.setState({ searchText: state.text });
     }
   }
+  
+  openUserFiles = () => {
+    this.props.viewModel.pushView('UserFiles', '', (<UserFilesPanel appModel={this.props.appModel} />));
+  }
 
   render() {
-  const analyzeButton = (<FlatButton onClick={this.openAnalysis} label="Analysis" icon={(<ShowChart/>)}></FlatButton>);
+    const userFileButton = <FlatButton onClick={this.openUserFiles} label="Files" icon={(<CloudUpload/>)} />;
+    const analyzeButton = <FlatButton onClick={this.openAnalysis} label="Analysis" icon={(<ShowChart/>)} />;
     return (<div className="header">
       <Toolbar>
         <ToolbarTitle text="VALIS"/>
@@ -70,6 +81,7 @@ class Header extends React.Component<Props, State> {
           </div>
         </ToolbarGroup>
         <ToolbarGroup>
+          {userFileButton}
           {analyzeButton}
           <UserFeedBackButton userProfile={this.props.userProfile} />
           <div className="user-button">
