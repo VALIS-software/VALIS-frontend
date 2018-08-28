@@ -16,6 +16,7 @@ import { EntityDetails } from "./ui/components/EntityDetails/EntityDetails";
 import Header from "./ui/components/Header/Header";
 import NavigationController from "./ui/components/NavigationController/NavigationController";
 import SearchResultsView from "./ui/components/SearchResultsView/SearchResultsView";
+import ShareLinkDialog from "./ui/components/ShareLink/ShareLinkDialog";
 import { AppCanvas } from "./ui/core/AppCanvas";
 import AppModel, { AppEvent } from "./ui/models/AppModel";
 import ViewModel, { ViewEvent } from "./ui/models/ViewModel";
@@ -78,8 +79,8 @@ type PersistentAppState = {
 
 export class App extends React.Component<Props, State> implements Persistable<PersistentAppState> {
 
-	readonly headerHeight: number = 50;
-	readonly headerMargin: number = 30;
+	readonly headerHeight: number = 56;
+	readonly headerMargin: number = 20;
 
 	protected appModel: AppModel;
 	protected viewModel: ViewModel;
@@ -125,7 +126,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		}
 
 		for (let panel of [
-			// { name: 'Chromosome 1', x0: 1358.4e3, x1: 1358.6e3}
 			{ contig: 'chr1', x0: 0, x1: 249e6 }
 		]) {
 			this.trackViewer.addPanel(panel, false);
@@ -298,12 +298,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			) :
 			(<div />);
 
-		const shareButton = (
-			<IconButton onClick={() => this.setState({ displayShareDialog: true })} tooltip="Share" tooltipPosition="top-center">
-				<SocialShare />
-			</IconButton>
-		);
-
 		let errorDialog = (<div />);
 		if (this.state.errors.length) {
 			let id = 0;
@@ -334,15 +328,36 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		return (
 			<MuiThemeProvider muiTheme={BasicTheme}>
 				<div>
-					<Header viewModel={this.viewModel} appModel={this.appModel} userProfile={this.state.userProfile} ref={(v) => this.headerRef = v}/>
+					<Header
+						viewModel={this.viewModel}
+						appModel={this.appModel}
+						userProfile={this.state.userProfile}
+						onShowShare={() => this.setState({ displayShareDialog: true })}
+						ref={(v) => this.headerRef = v}
+					/>
+
 					<AppCanvas
 						ref={(v) => this.appCanvas = v}
 						width={this.state.viewerWidth}
 						height={this.state.viewerHeight}
 						content={this.state.trackViewer}
 						pixelRatio={App.canvasPixelRatio}
+						style={{
+							display: 'inline-block',
+							marginTop: this.headerMargin + 'px',
+						}}
 					/>
-					<NavigationController viewModel={this.viewModel} views={this.state.views} visible={this.state.sidebarVisible}/>
+
+					<NavigationController
+						viewModel={this.viewModel}
+						views={this.state.views}
+						visible={this.state.sidebarVisible}
+						style={{
+							top: this.headerHeight + 'px',
+							bottom: '0px',
+							height: 'auto',
+						}}
+					/>
 
 					{errorDialog}
 					<ShareLinkDialog
@@ -353,7 +368,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 					<div className="page-buttons">
 						{errorButton}
-						{shareButton}
 					</div>
 				</div>
 			</MuiThemeProvider>
@@ -587,77 +601,3 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 }
 
 export default App;
-
-type ShareLinkDialogProps = { shareLink: string, open: boolean, handleClose: () => void };
-type ShareLinkDialogState = { clipboardNotificationContext: null | string };
-
-class ShareLinkDialog extends React.Component<ShareLinkDialogProps, ShareLinkDialogState> {
-
-	constructor(props: ShareLinkDialogProps, ctx?: any) {
-		super(props, ctx);
-		this.state = {
-			clipboardNotificationContext: null
-		}
-	}
-
-	render() {
-		let shareLinkTextareaRef: HTMLTextAreaElement;
-
-		return (<Dialog
-			title="Sharing Link"
-			modal={false}
-			open={this.props.open}
-			onRequestClose={this.props.handleClose}
-			autoScrollBodyContent={true}
-			actions={[
-				<FlatButton
-					label="Copy to Clipboard"
-					primary={false}
-					onClick={() => {
-						shareLinkTextareaRef.focus();
-						shareLinkTextareaRef.select();
-						if (document.execCommand('copy')) {
-							this.setState({
-								clipboardNotificationContext: 'Copied!'
-							});
-						} else {
-							this.setState({
-								clipboardNotificationContext: 'Error copying to clipboard'
-							});
-						}
-					}}
-				/>,
-				<FlatButton
-					label="Close"
-					primary={true}
-					onClick={this.props.handleClose}
-				/>
-			]}
-			contentStyle={{ overflow: 'hidden' }}
-		>
-			<textarea
-				ref={(v) => shareLinkTextareaRef = v}
-				style={{ width: '100%', fontSize: '1.0em' }}
-				onClick={(e) => {
-					if (e.target instanceof HTMLTextAreaElement) {
-						let textarea = e.target;
-						textarea.select();
-					}
-				}}
-				value={this.props.shareLink}
-				readOnly={true}
-			/>
-			<Snackbar
-				open={(this.state.clipboardNotificationContext != null)}
-				autoHideDuration={1000}
-				message={this.state.clipboardNotificationContext || ''}
-				onRequestClose={(r) => {
-					this.setState({
-						clipboardNotificationContext: null
-					});
-				}}
-			/>
-		</Dialog>)
-	}
-
-}

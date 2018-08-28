@@ -642,7 +642,8 @@ class TrackViewer extends Object2D implements Persistable<PersistentTrackViewerS
             rowHeight += row.heightPx;
         }
 
-        let overflow = rowHeight - gridViewportHeight;
+        const padding = this.spacing.y;
+        let overflow = rowHeight - gridViewportHeight + padding;
         let minOffset = -overflow;
 
         this.rowOffsetY = Math.min(Math.max(this.rowOffsetY, minOffset), maxOffset);
