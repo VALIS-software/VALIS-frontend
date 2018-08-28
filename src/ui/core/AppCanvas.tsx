@@ -23,6 +23,8 @@ interface Props {
     height: number;
     content: Object2D;
     pixelRatio?: number;
+    style?: React.CSSProperties;
+    canvasStyle?: React.CSSProperties;
 }
 
 interface State {
@@ -129,18 +131,15 @@ export class AppCanvas extends React.Component<Props, State> {
         const pixelRatio = this.props.pixelRatio || window.devicePixelRatio || 1;
         const canvasWidth = this.props.width * pixelRatio + 'px';
         const canvasHeight = this.props.height * pixelRatio + 'px';
-        const containerStyle : React.CSSProperties = {
+        const style : React.CSSProperties = {
             position: 'relative', 
             overflow: 'hidden',
             width: canvasWidth,
             height: canvasHeight,
+            ...(this.props.style || {})
         };
         return (
-          
-          
-          
-          
-            <div className="app-canvas" style={containerStyle}>
+            <div className="app-canvas" style={style}>
                 <canvas
                     ref={(v) => this.canvas = v}
                     width={canvasWidth}
@@ -153,6 +152,7 @@ export class AppCanvas extends React.Component<Props, State> {
                         width: this.props.width + 'px',
                         height: this.props.height + 'px',
                         zIndex: 0,
+                        ...(this.props.canvasStyle || {})
                     }}
                 />
                 {
@@ -161,7 +161,7 @@ export class AppCanvas extends React.Component<Props, State> {
                     )
                 }
             </div>
-        )
+        );
     }
 
     renderCanvas() {
