@@ -14,7 +14,8 @@ import View from "../../View";
 type Props = {
   viewModel: ViewModel,
   views: Array<View>,
-  visible: boolean
+  visible: boolean,
+  style?: React.CSSProperties,
 }
 
 type State = {  }
@@ -47,7 +48,13 @@ class NavigationController extends React.Component<Props, State> {
     const view = visible ? curr.view : <div />;
 
     return (
-      <Drawer className="navigation-controller" width={400} openSecondary={true} open={visible && this.props.visible}>
+      <Drawer
+        className="navigation-controller"
+        width={400}
+        openSecondary={true}
+        open={visible && this.props.visible}
+        containerStyle={this.props.style}
+      >
         <AppBar
           title={title}
           iconElementLeft={navButton}
