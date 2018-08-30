@@ -83,6 +83,9 @@ export class Animator {
                         x: target - current,
                         v: velocity == null ? 0 : velocity,
                         pe: 0,
+
+                        t0: t_s,
+                        lastT: t_s,
                     },
 
                     target: fieldTargets[field],
@@ -94,6 +97,7 @@ export class Animator {
                 // animation is already active, update state
                 animation.state.x = target - current;
                 animation.state.v = velocity == null ? animation.state.v : velocity;
+                animation.state.t0 = t_s; // set t0 so easings are reset
                 animation.target = target;
                 animation.step = step;
                 animation.parameters = parameters;
@@ -122,8 +126,8 @@ export class Animator {
         }
     }
 
-    public static step(dt_ms: number) {
-        let dt_s = dt_ms / 1000;
+    public static frame() {
+        let t_s = window.performance.now() / 1000;
 
         let steppedAnimationCount = 0;
 
@@ -135,7 +139,7 @@ export class Animator {
                 let animation = entry.animatingFields[field];
                 
                 animation.state.x = animation.target - object[field];
-                animation.step(dt_s, animation.state, animation.parameters);
+                animation.step(t_s, animation.state, animation.parameters);
                 object[field] = animation.target - animation.state.x;
 
                 steppedAnimationCount++;
@@ -218,10 +222,12 @@ export class Animator {
         }
     }
 
-    private static stringStep(dt_s: number, state: AnimationState, parameters: {
+    private static stringStep(t_s: number, state: AnimationState, parameters: {
         tension: number,
         friction: number,
     }) {
+        let dt_s = t_s - state.lastT;
+        state.lastT = t_s;
 
         // analytic integration (unconditionally stable)
         // references:
@@ -297,6 +303,9 @@ type AnimationState = {
     x: number,
     v: number,
     pe: number,
+
+    lastT: number,
+    t0: number
 }
 
 export default Animator;
