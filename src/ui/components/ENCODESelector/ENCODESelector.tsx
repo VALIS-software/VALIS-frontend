@@ -244,12 +244,7 @@ class ENCODESelector extends React.Component<Props, State> {
   addQueryTrack = () => {
     const query = this.buildQuery();
     this.appModel.trackMixPanel("Add ENCODE Track", { "query": query });
-    App.addIntervalTrack(this.buildTitle(), query, (e) => {
-      return {
-        startIndex: e.start - 1,
-        span: e.length
-      }
-    });
+    App.addIntervalTrack(this.buildTitle(), query);
     this.props.viewModel.closeNavigationView();
   }
 

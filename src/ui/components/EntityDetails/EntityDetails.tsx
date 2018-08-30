@@ -10,7 +10,7 @@ import TraitDetails from "../TraitDetails/TraitDetails";
 import React = require("react");
 
 export function EntityDetails(props: {
-    entity: { id: string, type: EntityType},
+    entity: { id: string, type: EntityType },
     appModel: AppModel,
     viewModel: ViewModel
 }) {

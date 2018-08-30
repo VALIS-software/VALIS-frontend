@@ -58,12 +58,7 @@ class SearchResultsView extends React.Component {
     if (['SNP', 'variant'].indexOf(resultType) > -1) {
       App.addVariantTrack(trackTitle, this.queryModel.getFilteredQuery());
     } else {
-      App.addIntervalTrack(trackTitle, this.queryModel.getFilteredQuery(), (e) => {
-        return {
-          startIndex: e.start - 1,
-          span: e.length
-        }
-      }, false);
+      App.addIntervalTrack(trackTitle, this.queryModel.getFilteredQuery(), false);
     }
   }
 

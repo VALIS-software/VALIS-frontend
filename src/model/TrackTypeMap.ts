@@ -13,7 +13,6 @@ export interface TrackTypeMap {
     'interval': {
         query: any,
         tileStoreType: string,
-        tileStoreConstructor: (contig: string) => GenericIntervalTileStore,
         blendEnabled: boolean,
     },
 }

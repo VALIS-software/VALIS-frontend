@@ -30,7 +30,7 @@ export type Feature = {
     end: number;
     strand: Strand;
     phase: number | null;
-    attributes: FeatureAttributes
+    attributes: FeatureAttributes;
 };
 
 export default Feature;
