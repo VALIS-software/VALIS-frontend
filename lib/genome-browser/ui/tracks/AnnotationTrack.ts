@@ -12,9 +12,7 @@ import { BlendMode, DrawContext } from "../../rendering/Renderer";
 import Object2D from "../core/Object2D";
 import { Rect } from "../core/Rect";
 import Text from "../core/Text";
-import InteractiveStyling from "../dev/InteractiveStyling";
 import { OpenSansRegular } from "../font/Fonts";
-import TrackRow from "../TrackRow";
 import Track from "./Track";
 import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
 import { SiriusApi } from "sirius/SiriusApi";
@@ -342,7 +340,9 @@ class TranscriptAnnotation extends Object2D {
             [TranscriptClass.NonProteinCoding]: [0, 1, 1, 0.25],
         }
 
-        let backgroundColor = [107 /0xff, 109 /0xff, 136 /0xff, 0.17];
+        let backgroundColor = [107 / 0xff, 109 / 0xff, 136 / 0xff, 0.17]; // rgba(107, 109, 136, 0.17)
+        let passiveOpacity = backgroundColor[3];
+        let hoverOpacity = passiveOpacity * 3;
 
         let background = new Rect(0, 0, backgroundColor);
         background.cursorStyle = 'pointer';
@@ -351,15 +351,7 @@ class TranscriptAnnotation extends Object2D {
         background.layoutW = 1;
         background.layoutH = 1;
 
-        let passiveOpacity = background.color[3];
-        let hoverOpacity = passiveOpacity * 3;
-
         this.add(background);
-
-        InteractiveStyling.colorFromElement('transcript-background', background.color, () => {
-            passiveOpacity = background.color[3];
-            hoverOpacity = passiveOpacity * 3;
-        });
 
         // highlight on mouse-over
         const springStrength = 300;
@@ -448,13 +440,8 @@ class Exon extends Rect {
 
     constructor() {
         super(0, 0);
-
-        this.color.set([255, 255, 255].map(v => v / 255));
-        this.color[3] = 0.1;
-
+        this.color.set([82 / 0xff, 75 / 0xff, 165 / 0xff, 0.3]); // rgba(82, 75, 165, 0.3)
         this.transparent = true;
-
-        InteractiveStyling.colorFromElement('exon', this.color);
     }
 
     draw(context: DrawContext) {
@@ -496,13 +483,8 @@ class UTR extends Rect {
 
     constructor() {
         super(0, 0);
-
-        this.color.set([216., 231., 255.].map(v => v / 255));
-        this.color[3] = 0.1;
-
+        this.color.set([138/0xff, 136/0xff, 191/0xff, 0.38]); // rgba(138, 136, 191, 0.38)
         this.transparent = true;
-
-        InteractiveStyling.colorFromElement('utr', this.color);
     }
 
     draw(context: DrawContext) {
@@ -578,13 +560,9 @@ class CDS extends Rect {
 
         this.reverse = strand === Strand.Negative ? 1.0 : 0.0;
 
-        this.color.set([228, 25, 255].map(v => v/255));
-        this.color[3] = 0.5;
-
+        this.color.set([26 / 0xff, 174 / 0xff, 222 / 0xff, 0.58]); // rgba(26, 174, 222, 0.58)
         this.transparent = true;
         this.blendMode = BlendMode.PREMULTIPLIED_ALPHA;
-
-        InteractiveStyling.colorFromElement('cds', this.color);
     }
 
     draw(context: DrawContext) {
