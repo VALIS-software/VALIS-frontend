@@ -4,16 +4,13 @@ import SvgAdd from "material-ui/svg-icons/content/add";
 import Animator from "../animation/Animator";
 import { GenomicLocation } from "../model/GenomicLocation";
 import TrackModel from "../model/TrackModel";
-import DatasetSelector from "./components/DatasetSelector/DatasetSelector";
 import Object2D from "./core/Object2D";
 import ReactObject from "./core/ReactObject";
 import Rect from "./core/Rect";
-import AppModel from "./models/AppModel";
 import Panel from "./Panel";
 import TrackRow from "./TrackRow";
 import { DEFAULT_SPRING } from "./UIConstants";
 import { SiriusApi } from "sirius/SiriusApi";
-import Persistable from "../model/Persistable";
 
 export type PersistentTrackViewerState = {
     /** Panel data: [[panel.contig, panel.x0, panel.x1, width], ...] */
@@ -27,7 +24,7 @@ type Row = {
     heightPx: number, // updated instantaneously; not animated
 }
 
-class TrackViewer extends Object2D implements Persistable<PersistentTrackViewerState> {
+class TrackViewer extends Object2D {
 
     // layout settings
     readonly trackHeaderWidth: number = 180;
@@ -51,10 +48,6 @@ class TrackViewer extends Object2D implements Persistable<PersistentTrackViewerS
     /** used to collectively position panels and track tiles */
     protected grid: Object2D;
     protected addPanelButton: ReactObject;
-    protected addDataTrackButton: ReactObject;
-
-    /** used to interact with app ui */
-    protected appModel: AppModel;
 
     constructor() {
         super();
@@ -87,21 +80,6 @@ class TrackViewer extends Object2D implements Persistable<PersistentTrackViewerS
         this.addPanelButton.y = -this.xAxisHeight - this.spacing.x * 0.5;
         this.grid.add(this.addPanelButton);
 
-        this.addDataTrackButton = new ReactObject(
-            <AddDataTrackButton onClick={this.addDatasetBrowser} />,
-            this.panelHeaderHeight,
-            this.panelHeaderHeight,
-        );
-        this.addDataTrackButton.x = -this.trackHeaderWidth + this.spacing.x * 0.5;
-        this.addDataTrackButton.layoutParentX = 0;
-        this.addDataTrackButton.layoutY = -1;
-        this.addDataTrackButton.w = this.trackHeaderWidth;
-        this.addDataTrackButton.y = this.spacing.y * 0.5 - this.xAxisHeight - this.spacing.y;
-        this.addDataTrackButton.containerStyle = {
-            zIndex: 3,
-        }
-        this.grid.add(this.addDataTrackButton);
-
         const leftTrackMask = new ReactObject(<div 
             style={
                 {
@@ -131,10 +109,6 @@ class TrackViewer extends Object2D implements Persistable<PersistentTrackViewerS
         this.layoutGridContainer();
 
         window.addEventListener('resize', this.onResize);
-    }
-
-    setAppModel(appModel: AppModel) {
-        this.appModel = appModel;
     }
 
     setRowHeight(row: TrackRow, heightPx: number, animate: boolean) {
@@ -228,10 +202,6 @@ class TrackViewer extends Object2D implements Persistable<PersistentTrackViewerS
         }
 
         this.layoutTrackRows(animate);
-    }
-
-    addDatasetBrowser = () => {
-        this.appModel.pushView((<DatasetSelector appModel={this.appModel}/>), 'Add Track');
     }
 
     addPanel(location: GenomicLocation, animate: boolean = true) {
@@ -821,33 +791,6 @@ function AddPanelButton(props: {
             <IconButton onClick={props.onClick}>
                 <SvgAdd color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' />
             </IconButton>
-        </div>
-    </div>
-}
-
-function AddDataTrackButton(props: {
-    onClick: () => void
-}) {
-    return <div
-    style={{
-        position: 'relative',
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-        alignItems: 'center',
-    }}
-    >
-        <div>
-            <button 
-                onClick={props.onClick}
-                style={{
-                    margin: '0 auto',
-                    padding: '8px 16px',
-                    borderRadius: '16px',
-            }}>Add Track</button>
         </div>
     </div>
 }

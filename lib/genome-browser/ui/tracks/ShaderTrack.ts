@@ -1,4 +1,3 @@
-import App from "../../App";
 import Animator from "../../animation/Animator";
 import UsageCache from "../../ds/UsageCache";
 import Scalar from "../../math/Scalar";
@@ -15,13 +14,21 @@ import SharedTileStore from "../../model/data-store/SharedTileStores";
  */
 export class ShaderTrack<TilePayload, BlockPayload> extends Track {
 
+    get pixelRatio() { return this._pixelRatio; }
+
+    set pixelRatio(v: number) {
+        this._pixelRatio = v;
+        this.displayNeedUpdate = true;
+    }
+
     protected densityMultiplier = 1.0;
     protected tileStore: TileStore<TilePayload, BlockPayload>;
+    protected _pixelRatio: number = window.devicePixelRatio || 1;
 
     constructor(
         model: TrackModel,
         protected tileStoreType: string,
-        protected tileStoreConstructor: (contig: string) => TileStore<TilePayload, BlockPayload>
+        protected tileStoreConstructor: (contig: string) => TileStore<TilePayload, BlockPayload>,
     ) {
         super(model);
     }
@@ -51,7 +58,7 @@ export class ShaderTrack<TilePayload, BlockPayload> extends Track {
 
         if (widthPx > 0) {
             let basePairsPerDOMPixel = (span / widthPx);
-            let samplingDensity = this.densityMultiplier * basePairsPerDOMPixel / App.canvasPixelRatio;
+            let samplingDensity = this.densityMultiplier * basePairsPerDOMPixel / this.pixelRatio;
             let displayLodLevel = Scalar.log2(Math.max(samplingDensity, 1));
             let lodLevel = Math.floor(displayLodLevel);
 

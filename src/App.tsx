@@ -1,31 +1,32 @@
+import * as React from "react";
 import { Strand } from "gff3/Strand";
-import { Dialog, FlatButton, IconButton, Snackbar } from "material-ui";
+import { Dialog, FlatButton, IconButton } from "material-ui";
 import CircularProgress from "material-ui/CircularProgress";
 import { MuiThemeProvider } from "material-ui/styles";
-import { ContentReport, SocialShare } from "material-ui/svg-icons";
-import * as React from "react";
+import { ContentReport } from "material-ui/svg-icons";
 import EntityType from "sirius/EntityType";
 import SiriusApi from "sirius/SiriusApi";
-import Animator from "./animation/Animator";
-// styles
-import "./App.scss";
-import { SharedTileStore } from "./model/data-store/SharedTileStores";
-import Persistable from "./model/Persistable";
-import { TrackModel } from "./model/TrackModel";
+import Persistable from "./ui/models/Persistable";
 import { EntityDetails } from "./ui/components/EntityDetails/EntityDetails";
 import Header from "./ui/components/Header/Header";
 import NavigationController from "./ui/components/NavigationController/NavigationController";
 import SearchResultsView from "./ui/components/SearchResultsView/SearchResultsView";
 import ShareLinkDialog from "./ui/components/ShareLink/ShareLinkDialog";
-import { AppCanvas } from "./ui/core/AppCanvas";
 import AppModel, { AppEvent } from "./ui/models/AppModel";
 import ViewModel, { ViewEvent } from "./ui/models/ViewModel";
 import BasicTheme from "./ui/themes/BasicTheme";
-import TrackViewer, { PersistentTrackViewerState } from "./ui/TrackViewer";
 import View from "./ui/View";
 import LZString = require("lz-string");
-
 const deepEqual = require('fast-deep-equal');
+
+import TrackViewer, { PersistentTrackViewerState } from "genome-browser/ui/TrackViewer";
+import { AppCanvas } from "genome-browser/ui/core/AppCanvas";
+import Animator from "genome-browser/animation/Animator";
+import { SharedTileStore } from "genome-browser/model/data-store/SharedTileStores";
+import { TrackModel } from "genome-browser/model/TrackModel";
+
+// styles
+import "./App.scss";
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
@@ -111,7 +112,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 		// initialize UI
 		this.trackViewer = new TrackViewer();
-		this.trackViewer.setAppModel(this.appModel);
 
 		// initialize with some dummy data
 		let tracks: Array<TrackModel> = [
@@ -398,7 +398,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		// this enables any animations spawned by the interaction events to be progressed before rendering
 		this.appCanvas.handleUserInteraction();
 
-		Animator.step();
+		Animator.step(dt_ms);
 
 		this.appCanvas.renderCanvas();
 		

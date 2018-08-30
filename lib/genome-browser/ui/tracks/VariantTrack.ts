@@ -1,6 +1,4 @@
-import { QueryBuilder } from "sirius/QueryBuilder";
 import { Animator } from "../../animation/Animator";
-import { App } from "../../App";
 import UsageCache from "../../ds/UsageCache";
 import Scalar from "../../math/Scalar";
 import { SharedTileStore } from "../../model/data-store/SharedTileStores";
@@ -296,7 +294,7 @@ export default class VariantTrack extends Track<'variant'> {
         let label = this._sequenceLabelCache.get(cacheKey, () => {
             return this.createBaseLabel(baseCharacter, color, () => {
                 const entity = {id: variantId, type: EntityType.SNP}
-                App.displayEntityDetails(entity);
+                console.log('@! todo: variant label clicked', entity);
             });
         });
 

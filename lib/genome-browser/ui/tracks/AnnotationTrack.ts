@@ -2,7 +2,6 @@ import { Strand } from "gff3/Strand";
 import { GeneClass, TranscriptClass } from "sirius/AnnotationTileset";
 import QueryBuilder from "sirius/QueryBuilder";
 import Animator from "../../animation/Animator";
-import App from "../../App";
 import UsageCache from "../../ds/UsageCache";
 import { Scalar } from "../../math/Scalar";
 import { AnnotationTileStore, Gene, MacroAnnotationTileStore, Transcript } from "../../model/data-store/AnnotationTileStore";
@@ -310,7 +309,7 @@ class GeneAnnotation extends Object2D {
         SiriusApi.getQueryResults(geneQuery, false).then(results => {
             if (results.data.length > 0) {
                 const entity = results.data[0];
-                App.displayEntityDetails(entity);
+                console.log('@! todo: transcript clicked', entity);
             } else {
                 // this is a temporary solution
                 alert("Data not found");
