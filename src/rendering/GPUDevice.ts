@@ -2,7 +2,7 @@
 
 Dev Notes:
 - Should be dependency free, doesn't know about Renderer
-- Should not have any state fields, purely object management
+- Should not have any public state; purely object management
 - TextureManager
 	"Performance problems have been observed on some implementations when using uniform1i to update sampler uniforms. To change the texture referenced by a sampler uniform, binding a new texture to the texture unit referenced by the uniform should be preferred over using uniform1i to update the uniform itself."
 
