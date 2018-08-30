@@ -8,7 +8,7 @@ import IconButton from "material-ui/IconButton";
 
 // Styles
 import "./NavigationController.scss";
-import ViewModel, { ViewEvent } from "../../models/ViewModel";
+import ViewModel from "../../../model/ViewModel";
 import View from "../../View";
 
 type Props = {

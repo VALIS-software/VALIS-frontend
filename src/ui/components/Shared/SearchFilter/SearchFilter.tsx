@@ -2,8 +2,8 @@ import * as React from 'react';
 import { DATA_SOURCES, CHROMOSOME_NAMES } from '../../../helpers/constants';
 import QueryBuilder from "sirius/QueryBuilder";
 import SiriusApi from "sirius/SiriusApi";
-import QueryModel from '../../../models/QueryModel';
-import { FilterType, FilterValue} from '../../../models/QueryModel';
+import QueryModel from '../../../../model/QueryModel';
+import { FilterType, FilterValue} from '../../../../model/QueryModel';
 import './SearchFilter.scss';
 
 

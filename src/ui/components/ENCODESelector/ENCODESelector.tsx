@@ -9,8 +9,8 @@ import QueryBuilder from "sirius/QueryBuilder";
 import SiriusApi from "sirius/SiriusApi";
 import App from "../../../App";
 import { CHROMOSOME_NAMES, DATA_SOURCE_ENCODE } from "../../helpers/constants";
-import AppModel from "../../models/AppModel";
-import ViewModel from "../../models/ViewModel";
+import AppModel from "../../../model/AppModel";
+import ViewModel from "../../../model/ViewModel";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 // Styles
 import "./ENCODESelector.scss";

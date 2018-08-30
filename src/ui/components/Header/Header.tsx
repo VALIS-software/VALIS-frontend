@@ -15,8 +15,8 @@ import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton'
 import AnalysisSelector from '../AnalysisSelector/AnalysisSelector';
 import UserFilesPanel from '../UserFilesPanel/UserFilesPanel';
 // Models
-import AppModel from '../../models/AppModel';
-import ViewModel from '../../models/ViewModel';
+import AppModel from '../../../model/AppModel';
+import ViewModel from '../../../model/ViewModel';
 // Styles
 import './Header.scss';
 
