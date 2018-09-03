@@ -9,7 +9,7 @@ import { SharedResources } from "./SharedResources";
  *
  * Todo:
  * - Glow and shadow
- * - Bake color into verticies
+ * - Bake color into vertices
  * - Vertex index buffer
  */
 export class Text extends Object2D {
