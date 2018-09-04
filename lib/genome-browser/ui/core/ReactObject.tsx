@@ -1,5 +1,5 @@
 import Object2D, { Object2DInternal } from "./Object2D";
-import React = require("react");
+import * as React from "react";
 
 export class ReactObject extends Object2D {
 

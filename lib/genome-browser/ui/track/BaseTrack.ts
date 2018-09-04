@@ -1,13 +1,12 @@
 import Animator from "../../animation/Animator";
 import UsageCache from "../../ds/UsageCache";
 import { Tile } from "../../model/data-store/TileStore";
-import { TrackModel } from "../../model/TrackModel";
-import { TrackTypeMap } from "../../model/TrackTypeMap";
+import { TrackModel, TrackTypeMap } from "../../model/TrackModel";
 import Rect from "../core/Rect";
 import Text from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
 
-export class Track<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> extends Rect {
+export class BaseTrack<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> extends Rect {
 
     protected contig: string | undefined;
     protected x0: number;
@@ -218,4 +217,4 @@ class LoadingIndicator extends Text {
 
 }
 
-export default Track;
+export default BaseTrack;

@@ -1,5 +1,4 @@
 import * as React from "react";
-import { Strand } from "gff3/Strand";
 import { Dialog, FlatButton, IconButton } from "material-ui";
 import CircularProgress from "material-ui/CircularProgress";
 import { MuiThemeProvider } from "material-ui/styles";
@@ -19,9 +18,7 @@ import View from "./ui/View";
 import LZString = require("lz-string");
 const deepEqual = require('fast-deep-equal');
 
-import TrackViewer, { PersistentTrackViewerState } from "genome-browser/ui/TrackViewer";
-import { AppCanvas } from "genome-browser/ui/core/AppCanvas";
-import Animator from "genome-browser/animation/Animator";
+import GenomeBrowser, { GenomeBrowserConfiguration } from "genome-browser/GenomeBrowser";
 import { SharedTileStore } from "genome-browser/model/data-store/SharedTileStores";
 import { TrackModel } from "genome-browser/model/TrackModel";
 
@@ -43,8 +40,6 @@ type State = {
 	viewerWidth: number;
 	viewerHeight: number;
 
-	trackViewer: TrackViewer;
-
 	displayErrorDialog: boolean,
 	errors: Array<any>,
 
@@ -65,16 +60,11 @@ enum SidebarViewType {
 
 // Persistent app state field names are minified to reduce json size
 type PersistentAppState = {
-	/** TrackViewer state */
-	t: PersistentTrackViewerState,
-	/** Sidebar view state */
-	s: {
-		/** Sidebar view type */
-		t: SidebarViewType,
-		/** Sidebar view */
-		h?: string,
-		/** Sidebar view props */
-		p?: any,
+	genomeBrowser: GenomeBrowserConfiguration,
+	sidebar: {
+		viewType: SidebarViewType,
+		title?: string,
+		viewProps?: any,
 	}
 }
 
@@ -85,10 +75,9 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 	protected appModel: AppModel;
 	protected viewModel: ViewModel;
-	protected appCanvas: AppCanvas;
-	protected trackViewer: TrackViewer;
 
 	protected headerRef: Header;
+	protected genomeBrowser: GenomeBrowser;
 
 	protected _currentPersistentState: PersistentAppState;
 
@@ -110,33 +99,16 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		this.viewModel = new ViewModel();
 		this.appModel.setViewModel(this.viewModel);
 
-		// initialize UI
-		this.trackViewer = new TrackViewer();
-
-		// initialize with some dummy data
-		let tracks: Array<TrackModel> = [
-			{ name: 'GRCh38', type: 'sequence' },
-			{ name: 'Variants', type: 'variant'},
-			{ name: '→ Strand Genes', type: 'annotation', strand: Strand.Positive },
-			{ name: '← Strand Genes', type: 'annotation', strand: Strand.Negative },
-		];
-		let i = 0;
-		for (let model of tracks) {
-			this.trackViewer.addTrackRow(model, undefined, false);
-		}
-
-		for (let panel of [
-			{ contig: 'chr1', x0: 0, x1: 249e6 }
-		]) {
-			this.trackViewer.addPanel(panel, false);
-		}
+		this.genomeBrowser = new GenomeBrowser({
+			panels: [ { location: { contig: 'chr1', x0: 0, x1: 249e6 } } ],
+			tracks: [ { model: { name: 'GRCh38', type: 'sequence' }, heightPx: 100 } ],
+		});
 
 		this.state = {
 			views: [],
 			headerHeight: this.headerHeight,
 			viewerWidth: window.innerWidth,
 			viewerHeight: this.canvasHeight(),
-			trackViewer: this.trackViewer,
 			displayErrorDialog: false,
 			errors: [],
 			displayShareDialog: false,
@@ -148,8 +120,8 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 	getPersistentState(): PersistentAppState {
 		// default to no sidebar view open
-		let currentSidebarView: PersistentAppState['s'] = {
-			t: SidebarViewType.None,
+		let currentSidebarView: PersistentAppState['sidebar'] = {
+			viewType: SidebarViewType.None,
 		}
 
 		let lastView = this.state.views[this.state.views.length - 1];
@@ -158,35 +130,35 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 			if (lastReactView != null && (lastReactView as any).type != null) {
 				let type = (lastReactView as any).type;
-				currentSidebarView.h = lastView.title;
+				currentSidebarView.title = lastView.title;
 
 				if (type === EntityDetails) {
-					currentSidebarView.t = SidebarViewType.EntityDetails;
-					currentSidebarView.p = (lastReactView as React.ReactElement<any>).props.entity;
+					currentSidebarView.viewType = SidebarViewType.EntityDetails;
+					currentSidebarView.viewProps = (lastReactView as React.ReactElement<any>).props.entity;
 				} else if (type === SearchResultsView) {
-					currentSidebarView.t = SidebarViewType.SearchResults;
-					currentSidebarView.p = {
+					currentSidebarView.viewType = SidebarViewType.SearchResults;
+					currentSidebarView.viewProps = {
 						q: lastView.info, // search query object
 						t: (lastReactView as SearchResultsView).props.text
 					}
 					// token box state
 					if (this.headerRef != null) {
-						currentSidebarView.p.h = this.headerRef.getTokenBoxState();
+						currentSidebarView.viewProps.h = this.headerRef.getTokenBoxState();
 					}
 				}
 			}
 		}
 
 		return {
-			t: this.trackViewer.getPersistentState(),
-			s: currentSidebarView
+			genomeBrowser: this.genomeBrowser.getConfiguration(),
+			sidebar: currentSidebarView
 		}
 	}
 
 	setPersistentState(state: PersistentAppState) {
-		this.trackViewer.setPersistentState(state.t);
-		let viewProps = state.s.p;
-		switch (state.s.t) {
+		this.genomeBrowser.setConfiguration(state.genomeBrowser);
+		let viewProps = state.sidebar.viewProps;
+		switch (state.sidebar.viewType) {
 			case SidebarViewType.None: {
 				break;
 			}
@@ -265,14 +237,11 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	}
 
 	onMainAppReady() {
-		// We only start the FrameLoop after log in
-		this.startFrameLoop();
-
 		// on persistent state changed
 		// get app state from URL
-		if (this.hasStateInUrl()) {
+		if (AppStatePersistence.hasStateInUrl()) {
 			try {
-				this.setPersistentState(this.getStateObject(window.location));
+				this.setPersistentState(AppStatePersistence.parseUrlStateObject(window.location));
 			} catch (e) {
 				console.warn(`State url is invalid: ${e}`);
 			}
@@ -282,6 +251,9 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 		// set initial history state
 		history.replaceState(this._currentPersistentState, document.title);
+
+		// We only start the FrameLoop after log in
+		this.startFrameLoop();
 	}
 
 	render() {
@@ -336,17 +308,15 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						ref={(v) => this.headerRef = v}
 					/>
 
-					<AppCanvas
-						ref={(v) => this.appCanvas = v}
-						width={this.state.viewerWidth}
-						height={this.state.viewerHeight}
-						content={this.state.trackViewer}
-						pixelRatio={App.canvasPixelRatio}
-						style={{
+					{this.genomeBrowser.render({
+						width: this.state.viewerWidth,
+						height: this.state.viewerHeight,
+						pixelRatio: App.canvasPixelRatio,
+						style: {
 							display: 'inline-block',
 							marginTop: this.headerMargin + 'px',
-						}}
-					/>
+						}
+					})}
 
 					<NavigationController
 						viewModel={this.viewModel}
@@ -393,14 +363,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		let t_ms = window.performance.now();
 		let dt_ms = t_ms - this._lastFrameT_ms;
 		this._lastFrameT_ms = t_ms;
-
-		// appCanvas should react to user input before animation are stepped
-		// this enables any animations spawned by the interaction events to be progressed before rendering
-		this.appCanvas.handleUserInteraction();
-
-		Animator.step(dt_ms);
-
-		this.appCanvas.renderCanvas();
 		
 		// manage writing persistent state to the url
 		// if the persistent state hasn't changed for some time then update the url
@@ -412,7 +374,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		} else if (this._urlStateNeedsUpdate) {
 			let timeWithoutStateChange_ms = (t_ms - this._lastStateChangeT_ms);
 			if (timeWithoutStateChange_ms > 100) {
-				this.writePersistentUrlState(this._currentPersistentState);
+				AppStatePersistence.writePersistentUrlState(this._currentPersistentState);
 				this._urlStateNeedsUpdate = false;
 			}
 		}
@@ -459,10 +421,13 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		let startIndex = startBase - 1;
 		let endIndex = endBase;
 
-		let panel0 = this.state.trackViewer.getPanel(0);
-		if (panel0 == null) return;
-		panel0.setContig(contig);
-		panel0.setRange(startIndex, endIndex);
+		for (let panel of this.genomeBrowser.getPanels()) {
+			if (panel.column === 0) {
+				panel.setContig(contig);
+				panel.setRange(startIndex, endIndex);
+				break;
+			}
+		}
 	}
 
 	protected displayEntityDetails(entity: { id: string, type: EntityType }) {
@@ -510,7 +475,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	}
 
 	protected addTrack(model: TrackModel) {
-		this.state.trackViewer.addTrackRow(model);
+		this.genomeBrowser.addTrack(model, undefined, true);
 	}
 
 	protected addVariantTrack(title: string, query: any) {
@@ -537,29 +502,27 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	}
 
 	protected getQueryTracks() : Map<string, any> {
-		return this.state.trackViewer.getQueryRows();
-	}
+		let tracks = this.genomeBrowser.getTracks();
 
-	protected writePersistentUrlState(stateObject: PersistentAppState) {
-		let originalString = JSON.stringify(stateObject);
-		let stateUrl = '#' + LZString.compressToBase64(originalString);
-		// @! replace with pushState for back/forward support (this requires some extra work to get right)
-		history.replaceState(stateObject, document.title, stateUrl);
-	}
+		let ret = new Map<string, any>();
 
-	protected hasStateInUrl() {
-		return !!window.location.hash;
-	}
-	/**
-	 * @throws string
-	 */
-	protected getStateObject(url: { hash: string }): any {
-		let stateString = url.hash.substring(1);
-		let jsonString = LZString.decompressFromBase64(stateString);
-		if (jsonString == null) {
-			throw `Invalid state string`;
+		for (let track of tracks) {
+			let name = null;
+			let query = null;
+			const type = track.model.type;
+			if (type === 'interval') {
+				name = (track.model as TrackModel<'interval'>).name;
+				query = (track.model as TrackModel<'interval'>).query;
+			} else if (type === 'variant') {
+				name = (track.model as TrackModel<'variant'>).name;
+				query = (track.model as TrackModel<'variant'>).query;
+			}
+			if (query && name) {
+				ret.set(name, { query: JSON.parse(JSON.stringify(query)), type: type });
+			}
 		}
-		return JSON.parse(LZString.decompressFromBase64(stateString));	
+
+		return ret;
 	}
  
 	// global app methods, assumes a single instance of App
@@ -596,6 +559,165 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 	static displaySearchResults(query: any, text: string = 'Search') {
 		this.appInstance.displaySearchResults(query, text);
+	}
+
+}
+
+// A minified version of PersistentAppState
+type MinifiedAppState = [
+	/** genomeBrowser */
+	[
+		/** panels */
+		Array<[
+			/** contig */
+			string,
+			/** x0 */
+			number,
+			/** x1 */
+			number,
+			/** width */
+			number | undefined
+		]>,
+		/** tracks */
+		Array<[
+			/** model */
+			TrackModel,
+			/** heightPx */
+			number | undefined
+		]>
+	],
+	/** sidebar */
+	[
+		/** viewType */
+		SidebarViewType,
+		/** title */
+		string | undefined,
+		/** viewProps */
+		any | undefined
+	] 
+];
+
+class AppStatePersistence {
+
+	static hasStateInUrl() {
+		return !!window.location.hash;
+	}
+
+	static writePersistentUrlState(stateObject: PersistentAppState) {
+		let stateUrl = '#' + this.serializePersistentState(stateObject);
+		history.replaceState(stateObject, document.title, stateUrl);
+	}
+
+	/**
+	 * @throws string on invalid state url
+	 */
+	static parseUrlStateObject(url: { hash: string }): any {
+		let stateString = url.hash.substring(1);
+		return this.deserializePersistentState(stateString);
+	}
+
+	static serializePersistentState(state: PersistentAppState): string {
+		let minifiedState: MinifiedAppState = [
+			this.minifyGenomeBrowserState(state.genomeBrowser),
+			this.minifySidebarState(state.sidebar)
+		];
+
+		let jsonString = JSON.stringify(minifiedState);
+		let compressedString = LZString.compressToBase64(jsonString);
+
+		return compressedString;
+	}
+
+	/**
+	 * @throws string on invalid serialized data
+	 */
+	static deserializePersistentState(serialized: string): PersistentAppState {
+		let jsonString = LZString.decompressFromBase64(serialized);
+		if (jsonString == null) {
+			throw `Invalid state string - could not decompress`;
+		}
+
+		let minifiedState: MinifiedAppState = JSON.parse(jsonString);
+
+		let expandedState: PersistentAppState = {
+			genomeBrowser: this.expandGenomeBrowserState(minifiedState[0]),
+			sidebar: this.expandSidebarState(minifiedState[1])
+		};
+
+		return expandedState;
+	}
+
+	private static minifyGenomeBrowserState(state: PersistentAppState['genomeBrowser']): MinifiedAppState[0] {
+		let minifiedPanels: MinifiedAppState[0][0] = new Array();
+		for (let panel of state.panels) {
+			minifiedPanels.push([
+				panel.location.contig,
+				panel.location.x0,
+				panel.location.x1,
+				panel.width
+			]);
+		}
+
+		let minifiedTracks: MinifiedAppState[0][1] = new Array();
+		for (let track of state.tracks) {
+			minifiedTracks.push([
+				track.model,
+				track.heightPx
+			]);
+		}
+
+		return [
+			minifiedPanels,
+			minifiedTracks,
+		];
+	}
+
+	private static expandGenomeBrowserState(min: MinifiedAppState[0]): PersistentAppState['genomeBrowser'] {
+		let minPanels = min[0];
+		let minTracks = min[1];
+
+		let panels: PersistentAppState['genomeBrowser']['panels'] = new Array();
+
+		for (let minPanel of minPanels) {
+			panels.push({
+				location: {
+					contig: minPanel[0],
+					x0: minPanel[1],
+					x1: minPanel[2],
+				},
+				width: minPanel[3],
+			});
+		}
+
+		let tracks: PersistentAppState['genomeBrowser']['tracks'] = new Array();
+
+		for (let minTrack of minTracks) {
+			tracks.push({
+				model: minTrack[0],
+				heightPx: minTrack[1],
+			});
+		}
+
+		return {
+			panels: panels,
+			tracks: tracks,
+		};
+	}
+
+	private static minifySidebarState(state: PersistentAppState['sidebar']): MinifiedAppState[1] {
+		return [
+			state.viewType,
+			state.title,
+			state.viewProps,
+		];
+	}
+
+	private static expandSidebarState(min: MinifiedAppState[1]): PersistentAppState['sidebar'] {
+		return {
+			viewType: min[0],
+			title: min[1],
+			viewProps: min[2]
+		};
 	}
 
 }

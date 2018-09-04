@@ -6,13 +6,13 @@ import { BlendMode } from "../../rendering/Renderer";
 import { DEFAULT_SPRING } from "../UIConstants";
 import Object2D from "../core/Object2D";
 import TileStore, { Tile, TileState } from "../../model/data-store/TileStore";
-import { Track } from "./Track";
+import { BaseTrack } from "./BaseTrack";
 import SharedTileStore from "../../model/data-store/SharedTileStores";
 
 /**
  * TileTrack provides a base class for Tracks that use TileStore
  */
-export class ShaderTrack<TilePayload, BlockPayload> extends Track {
+export class ShaderTrack<TilePayload, BlockPayload> extends BaseTrack {
 
     get pixelRatio() { return this._pixelRatio; }
 

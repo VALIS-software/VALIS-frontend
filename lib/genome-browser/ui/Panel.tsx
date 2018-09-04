@@ -11,13 +11,17 @@ import Object2D from "./core/Object2D";
 import ReactObject from "./core/ReactObject";
 import Rect from "./core/Rect";
 import { OpenSansRegular } from "./font/Fonts";
-import Track, { AxisPointerStyle } from "./tracks/Track";
+import BaseTrack, { AxisPointerStyle } from "./track/BaseTrack";
 import XAxis from "./XAxis";
 import Animator from "../animation/Animator";
 
 enum DragMode {
     Move,
     SelectRegion,
+}
+
+export interface PanelInternal {
+    setSecondaryAxisPointers(secondaryAxisPointers: { [pointerId: string]: number }): void,
 }
 
 export class Panel extends Object2D {
@@ -30,7 +34,7 @@ export class Panel extends Object2D {
     readonly header: ReactObject;
     readonly xAxis: XAxis;
     readonly resizeHandle: Rect;
-    readonly tracks = new Set<Track>();
+    readonly trackViews = new Set<BaseTrack>();
 
     get closable(): boolean { return this._closable; }
     get closing(): boolean { return this._closing; }
@@ -117,41 +121,41 @@ export class Panel extends Object2D {
         this.resizeHandle.color.set(v ? [0, 1, 0, 1] : [0.3, 0.3, 0.3, 1]);
     }
 
-    addTrack(track: Track) {
-        track.addInteractionListener('dragstart', this.onTileDragStart);
-        track.addInteractionListener('dragmove', this.onTileDragMove);
-        track.addInteractionListener('dragend', this.onTileDragEnd);
-        track.addInteractionListener('pointerup', this.onTileDragEnd);
-        track.addInteractionListener('wheel', this.onTileWheel);
-        track.addInteractionListener('pointermove', this.onTilePointerMove);
-        track.addInteractionListener('pointerleave', this.onTileLeave);
-        track.setContig(this.contig);
-        track.setRange(this.x0, this.x1);
+    addTrackView(trackView: BaseTrack) {
+        trackView.addInteractionListener('dragstart', this.onTileDragStart);
+        trackView.addInteractionListener('dragmove', this.onTileDragMove);
+        trackView.addInteractionListener('dragend', this.onTileDragEnd);
+        trackView.addInteractionListener('pointerup', this.onTileDragEnd);
+        trackView.addInteractionListener('wheel', this.onTileWheel);
+        trackView.addInteractionListener('pointermove', this.onTilePointerMove);
+        trackView.addInteractionListener('pointerleave', this.onTileLeave);
+        trackView.setContig(this.contig);
+        trackView.setRange(this.x0, this.x1);
 
-        this.fillX(track);
-        this.add(track);
+        this.fillX(trackView);
+        this.add(trackView);
 
-        this.tracks.add(track);
+        this.trackViews.add(trackView);
     }
 
-    removeTrack(track: Track) {
-        track.removeInteractionListener('dragstart', this.onTileDragStart);
-        track.removeInteractionListener('dragmove', this.onTileDragMove);
-        track.removeInteractionListener('dragend', this.onTileDragEnd);
-        track.removeInteractionListener('pointerup', this.onTileDragEnd);
-        track.removeInteractionListener('wheel', this.onTileWheel);
-        track.removeInteractionListener('pointermove', this.onTilePointerMove);
-        track.removeInteractionListener('pointerleave', this.onTileLeave);
+    removeTrackView(trackView: BaseTrack) {
+        trackView.removeInteractionListener('dragstart', this.onTileDragStart);
+        trackView.removeInteractionListener('dragmove', this.onTileDragMove);
+        trackView.removeInteractionListener('dragend', this.onTileDragEnd);
+        trackView.removeInteractionListener('pointerup', this.onTileDragEnd);
+        trackView.removeInteractionListener('wheel', this.onTileWheel);
+        trackView.removeInteractionListener('pointermove', this.onTilePointerMove);
+        trackView.removeInteractionListener('pointerleave', this.onTileLeave);
 
-        this.remove(track);
+        this.remove(trackView);
 
-        this.tracks.delete(track);
+        this.trackViews.delete(trackView);
     }
 
     setContig(contig: string) {
         (this.contig as any) = contig;
 
-        for (let track of this.tracks) {
+        for (let track of this.trackViews) {
             track.setContig(contig);
         }
 
@@ -204,11 +208,11 @@ export class Panel extends Object2D {
         this.updatePanelHeader();
     }
 
-    setSecondaryAxisPointers(secondaryAxisPointers: { [ pointerId: string ]: number }) {
+    protected setSecondaryAxisPointers(secondaryAxisPointers: { [ pointerId: string ]: number }) {
         // remove any old and unused axis pointers
         for (let pointerId in this.secondaryAxisPointers) {
             if (secondaryAxisPointers[pointerId] === undefined && this.activeAxisPointers[pointerId] === undefined) {
-                for (let tile of this.tracks) {
+                for (let tile of this.trackViews) {
                     tile.removeAxisPointer(pointerId);
                 }
             }
@@ -228,7 +232,7 @@ export class Panel extends Object2D {
 
             this.secondaryAxisPointers[pointerId] = absX;
 
-            for (let tile of this.tracks) {
+            for (let tile of this.trackViews) {
                 tile.setAxisPointer(pointerId, fractionX, AxisPointerStyle.Secondary);
             }
         }
@@ -268,7 +272,7 @@ export class Panel extends Object2D {
 
         this.xAxis.setRange(x0, x1);
 
-        for (let track of this.tracks) {
+        for (let track of this.trackViews) {
             track.setRange(x0, x1);
         }
 
@@ -423,7 +427,7 @@ export class Panel extends Object2D {
         switch (this._dragMode) {
             case DragMode.SelectRegion: {
                 e.preventDefault();
-                for (let track of this.tracks) {
+                for (let track of this.trackViews) {
                     track.setFocusRegion(this._dragXF0, this._dragXF0);
                 }
                 break;
@@ -449,7 +453,7 @@ export class Panel extends Object2D {
                 // selected region in fractional units
                 let selectedRegionF0 = this._dragXF0;
                 let selectedRegionF1 = e.fractionX;
-                for (let track of this.tracks) {
+                for (let track of this.trackViews) {
                     track.setFocusRegion(selectedRegionF0, selectedRegionF1);
                 }
                 break;
@@ -507,7 +511,7 @@ export class Panel extends Object2D {
             }
         }
 
-        for (let track of this.tracks) {
+        for (let track of this.trackViews) {
             track.disableFocusRegion();
         }
 
@@ -527,7 +531,7 @@ export class Panel extends Object2D {
 
         this.activeAxisPointers[e.pointerId] = axisPointerX;
 
-        for (let tile of this.tracks) {
+        for (let tile of this.trackViews) {
             tile.setAxisPointer(e.pointerId.toString(), fractionX, AxisPointerStyle.Active);
         }
 
@@ -542,7 +546,7 @@ export class Panel extends Object2D {
 
         delete this.activeAxisPointers[e.pointerId];
 
-        for (let tile of this.tracks) {
+        for (let tile of this.trackViews) {
             tile.removeAxisPointer(e.pointerId.toString());
         }
 

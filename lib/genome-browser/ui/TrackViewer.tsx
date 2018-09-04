@@ -1,35 +1,50 @@
+/*
+
+Dev notes:
+
+    Refactor plans:
+        - Improve how tracks and panels are laid out; should not need to manually call layout after each change
+        - Panels should be an array not a set
+*/
+
 import React = require("react");
 import IconButton from "material-ui/IconButton";
 import SvgAdd from "material-ui/svg-icons/content/add";
+import SvgClose from "material-ui/svg-icons/navigation/close";
+import SvgExpandLess from "material-ui/svg-icons/navigation/expand-less";
+import SvgExpandMore from "material-ui/svg-icons/navigation/expand-more";
+import { SiriusApi } from "sirius/SiriusApi";
 import Animator from "../animation/Animator";
 import { GenomicLocation } from "../model/GenomicLocation";
 import TrackModel from "../model/TrackModel";
 import Object2D from "./core/Object2D";
 import ReactObject from "./core/ReactObject";
 import Rect from "./core/Rect";
-import Panel from "./Panel";
-import TrackRow from "./TrackRow";
+import Panel, { PanelInternal } from "./Panel";
+import ConstructTrack from "./track/ConstructTrack";
+import BaseTrack from "./track/BaseTrack";
 import { DEFAULT_SPRING } from "./UIConstants";
-import { SiriusApi } from "sirius/SiriusApi";
 
-export type PersistentTrackViewerState = {
-    /** Panel data: [[panel.contig, panel.x0, panel.x1, width], ...] */
-    p: Array<Array<any>>,
-    /** Track row data: [[row.trackRow.model, row.heightPx], ...] */
-    t: Array<Array<any>>
-};
-
-type Row = {
-    trackRow: TrackRow, // track row pseudo object, positioning properties can be animated
-    heightPx: number, // updated instantaneously; not animated
+export interface PanelConfiguration {
+    location: GenomicLocation,
+    width?: number
 }
 
-class TrackViewer extends Object2D {
+export interface TrackConfiguration {
+    model: TrackModel,
+    heightPx?: number
+}
+
+export interface TrackViewerConfiguration {
+    panels: Array<PanelConfiguration>,
+    tracks: Array<TrackConfiguration>,
+}
+
+export default class TrackViewer extends Object2D {
 
     // layout settings
     readonly trackHeaderWidth: number = 180;
     readonly panelHeaderHeight: number = 50;
-    readonly defaultTrackHeight: number = 50;
 
     readonly spacing = {
         x: 5,
@@ -40,7 +55,7 @@ class TrackViewer extends Object2D {
     readonly minTrackHeight = 35;
 
     protected panels = new Set<Panel>();
-    protected rows = new Array<Row>();
+    protected tracks = new Array<Track>();
 
     protected panelEdges = new Array<number>();
     protected rowOffsetY: number = 0;
@@ -111,94 +126,102 @@ class TrackViewer extends Object2D {
         window.addEventListener('resize', this.onResize);
     }
 
-    setRowHeight(row: TrackRow, heightPx: number, animate: boolean) {
-        const result = this.rows.find(d => d.trackRow === row);
-        if (result) {
-            result.heightPx = heightPx;
-            this.layoutTrackRows(animate);
-        }
-    }
-
-    getRowHeight(row: TrackRow): number {
-        const result = this.rows.find(d => d.trackRow === row);
-        return result ? result.heightPx : null;
-    }
-
     // track-viewer state deltas
-    addTrackRow(model: TrackModel, heightPx: number = this.defaultTrackHeight, animate: boolean = true) {
+    addTrack(model: TrackModel, heightPx: number = 50, animate: boolean = true): Track {
         // create a track and add the header element to the grid
+        let track: Track = new Track(
+            model,
+            heightPx,
+            () => {
+                this.layoutTrackRows(true);
+            }
+        );
 
-        const rowHeightSetter = (row: TrackRow, h:number) => { this.setRowHeight(row, h, true)};
-        const rowHeightGetter = (row: TrackRow) : number => this.getRowHeight(row);
+        let rowObject = new RowObject(
+            model.name,
+            this.spacing,
+            () => this.closeTrack(track),
+            (h: number) => track.heightPx = h,
+            (): number => track.heightPx
+        );
 
-        let trackRow = new TrackRow((t) => this.closeTrackRow(t), model, this.spacing, rowHeightSetter, rowHeightGetter);
+        (track as any as TrackInternal).rowObject = rowObject;
 
         // add track tile to all panels
         for (let panel of this.panels) {
-            panel.addTrack(trackRow.createTrack());
+            var trackView = ConstructTrack(model);
+            panel.addTrackView(trackView);
+            rowObject.addTrackView(trackView);
         }
-        
-        this.rows.push({
-            trackRow: trackRow,
-            heightPx: heightPx,
-        });
 
-        trackRow.closeButton.layoutParentX = 1;
-        trackRow.closeButton.x = -this.spacing.x;
-        trackRow.closeButton.w = this.defaultTrackHeight;
-        trackRow.header.x = -this.trackHeaderWidth + this.spacing.x * 0.5;
-        trackRow.header.w = this.trackHeaderWidth;
+        this.tracks.push(track);
 
-        trackRow.resizeHandle.layoutW = 1;
-        trackRow.resizeHandle.addInteractionListener('dragstart', (e) => {
+        rowObject.closeButton.layoutParentX = 1;
+        rowObject.closeButton.x = -this.spacing.x;
+        rowObject.closeButton.w = 50;
+        rowObject.header.x = -this.trackHeaderWidth + this.spacing.x * 0.5;
+        rowObject.header.w = this.trackHeaderWidth;
+
+        rowObject.resizeHandle.layoutW = 1;
+        rowObject.resizeHandle.addInteractionListener('dragstart', (e) => {
             if (e.isPrimary && e.buttonState === 1) {
                 e.preventDefault();
-                this.startResizingTrackRow(trackRow);
+                this.startResizingTrack(track);
             }
         });
-        trackRow.resizeHandle.addInteractionListener('dragend', (e) => {
+        rowObject.resizeHandle.addInteractionListener('dragend', (e) => {
             if (e.isPrimary) {
                 e.preventDefault();
-                this.endResizingTrackRow(trackRow);
+                this.endResizingTrack(track);
             }
         });
 
-        trackRow.setResizable(true);
+        rowObject.setResizable(true);
 
-        this.grid.add(trackRow.header);
-        this.grid.add(trackRow.closeButton);
-        this.grid.add(trackRow.resizeHandle);
+        this.grid.add(rowObject.header);
+        this.grid.add(rowObject.closeButton);
+        this.grid.add(rowObject.resizeHandle);
 
         // first instantaneously the y position of the track and override h to 0
-        this.layoutTrackRows(false, trackRow);
-        trackRow.h = 0;
+        this.layoutTrackRows(false, rowObject);
+        rowObject.h = 0;
 
         // then animate all the tracks to the new layout
         this.layoutTrackRows(animate);
+
+        return track;
     }
 
-    closeTrackRow(trackRow: TrackRow, animate: boolean = true) {
+    closeTrack(track: Track, animate: boolean = true, onComplete: () => void = () => {}) {
         // first set height to 0, when the animation is complete, remove the row's resources
-        let row: Row = this.rows.find((r) => r.trackRow === trackRow);
-        if (row === undefined) return; // this trackRow has already been removed
+        if (this.tracks.indexOf(track) === -1) return; // this trackRow has already been removed
 
-        if (trackRow.closing) {
+        let trackInternal = track as any as TrackInternal;
+
+        let rowObject = trackInternal.rowObject;
+
+        if (trackInternal.closing) {
             return;
         }
 
-        trackRow.closing = true;
-        trackRow.setResizable(false);
+        trackInternal.closing = true;
 
-        this.endResizingTrackRow(trackRow);
+        rowObject.setResizable(false);
+
+        this.endResizingTrack(track);
 
         // animate height to 0 and delete the row when complete
-        row.heightPx = 0;
+        track.heightPx = 0;
 
         if (animate) {
-            Animator.addAnimationCompleteCallback(trackRow, 'h', this.deleteTrackRow, true);
+            Animator.addAnimationCompleteCallback(rowObject, 'h', () => {
+                this.deleteTrack(track);
+                onComplete();
+            }, true);
         } else {
-            Animator.stop(trackRow);
-            this.deleteTrackRow(trackRow);
+            Animator.stop(rowObject);
+            this.deleteTrack(track);
+            onComplete();
         }
 
         this.layoutTrackRows(animate);
@@ -226,8 +249,10 @@ class TrackViewer extends Object2D {
         SiriusApi.getContigsSorted().then((contigs) => panel.setAvailableContigs(contigs));
 
         // initialize tracks for this panel
-       for (let row of this.rows) {
-           panel.addTrack(row.trackRow.createTrack());
+       for (let track of this.tracks) {
+           let trackView = ConstructTrack(track.model);
+           panel.addTrackView(trackView);
+           (track as any as TrackInternal).rowObject.addTrackView(trackView);
        }
 
         this.panels.add(panel);
@@ -248,7 +273,7 @@ class TrackViewer extends Object2D {
         panel.addEventListener('axisPointerUpdate', (axisPointers) => {
             for (let p of this.panels) {
                 if (p === panel) continue;
-                p.setSecondaryAxisPointers(axisPointers);
+                (p as any as PanelInternal).setSecondaryAxisPointers(axisPointers);
             }
         });
 
@@ -264,7 +289,7 @@ class TrackViewer extends Object2D {
         this.layoutPanels(animate);
     }
 
-    closePanel(panel: Panel, animate: boolean = true){
+    closePanel(panel: Panel, animate: boolean = true, onComplete: () => void = () => {}){
         if (panel.closing) {
             return;
         }
@@ -290,11 +315,15 @@ class TrackViewer extends Object2D {
 
         // animate panel's width to 0, after which delete the panel
         if (animate) {
-            Animator.addAnimationCompleteCallback(panel, 'layoutW', this.deletePanel, true);
+            Animator.addAnimationCompleteCallback(panel, 'layoutW', () => {
+                this.deletePanel(panel);
+                onComplete();
+            }, true);
             Animator.springTo(panel, { layoutW: 0 }, DEFAULT_SPRING);
         } else {
             Animator.stop(panel);
             this.deletePanel(panel);
+            onComplete();
         }
 
         // clear edges if there's less then 2, this allows edges to be re-initialized
@@ -303,60 +332,35 @@ class TrackViewer extends Object2D {
         }
     }
 
-    getQueryRows() : Map<string, any> {
-        const ret = new Map<string, any>();
-        this.rows.forEach(row => {
-            let name = null;
-            let query = null;
-            const type = row.trackRow.model.type;
-            if (type === 'interval') {
-                name = (row.trackRow.model as TrackModel<'interval'>).name;
-                query = (row.trackRow.model as TrackModel<'interval'>).query;
-            } else if (type === 'variant') {
-                name = (row.trackRow.model as TrackModel<'variant'>).name;
-                query = (row.trackRow.model as TrackModel<'variant'>).query;
-            }
-            if (query && name) {
-                ret.set(name, { query: JSON.parse(JSON.stringify(query)), type: type });
-            }
-        });
-        return ret;
-    }
-
-    getPanel(index: number): null | Panel {
-        let i = 0;
-        for (let panel of this.panels) {
-            if (i === index) {
-                return panel;
-            }
-            i++;
-        }
-
-        return null;
-    }
-
-    getPersistentState(): PersistentTrackViewerState {
-        let panels: PersistentTrackViewerState['p'] = new Array();
+    getConfiguration(): TrackViewerConfiguration {
+        let panels: TrackViewerConfiguration['panels'] = new Array();
         for (let panel of this.panels) {
             let width = this.panelEdges[panel.column + 1] - this.panelEdges[panel.column];
-            panels.push([panel.contig, panel.x0, panel.x1, width]);
+            panels.push({
+                location: {
+                    contig: panel.contig,
+                    x0: panel.x0,
+                    x1: panel.x1,
+                },
+                width: width,
+            });
         }
 
-        let trackRows: PersistentTrackViewerState['t'] = new Array();
-        for (let row of this.rows) {
-            trackRows.push([
-                row.trackRow.model,
-                row.heightPx
-            ]);
+        let tracks: TrackViewerConfiguration['tracks'] = new Array();
+        for (let track of this.tracks) {
+            tracks.push({
+                model: track.model,
+                heightPx: track.heightPx,
+            });
         }
 
         return {
-            p: panels,
-            t: trackRows
+            panels: panels,
+            tracks: tracks,
         }
     }
 
-    setPersistentState(state: PersistentTrackViewerState) {
+    setConfiguration(state: TrackViewerConfiguration) {
         // Panels
         // clear current panels
         let currentPanels = new Set(this.panels);
@@ -364,39 +368,60 @@ class TrackViewer extends Object2D {
             this.closePanel(panel, false);
         }
 
-        // create panels
-        for (let i = 0; i < state.p.length; i++) {
-            let panelState = state.p[i];
-            this.addPanel({
-                contig: panelState[0],
-                x0: panelState[1],
-                x1: panelState[2]
-            }, false);
+        // clear current tracks
+        let currentTracks = new Set(this.tracks);
+        for (let track of currentTracks) {
+            this.closeTrack(track, false);
         }
+
+        // create panels
+        for (let i = 0; i < state.panels.length; i++) {
+            let panelState = state.panels[i];
+            this.addPanel(panelState.location, false);
+        }
+
+        // determine what width to set panels that have no width specified
+        let unassignedWidthRemaining = 1;
+        let unassignedWidthCount = 0;
+        for (let i = 0; i < state.panels.length; i++) {
+            let panelState = state.panels[i];
+            if (panelState.width != null) {
+                unassignedWidthRemaining -= panelState.width;
+            } else {
+                unassignedWidthCount++;
+            }
+        }
+        let unassignedWidthPanel = unassignedWidthRemaining / unassignedWidthCount;
 
         // set panel edges from state widths
         let e = 0;
-        for (let i = 0; i < state.p.length; i++) {
-            let panelState = state.p[i];
+        for (let i = 0; i < state.panels.length; i++) {
+            let panelState = state.panels[i];
             this.panelEdges[i] = e;
-            e += panelState[3];
+
+            if (panelState.width != null) {
+                e += panelState.width;
+            } else {
+                e += unassignedWidthPanel;
+            }
         }
 
         this.layoutPanels(false);
 
-        // TrackRows
-        // clear current rows
-        let currentRows = new Set(this.rows);
-        for (let row of currentRows) {
-            this.closeTrackRow(row.trackRow, false);
-        }
-
         // create rows
-        for (let row of state.t) {
-            this.addTrackRow(row[0], row[1], false);
+        for (let track of state.tracks) {
+            this.addTrack(track.model, track.heightPx, false);
         }
 
         this.layoutTrackRows(false);
+    }
+
+    getTracks() {
+        return this.tracks.slice();
+    }
+
+    getPanels() {
+        return new Set(this.panels);
     }
 
     /**
@@ -404,33 +429,31 @@ class TrackViewer extends Object2D {
      *
      * **Should only be called after closeTrackRow**
      */
-    protected deleteTrackRow = (trackRow: TrackRow) => {
+    protected deleteTrack = (track: Track) => {
+        this.deleteRowObject((track as any as TrackInternal).rowObject);
+        let i = this.tracks.indexOf(track);
+        if (i !== -1) {
+            this.tracks.splice(i, 1);
+        }
+    }
+
+    protected deleteRowObject = (rowObject: RowObject) => {
         // remove trackRow elements from scene
-        this.grid.remove(trackRow.header);
-        this.grid.remove(trackRow.closeButton);
-        this.grid.remove(trackRow.resizeHandle);
+        this.grid.remove(rowObject.header);
+        this.grid.remove(rowObject.closeButton);
+        this.grid.remove(rowObject.resizeHandle);
 
         // remove track tiles from panels and release resources
         for (let panel of this.panels) {
-            for (let track of trackRow.tracks) {
-                panel.removeTrack(track);
+            for (let track of rowObject.trackViews) {
+                panel.removeTrackView(track);
             }
         }
 
         // release track tile resources
-        for (let track of trackRow.tracks) {
-            trackRow.deleteTrack(track);
-        }
-
-        // remove row from rows array
-        let i = this.rows.length - 1;
-        while (i >= 0) {
-            let row = this.rows[i];
-            if (row.trackRow === trackRow) {
-                this.rows.splice(i, 1);
-                break;
-            }
-            i--;
+        for (let trackView of rowObject.trackViews) {
+            trackView.releaseGPUResources();
+            rowObject.removeTrackView(trackView);
         }
     }
 
@@ -463,15 +486,15 @@ class TrackViewer extends Object2D {
 
         // delete track tiles from the track
         // (we can leave them in the scene-graph of the panel and the GC should still cull them all)
-        for (let track of panel.tracks) {
-            panel.remove(track);
-            for (let row of this.rows) {
-                for (let t of row.trackRow.tracks) {
-                    if (t === track) {
-                        row.trackRow.deleteTrack(track);
-                        break;
-                    }
-                }
+        for (let trackView of panel.trackViews) {
+            // destroy the track object
+            trackView.releaseGPUResources();
+            // remove track object from panel
+            panel.remove(trackView);
+            // remove track object from all track rows
+            for (let track of this.tracks) {
+                let rowObject = (track as any as TrackInternal).rowObject;
+                rowObject.removeTrackView(trackView);
             }
         }
 
@@ -507,22 +530,22 @@ class TrackViewer extends Object2D {
         }
     }
 
-    protected layoutTrackRows(animate: boolean, singleTrackRowOnly?: TrackRow) {
+    protected layoutTrackRows(animate: boolean, singleTrackRowOnly?: RowObject) {
         let y = 0;
-        for (let row of this.rows) {
-            let h = row.heightPx;
-            let trackRow = row.trackRow;
-            if (singleTrackRowOnly === undefined || (singleTrackRowOnly === trackRow)) {
+        for (let track of this.tracks) {
+            let h = track.heightPx;
+            let rowObject = (track as any as TrackInternal).rowObject;
+            if (singleTrackRowOnly === undefined || (singleTrackRowOnly === rowObject)) {
                 if (animate) {
-                    Animator.springTo(trackRow, { y: y, h: h }, DEFAULT_SPRING);
+                    Animator.springTo(rowObject, { y: y, h: h }, DEFAULT_SPRING);
                 } else {
-                    Animator.stop(trackRow, ['y', 'h']);
-                    trackRow.y = y + this.rowOffsetY;
-                    trackRow.h = h;
+                    Animator.stop(rowObject, ['y', 'h']);
+                    rowObject.y = y + this.rowOffsetY;
+                    rowObject.h = h;
                 }
             }
 
-            y += row.heightPx;
+            y += track.heightPx;
         }
 
         // we manually set the grid height since it doesn't automatically wrap to content
@@ -608,7 +631,7 @@ class TrackViewer extends Object2D {
         
         // compute total row-height
         let rowHeight = 0;
-        for (let row of this.rows) {
+        for (let row of this.tracks) {
             rowHeight += row.heightPx;
         }
 
@@ -633,7 +656,7 @@ class TrackViewer extends Object2D {
         });
 
         this.addEventListener('dragmove', (e) => {
-            if (this._resizingPanels.size > 0 || this._resizingRows.size > 0) return;
+            if (this._resizingPanels.size > 0 || this._resizingTracks.size > 0) return;
             let dy = e.localY - dragStartY;
 
             this.rowOffsetY = yOffsetStart + dy;
@@ -646,8 +669,8 @@ class TrackViewer extends Object2D {
 
     // local state for grid-resizing
     private _resizingPanels = new Set<Panel>();
-    private _resizingRows = new Set<{
-        row: Row,
+    private _resizingTracks = new Set<{
+        track: Track,
         initialHeightPx: number
     }>();
     /**
@@ -666,7 +689,7 @@ class TrackViewer extends Object2D {
         let localY0 = 0;
 
         this.grid.addInteractionListener('dragstart', (e) => {
-            let resizing = (this._resizingPanels.size + this._resizingRows.size) > 0;
+            let resizing = (this._resizingPanels.size + this._resizingTracks.size) > 0;
             if (resizing) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -690,7 +713,7 @@ class TrackViewer extends Object2D {
         this.grid.addInteractionListener('dragmove', (e) => {
             let resized = false;
 
-            let resizing = (this._resizingPanels.size + this._resizingRows.size) > 0;
+            let resizing = (this._resizingPanels.size + this._resizingTracks.size) > 0;
             if (resizing) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -715,9 +738,9 @@ class TrackViewer extends Object2D {
             }
 
             if (e.isPrimary) {
-                for (let entry of this._resizingRows) {
+                for (let entry of this._resizingTracks) {
                     let deltaY = e.localY - localY0;
-                    entry.row.heightPx = Math.max(entry.initialHeightPx + deltaY, this.minTrackHeight);
+                    entry.track.heightPx = Math.max(entry.initialHeightPx + deltaY, this.minTrackHeight);
 
                     resized = true;
                 }
@@ -747,18 +770,17 @@ class TrackViewer extends Object2D {
         this._resizingPanels.delete(panel);
     }
 
-    protected startResizingTrackRow(trackRow: TrackRow) {
-        let row: Row = this.rows.find((r) => r.trackRow === trackRow);
-        this._resizingRows.add({
-            row: row,
-            initialHeightPx: row.trackRow.h,
+    protected startResizingTrack(track: Track) {
+        this._resizingTracks.add({
+            track: track,
+            initialHeightPx: track.heightPx,
         });
     }
 
-    protected endResizingTrackRow(trackRow: TrackRow) {
-        for (let entry of this._resizingRows) {
-            if (entry.row.trackRow === trackRow) {
-                this._resizingRows.delete(entry);
+    protected endResizingTrack(track: Track) {
+        for (let entry of this._resizingTracks) {
+            if (entry.track === track) {
+                this._resizingTracks.delete(entry);
             }
         }
 
@@ -766,6 +788,241 @@ class TrackViewer extends Object2D {
         this.layoutTrackRows(false);
     }
 
+}
+
+interface TrackInternal {
+    closing: boolean;
+    rowObject: RowObject;
+}
+
+export class Track {
+
+    readonly closing: boolean = false;
+
+    set heightPx(v: number) {
+        this._heightPx = v;
+        this.onHeightChanged();
+    }
+
+    get heightPx() {
+        return this._heightPx;
+    }
+
+    protected rowObject: RowObject;
+
+    constructor(
+        readonly model: TrackModel,
+        protected _heightPx: number,
+        protected onHeightChanged: () => void
+    ) {
+
+    }
+
+}
+
+/**
+ * RowObject is a pseudo Object2D used to layout a set of tracks vertically
+ * Internal to TrackViewer
+ */
+class RowObject {
+
+    readonly header: ReactObject;
+    readonly closeButton: ReactObject;
+    readonly resizeHandle: Rect;
+    readonly trackViews = new Set<BaseTrack>();
+
+    get y(): number { return this._y; }
+    get h(): number { return this._h; }
+
+    set y(v: number) { this._y = v; this.layoutY(); }
+    set h(v: number) {
+        this._h = v;
+        this.layoutY();
+    }
+
+    get title() {
+        return this._title;
+    }
+
+    set title(v: string) {
+        this._title = v;
+        this.updateHeader();
+    }
+
+    protected _y: number;
+    protected _h: number;
+    protected _title: string;
+
+    protected _headerIsExpandedState: boolean | undefined = undefined;
+
+    constructor(
+        title: string,
+        protected readonly spacing: { x: number, y: number },
+        protected onClose: (t: RowObject) => void,
+        protected readonly setHeight: (h: number) => void,
+        protected readonly getHeight: () => number
+    ) {
+        this._title = title;
+        this.header = new ReactObject();
+        this.closeButton = new ReactObject();
+
+        this.resizeHandle = new Rect(0, 0, [1, 0, 0, 1]);
+        this.resizeHandle.h = this.spacing.y;
+        this.resizeHandle.z = 1;
+        this.resizeHandle.render = false;
+        this.setResizable(false);
+
+        this.updateHeader();
+    }
+
+    setResizable(v: boolean) {
+        this.resizeHandle.cursorStyle = v ? 'row-resize' : null;
+        this.resizeHandle.color.set(v ? [0, 1, 0, 1] : [0.3, 0.3, 0.3, 1]);
+    }
+    
+    addTrackView(trackView: BaseTrack) {
+        this.trackViews.add(trackView);
+        this.layoutY();
+    }
+
+    removeTrackView(trackView: BaseTrack) {
+        this.trackViews.delete(trackView);
+    }
+
+    /**
+     * A TrackRow isn't an Object2D so we manually layout track elements with the track row's y and height
+     */
+    protected layoutY() {
+        // handle
+        let handle = this.resizeHandle;
+        handle.layoutY = -0.5;
+        handle.y = this.y + this.h;
+
+        // header
+        this.header.y = this.y + this.spacing.y * 0.5;
+        this.header.h = this.h - this.spacing.y;
+
+        this.closeButton.y = this.y + this.spacing.y * 0.5;
+        this.closeButton.h = this.h - this.spacing.y;
+
+        // tiles
+        for (let trackView of this.trackViews) {
+            trackView.y = this.y + this.spacing.y * 0.5;
+            trackView.h = this.h - this.spacing.y;
+        }
+
+        // update header if expand / collapse-toggle is out of sync with height
+        if (this._headerIsExpandedState !== this.isExpanded()) {
+            this.updateHeader();
+        }
+    }
+
+    protected updateHeader() {
+        this._headerIsExpandedState = this.isExpanded();
+        this.header.content = (<TrackHeader
+            title={this._title}
+            isExpanded={this._headerIsExpandedState}
+            setExpanded={(toggle: boolean) => {
+                this.setHeight(toggle ? RowObject.expandedTrackHeight : RowObject.collapsedTrackHeight);
+            }}
+        />);
+        this.closeButton.content = (<TrackCloseButton track={this} onClick={() => {
+            this.onClose(this);
+        }} />);
+    }
+
+    protected isExpanded = () => {
+        return this.getHeight() >= RowObject.expandedTrackHeight;
+    }
+
+    public static readonly expandedTrackHeight = 200;
+    public static readonly collapsedTrackHeight = 50;
+}
+
+function TrackCloseButton(props: {
+    onClick: (track: RowObject) => void,
+    track: RowObject,
+}) {
+    return <div
+        style={{
+            position: 'relative',
+            height: '100%',
+            width: '100%',
+            color: '#e8e8e8',
+            overflow: 'hidden',
+            userSelect: 'none',
+            backgroundColor: '#171615',
+            borderRadius: '0px 8px 8px 0px',
+        }}
+    >
+        <div style={{
+            position: 'absolute',
+            width: '100%',
+            textAlign: 'right',
+            top: '50%',
+            transform: 'translate(0, -50%)',
+        }}>
+            <IconButton onClick={() => props.onClick(props.track)}>
+                <SvgClose color='rgb(171, 171, 171)' hoverColor='rgb(255, 255, 255)' />
+            </IconButton>
+        </div>
+    </div>
+}
+
+function TrackHeader(props: {
+    title: string,
+    setExpanded?: (state: boolean) => void,
+    isExpanded: boolean,
+}) {
+    const iconColor = 'rgb(171, 171, 171)';
+    const iconHoverColor = 'rgb(255, 255, 255)';
+    const iconViewBoxSize = '0 0 32 32';
+    const style = {
+        marginTop: 8,
+        marginLeft: 16
+    }
+    const headerContainerStyle: React.CSSProperties = {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-start'
+    };
+
+    const ArrowElem = props.isExpanded ? SvgExpandLess : SvgExpandMore;
+
+    const expandArrow = (<ArrowElem
+        style={style}
+        viewBox={iconViewBoxSize}
+        color={iconColor}
+        hoverColor={iconHoverColor}
+    />);
+    return <div
+        style={{
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            color: '#e8e8e8',
+            backgroundColor: '#171615',
+            borderRadius: '8px 0px 0px 8px',
+            fontSize: '15px',
+            overflow: 'hidden',
+            userSelect: 'none',
+        }}
+    >
+        <div style={{
+            position: 'absolute',
+            width: '100%',
+            textAlign: 'center',
+            top: '50%',
+            transform: 'translate(0, -50%)',
+        }}>
+            <div onClick={() => {
+                props.setExpanded(!props.isExpanded);
+            }} style={headerContainerStyle}>
+                {expandArrow}
+                {props.title}
+            </div>
+        </div>
+    </div>
 }
 
 function AddPanelButton(props: {
@@ -794,5 +1051,3 @@ function AddPanelButton(props: {
         </div>
     </div>
 }
-
-export default TrackViewer;

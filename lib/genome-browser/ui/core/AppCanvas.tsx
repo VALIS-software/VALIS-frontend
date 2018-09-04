@@ -7,7 +7,6 @@
 */
 
 import * as React from "react";
-import Node from '../../rendering/Node';
 import GPUDevice from '../../rendering/GPUDevice';
 import RenderPass from '../../rendering/RenderPass';
 import Renderer from '../../rendering/Renderer';
@@ -17,7 +16,6 @@ import { Object2D, Object2DInternal } from './Object2D';
 import { ReactObject, ReactObjectContainer } from "./ReactObject";
 import InteractionEvent, { InteractionEventInternal, InteractionEventMap, WheelInteractionEvent, InteractionEventInit } from "./InteractionEvent";
 
-
 interface Props {
     width: number;
     height: number;
@@ -25,6 +23,7 @@ interface Props {
     pixelRatio?: number;
     style?: React.CSSProperties;
     canvasStyle?: React.CSSProperties;
+    onWillUnmount?: () => void,
 }
 
 interface State {
@@ -110,6 +109,10 @@ export class AppCanvas extends React.Component<Props, State> {
         this.renderer = null;
 
         this.removeInputListeners();
+
+        if (this.props.onWillUnmount) {
+            this.props.onWillUnmount();
+        }
     }
 
     componentDidUpdate(prevProps: Props, prevState: State, snapshot: any) {
@@ -717,7 +720,7 @@ export class AppCanvas extends React.Component<Props, State> {
         // set pointer event data if it's available
         if (this.pointerEventSupport && e instanceof PointerEvent) {
             interactionData.pointerId = e.pointerId;
-            interactionData.pointerType = e.pointerType;
+            interactionData.pointerType = e.pointerType as any;
             interactionData.isPrimary = e.isPrimary;
             interactionData.width = e.width;
             interactionData.height = e.height;

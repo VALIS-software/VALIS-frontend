@@ -9,12 +9,12 @@ import Object2D from "../core/Object2D";
 import { Rect } from "../core/Rect";
 import { Text } from "../core/Text";
 import { OpenSansRegular } from "../font/Fonts";
-import Track from "./Track";
+import BaseTrack from "./BaseTrack";
 import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
 import TextClone from "./util/TextClone";
 import { EntityType } from "sirius/EntityType";
 
-export default class VariantTrack extends Track<'variant'> {
+export default class VariantTrack extends BaseTrack<'variant'> {
 
     protected readonly macroLodBlendRange = 1;
     protected readonly macroLodThresholdLow = 8;
