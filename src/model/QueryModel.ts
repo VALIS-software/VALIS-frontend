@@ -155,14 +155,11 @@ export default class QueryModel  {
             }
         }
         if (filter.get(FilterType.TYPE)) {
-            //  only apply this filter to the top level query if it is a genome query
-            if (filteredQuery.type === QueryType.GENOME) {
-                const types = filter.get(FilterType.TYPE).toArray();
-                if (types.length === 1) {
-                    filteredQuery.filters['type'] = types[0];
-                } else {
-                    filteredQuery.filters['type'] = { "$in": types };
-                }
+            const types = filter.get(FilterType.TYPE).toArray();
+            if (types.length === 1) {
+                filteredQuery.filters['type'] = types[0];
+            } else {
+                filteredQuery.filters['type'] = { "$in": types };
             }
         }
         if (filter.get(FilterType.VARIANT_TAG)) {
