@@ -21,6 +21,7 @@ export class Animator {
             target: number,
             step: (dt_ms: number, state: AnimationState, parameters: any) => void,
             parameters: any,
+            stopOnComplete: boolean,
         } },
     }>();
 
@@ -48,14 +49,27 @@ export class Animator {
             friction: Math.sqrt(parameters) * 2
         };
 
-        Animator.stepTo(object, fieldTargets, Animator.stringStep, springParameters, velocity);
+        Animator.animation(object, fieldTargets, Animator.stringStep, springParameters, true, velocity);
     }
 
-    public static stepTo<T>(
+    public static spring(object: any, fieldTargets: { [key: string]: number }, criticalTension: number, velocity?: number): void;
+    public static spring(object: any, fieldTargets: { [key: string]: number }, parameters: { tension: number, friction: number }, velocity?: number): void;
+    public static spring(object: any, fieldTargets: { [key: string]: number }, parameters: any, velocity?: number): void {
+        // handle multiple types of spring parameters
+        let springParameters = parameters instanceof Object ? parameters : {
+            tension: parameters,
+            friction: Math.sqrt(parameters) * 2
+        };
+
+        Animator.animation(object, fieldTargets, Animator.stringStep, springParameters, false, velocity);
+    }
+
+    public static animation<T>(
         object: any,
         fieldTargets: { [key: string]: number },
         step: (dt_ms: number, state: AnimationState, parameters: T) => void,
         parameters: T,
+        stopOnComplete: boolean,
         velocity?: number
     ) {
         let t_s = window.performance.now() / 1000;
@@ -91,6 +105,8 @@ export class Animator {
                     target: fieldTargets[field],
                     step: step,
                     parameters: parameters,
+
+                    stopOnComplete: stopOnComplete,
                 };
                 entry.animatingFields[field] = animation;
             } else {
@@ -149,7 +165,7 @@ export class Animator {
                 let totalEnergy = animation.state.pe + kineticEnergy;
 
                 // @! magic number: can we derive a condition that's linked to user-known properties
-                if (totalEnergy < 0.000001) {
+                if (animation.stopOnComplete && totalEnergy < 0.000001) {
                     delete entry.animatingFields[field];
                     object[field] = animation.target;
 
