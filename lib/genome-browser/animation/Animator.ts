@@ -142,9 +142,7 @@ export class Animator {
         }
     }
 
-    public static frame() {
-        let t_s = window.performance.now() / 1000;
-
+    public static frame(time_s: number = window.performance.now() / 1000) {
         let steppedAnimationCount = 0;
 
         for (let entry of Animator.active) {
@@ -155,7 +153,7 @@ export class Animator {
                 let animation = entry.animatingFields[field];
                 
                 animation.state.x = animation.target - object[field];
-                animation.step(t_s, animation.state, animation.parameters);
+                animation.step(time_s, animation.state, animation.parameters);
                 object[field] = animation.target - animation.state.x;
 
                 steppedAnimationCount++;
