@@ -121,7 +121,7 @@ export default class IntervalTrack extends BaseTrack<'interval'> {
 
         let instancesTile = new IntervalInstances(instanceData);
         instancesTile.minWidth = 0.5;
-        instancesTile.blendFactor = 0.2; // full additive
+        instancesTile.blendFactor = 0.2; // nearly full additive
         instancesTile.y = 5;
         instancesTile.mask = this;
 

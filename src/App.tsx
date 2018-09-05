@@ -344,15 +344,18 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		);
 	}
 
-	private _frameLoopHandle: number;
+	private _frameLoopHandle: number = 0;
 	private _lastFrameT_ms = 0;
 	protected startFrameLoop() {
-		this._lastFrameT_ms = window.performance.now();
-		this.frameLoop();
+		if (this._frameLoopHandle === 0) {
+			this.frameLoop();
+
+		}
 	}
 
 	protected stopFrameLoop() {
 		window.cancelAnimationFrame(this._frameLoopHandle);
+		this._frameLoopHandle = 0;
 	}
 
 	protected _lastStateChangeT_ms = -Infinity;
@@ -363,7 +366,8 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		let t_ms = window.performance.now();
 		let dt_ms = t_ms - this._lastFrameT_ms;
 		this._lastFrameT_ms = t_ms;
-		
+
+		// ~0.001ms
 		// manage writing persistent state to the url
 		// if the persistent state hasn't changed for some time then update the url
 		let latestState = this.getPersistentState();
