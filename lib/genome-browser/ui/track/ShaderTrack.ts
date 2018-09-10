@@ -5,13 +5,13 @@ import TrackModel from "../../model/TrackModel";
 import { DEFAULT_SPRING } from "../UIConstants";
 import Object2D from "engine/ui/Object2D";
 import TileStore, { Tile, TileState } from "../../model/data-store/TileStore";
-import { BaseTrack } from "./BaseTrack";
+import { TrackObject } from "./BaseTrack";
 import SharedTileStore from "../../model/data-store/SharedTileStores";
 
 /**
  * TileTrack provides a base class for Tracks that use TileStore
  */
-export class ShaderTrack<TilePayload, BlockPayload> extends BaseTrack {
+export class ShaderTrack<TilePayload, BlockPayload> extends TrackObject {
 
     get pixelRatio() { return this._pixelRatio; }
 

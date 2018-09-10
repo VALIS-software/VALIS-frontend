@@ -6,7 +6,7 @@ import Rect from "engine/ui/Rect";
 import Text from "engine/ui/Text";
 import { OpenSansRegular } from "../font/Fonts";
 
-export class BaseTrack<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> extends Rect {
+export class TrackObject<ModelType extends keyof TrackTypeMap = keyof TrackTypeMap> extends Rect {
 
     protected contig: string | undefined;
     protected x0: number;
@@ -217,4 +217,4 @@ class LoadingIndicator extends Text {
 
 }
 
-export default BaseTrack;
+export default TrackObject;

@@ -22,7 +22,7 @@ import ReactObject from "./core/ReactObject";
 import Rect from "engine/ui/Rect";
 import Panel, { PanelInternal } from "./Panel";
 import ConstructTrack from "./track/ConstructTrack";
-import BaseTrack from "./track/BaseTrack";
+import TrackObject from "./track/BaseTrack";
 import { DEFAULT_SPRING } from "./UIConstants";
 
 export interface PanelConfiguration {
@@ -829,7 +829,7 @@ class RowObject {
     readonly header: ReactObject;
     readonly closeButton: ReactObject;
     readonly resizeHandle: Rect;
-    readonly trackViews = new Set<BaseTrack>();
+    readonly trackViews = new Set<TrackObject>();
 
     get y(): number { return this._y; }
     get h(): number { return this._h; }
@@ -880,12 +880,12 @@ class RowObject {
         this.resizeHandle.color.set(v ? [0, 1, 0, 1] : [0.3, 0.3, 0.3, 1]);
     }
     
-    addTrackView(trackView: BaseTrack) {
+    addTrackView(trackView: TrackObject) {
         this.trackViews.add(trackView);
         this.layoutY();
     }
 
-    removeTrackView(trackView: BaseTrack) {
+    removeTrackView(trackView: TrackObject) {
         this.trackViews.delete(trackView);
     }
 

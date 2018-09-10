@@ -13,7 +13,7 @@ import Object2D from "engine/ui/Object2D";
 import { Rect } from "engine/ui/Rect";
 import Text from "engine/ui/Text";
 import { OpenSansRegular } from "../font/Fonts";
-import BaseTrack from "./BaseTrack";
+import TrackObject from "./BaseTrack";
 import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
 import { SiriusApi } from "sirius/SiriusApi";
 
@@ -24,7 +24,7 @@ import { SiriusApi } from "sirius/SiriusApi";
  * - Convert micro-scale annotations to use instancing (and text batching)
  * - Merge shaders where possible and clean up
  */
-export class AnnotationTrack extends BaseTrack<'annotation'> {
+export class AnnotationTrack extends TrackObject<'annotation'> {
 
     protected readonly macroLodBlendRange = 2;
     protected readonly macroLodThresholdLow = 10;

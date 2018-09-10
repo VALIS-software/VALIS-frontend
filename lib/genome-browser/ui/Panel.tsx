@@ -11,7 +11,7 @@ import Object2D from "engine/ui/Object2D";
 import ReactObject from "./core/ReactObject";
 import Rect from "engine/ui/Rect";
 import { OpenSansRegular } from "./font/Fonts";
-import BaseTrack, { AxisPointerStyle } from "./track/BaseTrack";
+import TrackObject, { AxisPointerStyle } from "./track/BaseTrack";
 import XAxis from "./XAxis";
 import Animator from "engine/animation/Animator";
 
@@ -34,7 +34,7 @@ export class Panel extends Object2D {
     readonly header: ReactObject;
     readonly xAxis: XAxis;
     readonly resizeHandle: Rect;
-    readonly trackViews = new Set<BaseTrack>();
+    readonly trackViews = new Set<TrackObject>();
 
     get closable(): boolean { return this._closable; }
     get closing(): boolean { return this._closing; }
@@ -121,7 +121,7 @@ export class Panel extends Object2D {
         this.resizeHandle.color.set(v ? [0, 1, 0, 1] : [0.3, 0.3, 0.3, 1]);
     }
 
-    addTrackView(trackView: BaseTrack) {
+    addTrackView(trackView: TrackObject) {
         trackView.addInteractionListener('dragstart', this.onTileDragStart);
         trackView.addInteractionListener('dragmove', this.onTileDragMove);
         trackView.addInteractionListener('dragend', this.onTileDragEnd);
@@ -138,7 +138,7 @@ export class Panel extends Object2D {
         this.trackViews.add(trackView);
     }
 
-    removeTrackView(trackView: BaseTrack) {
+    removeTrackView(trackView: TrackObject) {
         trackView.removeInteractionListener('dragstart', this.onTileDragStart);
         trackView.removeInteractionListener('dragmove', this.onTileDragMove);
         trackView.removeInteractionListener('dragend', this.onTileDragEnd);

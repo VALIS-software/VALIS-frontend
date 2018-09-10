@@ -1,13 +1,13 @@
 import { TrackModel } from "../../model/TrackModel";
 import AnnotationTrack from "./AnnotationTrack";
 import SequenceTrack from "./SequenceTrack";
-import BaseTrack from "./BaseTrack";
+import TrackObject from "./BaseTrack";
 import VariantTrack from "./VariantTrack";
 import IntervalTrack from "./IntervalTrack";
 
 export function ConstructTrack(model: TrackModel) {
     switch (model.type) {
-        case 'empty': return new BaseTrack(model);
+        case 'empty': return new TrackObject(model);
         case 'sequence': return new SequenceTrack(model as TrackModel<'sequence'>);
         case 'annotation': return new AnnotationTrack(model as TrackModel<'annotation'>);
         case 'variant': return new VariantTrack(model as TrackModel<'variant'>);

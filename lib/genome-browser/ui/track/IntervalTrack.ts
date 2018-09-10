@@ -5,12 +5,12 @@ import SharedTileStore from "../../model/data-store/SharedTileStores";
 import { Tile, TileState } from "../../model/data-store/TileStore";
 import { TrackModel } from "../../model/TrackModel";
 import { Object2D } from "engine/ui/Object2D";
-import BaseTrack from "./BaseTrack";
+import TrackObject from "./BaseTrack";
 import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
 
 type TilePayload = Float32Array;
 
-export default class IntervalTrack extends BaseTrack<'interval'> {
+export default class IntervalTrack extends TrackObject<'interval'> {
     
     blendEnabled: boolean = true;
 
