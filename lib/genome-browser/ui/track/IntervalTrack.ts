@@ -1,10 +1,10 @@
-import UsageCache from "../../ds/UsageCache";
-import { Scalar } from "../../math/Scalar";
+import UsageCache from "engine/ds/UsageCache";
+import { Scalar } from "engine/math/Scalar";
 import GenericIntervalTileStore from "../../model/data-store/GenericIntervalTileStore";
 import SharedTileStore from "../../model/data-store/SharedTileStores";
 import { Tile, TileState } from "../../model/data-store/TileStore";
 import { TrackModel } from "../../model/TrackModel";
-import { Object2D } from "../core/Object2D";
+import { Object2D } from "engine/ui/Object2D";
 import BaseTrack from "./BaseTrack";
 import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
 

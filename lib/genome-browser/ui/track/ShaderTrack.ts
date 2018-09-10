@@ -1,10 +1,9 @@
-import Animator from "../../animation/Animator";
-import UsageCache from "../../ds/UsageCache";
-import Scalar from "../../math/Scalar";
+import Animator from "engine/animation/Animator";
+import UsageCache from "engine/ds/UsageCache";
+import Scalar from "engine/math/Scalar";
 import TrackModel from "../../model/TrackModel";
-import { BlendMode } from "../../rendering/Renderer";
 import { DEFAULT_SPRING } from "../UIConstants";
-import Object2D from "../core/Object2D";
+import Object2D from "engine/ui/Object2D";
 import TileStore, { Tile, TileState } from "../../model/data-store/TileStore";
 import { BaseTrack } from "./BaseTrack";
 import SharedTileStore from "../../model/data-store/SharedTileStores";

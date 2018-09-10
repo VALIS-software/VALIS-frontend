@@ -1,8 +1,8 @@
 import GPUText, { GlyphLayout, GPUTextFont } from "gputext/GPUText";
-import { AttributeLayout, BufferUsageHint, ColorSpaceConversion, GPUDevice, GPUBuffer, GPUTexture, AttributeType, TextureDataType, TextureFormat, TextureMagFilter, TextureMinFilter, TextureUsageHint, TextureWrapMode, VertexAttributeSourceType } from "../../rendering/GPUDevice";
-import { BlendMode, DrawContext, DrawMode } from "../../rendering/Renderer";
+import { AttributeLayout, BufferUsageHint, ColorSpaceConversion, GPUDevice, GPUBuffer, GPUTexture, AttributeType, TextureDataType, TextureFormat, TextureMagFilter, TextureMinFilter, TextureUsageHint, TextureWrapMode } from "../rendering/GPUDevice";
+import { BlendMode, DrawContext, DrawMode } from "../rendering/Renderer";
 import { Object2D } from "./Object2D";
-import { SharedResources } from "./SharedResources";
+import { SharedResources } from "./../SharedResources";
 
 /**
  * Text

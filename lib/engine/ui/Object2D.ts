@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { Renderable, RenderableInternal } from '../../rendering/Renderable';
+import { Renderable, RenderableInternal } from '../rendering/Renderable';
 import { InteractionEventMap } from './InteractionEvent';
 
 export type Object2DInternal = RenderableInternal & {

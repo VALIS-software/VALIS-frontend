@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import Scalar from "../../math/Scalar";
+import Scalar from "engine/math/Scalar";
 
 export class TileStore<TilePayload, BlockPayload> {
 

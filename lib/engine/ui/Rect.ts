@@ -1,6 +1,6 @@
-import { GPUDevice, GPUProgram, AttributeLayout, AttributeType } from "../../rendering/GPUDevice";
-import { SharedResources } from "./SharedResources";
-import { DrawContext, DrawMode } from "../../rendering/Renderer";
+import { GPUDevice, AttributeLayout, AttributeType } from "../rendering/GPUDevice";
+import { SharedResources } from "../SharedResources";
+import { DrawContext, DrawMode } from "../rendering/Renderer";
 import { Object2D } from "./Object2D";
 
 /**

@@ -4,17 +4,19 @@
     - Manages frame loop
     - Manages root scene node and coordinate system
     - All coordinates are set in DOM pixel units relative to the canvas (unless marked as otherwise)
+    
+    - Should split up and move core parts to engine
 */
 
 import * as React from "react";
-import GPUDevice from '../../rendering/GPUDevice';
-import RenderPass from '../../rendering/RenderPass';
-import Renderer from '../../rendering/Renderer';
-import Renderable from '../../rendering/Renderable';
-import SharedResources from './SharedResources';
-import { Object2D, Object2DInternal } from './Object2D';
+import GPUDevice from 'engine/rendering/GPUDevice';
+import RenderPass from 'engine/rendering/RenderPass';
+import Renderer from 'engine/rendering/Renderer';
+import Renderable from 'engine/rendering/Renderable';
+import SharedResources from 'engine/SharedResources';
+import { Object2D, Object2DInternal } from 'engine/ui/Object2D';
 import { ReactObject, ReactObjectContainer } from "./ReactObject";
-import InteractionEvent, { InteractionEventInternal, InteractionEventMap, WheelInteractionEvent, InteractionEventInit } from "./InteractionEvent";
+import InteractionEvent, { InteractionEventInternal, InteractionEventMap, WheelInteractionEvent, InteractionEventInit } from "engine/ui/InteractionEvent";
 
 interface Props {
     width: number;

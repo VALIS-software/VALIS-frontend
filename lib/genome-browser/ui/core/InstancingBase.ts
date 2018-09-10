@@ -1,6 +1,6 @@
-import GPUDevice, { AttributeLayout, GPUBuffer, GPUVertexState, shaderTypeLength, VertexAttributeBuffer } from "../../rendering/GPUDevice";
-import Object2D from "./Object2D";
-import SharedResources from "./SharedResources";
+import GPUDevice, { AttributeLayout, GPUBuffer, GPUVertexState, shaderTypeLength, VertexAttributeBuffer } from "engine/rendering/GPUDevice";
+import Object2D from "engine/ui/Object2D";
+import SharedResources from "engine/SharedResources";
 
 /**
  * Base class for instance rendering

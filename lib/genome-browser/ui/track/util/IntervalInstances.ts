@@ -1,7 +1,7 @@
-import GPUDevice, { AttributeLayout, AttributeType, VertexAttributeBuffer } from "../../../rendering/GPUDevice";
-import { BlendMode, DrawContext, DrawMode } from "../../../rendering/Renderer";
+import GPUDevice, { AttributeLayout, AttributeType, VertexAttributeBuffer } from "engine/rendering/GPUDevice";
+import { DrawContext, DrawMode } from "engine/rendering/Renderer";
 import InstancingBase from "../../core/InstancingBase";
-import SharedResources from "../../core/SharedResources";
+import SharedResources from "engine/SharedResources";
 
 export type IntervalInstance = {
     xFractional: number, y: number, z: number,

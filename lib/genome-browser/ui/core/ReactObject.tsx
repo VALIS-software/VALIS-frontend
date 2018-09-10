@@ -1,4 +1,4 @@
-import Object2D, { Object2DInternal } from "./Object2D";
+import Object2D, { Object2DInternal } from "engine/ui/Object2D";
 import * as React from "react";
 
 export class ReactObject extends Object2D {

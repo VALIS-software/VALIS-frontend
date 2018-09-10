@@ -6,14 +6,14 @@ import SvgCancel from "material-ui/svg-icons/navigation/cancel";
 import SvgCheck from "material-ui/svg-icons/navigation/check";
 import SvgClose from "material-ui/svg-icons/navigation/close";
 import * as React from "react";
-import { InteractionEvent, WheelDeltaMode, WheelInteractionEvent } from "./core/InteractionEvent";
-import Object2D from "./core/Object2D";
+import { InteractionEvent, WheelDeltaMode, WheelInteractionEvent } from "engine/ui/InteractionEvent";
+import Object2D from "engine/ui/Object2D";
 import ReactObject from "./core/ReactObject";
-import Rect from "./core/Rect";
+import Rect from "engine/ui/Rect";
 import { OpenSansRegular } from "./font/Fonts";
 import BaseTrack, { AxisPointerStyle } from "./track/BaseTrack";
 import XAxis from "./XAxis";
-import Animator from "../animation/Animator";
+import Animator from "engine/animation/Animator";
 
 enum DragMode {
     Move,
