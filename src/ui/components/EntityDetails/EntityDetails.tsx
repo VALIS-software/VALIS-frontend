@@ -1,4 +1,4 @@
-import EntityType from "sirius/EntityType";
+import { EntityType } from 'valis';
 import AppModel from "../../models/AppModel";
 import ViewModel from "../../models/ViewModel";
 import GeneDetails from "../GeneDetails/GeneDetails";

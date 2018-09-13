@@ -6,9 +6,9 @@ import Collapsible from '../Shared/Collapsible/Collapsible';
 import GenericEntityDetails from '../GenericEntityDetails/GenericEntityDetails';
 import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
 import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
-import SiriusApi from "sirius/SiriusApi";
-import QueryBuilder from "sirius/QueryBuilder";
-import EntityType from "sirius/EntityType";
+import { SiriusApi } from 'valis';
+import { QueryBuilder } from 'valis'
+import { EntityType } from 'valis';
 import App from "../../../App";
 
 // Styles

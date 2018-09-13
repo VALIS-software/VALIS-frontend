@@ -3,7 +3,7 @@ import * as ReactDOM from "react-dom";
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
 import App from "./App";
-import { SiriusApi } from "sirius/SiriusApi";
+import { SiriusApi } from 'valis';
 
 import './index.html';
 import './index.scss';

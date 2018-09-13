@@ -7,10 +7,10 @@ import Slider from 'material-ui/Slider';
 import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
-import QueryBuilder from "sirius/QueryBuilder";
+import { QueryBuilder } from 'valis'
 import { CHROMOSOME_NAMES } from '../../helpers/constants';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-import SiriusApi from "sirius/SiriusApi";
+import { SiriusApi } from 'valis';
 
 // Styles
 import './GenomeSelector.scss';

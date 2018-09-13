@@ -1,7 +1,7 @@
 // Dependencies
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import QueryBuilder from "sirius/QueryBuilder";
+import { QueryBuilder } from 'valis'
 import Pills from '../Shared/Pills/Pills';
 import GenericEntityDetails from '../GenericEntityDetails/GenericEntityDetails';
 import AssociationList from '../Shared/AssociationList/AssociationList';
@@ -9,13 +9,13 @@ import Collapsible from '../Shared/Collapsible/Collapsible';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import GenomicLocation from '../Shared/GenomicLocation/GenomicLocation';
 import ZoomToButton from '../Shared/ZoomToButton/ZoomToButton';
-import SiriusApi from "sirius/SiriusApi";
+import { SiriusApi } from 'valis';
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 import App from "../../../App";
 // Styles
 import './SNPDetails.scss';
 import '../Shared/Shared.scss';
-import { EntityType } from 'sirius/EntityType';
+import { EntityType } from 'valis';
 
 function FrequencyBarChart(props) {
   const sorted = props.data.slice().sort(((a, b) => b.value - a.value));

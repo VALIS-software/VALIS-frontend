@@ -4,9 +4,9 @@ import * as PropTypes from "prop-types";
 import RaisedButton from "material-ui/RaisedButton/RaisedButton";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
-import QueryBuilder from "sirius/QueryBuilder";
+import { QueryBuilder } from 'valis'
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-import SiriusApi from "sirius/SiriusApi";
+import { SiriusApi } from 'valis';
 import { DATA_SOURCE_TCGA } from "../../helpers/constants";
 import { App } from '../../../App';
 

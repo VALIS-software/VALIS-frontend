@@ -1,5 +1,5 @@
-import QueryBuilder from "sirius/QueryBuilder";
-import SiriusApi from "sirius/SiriusApi";
+import { QueryBuilder } from 'valis';
+import  { SiriusApi } from 'valis';
 import { TrackModel } from "../TrackModel";
 import { Tile, TileStore } from "./TileStore";
 import { start } from "repl";

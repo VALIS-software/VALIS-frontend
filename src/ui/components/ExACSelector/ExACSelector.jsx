@@ -5,11 +5,11 @@ import RaisedButton from "material-ui/RaisedButton/RaisedButton";
 import AutoComplete from "material-ui/AutoComplete";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
-import QueryBuilder from "sirius/QueryBuilder";
+import { QueryBuilder } from 'valis'
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
 import { DATA_SOURCE_ExAC } from "../../helpers/constants";
-import { SiriusApi } from "sirius/SiriusApi";
+import { SiriusApi } from 'valis';
 import { App } from '../../../App';
 
 class ExACSelector extends React.Component {

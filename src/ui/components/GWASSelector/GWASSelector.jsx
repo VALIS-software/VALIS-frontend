@@ -7,11 +7,11 @@ import RaisedButton from "material-ui/RaisedButton/RaisedButton";
 import SelectField from "material-ui/SelectField";
 import MenuItem from "material-ui/MenuItem";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-import QueryBuilder from "sirius/QueryBuilder";
+import { QueryBuilder } from 'valis'
 import {
   DATA_SOURCE_GWAS,
 } from "../../helpers/constants";
-import SiriusApi from "sirius/SiriusApi";
+import { SiriusApi } from 'valis';
 import { App } from '../../../App';
 // Styles
 import "./GWASSelector.scss";

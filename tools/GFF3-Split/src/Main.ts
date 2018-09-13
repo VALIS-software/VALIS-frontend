@@ -16,10 +16,8 @@
  */
 
 import * as fs from 'fs';
-import { AnnotationTileset, Tile }  from "../../../lib/sirius/AnnotationTileset";
-import Gff3Parser from "../../../lib/gff3/Gff3Parser";
+import { AnnotationTileset, Feature, Gff3Parser } from 'valis';
 import { Terminal } from "./Terminal";
-import { Feature } from "../../../lib/gff3/Feature";
 
 // settings
 const outputDirectory = '_output';
@@ -35,7 +33,7 @@ let onUnknownFeature = (f: Feature) => { unknownFeatureTypes[f.type] = (unknownF
 
 let lodLevel0TileSize = 1 << 20;
 
-let tileset = new AnnotationTileset(
+let tileset = new AnnotationTileset.Tileset(
 	lodLevel0TileSize, // ~1 million,
 	false,
 	onUnknownFeature,
@@ -43,7 +41,7 @@ let tileset = new AnnotationTileset(
 );
 
 let macroLodLevel = 5;
-let macroTileset = new AnnotationTileset(
+let macroTileset = new AnnotationTileset.Tileset(
 	lodLevel0TileSize * (1 << macroLodLevel),
 	true,
 	onUnknownFeature,
@@ -146,7 +144,7 @@ function onSequenceComplete(sequenceId: string) {
 	delete macroTileset.sequences[sequenceId];
 }
 
-function saveTiles(tiles: Array<Tile>, directory: string) {
+function saveTiles(tiles: Array<AnnotationTileset.Tile>, directory: string) {
 	try {
 		// delete and create output directory
 		deleteDirectory(directory);

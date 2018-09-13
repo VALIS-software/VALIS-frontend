@@ -65,6 +65,7 @@
     "prop-types": "15.6.x",
     "react": "16.3.x",
     "react-dom": "16.3.x",
-    "react-virtualized": "9.20.x"
+    "react-virtualized": "9.20.x",
+    "valis": "github:VALIS-Software/valis-typescript-client"
   }
 }

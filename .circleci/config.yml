@@ -20,9 +20,6 @@ jobs:
           paths:
             - node_modules
           key: dependency-cache-{{ checksum "package.json" }}
-      - run:
-          name: Run tests
-          command: npm test
       - deploy:
           name: Deploy on Google Cloud
           command: |

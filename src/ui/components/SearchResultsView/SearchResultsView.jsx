@@ -8,14 +8,14 @@ import Pills from "../Shared/Pills/Pills";
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import { prettyPrint } from "../TraitDetails/TraitDetails";
-import SiriusApi from "sirius/SiriusApi";
+import { SiriusApi } from 'valis';
 import QueryModel, { FilterType } from "../../models/QueryModel";
-import { QueryType } from "sirius/QueryBuilder";
+import { QueryType } from 'valis';
 
 // Styles
 import "./SearchResultsView.scss";
 import 'react-virtualized/styles.css'
-import { EntityType } from "sirius/EntityType";
+import { EntityType } from 'valis';
 import { App } from '../../../App';
 
 const FETCH_SIZE = 30;

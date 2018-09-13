@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import Collapsible from '../Collapsible/Collapsible';
 import './AssociationList.scss';
-import EntityType from "sirius/EntityType";
+import { EntityType } from 'valis';
 import App from "../../../../App";
 
 
