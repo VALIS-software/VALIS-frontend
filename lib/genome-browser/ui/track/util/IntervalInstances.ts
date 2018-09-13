@@ -1,6 +1,6 @@
 import GPUDevice, { AttributeLayout, AttributeType, VertexAttributeBuffer } from "engine/rendering/GPUDevice";
 import { DrawContext, DrawMode } from "engine/rendering/Renderer";
-import InstancingBase from "../../core/InstancingBase";
+import Object2DInstances from "engine/ui/Object2DInstances";
 import SharedResources from "engine/SharedResources";
 
 export type IntervalInstance = {
@@ -9,7 +9,7 @@ export type IntervalInstance = {
     color: Array<number>,
 };
 
-export default class IntervalInstances extends InstancingBase<IntervalInstance> {
+export default class IntervalInstances extends Object2DInstances<IntervalInstance> {
 
     minWidth: number = 0;
     blendFactor: number = 1;
