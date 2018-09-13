@@ -1,4 +1,4 @@
-import { Strand } from "gff3/Strand";
+import { Strand } from 'valis';
 import GenericIntervalTileStore from "./data-store/GenericIntervalTileStore";
 
 export interface TrackTypeMap {

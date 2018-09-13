@@ -14,7 +14,7 @@ import DataListItem from "../DataListItem/DataListItem";
 import ZoomToButton from "../Shared/ZoomToButton/ZoomToButton";
 
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-import SiriusApi from "sirius/SiriusApi";
+import { SiriusApi } from 'valis';
 import App from "../../../App";
 
 

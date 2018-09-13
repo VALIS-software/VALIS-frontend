@@ -19,8 +19,8 @@ import AddCircle from "material-ui/svg-icons/content/add-circle";
 import Delete from "material-ui/svg-icons/action/delete";
 // Models
 import App from "../../../App";
-import SiriusApi from "sirius/SiriusApi";
-import QueryBuilder from "sirius/QueryBuilder";
+import { SiriusApi } from 'valis';
+import { QueryBuilder } from 'valis'
 import { FILE_TYPE_23andMe } from "../../helpers/constants";
 // Styles
 import './UserFilesPanel.scss';

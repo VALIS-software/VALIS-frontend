@@ -1,11 +1,10 @@
-import { Strand } from "gff3/Strand";
+import { Strand } from 'valis';
 import { Dialog, FlatButton, IconButton, Snackbar } from "material-ui";
 import CircularProgress from "material-ui/CircularProgress";
 import { MuiThemeProvider } from "material-ui/styles";
 import { ContentReport, SocialShare } from "material-ui/svg-icons";
 import * as React from "react";
-import EntityType from "sirius/EntityType";
-import SiriusApi from "sirius/SiriusApi";
+import { SiriusApi, EntityType } from 'valis';
 import Animator from "./animation/Animator";
 // styles
 import "./App.scss";

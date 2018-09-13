@@ -6,13 +6,13 @@ import Pills from '../Shared/Pills/Pills';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
 import GenericEntityDetails from '../GenericEntityDetails/GenericEntityDetails';
-import SiriusApi from "sirius/SiriusApi";
-import QueryBuilder from "sirius/QueryBuilder";
+import { SiriusApi } from 'valis';
+import { QueryBuilder } from 'valis'
 
 // Styles
 import './TraitDetails.scss';
 import '../Shared/Shared.scss';
-import { QueryBuilder } from 'sirius/QueryBuilder';
+import { QueryBuilder } from 'valis';
 
 export const prettyPrint = (string) => {
   if (string.toUpperCase() === string) {

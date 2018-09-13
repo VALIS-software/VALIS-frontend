@@ -1,4 +1,4 @@
-import { QueryBuilder } from "sirius/QueryBuilder";
+import { QueryBuilder } from 'valis';
 import { Animator } from "../../animation/Animator";
 import { App } from "../../App";
 import UsageCache from "../../ds/UsageCache";
@@ -14,7 +14,7 @@ import { OpenSansRegular } from "../font/Fonts";
 import Track from "./Track";
 import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
 import TextClone from "./util/TextClone";
-import { EntityType } from "sirius/EntityType";
+import { EntityType } from 'valis';
 
 export default class VariantTrack extends Track<'variant'> {
 

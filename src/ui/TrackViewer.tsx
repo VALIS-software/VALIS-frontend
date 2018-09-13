@@ -12,7 +12,7 @@ import AppModel from "./models/AppModel";
 import Panel from "./Panel";
 import TrackRow from "./TrackRow";
 import { DEFAULT_SPRING } from "./UIConstants";
-import { SiriusApi } from "sirius/SiriusApi";
+import { SiriusApi } from 'valis';
 import Persistable from "../model/Persistable";
 
 export type PersistentTrackViewerState = {
