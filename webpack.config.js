@@ -62,7 +62,7 @@ module.exports = (env) => {
 					}],
 				},
 
-				// All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
+				// All files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'.
 				{
 					test: /\.(ts|tsx|js|jsx)$/,
 					loader: "ts-loader",
