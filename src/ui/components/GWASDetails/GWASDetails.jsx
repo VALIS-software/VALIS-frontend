@@ -9,7 +9,7 @@ import Collapsible from '../Shared/Collapsible/Collapsible';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import '../Shared/Shared.scss';
 import SNPDetails from '../SNPDetails/SNPDetails';
-import SiriusApi from "sirius/SiriusApi";
+import { SiriusApi } from 'valis';
 // Styles
 import './GWASDetails.scss';
 

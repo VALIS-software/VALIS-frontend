@@ -1,6 +1,6 @@
 
 import { Map, Set } from 'immutable';
-import { QueryType } from "sirius/QueryBuilder";
+import { QueryBuilder } from 'valis';
 
 export type FilterValue = string;
 export enum FilterType {

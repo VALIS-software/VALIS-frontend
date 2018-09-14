@@ -12,7 +12,7 @@ import { OpenSansRegular } from "../font/Fonts";
 import TrackObject from "./BaseTrack";
 import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
 import TextClone from "./util/TextClone";
-import { EntityType } from "sirius/EntityType";
+import { EntityType } from 'valis';
 
 export default class VariantTrack extends TrackObject<'variant'> {
 
@@ -267,7 +267,7 @@ export default class VariantTrack extends TrackObject<'variant'> {
         }
 
         this._pendingTiles.removeUnused(this.removeTileLoadingDependency);
-        this._onStageAnnotations.removeUnused((t) => this.remove(t));
+        this._onStageAnnotations.removeUnused((t: any) => this.remove(t));
         this._sequenceLabelCache.removeUnused(this.deleteBaseLabel);
         this.toggleLoadingIndicator(this._pendingTiles.count > 0, true);
         this.displayNeedUpdate = false;

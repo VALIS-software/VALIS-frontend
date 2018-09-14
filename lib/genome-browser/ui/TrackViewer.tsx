@@ -13,7 +13,7 @@ import SvgAdd from "material-ui/svg-icons/content/add";
 import SvgClose from "material-ui/svg-icons/navigation/close";
 import SvgExpandLess from "material-ui/svg-icons/navigation/expand-less";
 import SvgExpandMore from "material-ui/svg-icons/navigation/expand-more";
-import { SiriusApi } from "sirius/SiriusApi";
+import { SiriusApi } from 'valis';
 import Animator from "engine/animation/Animator";
 import { GenomicLocation } from "../model/GenomicLocation";
 import TrackModel from "../model/TrackModel";

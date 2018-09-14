@@ -1,6 +1,5 @@
 import { Tile, TileStore } from "./TileStore";
-import { SiriusApi } from "sirius/SiriusApi";
-import QueryBuilder from "sirius/QueryBuilder";
+import { SiriusApi } from 'valis';
 
 export type TilePayload = Float32Array;
 
@@ -28,7 +27,7 @@ export default class GenericIntervalTileStore extends TileStore<TilePayload, voi
             1
         );
 
-        SiriusApi.getContigInfo(contig).then((info) => {
+        SiriusApi.getContigInfo(contig).then((info : any) => {
             this.maximumX = info.length - 1;
         });
     }

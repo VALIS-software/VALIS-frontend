@@ -1,29 +1,28 @@
-import * as React from "react";
+import GenomeBrowser, { GenomeBrowserConfiguration } from "genome-browser/GenomeBrowser";
+import { SharedTileStore } from "genome-browser/model/data-store/SharedTileStores";
+import { TrackModel } from "genome-browser/model/TrackModel";
 import { Dialog, FlatButton, IconButton } from "material-ui";
 import CircularProgress from "material-ui/CircularProgress";
 import { MuiThemeProvider } from "material-ui/styles";
 import { ContentReport } from "material-ui/svg-icons";
-import EntityType from "sirius/EntityType";
-import SiriusApi from "sirius/SiriusApi";
+import * as React from "react";
+import { EntityType, SiriusApi } from 'valis';
+// styles
+import "./App.scss";
+import AppModel, { AppEvent } from "./model/AppModel";
 import Persistable from "./model/Persistable";
+import ViewModel, { ViewEvent } from "./model/ViewModel";
 import { EntityDetails } from "./ui/components/EntityDetails/EntityDetails";
 import Header from "./ui/components/Header/Header";
 import NavigationController from "./ui/components/NavigationController/NavigationController";
 import SearchResultsView from "./ui/components/SearchResultsView/SearchResultsView";
 import ShareLinkDialog from "./ui/components/ShareLink/ShareLinkDialog";
-import AppModel, { AppEvent } from "./model/AppModel";
-import ViewModel, { ViewEvent } from "./model/ViewModel";
 import BasicTheme from "./ui/themes/BasicTheme";
 import View from "./ui/View";
 import LZString = require("lz-string");
 const deepEqual = require('fast-deep-equal');
 
-import GenomeBrowser, { GenomeBrowserConfiguration } from "genome-browser/GenomeBrowser";
-import { SharedTileStore } from "genome-browser/model/data-store/SharedTileStores";
-import { TrackModel } from "genome-browser/model/TrackModel";
 
-// styles
-import "./App.scss";
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern

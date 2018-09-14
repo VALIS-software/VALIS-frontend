@@ -7,9 +7,7 @@ import ActionSearch from 'material-ui/svg-icons/action/search';
 import SvgClose from "material-ui/svg-icons/navigation/close";
 import CircularProgress from "material-ui/CircularProgress";
 import ErrorDetails from "../ErrorDetails/ErrorDetails";
-import buildQueryParser from "sirius/queryparser";
-import SiriusApi from "sirius/SiriusApi";
-import QueryBuilder from "sirius/QueryBuilder";
+import { SiriusApi, QueryBuilder, buildQueryParser } from 'valis';
 import { App } from '../../../../App';
 
 import './TokenBox.scss';

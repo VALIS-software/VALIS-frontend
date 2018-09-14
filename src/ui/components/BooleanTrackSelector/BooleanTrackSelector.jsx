@@ -6,7 +6,7 @@ import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
-import QueryBuilder from "sirius/QueryBuilder";
+import { QueryBuilder } from 'valis'
 
 // Styles
 import './BooleanTrackSelector.scss';
