@@ -334,7 +334,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						onShowShare={() => this.setState({ displayShareDialog: true })}
 						ref={(v) => this.headerRef = v}
 					/>
-
 					<AppCanvas
 						ref={(v) => this.appCanvas = v}
 						width={this.state.viewerWidth}
