@@ -29,9 +29,9 @@ class Collapsible extends React.Component {
         height: 20,
       },
     };
-    let toggleIcon = this.state.open ? (<SvgExpandLess />) : (<SvgExpandMore />);
+    let toggleIcon = this.state.open ? (<SvgExpandLess color='white'/>) : (<SvgExpandMore color='white'/>);
     toggleIcon = this.props.disabled ? '' : toggleIcon;
-    toggleIcon = this.props.isLink ?  (<SvgChevronRight />) : toggleIcon;
+    toggleIcon = this.props.isLink ?  (<SvgChevronRight color='white'/>) : toggleIcon;
 
     const content = this.state.open ? (<div className="collapsible-content">{this.props.children}</div>) : (<div />);
     return (<div className="collapsible">

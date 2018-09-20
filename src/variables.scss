@@ -3,26 +3,47 @@ $track-header-width: 200px;
 $axis-width: 30px;
 $margin-width: 8px;
 $header-content-width: calc(100% - #{$axis-width} - #{$margin-width});
-$white-color: #e8e8e8;
-$dark-color: darken(#242321, 5%);
 
 $sidebar-header-height: 64px;
 
+
+$valis-body-font: "urw-din",sans-serif;
+$valis-title-font: "univia-pro",sans-serif;
+$valis-font-weight-bold: 600;
+$valis-font-weight-light: 300;
+$valis-font-size-small: 12px;
+
+$valis-theme-primary-blue: #142ba5;
+$valis-theme-dark-gray: #3a3b59;
+$valis-theme-dark-blue: #2789e4;
+$valis-theme-medium-blue: #02b0ec;
+$valis-theme-light: #def3fc;
+$valis-theme-lightest: #ebf6fd;
+$valis-theme-black: #030027;
+$valis-theme-darker-gray: #151e3f;
+$valis-theme-green: #ffb2b2;
+$valis-theme-light-green: #c7efcf;
+
 // Colors
-$valis-blue-light: #6BBBE6;
-$valis-blue-medium: #55ACDB;
-$valis-blue-dark: #446577;
-$valis-grey-light: #EEF3F5;
-$valis-blue-lightest: lighten($valis-blue-light, 30%);
+$white-color: #e8e8e8;
+$dark-color: darken(#242321, 5%);
+
+$valis-blue-light: $valis-theme-medium-blue;
+$valis-blue-medium: $valis-theme-dark-blue;
+$valis-blue-dark: $valis-theme-dark-gray;
+$valis-grey-light: $valis-theme-lightest;
+$valis-blue-lightest: $valis-theme-medium-blue;
 $valis-grey-dark: darken($valis-grey-light, 20%);
 $valis-white: #ffffff;
 $valis-black: darken($valis-grey-dark, 50%);
-$valis-shadow: rgba(0, 0, 0, 0.12) 0px 1px 6px, rgba(0, 0, 0, 0.12) 0px 1px 4px;
-$valis-scroll-shadow: inset 0px 11px 8px -10px rgba(0.0, 0.0, 0.0, 0.3), inset 0px -11px 8px -10px rgba(0.0, 0.0, 0.0, 0.3);
 $link-color: $dark-color;
 
+
+$valis-shadow: rgba(0, 0, 0, 0.12) 0px 1px 6px, rgba(0, 0, 0, 0.12) 0px 1px 4px;
+$valis-scroll-shadow: inset 0px 11px 8px -10px rgba(0.0, 0.0, 0.0, 0.3), inset 0px -11px 8px -10px rgba(0.0, 0.0, 0.0, 0.3);
+
 // Fonts
-$font-stack: 'Open Sans', sans-serif;
+$font-stack: $valis-body-font;
 $valis-font-size-info-header: 2em;
 $valis-font-size-small-info-header: 1.5em;
 $valis-font-size-info-section-header: 0.75em;

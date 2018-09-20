@@ -1,13 +1,12 @@
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 
 
-const blueLight = '#6BBBE6';
-const blueMedium = '#55ACDB';
-const blueDark = '#446577';
-const lightGray = '#EEF3F5';
+const blueLight = '#02b0ec';
+const blueDark = '#3a3b59';
+const lightGray = '#def3fc';
 
 const BasicTheme = getMuiTheme({
-    fontFamily: "'Open Sans', serif",
+    fontFamily: '"univia-pro",sans-serif',
     palette: {
         primary1Color: blueLight,
     },

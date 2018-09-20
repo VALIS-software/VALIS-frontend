@@ -16,8 +16,7 @@ $filter-header-height: 48px;
 	height:calc(100% - #{$sidebar-header-height});
 	user-select: none;
 	.search-results-list {
-		background-color: $valis-blue-lightest;
-		box-shadow: $valis-scroll-shadow;
+		background-color: $valis-theme-lightest;
 		user-select: none;
 		outline-style:none;
 		.search-result-inner {
