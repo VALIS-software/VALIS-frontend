@@ -6,26 +6,25 @@
     padding: 10px;
     border: none;
     width: 100%;
-    background-color: $valis-blue-lightest;
+    background-color: $valis-theme-lightest;
 
     .option-title {
-        color: $valis-black;
-		font-size: 16px;
+        color: $valis-theme-dark-blue;
+        font-size: 16px;
         font-weight: bold;
         padding: 2px;
         text-align: center;
     }
     .option-description {
-        color: $valis-blue-dark;
+        font-family: $valis-body-font;
+        color: $valis-theme-dark-gray;
         font-size: 14px;
-        padding: 2px;
+        padding: 12px;
         text-align: center;
     }
-    border-top: 1px solid $valis-blue-light;
-    border-left: 8px solid lighten($valis-blue-light, 20%);
+    border-top: 1px solid $valis-theme-light;
 }
 .data-list-item:hover {
-    border-left: 8px solid $valis-blue-medium;
-    background-color: $valis-blue-lightest;
+    background-color: $valis-theme-light;
     cursor: pointer;
 }

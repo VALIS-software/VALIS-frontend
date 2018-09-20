@@ -4,9 +4,8 @@
 		padding: 16px;
 		cursor: pointer;
 		font-size: $valis-font-size-info-section-header;
-		color: $valis-black;
-		background: linear-gradient(lighten($valis-blue-light, 15%), lighten($valis-blue-light, 10%));
-		border-left: 8px solid $valis-blue-dark;
+		color: $valis-theme-lightest;
+		background: $valis-theme-dark-blue;
 		.collapsible-toggle {
 			float: right;
 			font-size: 18px;
@@ -14,11 +13,11 @@
 			margin-top: -7px;
 		}
 
-
 		&:hover {
-			background: linear-gradient(lighten($valis-blue-light, 5%), lighten($valis-blue-light, 0%));
-			border-left: 8px solid $valis-blue-dark;
+			background: $valis-blue-medium;
 		}
+
+		border-bottom: 1px solid $valis-theme-medium-blue;
 	}
 	.collapsible-content {
 		border-top: 1px solid #D5D6D9;
@@ -27,7 +26,6 @@
 			font-size: $valis-font-size-info-section-header;
 			padding: 16px;
 			border-bottom: 1px solid #D5D6D9;
-			border-left: 8px solid lighten(#D5D6D9, 10%);
 			&:hover {
 				background-color: lighten(#D5D6D9, 10%);
 			}
@@ -40,6 +38,7 @@
   }
 
 	.section {
+		font-family: $valis-body-font;
     	padding-top: 4px;
     	padding-bottom: 4px;
 
