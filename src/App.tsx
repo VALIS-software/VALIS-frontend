@@ -1,8 +1,8 @@
 import { Strand } from 'valis';
-import { Dialog, FlatButton, IconButton, Snackbar } from "material-ui";
+import { Dialog, FlatButton, IconButton } from "material-ui";
 import CircularProgress from "material-ui/CircularProgress";
 import { MuiThemeProvider } from "material-ui/styles";
-import { ContentReport, SocialShare } from "material-ui/svg-icons";
+import { ContentReport } from "material-ui/svg-icons";
 import * as React from "react";
 import { SiriusApi, EntityType } from 'valis';
 import Animator from "./animation/Animator";
