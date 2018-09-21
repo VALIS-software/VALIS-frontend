@@ -1,6 +1,7 @@
-import GenomeBrowser, { GenomeBrowserConfiguration } from "genome-browser/GenomeBrowser";
-import { SharedTileStore } from "genome-browser/model/data-store/SharedTileStores";
-import { TrackModel } from "genome-browser/model/TrackModel";
+import { GenomeBrowser, GenomeBrowserConfiguration } from "genome-browser";
+import { SharedTileStore } from "genome-browser";
+import { TrackModel } from "genome-browser";
+
 import { Dialog, FlatButton, IconButton } from "material-ui";
 import CircularProgress from "material-ui/CircularProgress";
 import { MuiThemeProvider } from "material-ui/styles";
@@ -21,8 +22,6 @@ import BasicTheme from "./ui/themes/BasicTheme";
 import View from "./ui/View";
 import LZString = require("lz-string");
 const deepEqual = require('fast-deep-equal');
-
-
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern

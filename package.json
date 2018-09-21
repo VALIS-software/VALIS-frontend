@@ -59,6 +59,7 @@
     "axios": "0.18.x",
     "engine": "git+https://github.com/VALIS-software/Engine.git",
     "fast-deep-equal": "^2.0.1",
+    "genome-browser": "git+https://github.com/VALIS-software/Genome-Browser.git",
     "gputext": "git+https://github.com/VALIS-software/GPUText.git",
     "immutable": "3.8.x",
     "lz-string": "1.4.x",
