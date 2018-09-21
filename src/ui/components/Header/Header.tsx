@@ -25,7 +25,8 @@ type Props = {
   appModel: AppModel,
   userProfile: any // @! todo type
   // callbacks
-  onShowShare: () => void, 
+  onShowShare: () => void,
+  style: React.CSSProperties,
 }
 
 type State = {}
@@ -74,7 +75,7 @@ class Header extends React.Component<Props, State> {
   render() {
     const userFileButton = <FlatButton onClick={this.openUserFiles} label="Files" icon={(<CloudUpload/>)} />;
     const shareButton = <FlatButton onClick={this.props.onShowShare} label="Share" icon={(<SocialShare/>)} />;
-    return (<div className="header">
+    return (<div className="header" style={this.props.style}>
       <Toolbar>
         <ToolbarTitle text="VALIS"/>
         <ToolbarGroup>
