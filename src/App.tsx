@@ -37,7 +37,7 @@ type Props = {
 type State = {
 	views: Array<View>,
 
-	headerHeight: number;
+	headerHeight: number; // set to 0 to hide header
 	viewerWidth: number;
 	viewerHeight: number;
 
@@ -73,13 +73,15 @@ type PersistentAppState = {
 		h?: string,
 		/** Sidebar view props */
 		p?: any,
-	}
+	},
+	/** Header visible (default visible)  */
+	hv?: number // 0 hidden, 1 visible
 }
 
 export class App extends React.Component<Props, State> implements Persistable<PersistentAppState> {
 
-	readonly headerHeight: number = 56;
-	readonly headerMargin: number = 20;
+	readonly HEADER_HEIGHT: number = 56;
+	readonly HEADER_MARGIN: number = 20;
 
 	protected appModel: AppModel;
 	protected viewModel: ViewModel;
@@ -129,12 +131,12 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		]) {
 			this.trackViewer.addPanel(panel, false);
 		}
-
+		
 		this.state = {
 			views: [],
-			headerHeight: this.headerHeight,
+			headerHeight: this.HEADER_HEIGHT,
 			viewerWidth: window.innerWidth,
-			viewerHeight: this.canvasHeight(),
+			viewerHeight: this.canvasHeight(this.HEADER_HEIGHT),
 			trackViewer: this.trackViewer,
 			displayErrorDialog: false,
 			errors: [],
@@ -178,12 +180,14 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 		return {
 			t: this.trackViewer.getPersistentState(),
-			s: currentSidebarView
+			s: currentSidebarView,
+			hv: this.state.headerHeight > 0 ? 1 : 0
 		}
 	}
 
 	setPersistentState(state: PersistentAppState) {
 		this.trackViewer.setPersistentState(state.t);
+
 		let viewProps = state.s.p;
 		switch (state.s.t) {
 			case SidebarViewType.None: {
@@ -202,6 +206,9 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 				break;
 			}
 		}
+
+		let headerVisible = (state.hv != null) ? (!!state.hv) : true;
+		this.setHeaderVisibility(headerVisible);
 	}
 
 	componentDidMount() {
@@ -323,6 +330,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		}
 
 		const shareLink = window.location.href;
+		let headerVisible = this.state.headerHeight > 0;
 
 		return (
 			<MuiThemeProvider muiTheme={BasicTheme}>
@@ -333,7 +341,11 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						userProfile={this.state.userProfile}
 						onShowShare={() => this.setState({ displayShareDialog: true })}
 						ref={(v) => this.headerRef = v}
+						style={{
+							display: headerVisible ? '' : 'none'
+						}}
 					/>
+
 					<AppCanvas
 						ref={(v) => this.appCanvas = v}
 						width={this.state.viewerWidth}
@@ -342,7 +354,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						pixelRatio={App.canvasPixelRatio}
 						style={{
 							display: 'inline-block',
-							marginTop: this.headerMargin + 'px',
+							marginTop: this.HEADER_MARGIN + 'px',
 						}}
 					/>
 
@@ -351,7 +363,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						views={this.state.views}
 						visible={this.state.sidebarVisible}
 						style={{
-							top: this.headerHeight + 'px',
+							top: this.state.headerHeight + 'px',
 							bottom: '0px',
 							height: 'auto',
 						}}
@@ -416,8 +428,14 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		}
 	}
 
-	protected canvasHeight() {
-		return window.innerHeight - this.headerHeight - this.headerMargin;
+	protected setHeaderVisibility(visible: boolean) {
+		this.setState({
+			headerHeight: visible ? this.HEADER_HEIGHT : 0,
+		});
+	}
+
+	protected canvasHeight(headerHeight: number) {
+		return window.innerHeight - headerHeight - this.HEADER_MARGIN;
 	}
 
 	// event handling
@@ -425,7 +443,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	protected onResize = () => {
 		this.setState({
 			viewerWidth: window.innerWidth,
-			viewerHeight: this.canvasHeight(),
+			viewerHeight: this.canvasHeight(this.state.headerHeight),
 		});
 	}
 
