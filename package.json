@@ -31,7 +31,7 @@
     "@types/mixpanel": "2.14.x",
     "@types/node": "9.6.x",
     "@types/prop-types": "15.5.x",
-    "@types/react": "16.1.x",
+    "@types/react": "16.4.x",
     "@types/react-dom": "16.0.x",
     "css-loader": "0.28.x",
     "enzyme": "3.3.x",
@@ -66,7 +66,7 @@
     "material-ui": "0.20.x",
     "mixpanel-browser": "2.22.x",
     "prop-types": "15.6.x",
-    "react": "16.3.x",
+    "react": "16.4.x",
     "react-dom": "16.3.x",
     "react-virtualized": "9.20.x",
     "valis": "github:VALIS-Software/valis-typescript-client"
