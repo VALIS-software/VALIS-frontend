@@ -7,6 +7,7 @@
     "lib": "lib"
   },
   "scripts": {
+    "analyze": "webpack --mode=production --env.analyze",
     "dev": "webpack-dev-server --env.dev",
     "dev-remote": "webpack-dev-server --env.dev --env.API_URL=http://35.185.230.75",
     "production": "webpack --env.production",
@@ -49,7 +50,8 @@
     "webpack-cli": "2.0.x",
     "webpack-dev-server": "3.1.x",
     "webpack-google-cloud-storage-plugin": "0.8.x",
-    "zip-webpack-plugin": "3.0.x"
+    "zip-webpack-plugin": "3.0.x",
+    "webpack-bundle-analyzer": "^3.0.2"
   },
   "dependencies": {
     "@fortawesome/fontawesome": "1.1.x",
@@ -57,18 +59,18 @@
     "@fortawesome/fontawesome-free-solid": "5.0.x",
     "@fortawesome/react-fontawesome": "0.0.x",
     "axios": "0.18.x",
-    "engine": "git+https://github.com/VALIS-software/Engine.git",
+    "engine": "github:VALIS-software/Engine",
     "fast-deep-equal": "^2.0.1",
-    "genome-browser": "git+https://github.com/VALIS-software/Genome-Browser.git",
-    "gputext": "git+https://github.com/VALIS-software/GPUText.git",
+    "genome-browser": "github:VALIS-software/Genome-Browser",
+    "gputext": "github:VALIS-software/GPUText",
     "immutable": "3.8.x",
     "lz-string": "1.4.x",
     "material-ui": "0.20.x",
     "mixpanel-browser": "2.22.x",
     "prop-types": "15.6.x",
-    "react": "16.4.x",
-    "react-dom": "16.3.x",
     "react-virtualized": "9.20.x",
-    "valis": "github:VALIS-Software/valis-typescript-client"
+    "valis": "github:VALIS-Software/valis-typescript-client",
+    "react": "16.4.x",
+    "react-dom": "16.3.x"
   }
 }

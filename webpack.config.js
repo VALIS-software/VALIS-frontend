@@ -77,7 +77,9 @@ module.exports = (env) => {
 		plugins: [
 			// pass --env to javascript build via process.env
 			new webpack.DefinePlugin({ "process.env": JSON.stringify(env) }),
-		]
+		].concat(
+			env.analyze ? [new (require('webpack-bundle-analyzer').BundleAnalyzerPlugin)] : []
+		)
 	}
 
 	// if in deploy mode, add deployment plugins
