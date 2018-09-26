@@ -9,8 +9,8 @@ import IconButton from "material-ui/IconButton";
 import CircularProgress from "material-ui/CircularProgress";
 import { ContentReport } from "material-ui/svg-icons";
 import * as React from "react";
-import { EntityType, SiriusApi, AppStatePersistence } from 'valis';
-import { ValisBrowserConfig } from 'valis/lib/valis-browser/AppStatePersistence';
+import { EntityType, SiriusApi, AppStatePersistence } from "valis";
+import { ValisBrowserConfig } from "valis/lib/valis-browser/AppStatePersistence";
 // styles
 import "./App.scss";
 import AppModel, { AppEvent } from "./model/AppModel";
@@ -23,6 +23,7 @@ import SearchResultsView from "./ui/components/SearchResultsView/SearchResultsVi
 import ShareLinkDialog from "./ui/components/ShareLink/ShareLinkDialog";
 import View from "./ui/View";
 import LZString = require("lz-string");
+import DatasetSelector from "./ui/components/DatasetSelector/DatasetSelector";
 const deepEqual = require('fast-deep-equal');
 
 // telemetry
@@ -306,7 +307,18 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 							display: headerVisible ? '' : 'none'
 						}}
 					/>
-
+					<button 
+					onClick={() => this.displayDatasetBrowser()}
+						style={{
+							position: 'absolute',
+							padding: '8px 16px',
+							margin: `${this.HEADER_MARGIN}px 0 0 5px`,
+							top: 'auto',
+							height: 50,
+							width: 175,
+							zIndex: 1
+						}}
+					>Add Track</button> 
 					{this.genomeBrowser.render({
 						width: this.state.viewerWidth,
 						height: this.state.viewerHeight,
@@ -451,6 +463,10 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		const uid = `search-result-#${this._searchIncrementalId++}`;
 		const view = (<SearchResultsView key={uid} text={text} query={query} viewModel={this.viewModel} appModel={this.appModel}/>);
 		this.viewModel.pushView('Search Results', query, view);
+	}
+
+	protected displayDatasetBrowser() {
+		this.appModel.pushView((<DatasetSelector appModel={this.appModel} />), 'Add Track');
 	}
 
 	protected displayErrors = () => {
