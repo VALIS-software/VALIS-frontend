@@ -69,7 +69,7 @@
     "mixpanel-browser": "2.22.x",
     "prop-types": "15.6.x",
     "react-virtualized": "9.20.x",
-    "valis": "github:VALIS-Software/valis-typescript-client",
+    "valis": "github:VALIS-software/valis-typescript-client",
     "react": "16.4.x",
     "react-dom": "16.3.x"
   }
