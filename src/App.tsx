@@ -2,7 +2,10 @@ import { GenomeBrowser, GenomeBrowserConfiguration } from "genome-browser";
 import { SharedTileStore } from "genome-browser";
 import { TrackModel } from "genome-browser";
 
-import { Dialog, FlatButton, IconButton } from "material-ui";
+import Dialog from "material-ui/Dialog";
+import FlatButton from "material-ui/FlatButton";
+import IconButton from "material-ui/IconButton";
+
 import CircularProgress from "material-ui/CircularProgress";
 import { MuiThemeProvider } from "material-ui/styles";
 import { ContentReport } from "material-ui/svg-icons";
