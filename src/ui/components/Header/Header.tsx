@@ -26,7 +26,7 @@ type Props = {
   userProfile: any // @! todo type
   // callbacks
   onShowShare: () => void,
-  style: React.CSSProperties,
+  style?: React.CSSProperties,
 }
 
 type State = {}
