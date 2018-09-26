@@ -9,7 +9,8 @@ import IconButton from "material-ui/IconButton";
 import CircularProgress from "material-ui/CircularProgress";
 import { ContentReport } from "material-ui/svg-icons";
 import * as React from "react";
-import { EntityType, SiriusApi } from 'valis';
+import { EntityType, SiriusApi, AppStatePersistence } from 'valis';
+import { ValisBrowserConfig } from 'valis/lib/valis-browser/AppStatePersistence';
 // styles
 import "./App.scss";
 import AppModel, { AppEvent } from "./model/AppModel";
@@ -35,7 +36,7 @@ type Props = {
 type State = {
 	views: Array<View>,
 
-	headerHeight: number;
+	headerHeight: number; // set to 0 to hide header
 	viewerWidth: number;
 	viewerHeight: number;
 
@@ -57,20 +58,12 @@ enum SidebarViewType {
 	SearchResults = 2,
 }
 
-// Persistent app state field names are minified to reduce json size
-type PersistentAppState = {
-	genomeBrowser: GenomeBrowserConfiguration,
-	sidebar: {
-		viewType: SidebarViewType,
-		title?: string,
-		viewProps?: any,
-	}
-}
+type PersistentAppState = ValisBrowserConfig;
 
 export class App extends React.Component<Props, State> implements Persistable<PersistentAppState> {
 
-	readonly headerHeight: number = 56;
-	readonly headerMargin: number = 20;
+	readonly HEADER_HEIGHT: number = 56;
+	readonly HEADER_MARGIN: number = 20;
 
 	protected appModel: AppModel;
 	protected viewModel: ViewModel;
@@ -105,9 +98,9 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 		this.state = {
 			views: [],
-			headerHeight: this.headerHeight,
+			headerHeight: this.HEADER_HEIGHT,
 			viewerWidth: window.innerWidth,
-			viewerHeight: this.canvasHeight(),
+			viewerHeight: this.canvasHeight(this.HEADER_HEIGHT),
 			displayErrorDialog: false,
 			errors: [],
 			displayShareDialog: false,
@@ -150,7 +143,8 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 		return {
 			genomeBrowser: this.genomeBrowser.getConfiguration(),
-			sidebar: currentSidebarView
+			sidebar: currentSidebarView,
+			headerVisible: this.state.headerHeight > 0
 		}
 	}
 
@@ -174,6 +168,9 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 				break;
 			}
 		}
+
+		let headerVisible = (state.headerVisible != null) ? (!!state.headerVisible) : true;
+		this.setHeaderVisibility(headerVisible);
 	}
 
 	componentDidMount() {
@@ -238,9 +235,9 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	onMainAppReady() {
 		// on persistent state changed
 		// get app state from URL
-		if (AppStatePersistence.hasStateInUrl()) {
+		if (!!window.location.hash) {
 			try {
-				this.setPersistentState(AppStatePersistence.parseUrlStateObject(window.location));
+				this.setPersistentState(AppStatePersistence.parseUrlHash(window.location.hash));
 			} catch (e) {
 				console.warn(`State url is invalid: ${e}`);
 			}
@@ -295,6 +292,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		}
 
 		const shareLink = window.location.href;
+		let headerVisible = this.state.headerHeight > 0;
 
 		return (
 				<div>
@@ -304,6 +302,9 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						userProfile={this.state.userProfile}
 						onShowShare={() => this.setState({ displayShareDialog: true })}
 						ref={(v) => this.headerRef = v}
+						style={{
+							display: headerVisible ? '' : 'none'
+						}}
 					/>
 
 					{this.genomeBrowser.render({
@@ -312,7 +313,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						pixelRatio: App.canvasPixelRatio,
 						style: {
 							display: 'inline-block',
-							marginTop: this.headerMargin + 'px',
+							marginTop: this.HEADER_MARGIN + 'px',
 						}
 					})}
 
@@ -321,7 +322,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						views={this.state.views}
 						visible={this.state.sidebarVisible}
 						style={{
-							top: this.headerHeight + 'px',
+							top: this.state.headerHeight + 'px',
 							bottom: '0px',
 							height: 'auto',
 						}}
@@ -375,14 +376,20 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		} else if (this._urlStateNeedsUpdate) {
 			let timeWithoutStateChange_ms = (t_ms - this._lastStateChangeT_ms);
 			if (timeWithoutStateChange_ms > 100) {
-				AppStatePersistence.writePersistentUrlState(this._currentPersistentState);
+				history.replaceState(this._currentPersistentState, document.title, AppStatePersistence.getUrlHash(this._currentPersistentState));
 				this._urlStateNeedsUpdate = false;
 			}
 		}
 	}
 
-	protected canvasHeight() {
-		return window.innerHeight - this.headerHeight - this.headerMargin;
+	protected setHeaderVisibility(visible: boolean) {
+		this.setState({
+			headerHeight: visible ? this.HEADER_HEIGHT : 0,
+		});
+	}
+
+	protected canvasHeight(headerHeight: number) {
+		return window.innerHeight - headerHeight - this.HEADER_MARGIN;
 	}
 
 	// event handling
@@ -390,7 +397,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	protected onResize = () => {
 		this.setState({
 			viewerWidth: window.innerWidth,
-			viewerHeight: this.canvasHeight(),
+			viewerHeight: this.canvasHeight(this.state.headerHeight),
 		});
 	}
 
@@ -560,165 +567,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 	static displaySearchResults(query: any, text: string = 'Search') {
 		this.appInstance.displaySearchResults(query, text);
-	}
-
-}
-
-// A minified version of PersistentAppState
-type MinifiedAppState = [
-	/** genomeBrowser */
-	[
-		/** panels */
-		Array<[
-			/** contig */
-			string,
-			/** x0 */
-			number,
-			/** x1 */
-			number,
-			/** width */
-			number | undefined
-		]>,
-		/** tracks */
-		Array<[
-			/** model */
-			TrackModel,
-			/** heightPx */
-			number | undefined
-		]>
-	],
-	/** sidebar */
-	[
-		/** viewType */
-		SidebarViewType,
-		/** title */
-		string | undefined,
-		/** viewProps */
-		any | undefined
-	] 
-];
-
-class AppStatePersistence {
-
-	static hasStateInUrl() {
-		return !!window.location.hash;
-	}
-
-	static writePersistentUrlState(stateObject: PersistentAppState) {
-		let stateUrl = '#' + this.serializePersistentState(stateObject);
-		history.replaceState(stateObject, document.title, stateUrl);
-	}
-
-	/**
-	 * @throws string on invalid state url
-	 */
-	static parseUrlStateObject(url: { hash: string }): any {
-		let stateString = url.hash.substring(1);
-		return this.deserializePersistentState(stateString);
-	}
-
-	static serializePersistentState(state: PersistentAppState): string {
-		let minifiedState: MinifiedAppState = [
-			this.minifyGenomeBrowserState(state.genomeBrowser),
-			this.minifySidebarState(state.sidebar)
-		];
-
-		let jsonString = JSON.stringify(minifiedState);
-		let compressedString = LZString.compressToBase64(jsonString);
-
-		return compressedString;
-	}
-
-	/**
-	 * @throws string on invalid serialized data
-	 */
-	static deserializePersistentState(serialized: string): PersistentAppState {
-		let jsonString = LZString.decompressFromBase64(serialized);
-		if (jsonString == null) {
-			throw `Invalid state string - could not decompress`;
-		}
-
-		let minifiedState: MinifiedAppState = JSON.parse(jsonString);
-
-		let expandedState: PersistentAppState = {
-			genomeBrowser: this.expandGenomeBrowserState(minifiedState[0]),
-			sidebar: this.expandSidebarState(minifiedState[1])
-		};
-
-		return expandedState;
-	}
-
-	private static minifyGenomeBrowserState(state: PersistentAppState['genomeBrowser']): MinifiedAppState[0] {
-		let minifiedPanels: MinifiedAppState[0][0] = new Array();
-		for (let panel of state.panels) {
-			minifiedPanels.push([
-				panel.location.contig,
-				panel.location.x0,
-				panel.location.x1,
-				panel.width
-			]);
-		}
-
-		let minifiedTracks: MinifiedAppState[0][1] = new Array();
-		for (let track of state.tracks) {
-			minifiedTracks.push([
-				track.model,
-				track.heightPx
-			]);
-		}
-
-		return [
-			minifiedPanels,
-			minifiedTracks,
-		];
-	}
-
-	private static expandGenomeBrowserState(min: MinifiedAppState[0]): PersistentAppState['genomeBrowser'] {
-		let minPanels = min[0];
-		let minTracks = min[1];
-
-		let panels: PersistentAppState['genomeBrowser']['panels'] = new Array();
-
-		for (let minPanel of minPanels) {
-			panels.push({
-				location: {
-					contig: minPanel[0],
-					x0: minPanel[1],
-					x1: minPanel[2],
-				},
-				width: minPanel[3],
-			});
-		}
-
-		let tracks: PersistentAppState['genomeBrowser']['tracks'] = new Array();
-
-		for (let minTrack of minTracks) {
-			tracks.push({
-				model: minTrack[0],
-				heightPx: minTrack[1],
-			});
-		}
-
-		return {
-			panels: panels,
-			tracks: tracks,
-		};
-	}
-
-	private static minifySidebarState(state: PersistentAppState['sidebar']): MinifiedAppState[1] {
-		return [
-			state.viewType,
-			state.title,
-			state.viewProps,
-		];
-	}
-
-	private static expandSidebarState(min: MinifiedAppState[1]): PersistentAppState['sidebar'] {
-		return {
-			viewType: min[0],
-			title: min[1],
-			viewProps: min[2]
-		};
 	}
 
 }
