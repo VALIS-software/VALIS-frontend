@@ -7,7 +7,6 @@ import FlatButton from "material-ui/FlatButton";
 import IconButton from "material-ui/IconButton";
 
 import CircularProgress from "material-ui/CircularProgress";
-import { MuiThemeProvider } from "material-ui/styles";
 import { ContentReport } from "material-ui/svg-icons";
 import * as React from "react";
 import { EntityType, SiriusApi } from 'valis';
@@ -21,7 +20,6 @@ import Header from "./ui/components/Header/Header";
 import NavigationController from "./ui/components/NavigationController/NavigationController";
 import SearchResultsView from "./ui/components/SearchResultsView/SearchResultsView";
 import ShareLinkDialog from "./ui/components/ShareLink/ShareLinkDialog";
-import BasicTheme from "./ui/themes/BasicTheme";
 import View from "./ui/View";
 import LZString = require("lz-string");
 const deepEqual = require('fast-deep-equal');
@@ -299,7 +297,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		const shareLink = window.location.href;
 
 		return (
-			<MuiThemeProvider muiTheme={BasicTheme}>
 				<div>
 					<Header
 						viewModel={this.viewModel}
@@ -341,7 +338,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						{errorButton}
 					</div>
 				</div>
-			</MuiThemeProvider>
 		);
 	}
 
