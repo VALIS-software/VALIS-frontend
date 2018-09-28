@@ -10,7 +10,7 @@ import CircularProgress from "material-ui/CircularProgress";
 import { ContentReport } from "material-ui/svg-icons";
 import * as React from "react";
 import { EntityType, SiriusApi, AppStatePersistence } from "valis";
-import { ValisBrowserConfig } from "valis/lib/valis-browser/AppStatePersistence";
+import { ValisBrowserConfig } from "valis/lib/valis-browser/ValisBrowserConfig";
 // styles
 import "./App.scss";
 import AppModel, { AppEvent } from "./model/AppModel";
@@ -92,7 +92,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		this.viewModel = new ViewModel();
 		this.appModel.setViewModel(this.viewModel);
 
-		this.genomeBrowser = new GenomeBrowser({
+		this.genomeBrowser = new GenomeBrowser('', {
 			panels: [ { location: { contig: 'chr1', x0: 0, x1: 249e6 } } ],
 			tracks: [ { model: { name: 'GRCh38', type: 'sequence' }, heightPx: 100 } ],
 		});

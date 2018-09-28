@@ -71,6 +71,7 @@
     "react": "16.4.x",
     "react-dom": "16.3.x",
     "react-virtualized": "9.20.x",
-    "valis": "github:VALIS-software/valis-typescript-client"
+    "valis": "github:VALIS-software/valis-typescript-client",
+    "genomics-formats": "github:VALIS-software/Genomics-Formats"
   }
 }
