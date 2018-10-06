@@ -66,6 +66,6 @@
     "react": "16.3.x",
     "react-dom": "16.3.x",
     "react-virtualized": "9.20.x",
-    "valis": "github:VALIS-software/valis-typescript-client"
+    "valis": "github:VALIS-software/valis-typescript-client#ea442d6245ce11a075e607563adbeaa2fcd7ad7f"
   }
 }
