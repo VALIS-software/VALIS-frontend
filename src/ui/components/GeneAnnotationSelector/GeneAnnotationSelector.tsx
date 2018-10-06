@@ -1,7 +1,7 @@
 import * as React from "react";
 import { SelectField, MenuItem, RaisedButton } from "material-ui";
 import App from "../../../App";
-import { Strand } from 'valis';
+import Strand from "genomics-formats/dist/gff3/Strand";
 
 type Props = {};
 type State = {

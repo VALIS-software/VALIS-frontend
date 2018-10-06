@@ -1,16 +1,17 @@
-import { AnnotationTileset, SiriusApi } from 'valis';
+import { SiriusApi } from 'valis';
 import { Tile, TileStore } from "./TileStore";
+import { GeneInfo, TranscriptInfo, TranscriptComponentInfo, GenomeFeatureType, TranscriptComponentClass } from '../AnnotationTypes';
 
 // Tile payload is a list of genes extended with nesting
-export type Gene = AnnotationTileset.GeneInfo & {
+export type Gene = GeneInfo & {
     transcripts: Array<Transcript>;
 };
 
-export type Transcript = AnnotationTileset.TranscriptInfo & {
-    exon: Array<AnnotationTileset.TranscriptComponentInfo>,
-    cds: Array<AnnotationTileset.TranscriptComponentInfo>,
-    utr: Array<AnnotationTileset.TranscriptComponentInfo>,
-    other: Array<AnnotationTileset.TranscriptComponentInfo>
+export type Transcript = TranscriptInfo & {
+    exon: Array<TranscriptComponentInfo>,
+    cds: Array<TranscriptComponentInfo>,
+    utr: Array<TranscriptComponentInfo>,
+    other: Array<TranscriptComponentInfo>
 }
 
 export type TilePayload = Array<Gene>;
@@ -43,12 +44,12 @@ export class AnnotationTileStore extends TileStore<TilePayload, void> {
                 // validate feature type conforms to expected nesting order
                 let deltaType = feature.type - lastType;
                 if (deltaType > 1) {
-                    console.warn(`Invalid gene feature nesting: ${AnnotationTileset.GenomeFeatureType[lastType]} -> ${AnnotationTileset.GenomeFeatureType[feature.type] }`);
+                    console.warn(`Invalid gene feature nesting: ${GenomeFeatureType[lastType]} -> ${GenomeFeatureType[feature.type] }`);
                 }
                 lastType = feature.type;
 
-                if (feature.type === AnnotationTileset.GenomeFeatureType.Gene) {
-                    let geneInfo = feature as AnnotationTileset.GeneInfo;
+                if (feature.type === GenomeFeatureType.Gene) {
+                    let geneInfo = feature as GeneInfo;
                     activeGene = {
                         ...geneInfo,
                         transcripts: [],
@@ -56,8 +57,8 @@ export class AnnotationTileStore extends TileStore<TilePayload, void> {
                     payload.push(activeGene);
                 }
 
-                if (feature.type === AnnotationTileset.GenomeFeatureType.Transcript) {
-                    let transcriptInfo = feature as AnnotationTileset.TranscriptInfo;
+                if (feature.type === GenomeFeatureType.Transcript) {
+                    let transcriptInfo = feature as TranscriptInfo;
                     if (activeGene == null) {
                         console.warn(`Out of order Transcript – no parent gene found`);
                         continue;
@@ -72,8 +73,8 @@ export class AnnotationTileStore extends TileStore<TilePayload, void> {
                     activeGene.transcripts.push(activeTranscript);
                 }
 
-                if (feature.type === AnnotationTileset.GenomeFeatureType.TranscriptComponent) {
-                    let componentInfo = feature as AnnotationTileset.TranscriptComponentInfo;
+                if (feature.type === GenomeFeatureType.TranscriptComponent) {
+                    let componentInfo = feature as TranscriptComponentInfo;
                     if (activeTranscript == null) {
                         console.warn(`Out of order TranscriptComponent – no parent transcript found`);
                         continue;
@@ -81,11 +82,11 @@ export class AnnotationTileStore extends TileStore<TilePayload, void> {
 
                     // bucket components by class
                     switch (componentInfo.class) {
-                        case AnnotationTileset.TranscriptComponentClass.Exon: {
+                        case TranscriptComponentClass.Exon: {
                             activeTranscript.exon.push(componentInfo);
                             break;
                         }
-                        case AnnotationTileset.TranscriptComponentClass.ProteinCodingSequence: {
+                        case TranscriptComponentClass.ProteinCodingSequence: {
                             // validate CDS ordering (must be startIndex ascending)
                             let lastCDS = activeTranscript.cds[activeTranscript.cds.length - 1];
                             if (lastCDS != null && (lastCDS.startIndex >= componentInfo.startIndex)) {
@@ -95,7 +96,7 @@ export class AnnotationTileStore extends TileStore<TilePayload, void> {
                             activeTranscript.cds.push(componentInfo);
                             break;
                         }
-                        case AnnotationTileset.TranscriptComponentClass.Untranslated: {
+                        case TranscriptComponentClass.Untranslated: {
                             activeTranscript.utr.push(componentInfo);
                             break;
                         }
