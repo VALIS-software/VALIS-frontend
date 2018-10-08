@@ -481,7 +481,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		panel0.setRange(startIndex, endIndex);
 	}
 
-	protected displayEntityDetails(entity: { id: string, type: EntityType, userFileID: string }) {
+	protected displayEntityDetails(entity: { id: string, type: EntityType, userFileID?: string }) {
 		this.viewModel.pushView(
 			'',
 			entity.id,
@@ -606,7 +606,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		this.appInstance.addIntervalTrack(title, query, blendEnabled);
 	}
 
-	static displayEntityDetails(entity: { id: string, type: EntityType, userFileID: string }) {
+	static displayEntityDetails(entity: { id: string, type: EntityType, userFileID?: string }) {
 		this.appInstance.displayEntityDetails(entity);
 	}
 
