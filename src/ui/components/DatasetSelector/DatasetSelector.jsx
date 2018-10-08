@@ -4,7 +4,7 @@ import * as PropTypes from "prop-types";
 import UpgradeDialog from "../Shared/UpgradeDialog/UpgradeDialog";
 import GWASSelector from "../GWASSelector/GWASSelector";
 import GenomeSelector from "../GenomeSelector/GenomeSelector";
-import TrackSelector from "../TrackSelector/TrackSelector";
+import UserFilesPanel from "../UserFilesPanel/UserFilesPanel";
 import ENCODESelector from "../ENCODESelector/ENCODESelector";
 import GTEXSelector from "../GTEXSelector/GTEXSelector";
 import ExACSelector from "../ExACSelector/ExACSelector";
@@ -23,12 +23,18 @@ const TRACK_TYPE_ENCODE = 'track_type_encode';
 const TRACK_TYPE_BOOLEAN = 'track_type_boolean';
 const TRACK_TYPE_SEQUENCE = 'track_type_sequence';
 const TRACK_TYPE_GENES = 'track_type_gene';
+const TRACK_TYPE_USER_FILE = 'track_type_user_file';
 
 // Styles
 import "./DatasetSelector.scss";
 import GeneAnnotationSelector from "../GeneAnnotationSelector/GeneAnnotationSelector";
 
 const fixedTrackData = [
+  {
+    "track_type": TRACK_TYPE_USER_FILE,
+    "title": "Uploaded files",
+    "description": "Browse, manage, or upload custom files in VCF, 23andMe or BED format."
+  },
   {
     "track_type": TRACK_TYPE_GWAS,
     "title": "Genome Wide Associations",
@@ -63,11 +69,6 @@ const fixedTrackData = [
     "track_type": TRACK_TYPE_GENES,
     "title": "Gene Annotations",
     "description": "Filterable gene annotation track. (ENSEMBL)"
-  },
-  {
-    "track_type": "premium",
-    "title": "Custom Track",
-    "description": "Import and analyze your own VCF, BAM, GFF, BED or bigwig files."
   }
 ];
 
@@ -137,6 +138,12 @@ class DatasetSelector extends React.Component {
         "Gene Annotations",
         null,
         <GeneAnnotationSelector />
+      );
+    } else if (trackType === TRACK_TYPE_USER_FILE) {
+      this.viewModel.pushView(
+        "My Files",
+        null,
+        <UserFilesPanel />
       );
     } else if (trackType === 'premium') {
       this.setState({
