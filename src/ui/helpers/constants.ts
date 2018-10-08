@@ -36,6 +36,7 @@ const DATA_SOURCES = [
 ];
 
 const FILE_TYPE_23andMe = '23andme';
+const FILE_TYPE_VCF = 'vcf';
 
 export {
   CHROMOSOME_NAMES,
@@ -53,4 +54,5 @@ export {
   DATA_SOURCE_GTEX,
   DATA_SOURCES,
   FILE_TYPE_23andMe,
+  FILE_TYPE_VCF,
 };

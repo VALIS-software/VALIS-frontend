@@ -86,20 +86,17 @@ class SNPDetails extends React.Component {
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
     this.api = this.appModel.api;
-    this.state = {};
+    this.state = {
+      details: null,
+      relations: null,
+    };
   }
 
-  static getDerivedStateFromProps(nextProps, prevState) {
-    if (!prevState) prevState = {};
-    prevState.currentSnpId = nextProps.snpId;
-    return prevState;
-  }
-
-  loadSnpDetails() {
-    const snpId = this.state.currentSnpId;
-    SiriusApi.getDetails(this.state.currentSnpId).then(detailsData => {
+  componentDidMount() {
+    const snpId = this.props.entity.id;
+    const userFileID = this.props.entity.userFileID;
+    SiriusApi.getDetails(snpId, userFileID).then(detailsData => {
       this.setState({
-        loadedSnpId: snpId,
         details: detailsData.details,
         relations: detailsData.relations,
       });
@@ -125,12 +122,11 @@ class SNPDetails extends React.Component {
     if (this.state.error) {
       return (<ErrorDetails error={this.state.error} />);
     }
-    if (this.state.currentSnpId !== this.state.loadedSnpId) {
-      this.loadSnpDetails();
-      return (<div />);
-    }
     const details = this.state.details;
-    const name = this.state.details.name;
+    if (!details) {
+      return <div />;
+    }
+    const name = details.name;
     let zoomBtn = (<div />);
 
     if (details.contig) {

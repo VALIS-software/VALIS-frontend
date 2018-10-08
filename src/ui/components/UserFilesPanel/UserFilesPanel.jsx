@@ -21,7 +21,7 @@ import Delete from "material-ui/svg-icons/action/delete";
 import App from "../../../App";
 import { SiriusApi } from 'valis';
 import { QueryBuilder } from 'valis'
-import { FILE_TYPE_23andMe } from "../../helpers/constants";
+import { FILE_TYPE_23andMe, FILE_TYPE_VCF } from "../../helpers/constants";
 // Styles
 import './UserFilesPanel.scss';
 
@@ -39,7 +39,7 @@ class UserFilesPanel extends React.Component {
 
 
 
-  upload23andMeFile = (event) => {
+  uploadFile = (fileType) => (event) => {
     const file = event.target.files[0];
     if (file) {
       // check if filename already exists
@@ -59,7 +59,7 @@ class UserFilesPanel extends React.Component {
         uploadingFileProgress: uploadingFileProgress.concat(0),
       });
       // function to update progress bar
-      SiriusApi.uploadFile(FILE_TYPE_23andMe, file, (e) => {this.updateUploadProgress(file.name, e)}).then(() => {
+      SiriusApi.uploadFile(fileType, file, (e) => {this.updateUploadProgress(file.name, e)}).then(() => {
         this.updateExistingFiles();
         this.removeUploadingFile(file.name);
       });
@@ -113,7 +113,16 @@ class UserFilesPanel extends React.Component {
       icon={<CloudUpload/>}
       primary
       >
-        <input className="invisible" type="file" onChange={this.upload23andMeFile} />
+        <input className="invisible" type="file" onChange={this.uploadFile(FILE_TYPE_23andMe)} />
+    </RaisedButton>);
+
+    const uploadButtonVCF = (<RaisedButton
+      containerElement='label'
+      label="VCF"
+      icon={<CloudUpload/>}
+      primary
+      >
+        <input className="invisible" type="file" onChange={this.uploadFile(FILE_TYPE_VCF)} />
     </RaisedButton>);
 
     const cellStyle = { padding: 5, textAlign: 'center' };
@@ -169,10 +178,13 @@ class UserFilesPanel extends React.Component {
 
     return (<div className="user-file-panel">
       {filesTable}
-      <div className='buttons'>
+      <span className='buttons'>
         {uploadButton23andme}
-        {error}
-      </div>
+      </span>
+      <span className='buttons'>
+        {uploadButtonVCF}
+      </span>
+      {error}
     </div>);
   }
 }

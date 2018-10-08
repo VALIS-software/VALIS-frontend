@@ -10,7 +10,7 @@ import TraitDetails from "../TraitDetails/TraitDetails";
 import React = require("react");
 
 export function EntityDetails(props: {
-    entity: { id: string, type: EntityType },
+    entity: { id: string, type: EntityType, userFileID: string },
     appModel: AppModel,
     viewModel: ViewModel
 }) {
@@ -18,7 +18,7 @@ export function EntityDetails(props: {
     const entityType: string = props.entity.type;
     let elem = null;
     if (entityType === EntityType.SNP || entityType === EntityType.VARIANT) {
-        elem = (<SNPDetails viewModel={props.viewModel} appModel={props.appModel} snpId={dataID} />);
+        elem = (<SNPDetails viewModel={props.viewModel} appModel={props.appModel} entity={props.entity} />);
     } else if ( entityType === EntityType.GENE || entityType === EntityType.PSUDOGENE || entityType === EntityType.NCRNAGENE ) {
         elem = (<GeneDetails viewModel={props.viewModel} appModel={props.appModel} geneId={dataID} />);
     } else if (entityType === EntityType.TRAIT) {

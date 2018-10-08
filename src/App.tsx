@@ -131,7 +131,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		]) {
 			this.trackViewer.addPanel(panel, false);
 		}
-		
+
 		this.state = {
 			views: [],
 			headerHeight: this.HEADER_HEIGHT,
@@ -411,7 +411,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		Animator.step();
 
 		this.appCanvas.renderCanvas();
-		
+
 		// manage writing persistent state to the url
 		// if the persistent state hasn't changed for some time then update the url
 		let latestState = this.getPersistentState();
@@ -481,7 +481,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		panel0.setRange(startIndex, endIndex);
 	}
 
-	protected displayEntityDetails(entity: { id: string, type: EntityType }) {
+	protected displayEntityDetails(entity: { id: string, type: EntityType, userFileID: string }) {
 		this.viewModel.pushView(
 			'',
 			entity.id,
@@ -575,9 +575,9 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		if (jsonString == null) {
 			throw `Invalid state string`;
 		}
-		return JSON.parse(LZString.decompressFromBase64(stateString));	
+		return JSON.parse(LZString.decompressFromBase64(stateString));
 	}
- 
+
 	// global app methods, assumes a single instance of App
 	static readonly canvasPixelRatio = window.devicePixelRatio || 1;
 
@@ -606,7 +606,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		this.appInstance.addIntervalTrack(title, query, blendEnabled);
 	}
 
-	static displayEntityDetails(entity: { id: string, type: EntityType }) {
+	static displayEntityDetails(entity: { id: string, type: EntityType, userFileID: string }) {
 		this.appInstance.displayEntityDetails(entity);
 	}
 
