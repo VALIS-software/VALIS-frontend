@@ -85,7 +85,6 @@ class SNPDetails extends React.Component {
     super(props);
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
-    this.api = this.appModel.api;
     this.state = {
       details: null,
       relations: null,
@@ -244,7 +243,7 @@ class SNPDetails extends React.Component {
         {links}
       </Collapsible>
       <Collapsible title="View Raw Data" open={false}>
-        <GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={this.props.snpId}/>
+        <GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} entity={this.props.entity} />
       </Collapsible>
     </div>);
   }
