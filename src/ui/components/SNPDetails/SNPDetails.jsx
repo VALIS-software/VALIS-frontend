@@ -111,6 +111,9 @@ class SNPDetails extends React.Component {
       });
     }, (err) => {
       this.appModel.error(this, err);
+      this.setState({
+        error: err,
+      })
     });
   }
 
