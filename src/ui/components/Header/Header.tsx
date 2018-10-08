@@ -20,6 +20,7 @@ import AppModel from '../../models/AppModel';
 import ViewModel from '../../models/ViewModel';
 // Styles
 import './Header.scss';
+const logoPath = require('./valis-logo.png');
 
 type Props = {
   viewModel: ViewModel,
@@ -80,7 +81,7 @@ class Header extends React.Component<Props, State> {
     return (<div>
         <div className="header" style={{height: '56px', width: '100%'}}>
             <div className="header-item">
-              <img style={{cursor: 'pointer', height: 45, marginTop: 6}} src='./static/valis-logo.png'/> 
+            <img style={{ cursor: 'pointer', height: 45, marginTop: 6 }} src={logoPath}/> 
             </div>
             <div className="header-search-box" style={{marginTop: -16}}>
               <TokenBox appModel={this.props.appModel} viewModel={this.props.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>
