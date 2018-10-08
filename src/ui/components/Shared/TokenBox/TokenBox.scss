@@ -1,3 +1,5 @@
+@import "../../../../variables.scss";
+
 .token-box {
 	display: flex;
 	list-style: none;
@@ -5,5 +7,13 @@
 		cursor: pointer;
 		margin: 2px 2px 2px 0px;
 		padding-top: 8px;
+	}
+
+	& > div > div > div > div {
+		color: darken($valis-theme-light, 10%) !important;
+	}
+
+	#search-box {
+		color: $valis-theme-lightest !important,
 	}
 }

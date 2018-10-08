@@ -134,9 +134,9 @@ class UserFeedBackButton extends React.Component {
 
     let button = null;
     if (this.props.label) {
-      button = (<FlatButton icon={<HelpIcon/>} onClick={this.handleClick} label={this.props.label} labelPosition="after"></FlatButton>);
+      button = (<FlatButton icon={<HelpIcon color='white'/>} onClick={this.handleClick} label={this.props.label} labelPosition="after"></FlatButton>);
     }else {
-      button = (<IconButton onClick={this.handleClick} ><HelpIcon/></IconButton>);
+      button = (<IconButton onClick={this.handleClick} ><HelpIcon color='white'/></IconButton>);
     }
     return (
       <div>

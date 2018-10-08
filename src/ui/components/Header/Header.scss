@@ -1,12 +1,27 @@
+@import "../../../variables.scss";
+
 .header {
 	position: relative;
+	display: flex;
+	background-color: $valis-theme-darker-gray;
 
 	box-shadow: 0 2px 20px #0000004f;
 	z-index: 1;
 
-	.search-box {
-		width: 786px;
-		padding-left: 32px;
+	.header-item {
+		align-self: center;
+	}
+
+	.header-search-box {
+		padding-left: 0px;
+		padding-top: 12px;
+		flex-grow: 1;
+		margin-top: 3px;
+		align-self: center;
+	}
+
+	.header-right {
+		float: right;
 	}
 
 	.user-button {
@@ -17,5 +32,18 @@
 			cursor: null;
 			background-color: transparent;
 		}
+	}
+
+	.header-spacer {
+		flex-grow: 1;
+	}
+
+	.header-button {
+		align-self: center;
+		margin-top: 3px;
+	}
+
+	.header-button > button > div {
+		margin-top: -3px;
 	}
 }

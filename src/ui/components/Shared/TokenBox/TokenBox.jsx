@@ -490,18 +490,14 @@ class TokenBox extends React.Component {
       onNewRequest={this.handleSelectItem}
       menuProps={{onKeyDown: this.handleMenuKeyDown}}
     />);
-    const style = {
-      position: 'absolute',
-      right: '0px',
-    };
 
     const drawClear = this.state.searchString.length > 0 || this.state.tokens.length > 0;
     const searchEnabled = this.state.query !== null;
     const tooltip = searchEnabled ? 'Search' : 'Enter a valid search';
-    const clearButton = drawClear ? (<IconButton tooltip="Clear" onClick={this.clearSearch}><SvgClose /></IconButton>) : (<div />);
-    const searchButton = (<IconButton onClick={this.runCurrentSearch} disabled={!searchEnabled} tooltip={tooltip}><ActionSearch /></IconButton>);
+    const clearButton = drawClear ? (<IconButton tooltip="Clear" onClick={this.clearSearch}><SvgClose color='white'/></IconButton>) : (<div />);
+    const searchButton = (<IconButton onClick={this.runCurrentSearch}  tooltip={tooltip}><ActionSearch color='white'/></IconButton>);
     const progress = this.state.loading ? (<CircularProgress size={80} thickness={5} />) : null;
-    const status = (<div style={style}>
+    const status = (<div>
       {progress}
       {clearButton}
       {searchButton}
