@@ -345,7 +345,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 							display: headerVisible ? '' : 'none'
 						}}
 					/>
-
 					<AppCanvas
 						ref={(v) => this.appCanvas = v}
 						width={this.state.viewerWidth}
