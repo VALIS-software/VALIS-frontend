@@ -1,5 +1,4 @@
-import { Strand } from 'valis';
-import GenericIntervalTileStore from "./data-store/GenericIntervalTileStore";
+import Strand from "genomics-formats/dist/gff3/Strand";
 
 export interface TrackTypeMap {
     'empty': {};

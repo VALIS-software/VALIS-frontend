@@ -1,4 +1,4 @@
-import { Strand } from 'valis';
+import Strand from "genomics-formats/dist/gff3/Strand";
 import { Dialog, FlatButton, IconButton } from "material-ui";
 import CircularProgress from "material-ui/CircularProgress";
 import { MuiThemeProvider } from "material-ui/styles";

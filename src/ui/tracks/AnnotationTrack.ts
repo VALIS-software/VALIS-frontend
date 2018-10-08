@@ -1,5 +1,5 @@
-import { Strand } from 'valis';
-import { QueryBuilder, AnnotationTileset } from 'valis'
+import Strand from "genomics-formats/dist/gff3/Strand";
+import { QueryBuilder } from 'valis';
 import Animator from "../../animation/Animator";
 import App from "../../App";
 import UsageCache from "../../ds/UsageCache";
@@ -14,10 +14,10 @@ import { Rect } from "../core/Rect";
 import Text from "../core/Text";
 import InteractiveStyling from "../dev/InteractiveStyling";
 import { OpenSansRegular } from "../font/Fonts";
-import TrackRow from "../TrackRow";
 import Track from "./Track";
 import IntervalInstances, { IntervalInstance } from "./util/IntervalInstances";
 import { SiriusApi } from 'valis';
+import { GeneClass, TranscriptClass } from "../../model/AnnotationTypes";
 
 /**
  * WIP Annotation tracks:
@@ -125,7 +125,7 @@ export class AnnotationTrack extends Track<'annotation'> {
                 for (let gene of tile.payload) {
                     if (gene.strand !== this.model.strand) continue;
 
-                    let color = gene.class === AnnotationTileset.GeneClass.NonProteinCoding ? nonCodingColor : codingColor;
+                    let color = gene.class === GeneClass.NonProteinCoding ? nonCodingColor : codingColor;
                     let height = gene.transcriptCount * 20 + (gene.transcriptCount - 1) * 10 + 60;
 
                     instanceData.push({
@@ -337,9 +337,9 @@ class TranscriptAnnotation extends Object2D {
         super();
 
         let transcriptColor = {
-            [AnnotationTileset.TranscriptClass.Unspecified]: [0.5, 0.5, 0.5, 0.25],
-            [AnnotationTileset.TranscriptClass.ProteinCoding]: [1, 0, 1, 0.25],
-            [AnnotationTileset.TranscriptClass.NonProteinCoding]: [0, 1, 1, 0.25],
+            [TranscriptClass.Unspecified]: [0.5, 0.5, 0.5, 0.25],
+            [TranscriptClass.ProteinCoding]: [1, 0, 1, 0.25],
+            [TranscriptClass.NonProteinCoding]: [0, 1, 1, 0.25],
         }
 
         let backgroundColor = [107 /0xff, 109 /0xff, 136 /0xff, 0.17];
