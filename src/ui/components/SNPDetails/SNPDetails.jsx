@@ -204,7 +204,7 @@ class SNPDetails extends React.Component {
       return (<div key={link[0]} onClick={openLink} className="row">{link[0]}</div>);
     });
     const dataError = (<UserFeedBackButton label="Report Data Error"/>);
-    const nameShortened = name.length > 13 ? name.slice(0, 12) + "..." : name;
+    const nameShortened = name.length > 18 ? name.slice(0, 17) + "..." : name;
     const header = (<div className="sidebar-header">
       <span className="sidebar-name">{nameShortened}{zoomBtn}</span>
     </div>);
@@ -253,7 +253,7 @@ class SNPDetails extends React.Component {
 }
 
 SNPDetails.propTypes = {
-  snpId: PropTypes.string,
+  entity: PropTypes.object,
   appModel: PropTypes.object,
   viewModel: PropTypes.object,
 };

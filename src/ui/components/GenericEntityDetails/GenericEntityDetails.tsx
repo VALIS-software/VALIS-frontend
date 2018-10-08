@@ -60,7 +60,6 @@ class GenericEntityDetails extends React.Component<any, any> {
 			this.setState({
 				details: detailsData.details,
 				relations: detailsData.relations,
-				needsRefresh: true,
 			});
 		}, (err: object) => {
 			this.appModel.error(this, err);
