@@ -93,8 +93,18 @@ class SNPDetails extends React.Component {
   }
 
   componentDidMount() {
-    const snpId = this.props.entity.id;
-    const userFileID = this.props.entity.userFileID;
+    const entity = this.props.entity;
+    this.fetchData(entity.id, entity.userFileID);
+  }
+
+  componentDidUpdate(prevProps) {
+    const entity = this.props.entity;
+    if (entity.id !== prevProps.entity.id || entity.userFileID !== prevProps.entity.userFileID) {
+      this.fetchData(entity.id, entity.userFileID);
+    }
+  }
+
+  fetchData(snpId, userFileID) {
     SiriusApi.getDetails(snpId, userFileID).then(detailsData => {
       this.setState({
         details: detailsData.details,

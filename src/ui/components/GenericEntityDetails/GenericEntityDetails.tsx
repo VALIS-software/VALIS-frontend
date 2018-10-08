@@ -27,7 +27,7 @@ const prettyPrint = (str: string) => {
 class GenericEntityDetails extends React.Component<any, any> {
 
     static propTypes = {
-        dataID: PropTypes.string,
+        entity: PropTypes.object,
         appModel: PropTypes.object,
         viewModel: PropTypes.object
     };

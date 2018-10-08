@@ -26,7 +26,7 @@ export function EntityDetails(props: {
     } else if (entityType === EntityType.GWAS) {
         elem = (<GWASDetails viewModel={props.viewModel} appModel={props.appModel} assocId={dataID} />);
     } else {
-        elem = (<GenericEntityDetails viewModel={props.viewModel} appModel={props.appModel} dataID={dataID} />);
+        elem = (<GenericEntityDetails viewModel={props.viewModel} appModel={props.appModel} entity={props.entity} />);
     }
     return elem;
 }
