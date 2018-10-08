@@ -83,7 +83,7 @@ class BooleanTrackSelector extends React.Component {
       const queryA = this.state.availableAnnotationTracks[this.state.trackAValue];
       const queryB = this.state.availableAnnotationTracks[this.state.trackBValue];
       const op = this.state.availableOperators[this.state.operatorValue];
-      if (op === 'intersect' || op === 'window') {
+      if (op === 'intersect' || op === 'window' || op === 'difference') {
         return queryA.type;
       } else if (queryA.type === queryB.type === 'variant'){
         return 'variant';
@@ -106,6 +106,8 @@ class BooleanTrackSelector extends React.Component {
       builder.addArithmeticWindow(queryB, windowSize);
     } else if (op === 'union') {
       builder.addArithmeticUnion(queryB);
+    } else if (op === 'difference') {
+      builder.addArithmeticDiff(queryB);
     }
     const query = builder.build();
     return query;
@@ -113,7 +115,7 @@ class BooleanTrackSelector extends React.Component {
 
   addQueryTrack() {
     const query = this.buildQuery();
-    
+
     if (this.getOutputQueryType() === 'interval') {
       App.addIntervalTrack(this.state.title, query, false);
     } else {
@@ -122,7 +124,7 @@ class BooleanTrackSelector extends React.Component {
   }
 
   componentDidMount() {
-    const availableOperators = ['intersect', 'window', 'union'];
+    const availableOperators = ['intersect', 'window', 'union', 'difference'];
     const availableAnnotationTracks = [];
     for (const trackInfo of App.getQueryTracks()) {
       availableAnnotationTracks.push({

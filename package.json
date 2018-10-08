@@ -32,7 +32,7 @@
     "@types/node": "9.6.x",
     "@types/prop-types": "15.5.x",
     "@types/react": "16.1.x",
-    "@types/react-dom": "16.0.x",
+    "@types/react-dom": "^16.0.9",
     "css-loader": "0.28.x",
     "enzyme": "3.3.x",
     "enzyme-adapter-react-16": "1.1.x",
@@ -58,6 +58,7 @@
     "@fortawesome/react-fontawesome": "0.0.x",
     "axios": "0.18.x",
     "fast-deep-equal": "^2.0.1",
+    "genomics-formats": "VALIS-software/Genomics-Formats#598a71b993fe8f2e77762c71e5c8b2f09725c3fb",
     "immutable": "3.8.x",
     "lz-string": "1.4.x",
     "material-ui": "0.20.x",
@@ -66,7 +67,6 @@
     "react": "16.3.x",
     "react-dom": "16.3.x",
     "react-virtualized": "9.20.x",
-    "valis": "github:VALIS-software/valis-typescript-client#10cf0a944d5d858ee02387c7a1057ed5d49f8d2b",
-    "genomics-formats": "VALIS-software/Genomics-Formats#598a71b993fe8f2e77762c71e5c8b2f09725c3fb"
+    "valis": "github:VALIS-software/valis-typescript-client"
   }
 }
