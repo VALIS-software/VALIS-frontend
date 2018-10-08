@@ -1,6 +1,7 @@
 import { SiriusApi } from 'valis';
 import { Tile, TileStore } from "./TileStore";
 import { GeneInfo, TranscriptInfo, TranscriptComponentInfo, GenomeFeatureType, TranscriptComponentClass } from '../AnnotationTypes';
+import Strand from 'genomics-formats/dist/gff3/Strand';
 
 // Tile payload is a list of genes extended with nesting
 export type Gene = GeneInfo & {
@@ -50,6 +51,16 @@ export class AnnotationTileStore extends TileStore<TilePayload, void> {
 
                 if (feature.type === GenomeFeatureType.Gene) {
                     let geneInfo = feature as GeneInfo;
+                    // convert strand from old format to new
+                    if (typeof geneInfo.strand === 'number') {
+                        switch (geneInfo.strand) {
+                            case 0: geneInfo.strand = Strand.None; break;
+                            case 1: geneInfo.strand = Strand.Unknown; break;
+                            case 2: geneInfo.strand = Strand.Positive; break;
+                            case 3: geneInfo.strand = Strand.Negative; break;
+                            default: geneInfo.strand = Strand.Unknown; break;
+                        }
+                    }
                     activeGene = {
                         ...geneInfo,
                         transcripts: [],
