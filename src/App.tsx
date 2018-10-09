@@ -1,4 +1,4 @@
-import { GenomeBrowser, TrackModel, IntervalTrackModel, VariantTrackModel, GenomeBrowserConfiguration, AnnotationTileLoader, VariantTileLoader, VariantTrack } from "genome-browser";
+import { GenomeBrowser, TrackModel, IntervalTrackModel, VariantTrackModel, GenomeBrowserConfiguration, AnnotationTileLoader, VariantTileLoader, VariantTrack, IDataSource } from "genome-browser";
 
 import Dialog from "material-ui/Dialog";
 import FlatButton from "material-ui/FlatButton";
@@ -23,6 +23,7 @@ import View from "./ui/View";
 import DatasetSelector from "./ui/components/DatasetSelector/DatasetSelector";
 import { AnnotationTrackOverride } from "./tracks/AnnotationTrackOverride";
 import { VariantTrackOverride } from "./tracks/VariantTrackOverride";
+import { SiriusDataSource } from "./data-sources/SiriusDataSource";
 const deepEqual = require('fast-deep-equal');
 
 // register custom / override tracks
@@ -95,18 +96,19 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		this.viewModel = new ViewModel();
 		this.appModel.setViewModel(this.viewModel);
 
-		this.genomeBrowser = new GenomeBrowser('', {
+		let dataSource: IDataSource = new SiriusDataSource(SiriusApi);
+		this.genomeBrowser = new GenomeBrowser(dataSource, {
 			panels: [ { location: { contig: 'chr1', x0: 0, x1: 249e6 } } ],
 			tracks: [
+				{ model: {
+					type: 'sequence',
+					name: 'Sequence',
+				} },
 				{ model: {
 					type: 'annotation',
 					name: '→ Strand Genes',
 					strand: '+',
-				} },
-				{ model: {
-					type: 'variant',
-					name: 'Variants',
-				} },
+				} }
 			],
 		});
 
