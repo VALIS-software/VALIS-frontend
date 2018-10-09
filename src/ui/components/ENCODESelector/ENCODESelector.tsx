@@ -3,6 +3,7 @@ import Checkbox from "material-ui/Checkbox";
 import Divider from "material-ui/Divider";
 import MenuItem from "material-ui/MenuItem";
 import RaisedButton from "material-ui/RaisedButton";
+import Select from 'react-select';
 import SelectField from "material-ui/SelectField";
 import * as React from "react";
 import { SiriusApi, QueryBuilder  } from 'valis';
@@ -74,7 +75,7 @@ class ENCODESelector extends React.Component<Props, State> {
       // Keep the current selection of biosample
       let newBiosampleValue = null;
       if (this.state.biosampleValue !== null) {
-        const currentBiosample = this.state.availableBiosamples[this.state.biosampleValue];
+        const currentBiosample = this.state.biosampleValue;
         newBiosampleValue = data.indexOf(currentBiosample);
         if (newBiosampleValue < 0) {
           newBiosampleValue = null;
@@ -93,7 +94,6 @@ class ENCODESelector extends React.Component<Props, State> {
   }
 
   updateAvailableTypes = () => {
-    if (this.selectedType) return;
     const builder = new QueryBuilder();
     builder.newInfoQuery();
     builder.filterSource(DATA_SOURCE_ENCODE);
@@ -158,28 +158,29 @@ class ENCODESelector extends React.Component<Props, State> {
     });
   }
 
-  handelUpdateBiosample = (event: any, index: any, value: any) => {
+  handleUpdateBiosample = (value: any) => {
     this.setState({
-      biosampleValue: value
+      biosampleValue: value,
+      availableTypes: [],
+      availableTargets: [],
     });
     // Update the available types and targets
     if (value !== null) {
       this.selectedBiosample = this.state.availableBiosamples[value];
-      this.updateAvailableTypes();
-      this.updateAvailableTargets();
     }
+    this.updateAvailableTypes();
   }
 
   handleUpdateType = (event: any, index: number, value: any) => {
     this.setState({
-      genomeTypeValue: value
+      genomeTypeValue: value,
+      availableTargets: [],
     });
     // Update the available biosample and targets
     if (value !== null) {
       this.selectedType = this.state.availableTypes[value];
-      this.updateAvailableBiosamples();
-      this.updateAvailableTargets();
     }
+    this.updateAvailableTargets();
   }
 
   handleCheckBox = (index: number) => {
@@ -195,8 +196,6 @@ class ENCODESelector extends React.Component<Props, State> {
         this.selectedTargets.push(this.state.availableTargets[i]);
       }
     }
-    this.updateAvailableBiosamples();
-    this.updateAvailableTypes();
   }
 
   handleUpdateChromName = (event: any, index: number, value: any) => {
@@ -206,7 +205,7 @@ class ENCODESelector extends React.Component<Props, State> {
   }
 
   buildTitle() {
-    const biosample = this.state.availableBiosamples[this.state.biosampleValue];
+    const biosample = this.state.biosampleValue;
     const genomeType = this.state.availableTypes[this.state.genomeTypeValue];
     const targets = [];
     for (let i = 0; i < this.state.checked.length; i++) {
@@ -226,7 +225,7 @@ class ENCODESelector extends React.Component<Props, State> {
     }
     const genomeType = this.state.availableTypes[this.state.genomeTypeValue];
     builder.filterType(genomeType);
-    const biosample = this.state.availableBiosamples[this.state.biosampleValue];
+    const biosample = this.state.biosampleValue;
     builder.filterBiosample(biosample);
     const targets = [];
     for (let i = 0; i < this.state.checked.length; i++) {
@@ -237,6 +236,7 @@ class ENCODESelector extends React.Component<Props, State> {
     builder.filterTargets(targets);
     builder.setLimit(this.state.maxnumber);
     const genomeQuery = builder.build();
+    console.log(genomeQuery);
     return genomeQuery;
   }
 
@@ -251,8 +251,6 @@ class ENCODESelector extends React.Component<Props, State> {
     this.availableChromoNames = ['Any'].concat(CHROMOSOME_NAMES);
     // use api to pull all available biosamples
     this.updateAvailableBiosamples();
-    this.updateAvailableTypes();
-    this.updateAvailableTargets();
   }
 
   render() {
@@ -271,10 +269,10 @@ class ENCODESelector extends React.Component<Props, State> {
         <MenuItem value={i} key={i} primaryText={availableTypes[i]} />
       );
     }
-    const biosampleItems = [<MenuItem value={null} primaryText="" key={-1} />];
+    const biosampleItems = [];
     for (let i = 0; i < availableBiosamples.length; i++) {
       biosampleItems.push(
-        <MenuItem value={i} key={i} primaryText={availableBiosamples[i]} />
+        { label: availableBiosamples[i], value: availableBiosamples[i]}
       );
     }
     const targetCheckboxes = [];
@@ -288,27 +286,32 @@ class ENCODESelector extends React.Component<Props, State> {
         />
       );
     }
+    const currentValue = this.state.biosampleValue ? {
+      label: this.state.biosampleValue,
+      value: this.state.biosampleValue,
+    } : null;
+
     return (
       <div className="track-editor">
-        <SelectField
-          value={this.state.biosampleValue}
-          floatingLabelText="Biosample"
-          onChange={this.handelUpdateBiosample}
-          maxHeight={200}
-          errorText={this.state.biosampleValue === null ? "Pick one" : null}
-        >
-          {biosampleItems}
-        </SelectField>{" "}
+        <Select
+          value={currentValue}
+          onChange={(d: any) => this.handleUpdateBiosample(d.value)}
+          options={biosampleItems}
+          placeholder='Choose a cell type'
+        />{" "}
         <br />
-        <SelectField
-          value={this.state.genomeTypeValue}
-          floatingLabelText="Type"
-          onChange={this.handleUpdateType}
-          maxHeight={200}
-          errorText={this.state.genomeTypeValue === null ? "Pick one" : null}
-        >
-          {genomeTypeItems}
-        </SelectField>{" "}
+        {
+          this.state.availableTypes.length ? (<SelectField
+            value={this.state.genomeTypeValue}
+            floatingLabelText="Type"
+            onChange={this.handleUpdateType}
+            maxHeight={200}
+            errorText={this.state.genomeTypeValue === null ? "Pick one" : null}
+          >
+            {genomeTypeItems}
+          </SelectField>) : null
+        }
+        {" "}
         <br /> <br />
         {targetCheckboxes.length > 0 && (
           <div>
