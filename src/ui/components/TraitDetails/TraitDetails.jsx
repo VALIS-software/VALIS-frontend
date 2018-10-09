@@ -26,15 +26,34 @@ class TraitDetails extends React.Component {
     super(props);
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
-    this.api = this.appModel.api;
     this.state = {};
   }
 
-  static getDerivedStateFromProps(nextProps, prevState) {
-    if (!prevState) prevState = {};
-    prevState.currentTraitId = nextProps.traitId;
-    return prevState;
-  }
+	componentDidMount() {
+		const entity = this.props.entity;
+		this.fetchData(entity.id, entity.userFileID);
+	}
+
+	componentDidUpdate(prevProps) {
+		const entity = this.props.entity;
+		if (entity.id !== prevProps.entity.id || entity.userFileID !== prevProps.entity.userFileID) {
+			this.fetchData(entity.id, entity.userFileID);
+		}
+	}
+
+	fetchData(dataID, userFileID) {
+		SiriusApi.getDetails(dataID, userFileID).then((detailsData) => {
+			this.setState({
+				details: detailsData.details,
+				relations: detailsData.relations,
+			});
+		}, (err) => {
+			this.appModel.error(this, err);
+			this.setState({
+				error: err,
+			});
+		});
+	}
 
   buildTraitQuery() {
     const details = this.state.details;
@@ -54,22 +73,6 @@ class TraitDetails extends React.Component {
     builder.addToEdge(edgeQuery);
     builder.setSpecialGWASQuery();
     return builder.build();
-  }
-
-  loadTraitDetails() {
-    const traitId = this.state.currentTraitId;
-    SiriusApi.getDetails(this.state.currentTraitId).then(detailsData => {
-      this.setState({
-        loadedTraitId: traitId,
-        details: detailsData.details,
-        relations: detailsData.relations,
-      });
-    }, (err) => {
-      this.appModel.error(this, err);
-      this.setState({
-        error: err,
-      });
-    });
   }
 
   loadQuery(title, query, queryTitle) {
@@ -99,13 +102,10 @@ class TraitDetails extends React.Component {
     if (this.state.error) {
       return (<ErrorDetails error={this.state.error} />);
     }
-    if (this.state.currentTraitId !== this.state.loadedTraitId) {
-      this.loadTraitDetails();
-      return (<div />);
-    }
-
     const details = this.state.details;
-
+    if (!details) {
+      return <div />;
+    }
     const name = prettyPrint(details.name);
 
     const header = (<div className="sidebar-header">
@@ -139,13 +139,13 @@ class TraitDetails extends React.Component {
       </Collapsible>
       {associations}
       <Collapsible title="View Raw Data" open={false}>
-        <GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={this.props.traitId}/>
+        <GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} entity={this.props.entity}/>
       </Collapsible>
     </div>);
   }
 }
 TraitDetails.propTypes = {
-  traitId: PropTypes.string,
+  entity: PropTypes.object,
   appModel: PropTypes.object,
   viewModel: PropTypes.object,
 };

@@ -85,26 +85,35 @@ class SNPDetails extends React.Component {
     super(props);
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
-    this.api = this.appModel.api;
-    this.state = {};
+    this.state = {
+      details: null,
+      relations: null,
+    };
   }
 
-  static getDerivedStateFromProps(nextProps, prevState) {
-    if (!prevState) prevState = {};
-    prevState.currentSnpId = nextProps.snpId;
-    return prevState;
+  componentDidMount() {
+    const entity = this.props.entity;
+    this.fetchData(entity.id, entity.userFileID);
   }
 
-  loadSnpDetails() {
-    const snpId = this.state.currentSnpId;
-    SiriusApi.getDetails(this.state.currentSnpId).then(detailsData => {
+  componentDidUpdate(prevProps) {
+    const entity = this.props.entity;
+    if (entity.id !== prevProps.entity.id || entity.userFileID !== prevProps.entity.userFileID) {
+      this.fetchData(entity.id, entity.userFileID);
+    }
+  }
+
+  fetchData(snpId, userFileID) {
+    SiriusApi.getDetails(snpId, userFileID).then(detailsData => {
       this.setState({
-        loadedSnpId: snpId,
         details: detailsData.details,
         relations: detailsData.relations,
       });
     }, (err) => {
       this.appModel.error(this, err);
+      this.setState({
+        error: err,
+      })
     });
   }
 
@@ -125,12 +134,11 @@ class SNPDetails extends React.Component {
     if (this.state.error) {
       return (<ErrorDetails error={this.state.error} />);
     }
-    if (this.state.currentSnpId !== this.state.loadedSnpId) {
-      this.loadSnpDetails();
-      return (<div />);
-    }
     const details = this.state.details;
-    const name = this.state.details.name;
+    if (!details) {
+      return <div />;
+    }
+    const name = details.name;
     let zoomBtn = (<div />);
 
     if (details.contig) {
@@ -196,7 +204,7 @@ class SNPDetails extends React.Component {
       return (<div key={link[0]} onClick={openLink} className="row">{link[0]}</div>);
     });
     const dataError = (<UserFeedBackButton label="Report Data Error"/>);
-    const nameShortened = name.length > 13 ? name.slice(0, 12) + "..." : name;
+    const nameShortened = name.length > 18 ? name.slice(0, 17) + "..." : name;
     const header = (<div className="sidebar-header">
       <span className="sidebar-name">{nameShortened}{zoomBtn}</span>
     </div>);
@@ -238,14 +246,14 @@ class SNPDetails extends React.Component {
         {links}
       </Collapsible>
       <Collapsible title="View Raw Data" open={false}>
-        <GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={this.props.snpId}/>
+        <GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} entity={this.props.entity} />
       </Collapsible>
     </div>);
   }
 }
 
 SNPDetails.propTypes = {
-  snpId: PropTypes.string,
+  entity: PropTypes.object,
   appModel: PropTypes.object,
   viewModel: PropTypes.object,
 };
