@@ -46,6 +46,11 @@ const fixedTrackData = [
     "description": "Comprehensive parts list of functional elements in the human genome."
   },
   {
+    "track_type": TRACK_TYPE_EXAC,
+    "title": "ExAC Variants",
+    "description": "Search labeled variants of over 60k exomes from the Exome Aggregation Consortium."
+  },
+  {
     "track_type": TRACK_TYPE_EQTL,
     "title": "GTEx eQTLs",
     "description": "Quantitative trait loci from 53 human tissues curated from the Genotype-Tissue Expression project."
@@ -54,11 +59,6 @@ const fixedTrackData = [
     "track_type": TRACK_TYPE_TCGA,
     "title": "TCGA Variants",
     "description": "Search germline and somatic mutations from The Cancer Genome Atlas."
-  },
-  {
-    "track_type": TRACK_TYPE_EXAC,
-    "title": "ExAC Variants",
-    "description": "Search labeled variants of over 60k exomes from the Exome Aggregation Consortium."
   },
   {
     "track_type": TRACK_TYPE_SEQUENCE,

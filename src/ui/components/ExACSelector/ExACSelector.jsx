@@ -2,9 +2,7 @@
 import * as React from "react";
 import * as PropTypes from "prop-types";
 import RaisedButton from "material-ui/RaisedButton/RaisedButton";
-import AutoComplete from "material-ui/AutoComplete";
-import SelectField from "material-ui/SelectField";
-import MenuItem from "material-ui/MenuItem";
+import Select from 'react-select';
 import { QueryBuilder } from 'valis'
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
@@ -19,7 +17,7 @@ class ExACSelector extends React.Component {
       this.appModel = props.appModel;
     }
     this.state = {
-      variantTagValue: null,
+      variantTagValue: [],
       availableVariantTags: [],
     };
   }
@@ -43,9 +41,9 @@ class ExACSelector extends React.Component {
     });
   }
 
-  handelUpdateVariantTag = (event, index, value) => {
+  handleUpdateVariantTags = (value) => {
     this.setState({
-      variantTagValue: value
+      variantTagValue: value.map(d => d.value),
     });
   }
 
@@ -54,14 +52,14 @@ class ExACSelector extends React.Component {
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
     builder.filterSource(DATA_SOURCE_ExAC);
-    builder.filterVariantTag(this.state.availableVariantTags[this.state.variantTagValue]);
+    builder.filterVariantTag(this.state.variantTagValue);
     return builder.build();
   }
 
   addQueryTrack = () => {
     const query = this.buildQuery();
     this.appModel.trackMixPanel("Add ExAC Track", { "query": query });
-    const tagValue = this.state.availableVariantTags[this.state.variantTagValue];
+    const tagValue = this.state.variantTagValue.length === 1 ? this.state.variantTagValue[0] : this.state.variantTagValue.join(', ');
     App.addVariantTrack(`${tagValue} (ExAC)`, query);
     this.props.viewModel.closeNavigationView();
   }
@@ -79,29 +77,21 @@ class ExACSelector extends React.Component {
       availableVariantTags,
     } = this.state;
 
-    const variantTagItems = [<MenuItem value={null} primaryText="" key={-1} />];
-    for (let i = 0; i < availableVariantTags.length; i++) {
-      variantTagItems.push(
-        <MenuItem value={i} key={i} primaryText={availableVariantTags[i]} />
-      );
-    }
+    const variantTagItems = availableVariantTags.map(d => { return { label: d, value: d } });
     return (
       <div className="track-editor">
-        <SelectField
-          value={this.state.variantTagValue}
-          floatingLabelText="Variant Tag"
-          onChange={this.handelUpdateVariantTag}
-          maxHeight={200}
-          errorText={this.state.variantTagValue === null ? "Pick one" : null}
-        >
-          {variantTagItems}
-        </SelectField>
+        <Select
+          onChange={d => this.handleUpdateVariantTags(d)}
+          options={variantTagItems}
+          placeholder='Choose variant types'
+          isMulti={true}
+        />
         <br />
         <RaisedButton
           label="Add Track"
           primary={true}
           onClick={() => this.addQueryTrack()}
-          disabled={this.state.variantTagValue === null}
+          disabled={this.state.variantTagValue.length === 0}
           style={{ position: "absolute", bottom: "10px", width: "90%" }}
         />
       </div>

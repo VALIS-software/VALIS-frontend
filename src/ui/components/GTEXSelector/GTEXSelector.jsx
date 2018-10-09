@@ -5,6 +5,7 @@ import RaisedButton from "material-ui/RaisedButton/RaisedButton";
 import CircularProgress from "material-ui/CircularProgress";
 import Slider from "material-ui/Slider";
 import SelectField from "material-ui/SelectField";
+import Select from 'react-select';
 import MenuItem from "material-ui/MenuItem";
 import { QueryBuilder } from 'valis'
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
@@ -79,9 +80,9 @@ class GTEXSelector extends React.Component {
     });
   }
 
-  handelUpdateBiosample = (event, index, value) => {
+  handleUpdateBioSample = (value) => {
     this.setState({
-      biosampleValue: value
+      biosampleValue: value.map(d=> d.value)
     });
   }
 
@@ -90,7 +91,7 @@ class GTEXSelector extends React.Component {
     const builder = new QueryBuilder();
     builder.newEdgeQuery();
     builder.filterSource(DATA_SOURCE_GTEX);
-    builder.filterBiosample(this.state.availableBiosamples[this.state.biosampleValue]);
+    builder.filterBiosample(this.state.biosampleValue);
     builder.filterMaxPValue(this.state.pvalue);
     const edgeQuery = builder.build();
     builder.newGenomeQuery();
@@ -101,7 +102,7 @@ class GTEXSelector extends React.Component {
   addQueryTrack = () => {
     const query = this.buildQuery();
     this.appModel.trackMixPanel("Add GTEX Track", { "query": query });
-    const biosample = this.state.availableBiosamples[this.state.biosampleValue];
+    const biosample = this.state.biosampleValue.length === 1 ? this.state.biosampleValue[0] : this.state.biosampleValue.join(', ');
     // QYD: The results of this query is "Edges" instead of GenomeNodes, we might need a new method for displaying
     App.addVariantTrack(`${biosample} eQTLs`, query);
     this.props.viewModel.closeNavigationView();
@@ -126,23 +127,15 @@ class GTEXSelector extends React.Component {
       availableBiosamples,
     } = this.state;
 
-    const biosampleItems = [<MenuItem value={null} primaryText="" key={-1} />];
-    for (let i = 0; i < availableBiosamples.length; i++) {
-      biosampleItems.push(
-        <MenuItem value={i} key={i} primaryText={availableBiosamples[i]} />
-      );
-    }
+    const biosampleItems = availableBiosamples.map(d => { return {label: d, value: d} });
     return (
       <div className="track-editor">
-        <SelectField
-          value={this.state.biosampleValue}
-          floatingLabelText="Biosample"
-          onChange={this.handelUpdateBiosample}
-          maxHeight={200}
-          errorText={this.state.biosampleValue === null ? "Pick one" : null}
-        >
-          {biosampleItems}
-        </SelectField>
+        <Select
+          onChange={d => this.handleUpdateBioSample(d)}
+          options={biosampleItems}
+          placeholder='Choose Biosample(s)'
+          isMulti={true}
+        />
         <br/>
         <br/>
         <div>
@@ -161,7 +154,7 @@ class GTEXSelector extends React.Component {
           label="Add Track"
           primary={true}
           onClick={() => this.addQueryTrack()}
-          disabled={this.state.biosampleValue === null}
+          disabled={!this.state.biosampleValue || this.state.biosampleValue.length === 0}
           style={{ position: "absolute", bottom: "10px", width: "90%" }}
         />
       </div>
