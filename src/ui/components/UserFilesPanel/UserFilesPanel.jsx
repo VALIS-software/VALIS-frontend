@@ -21,7 +21,7 @@ import Delete from "material-ui/svg-icons/action/delete";
 import App from "../../../App";
 import { SiriusApi } from 'valis';
 import { QueryBuilder } from 'valis'
-import { FILE_TYPE_23andMe, FILE_TYPE_VCF } from "../../helpers/constants";
+import { FILE_TYPE_23andMe, FILE_TYPE_VCF, FILE_TYPE_BED } from "../../helpers/constants";
 // Styles
 import './UserFilesPanel.scss';
 
@@ -125,6 +125,15 @@ class UserFilesPanel extends React.Component {
         <input className="invisible" type="file" onChange={this.uploadFile(FILE_TYPE_VCF)} />
     </RaisedButton>);
 
+    const uploadButtonBed = (<RaisedButton
+      containerElement='label'
+      label="bed"
+      icon={<CloudUpload/>}
+      primary
+      >
+        <input className="invisible" type="file" onChange={this.uploadFile(FILE_TYPE_BED)} />
+    </RaisedButton>);
+
     const cellStyle = { padding: 5, textAlign: 'center' };
 
     const { fileNames, fileTypes, fileIDs, fileNumDocs, uploadingFileNames, uploadingFileProgress, errorMsg } = this.state;
@@ -146,6 +155,7 @@ class UserFilesPanel extends React.Component {
                 <TableRowColumn style={{ overflow: 'visible' }}>
                   <FileOperations
                     fileName={name}
+                    fileType={fileTypes[index]}
                     fileID={fileIDs[index]}
                     update={this.updateExistingFiles}
                   />
@@ -184,6 +194,9 @@ class UserFilesPanel extends React.Component {
       <span className='buttons'>
         {uploadButtonVCF}
       </span>
+      <span className='buttons'>
+        {uploadButtonBed}
+      </span>
       {error}
     </div>);
   }
@@ -212,7 +225,11 @@ function FileOperations(props) {
 
   function handleClickAdd(e) {
     e.preventDefault();
-    App.addVariantTrack(props.fileName, buildFileQuery(props.fileID));
+    if (props.fileType === FILE_TYPE_BED) {
+      App.addIntervalTrack(props.fileName, buildFileQuery(props.fileID));
+    } else {
+      App.addVariantTrack(props.fileName, buildFileQuery(props.fileID));
+    }
   }
 
   function handleClickDelete(e) {
