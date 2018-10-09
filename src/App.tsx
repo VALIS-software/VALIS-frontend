@@ -1,4 +1,4 @@
-import { GenomeBrowser, TrackModel, IntervalTrackModel, VariantTrackModel, GenomeBrowserConfiguration } from "genome-browser";
+import { GenomeBrowser, TrackModel, IntervalTrackModel, VariantTrackModel, GenomeBrowserConfiguration, AnnotationTileLoader, VariantTileLoader, VariantTrack } from "genome-browser";
 
 import Dialog from "material-ui/Dialog";
 import FlatButton from "material-ui/FlatButton";
@@ -20,9 +20,14 @@ import NavigationController from "./ui/components/NavigationController/Navigatio
 import SearchResultsView from "./ui/components/SearchResultsView/SearchResultsView";
 import ShareLinkDialog from "./ui/components/ShareLink/ShareLinkDialog";
 import View from "./ui/View";
-import LZString = require("lz-string");
 import DatasetSelector from "./ui/components/DatasetSelector/DatasetSelector";
+import { AnnotationTrackOverride } from "./tracks/AnnotationTrackOverride";
+import { VariantTrackOverride } from "./tracks/VariantTrackOverride";
 const deepEqual = require('fast-deep-equal');
+
+// register custom / override tracks
+GenomeBrowser.registerTrackType('annotation', AnnotationTileLoader, AnnotationTrackOverride);
+GenomeBrowser.registerTrackType('variant', VariantTileLoader, VariantTrackOverride);
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
@@ -92,7 +97,17 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 		this.genomeBrowser = new GenomeBrowser('', {
 			panels: [ { location: { contig: 'chr1', x0: 0, x1: 249e6 } } ],
-			tracks: [ { model: { name: 'GRCh38', type: 'sequence' }, heightPx: 100 } ],
+			tracks: [
+				{ model: {
+					type: 'annotation',
+					name: '→ Strand Genes',
+					strand: '+',
+				} },
+				{ model: {
+					type: 'variant',
+					name: 'Variants',
+				} },
+			],
 		});
 
 		this.state = {
@@ -496,7 +511,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		}
 	}
 
-	protected addTrack<T extends TrackModel>(model: T) {
+	protected addTrack(model: TrackModel) {
 		this.genomeBrowser.addTrack(model, undefined, true);
 	}
 
@@ -559,7 +574,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		this.appInstance.displayRegion(contig, startBase, endBase);
 	}
 
-	static addTrack<T extends TrackModel>(model: T) {
+	static addTrack(model: TrackModel) {
 		this.appInstance.addTrack(model);
 	}
 
