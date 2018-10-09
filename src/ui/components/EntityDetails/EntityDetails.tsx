@@ -10,7 +10,7 @@ import TraitDetails from "../TraitDetails/TraitDetails";
 import React = require("react");
 
 export function EntityDetails(props: {
-    entity: { id: string, type: EntityType },
+    entity: { id: string, type: EntityType, userFileID?: string },
     appModel: AppModel,
     viewModel: ViewModel
 }) {
@@ -18,15 +18,15 @@ export function EntityDetails(props: {
     const entityType: string = props.entity.type;
     let elem = null;
     if (entityType === EntityType.SNP || entityType === EntityType.VARIANT) {
-        elem = (<SNPDetails viewModel={props.viewModel} appModel={props.appModel} snpId={dataID} />);
+        elem = (<SNPDetails viewModel={props.viewModel} appModel={props.appModel} entity={props.entity} />);
     } else if ( entityType === EntityType.GENE || entityType === EntityType.PSUDOGENE || entityType === EntityType.NCRNAGENE ) {
-        elem = (<GeneDetails viewModel={props.viewModel} appModel={props.appModel} geneId={dataID} />);
+        elem = (<GeneDetails viewModel={props.viewModel} appModel={props.appModel} entity={props.entity} />);
     } else if (entityType === EntityType.TRAIT) {
-        elem = (<TraitDetails viewModel={props.viewModel} appModel={props.appModel} traitId={dataID} />);
+        elem = (<TraitDetails viewModel={props.viewModel} appModel={props.appModel} entity={props.entity} />);
     } else if (entityType === EntityType.GWAS) {
-        elem = (<GWASDetails viewModel={props.viewModel} appModel={props.appModel} assocId={dataID} />);
+        elem = (<GWASDetails viewModel={props.viewModel} appModel={props.appModel} entity={props.entity} />);
     } else {
-        elem = (<GenericEntityDetails viewModel={props.viewModel} appModel={props.appModel} dataID={dataID} />);
+        elem = (<GenericEntityDetails viewModel={props.viewModel} appModel={props.appModel} entity={props.entity} />);
     }
     return elem;
 }

@@ -7,6 +7,7 @@ import { Toolbar, ToolbarGroup, ToolbarTitle } from 'material-ui/Toolbar';
 // Material-UI Icons
 import Menu from 'material-ui/svg-icons/navigation/menu';
 import CloudUpload from "material-ui/svg-icons/file/cloud-upload";
+import ActionTimeline from "material-ui/svg-icons/action/timeline";
 import SocialShare from "material-ui/svg-icons/social/share";
 // components
 import TokenBox from '../Shared/TokenBox/TokenBox';
@@ -19,6 +20,7 @@ import AppModel from '../../../model/AppModel';
 import ViewModel from '../../../model/ViewModel';
 // Styles
 import './Header.scss';
+const logoPath = require('./valis-logo.png');
 
 type Props = {
   viewModel: ViewModel,
@@ -73,26 +75,24 @@ class Header extends React.Component<Props, State> {
   }
 
   render() {
-    const userFileButton = <FlatButton onClick={this.openUserFiles} label="Files" icon={(<CloudUpload/>)} />;
-    const shareButton = <FlatButton onClick={this.props.onShowShare} label="Share" icon={(<SocialShare/>)} />;
-    return (<div className="header" style={this.props.style}>
-      <Toolbar>
-        <ToolbarTitle text="VALIS"/>
-        <ToolbarGroup>
-          <div className="search-box">
-            <TokenBox appModel={this.props.appModel} viewModel={this.props.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>
-          </div>
-        </ToolbarGroup>
-        <ToolbarGroup>
-          {userFileButton}
-          {shareButton}
-          <UserFeedBackButton userProfile={this.props.userProfile} />
-          <div className="user-button">
-            <UserProfileButton userProfile={this.props.userProfile} />
-          </div>
-          <IconButton onClick={() => this.props.viewModel.showNavigationView()}><Menu /></IconButton>
-        </ToolbarGroup>
-      </Toolbar>
+    const analysisButton = <FlatButton style={{color: 'white'}} onClick={this.openAnalysis} label="Analyze" icon={(<ActionTimeline/>)} />;
+    const userFileButton = <FlatButton style={{color: 'white'}} onClick={this.openUserFiles} label="Upload Data" icon={(<CloudUpload/>)} />;
+    const shareButton = <FlatButton style={{color: 'white'}} onClick={this.props.onShowShare} label="Share" icon={(<SocialShare/>)} />;
+    return (<div>
+        <div className="header" style={{height: '56px', width: '100%'}}>
+            <div className="header-item">
+            <img style={{ cursor: 'pointer', height: 45, marginTop: 6 }} src={logoPath}/> 
+            </div>
+            <div className="header-search-box" style={{marginTop: -16}}>
+              <TokenBox appModel={this.props.appModel} viewModel={this.props.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>
+            </div>
+            <div className="header-button">{analysisButton}</div>
+            <div className="header-button">{shareButton}</div>
+            <div className="header-item"><UserFeedBackButton userProfile={this.props.userProfile} /></div>
+            <div className="header-item" style={{marginTop:2}}>
+              <UserProfileButton userProfile={this.props.userProfile} />
+            </div>
+      </div>
     </div>);
   }
 }

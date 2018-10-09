@@ -4,7 +4,7 @@ import MenuItem from "material-ui/MenuItem";
 import RaisedButton from "material-ui/RaisedButton";
 
 import App from "../../../App";
-import { Strand } from 'genomics-formats/dist/gff3/Strand';
+import Strand from "genomics-formats/dist/gff3/Strand";
 
 type Props = {};
 type State = {

@@ -1,6 +1,4 @@
-import { GenomeBrowser, GenomeBrowserConfiguration } from "genome-browser";
-import { SharedTileStore } from "genome-browser";
-import { TrackModel } from "genome-browser";
+import { GenomeBrowser, TrackModel, IntervalTrackModel, VariantTrackModel, GenomeBrowserConfiguration } from "genome-browser";
 
 import Dialog from "material-ui/Dialog";
 import FlatButton from "material-ui/FlatButton";
@@ -224,7 +222,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		this.viewModel.removeListener(this.onCloseView);
 
 		// release shared resources
-		SharedTileStore.clearAll();
+		this.genomeBrowser.clearCaches();
 	}
 
 	componentDidUpdate(prevProps: Props, prevState: State, snapshot: any) {
@@ -450,7 +448,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		}
 	}
 
-	protected displayEntityDetails(entity: { id: string, type: EntityType }) {
+	protected displayEntityDetails(entity: { id: string, type: EntityType, userFileID?: string }) {
 		this.viewModel.pushView(
 			'',
 			entity.id,
@@ -498,7 +496,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		}
 	}
 
-	protected addTrack(model: TrackModel) {
+	protected addTrack<T extends TrackModel>(model: T) {
 		this.genomeBrowser.addTrack(model, undefined, true);
 	}
 
@@ -535,11 +533,11 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			let query = null;
 			const type = track.model.type;
 			if (type === 'interval') {
-				name = (track.model as TrackModel<'interval'>).name;
-				query = (track.model as TrackModel<'interval'>).query;
+				name = (track.model as IntervalTrackModel).name;
+				query = (track.model as IntervalTrackModel).query;
 			} else if (type === 'variant') {
-				name = (track.model as TrackModel<'variant'>).name;
-				query = (track.model as TrackModel<'variant'>).query;
+				name = (track.model as VariantTrackModel).name;
+				query = (track.model as VariantTrackModel).query;
 			}
 			if (query && name) {
 				ret.set(name, { query: JSON.parse(JSON.stringify(query)), type: type });
@@ -548,7 +546,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 		return ret;
 	}
- 
+
 	// global app methods, assumes a single instance of App
 	static readonly canvasPixelRatio = window.devicePixelRatio || 1;
 
@@ -561,7 +559,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		this.appInstance.displayRegion(contig, startBase, endBase);
 	}
 
-	static addTrack(model: TrackModel) {
+	static addTrack<T extends TrackModel>(model: T) {
 		this.appInstance.addTrack(model);
 	}
 
@@ -577,7 +575,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		this.appInstance.addIntervalTrack(title, query, blendEnabled);
 	}
 
-	static displayEntityDetails(entity: { id: string, type: EntityType }) {
+	static displayEntityDetails(entity: { id: string, type: EntityType, userFileID?: string }) {
 		this.appInstance.displayEntityDetails(entity);
 	}
 

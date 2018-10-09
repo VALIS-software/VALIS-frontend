@@ -28,31 +28,34 @@ class GeneDetails extends React.Component {
     super(props);
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
-    this.api = this.appModel.api;
     this.state = {};
   }
 
-  static getDerivedStateFromProps(nextProps, prevState) {
-    if (!prevState) prevState = {};
-    prevState.currentGeneId = nextProps.geneId;
-    return prevState;
-  }
+	componentDidMount() {
+		const entity = this.props.entity;
+		this.fetchData(entity.id, entity.userFileID);
+	}
 
-  loadGeneDetails() {
-    const geneId = this.state.currentGeneId;
-    SiriusApi.getDetails(this.state.currentGeneId).then(detailsData => {
-      this.setState({
-        loadedGeneId: geneId,
-        details: detailsData.details,
-        relations: detailsData.relations,
-      });
-    }, (err) => {
-      this.appModel.error(err);
-      this.setState({
-        error: err,
-      });
-    });
-  }
+	componentDidUpdate(prevProps) {
+		const entity = this.props.entity;
+		if (entity.id !== prevProps.entity.id || entity.userFileID !== prevProps.entity.userFileID) {
+			this.fetchData(entity.id, entity.userFileID);
+		}
+	}
+
+	fetchData(dataID, userFileID) {
+		SiriusApi.getDetails(dataID, userFileID).then((detailsData) => {
+			this.setState({
+				details: detailsData.details,
+				relations: detailsData.relations,
+			});
+		}, (err) => {
+			this.appModel.error(this, err);
+			this.setState({
+				error: err,
+			});
+		});
+	}
 
   buildEqtlQuery() {
     const builder = new QueryBuilder();
@@ -117,12 +120,10 @@ class GeneDetails extends React.Component {
     if (this.state.error) {
       return (<ErrorDetails error={this.state.error} />);
     }
-    if (this.state.currentGeneId !== this.state.loadedGeneId) {
-      this.loadGeneDetails();
-      return (<div />);
-    }
-
     const details = this.state.details;
+    if (!details) {
+      return <div />;
+    }
     const relations = this.state.relations;
     const info = details.info;
     const name = details.name;
@@ -209,13 +210,13 @@ class GeneDetails extends React.Component {
       {intersectSNPList}
       {eqtlList}
       <Collapsible title="View Raw Data" open={false}>
-        <GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={this.props.geneId}/>
+        <GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} entity={this.props.entity}/>
       </Collapsible>
     </div>);
   }
 }
 GeneDetails.propTypes = {
-  geneId: PropTypes.string,
+  entity: PropTypes.object,
   appModel: PropTypes.object,
   viewModel: PropTypes.object,
 };

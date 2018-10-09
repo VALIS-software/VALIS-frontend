@@ -19,43 +19,46 @@ class GWASDetails extends React.Component {
     super(props);
     this.appModel = props.appModel;
     this.viewModel = props.viewModel;
-    this.api = this.appModel.api;
     this.state = {};
   }
 
-  static getDerivedStateFromProps(nextProps, prevState) {
-    if (!prevState) prevState = {};
-    prevState.currentAssocId = nextProps.assocId;
-    return prevState;
-  }
+	componentDidMount() {
+		const entity = this.props.entity;
+		this.fetchData(entity.id, entity.userFileID);
+	}
 
-  loadGwasDetails() {
-    const assocId = this.state.currentAssocId;
-    SiriusApi.getDetails(this.state.currentAssocId).then(detailsData => {
-      this.setState({
-        loadedAssocId: assocId,
-        details: detailsData.details,
-        relations: detailsData.relations,
-      });
-    }, (err) => {
-      this.appModel.error(this, err);
-      this.setState({
-        error: err,
-      });
-    });
-  }
+	componentDidUpdate(prevProps) {
+		const entity = this.props.entity;
+		if (entity.id !== prevProps.entity.id || entity.userFileID !== prevProps.entity.userFileID) {
+			this.fetchData(entity.id, entity.userFileID);
+		}
+	}
+
+	fetchData(dataID, userFileID) {
+		SiriusApi.getDetails(dataID, userFileID).then((detailsData) => {
+			this.setState({
+				details: detailsData.details,
+				relations: detailsData.relations,
+			});
+		}, (err) => {
+			this.appModel.error(this, err);
+			this.setState({
+				error: err,
+			});
+		});
+	}
 
   render() {
     if (this.state.error) {
       return (<ErrorDetails error={this.state.error} />);
     }
-    if (this.state.currentAssocId !== this.state.loadedAssocId) {
-      this.loadGwasDetails();
-      return (<div />);
+    const details = this.state.details;
+    if (!details) {
+      return <div />;
     }
     // Fall back to GenericEntityDetails since other source like ClinVar don't have detailed information
     if (this.state.details.source.indexOf(DATA_SOURCE_GWAS) < 0) {
-      return (<GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={this.state.loadedAssocId} />)
+      return (<GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} entity={this.props.entity} />)
     }
 
     const name = this.state.details.name;
@@ -69,7 +72,7 @@ class GWASDetails extends React.Component {
     const readElem = (<span> Read Study {openIcon} </span>);
 
     const snpId = this.state.details.from_id;
-    const snpView = (<SNPDetails viewModel={this.props.viewModel} appModel={this.props.appModel} snpId={snpId} />);
+    const snpView = (<SNPDetails viewModel={this.props.viewModel} appModel={this.props.appModel} entity={this.props.entity} />);
 
     return (<div className="gwas-details">
 
@@ -98,13 +101,13 @@ class GWASDetails extends React.Component {
         {snpView}
       </Collapsible>
       <Collapsible title="View Raw Data" open={false}>
-        <GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} dataID={this.props.assocId}/>
+        <GenericEntityDetails viewModel={this.viewModel} appModel={this.appModel} entity={this.props.entity} />
       </Collapsible>
     </div>);
   }
 }
 GWASDetails.propTypes = {
-  assocId: PropTypes.string,
+  entity: PropTypes.object,
   appModel: PropTypes.object,
   viewModel: PropTypes.object,
 };

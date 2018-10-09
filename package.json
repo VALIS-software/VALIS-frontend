@@ -63,7 +63,6 @@
     "fast-deep-equal": "^2.0.1",
     "genome-browser": "github:VALIS-software/Genome-Browser",
     "genomics-formats": "github:VALIS-software/Genomics-Formats",
-    "gputext": "github:VALIS-software/GPUText",
     "immutable": "3.8.x",
     "lz-string": "1.4.x",
     "material-ui": "0.20.x",
