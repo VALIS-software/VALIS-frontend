@@ -15,14 +15,9 @@ import "./AnalysisSelector.scss";
 const fixedAnalysisData = [
   {
     "track_type": TRACK_TYPE_BOOLEAN, 
-    "title": "∩ Intersect Tracks", 
-    "description": "Filter track elements to those near another tracks elements."
+    "title": "Genomic Arithmetic", 
+    "description": "Combine track regions, find regions that overlap, or subtract regions."
   }, 
-  {
-    "track_type": TRACK_TYPE_BOOLEAN, 
-    "title": "∪ Union Tracks", 
-    "description": "Union the contents of two different tracks into a single track."
-  },
   {
     "track_type": 'premium', 
     "title": "Correlate Regulatory Elements", 
@@ -30,23 +25,13 @@ const fixedAnalysisData = [
   },
   {
     "track_type": 'premium', 
-    "title": "Correlate Samples", 
-    "description": "Correlate sets of variants or regulatory annotations to patient cohorts."
-  },
-  {
-    "track_type": 'premium', 
     "title": "Predict Functional Effects", 
-    "description": "Predict the effect of non-coding variants on expression, methylation or chromatin accessibility."
+    "description": "Find variants that regulate a particular set of genes using predictive models."
   },
   {
     "track_type": 'premium', 
     "title": "Export Data", 
-    "description": "Export data from tracks to BED, GFF or CSV format."
-  },
-  {
-    "track_type": 'premium', 
-    "title": "Custom Analysis", 
-    "description": "Write your own analysis function in R, Python or via REST API."
+    "description": "Download data from track in BED format."
   },
 ];
 

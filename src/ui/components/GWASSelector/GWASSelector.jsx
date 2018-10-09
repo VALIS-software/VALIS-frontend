@@ -4,8 +4,6 @@ import * as PropTypes from "prop-types";
 import AutoComplete from "material-ui/AutoComplete";
 import Slider from "material-ui/Slider";
 import RaisedButton from "material-ui/RaisedButton/RaisedButton";
-import SelectField from "material-ui/SelectField";
-import MenuItem from "material-ui/MenuItem";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import { QueryBuilder } from 'valis'
 import {
