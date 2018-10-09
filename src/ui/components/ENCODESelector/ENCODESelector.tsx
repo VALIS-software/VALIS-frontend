@@ -101,23 +101,13 @@ class ENCODESelector extends React.Component<Props, State> {
     if (this.selectedBiosample) {
       builder.filterBiosample(this.selectedBiosample);
     }
-    if (this.selectedTargets) {
-      builder.filterTargets(this.selectedTargets);
-    }
     const infoQuery = builder.build();
     SiriusApi.getDistinctValues("info.types", infoQuery).then(data => {
       // Keep the current selection of type
-      let newTypeValue = null;
-      if (this.state.genomeTypeValue !== null) {
-        const currentType = this.state.availableTypes[this.state.genomeTypeValue];
-        newTypeValue = data.indexOf(currentType);
-        if (newTypeValue < 0) {
-          newTypeValue = null;
-        }
-      }
+
       this.setState({
         availableTypes: data,
-        genomeTypeValue: newTypeValue
+        genomeTypeValue: null,
       });
     }, err => {
       this.appModel.error(this, err);
@@ -166,7 +156,7 @@ class ENCODESelector extends React.Component<Props, State> {
     });
     // Update the available types and targets
     if (value !== null) {
-      this.selectedBiosample = this.state.availableBiosamples[value];
+      this.selectedBiosample = value;
     }
     this.updateAvailableTypes();
   }
