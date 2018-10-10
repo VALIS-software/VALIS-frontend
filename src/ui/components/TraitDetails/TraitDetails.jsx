@@ -4,7 +4,7 @@ import * as PropTypes from 'prop-types';
 import Collapsible from '../Shared/Collapsible/Collapsible';
 import Pills from '../Shared/Pills/Pills';
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-import SearchResultsView from '../SearchResultsView/SearchResultsView.jsx';
+import SearchResultsView from '../SearchResultsView/SearchResultsView';
 import GenericEntityDetails from '../GenericEntityDetails/GenericEntityDetails';
 import { SiriusApi } from 'valis';
 import { QueryBuilder } from 'valis'

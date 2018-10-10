@@ -62,7 +62,7 @@ module.exports = (env) => {
 					}],
 				},
 
-				// All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
+				// All files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'.
 				{
 					test: /\.(ts|tsx|js|jsx)$/,
 					loader: "ts-loader",
@@ -77,7 +77,9 @@ module.exports = (env) => {
 		plugins: [
 			// pass --env to javascript build via process.env
 			new webpack.DefinePlugin({ "process.env": JSON.stringify(env) }),
-		]
+		].concat(
+			env.analyze ? [new (require('webpack-bundle-analyzer').BundleAnalyzerPlugin)] : []
+		)
 	}
 
 	// if in deploy mode, add deployment plugins

@@ -1,5 +1,8 @@
 import * as React from "react";
-import { SelectField, MenuItem, RaisedButton } from "material-ui";
+import SelectField from "material-ui/SelectField";
+import MenuItem from "material-ui/MenuItem";
+import RaisedButton from "material-ui/RaisedButton";
+
 import App from "../../../App";
 import Strand from "genomics-formats/dist/gff3/Strand";
 

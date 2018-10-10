@@ -1,8 +1,5 @@
-import { QueryBuilder } from 'valis';
-import  { SiriusApi } from 'valis';
-import { TrackModel } from "../TrackModel";
-import { Tile, TileStore } from "./TileStore";
-import { start } from "repl";
+import { VariantTileLoader, VariantTilePayload, Tile } from "genome-browser";
+import { SiriusApi } from "valis";
 
 // Tile payload is a list of genes extended with nesting
 type VariantGenomeNode = {
@@ -35,35 +32,9 @@ type VariantInfo = {
     variant_affected_genes: Array<string>
 }
 
-export type TilePayload = Array<{
-    id: string,
-    baseIndex: number,
-    refSequence: string,
-    alts: string[]
-}>;
+export class VariantTileLoaderOverride extends VariantTileLoader {
 
-export class VariantTileStore extends TileStore<TilePayload, void> {
-
-    constructor(protected model: TrackModel<'variant'>, protected contig: string) {
-        super(
-            1 << 15, // tile size
-            1
-        );
-    
-        SiriusApi.getContigInfo(contig).then((info) => {
-            this.maximumX = info.length - 1;
-        });
-    }
-
-    protected mapLodLevel(l: number) {
-        if (this.model.query == null) {
-            return 0;
-        }
-
-        return Math.floor(l / 10) * 10;
-    }
-
-    protected getTilePayload(tile: Tile<TilePayload>): Promise<TilePayload> | TilePayload {
+    protected getTilePayload(tile: Tile<VariantTilePayload>): Promise<VariantTilePayload> | VariantTilePayload {
         const startBase = tile.x + 1;
         const endBase = startBase + tile.span;
         const snpQuery = this.model.query;
@@ -74,7 +45,7 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
         } else {
             ApiPromise = SiriusApi.getVariantTrackData(this.contig, startBase, endBase, snpQuery);
         }
-        // use general API to laod other variants, the number of results should be no more than 10M.
+        // use general API to load other variants, the number of results should be no more than 10M.
         return ApiPromise.then((data) => {
             let variants: Array<VariantGenomeNode> = data.data;
             return variants.map((v) => { return {
@@ -87,4 +58,3 @@ export class VariantTileStore extends TileStore<TilePayload, void> {
     }
 
 }
-export default VariantTileStore;

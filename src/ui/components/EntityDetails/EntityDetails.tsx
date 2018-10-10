@@ -1,6 +1,6 @@
 import { EntityType } from 'valis';
-import AppModel from "../../models/AppModel";
-import ViewModel from "../../models/ViewModel";
+import AppModel from "../../../model/AppModel";
+import ViewModel from "../../../model/ViewModel";
 import GeneDetails from "../GeneDetails/GeneDetails";
 import GenericEntityDetails from "../GenericEntityDetails/GenericEntityDetails";
 import GWASDetails from "../GWASDetails/GWASDetails";

@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
+import BasicTheme from "./ui/themes/BasicTheme";
 
 import App from "./App";
 import { SiriusApi } from 'valis';
@@ -26,7 +27,7 @@ SiriusApi.apiUrl = apiBaseUrl;
 
 // render app
 ReactDOM.render(
-	<MuiThemeProvider>
+	<MuiThemeProvider muiTheme={BasicTheme}>
 		<App apiBaseUrl={apiBaseUrl}/>
 	</MuiThemeProvider>,
 	document.getElementById('root')

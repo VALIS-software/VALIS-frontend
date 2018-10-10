@@ -1,4 +1,6 @@
-import { Dialog, FlatButton, Snackbar } from "material-ui";
+import Dialog from "material-ui/Dialog";
+import FlatButton from "material-ui/FlatButton";
+import Snackbar from "material-ui/Snackbar";
 import React = require("react");
 
 type Props = { shareLink: string, open: boolean, handleClose: () => void };

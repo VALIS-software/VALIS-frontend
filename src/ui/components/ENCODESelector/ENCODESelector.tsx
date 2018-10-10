@@ -9,8 +9,8 @@ import * as React from "react";
 import { SiriusApi, QueryBuilder  } from 'valis';
 import App from "../../../App";
 import { CHROMOSOME_NAMES, DATA_SOURCE_ENCODE } from "../../helpers/constants";
-import AppModel from "../../models/AppModel";
-import ViewModel from "../../models/ViewModel";
+import AppModel from "../../../model/AppModel";
+import ViewModel from "../../../model/ViewModel";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 // Styles
 import "./ENCODESelector.scss";
