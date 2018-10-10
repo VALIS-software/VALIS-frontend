@@ -1,5 +1,5 @@
 import { AnnotationTrack, Gene, GenomeFeature } from 'genome-browser';
-import App from '..//App';
+import App from '../../App';
 import { QueryBuilder, SiriusApi } from 'valis';
 
 export class AnnotationTrackOverride extends AnnotationTrack {

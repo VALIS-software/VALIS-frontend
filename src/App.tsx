@@ -1,4 +1,4 @@
-import { GenomeBrowser, TrackModel, IntervalTrackModel, VariantTrackModel, GenomeBrowserConfiguration, AnnotationTileLoader, VariantTileLoader, VariantTrack, IDataSource } from "genome-browser";
+import { GenomeBrowser, TrackModel, IntervalTrackModel, VariantTrackModel, GenomeBrowserConfiguration, AnnotationTileLoader, VariantTileLoader, VariantTrack, IDataSource, Strand, IntervalTrack } from "genome-browser";
 
 import Dialog from "material-ui/Dialog";
 import FlatButton from "material-ui/FlatButton";
@@ -21,14 +21,17 @@ import SearchResultsView from "./ui/components/SearchResultsView/SearchResultsVi
 import ShareLinkDialog from "./ui/components/ShareLink/ShareLinkDialog";
 import View from "./ui/View";
 import DatasetSelector from "./ui/components/DatasetSelector/DatasetSelector";
-import { AnnotationTrackOverride } from "./tracks/AnnotationTrackOverride";
-import { VariantTrackOverride } from "./tracks/VariantTrackOverride";
+import { AnnotationTrackOverride } from "./track/annotation/AnnotationTrackOverride";
+import { VariantTrackOverride } from "./track/variant/VariantTrackOverride";
 import { SiriusDataSource } from "./data-sources/SiriusDataSource";
+import { VariantTileLoaderOverride } from "./track/variant/VariantTileLoaderOverride";
+import { IntervalTileLoaderOverride } from "./track/interval/IntervalTileLoaderOverride";
 const deepEqual = require('fast-deep-equal');
 
 // register custom / override tracks
 GenomeBrowser.registerTrackType('annotation', AnnotationTileLoader, AnnotationTrackOverride);
-GenomeBrowser.registerTrackType('variant', VariantTileLoader, VariantTrackOverride);
+GenomeBrowser.registerTrackType('variant', VariantTileLoaderOverride, VariantTrackOverride);
+GenomeBrowser.registerTrackType('interval', IntervalTileLoaderOverride, IntervalTrack);
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
@@ -105,10 +108,19 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 					name: 'Sequence',
 				} },
 				{ model: {
+					type: 'variant',
+					name: 'Variants',
+				} },
+				{ model: {
 					type: 'annotation',
 					name: '→ Strand Genes',
-					strand: '+',
-				} }
+					strand: Strand.Positive,
+				} },
+				{ model: {
+					type: 'annotation',
+					name: '→ Strand Genes',
+					strand: Strand.Negative,
+				} },
 			],
 		});
 

@@ -1,6 +1,6 @@
 import { VariantTrack } from "genome-browser";
 import { EntityType } from "valis";
-import { App } from "../App";
+import { App } from "../../App";
 
 export class VariantTrackOverride extends VariantTrack {
 
