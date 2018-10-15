@@ -1,4 +1,4 @@
-import { GenomeBrowser, TrackModel, IntervalTrackModel, VariantTrackModel, GenomeBrowserConfiguration, AnnotationTileLoader, VariantTileLoader, VariantTrack, IDataSource, Strand, IntervalTrack } from "genome-browser";
+import { GenomeBrowser, TrackModel, IntervalTrackModel, VariantTrackModel, TrackViewer, AnnotationTileLoader, IDataSource, Strand, IntervalTrack } from "genome-browser";
 
 import Dialog from "material-ui/Dialog";
 import FlatButton from "material-ui/FlatButton";
@@ -9,6 +9,8 @@ import { ContentReport } from "material-ui/svg-icons";
 import * as React from "react";
 import { EntityType, SiriusApi, AppStatePersistence } from "valis";
 import { ValisBrowserConfig } from "valis/lib/valis-browser/ValisBrowserConfig";
+import ExpandLessIcon from "@material-ui/icons/ExpandLess";
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 // styles
 import "./App.scss";
 import AppModel, { AppEvent } from "./model/AppModel";
@@ -26,6 +28,7 @@ import { VariantTrackOverride } from "./track/variant/VariantTrackOverride";
 import { SiriusDataSource } from "./data-sources/SiriusDataSource";
 import { VariantTileLoaderOverride } from "./track/variant/VariantTileLoaderOverride";
 import { IntervalTileLoaderOverride } from "./track/interval/IntervalTileLoaderOverride";
+import { DATA_SOURCE_CLINVAR } from "./ui/helpers/constants";
 const deepEqual = require('fast-deep-equal');
 
 // register custom / override tracks
@@ -99,6 +102,64 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		this.viewModel = new ViewModel();
 		this.appModel.setViewModel(this.viewModel);
 
+		TrackViewer.TrackHeader = (props: {
+			model: TrackModel,
+			setExpanded?: (state: boolean) => void,
+			isExpanded: boolean,
+    	}) => {
+			const iconColor = 'rgb(171, 171, 171)';
+			const iconHoverColor = 'rgb(255, 255, 255)';
+			const iconViewBoxSize = '0 0 32 32';
+			const style = {
+				marginTop: 8,
+				marginLeft: 16,
+				color: 'inherit'
+			}
+			const headerContainerStyle: React.CSSProperties = {
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'flex-start'
+			};
+	
+			const ArrowElem = props.isExpanded ? ExpandLessIcon : ExpandMoreIcon;
+	
+			const expandArrow = (<ArrowElem
+				style={style}
+				viewBox={iconViewBoxSize}
+			// color={iconColor}	
+			// hoverColor={iconHoverColor}	
+			/>);
+			return (<div
+				style={{
+					position: 'relative',
+					width: '100%',
+					height: '100%',
+					color: '#e8e8e8',
+					backgroundColor: '#171615',
+					borderRadius: '8px 0px 0px 8px',
+					fontSize: '15px',
+					overflow: 'hidden',
+					userSelect: 'none',
+				}}
+			>
+				<div style={{
+					position: 'absolute',
+					width: '100%',
+					textAlign: 'center',
+					top: '50%',
+					transform: 'translate(0, -50%)',
+				}}>
+					<div style={headerContainerStyle} onClick={() => { this.trackHeaderClicked(props.model); }}>
+						<IconButton onClick={(e: any) => { props.setExpanded(!props.isExpanded); e.stopPropagation(); }} color="inherit">
+							{expandArrow}
+						</IconButton>
+						<div>{props.model.name}</div>
+					</div>
+				</div>
+			</div>);
+			return null;
+		}
+
 		let dataSource: IDataSource = new SiriusDataSource(SiriusApi);
 		this.genomeBrowser = new GenomeBrowser(dataSource, {
 			panels: [ { location: { contig: 'chr1', x0: 0, x1: 249e6 } } ],
@@ -136,6 +197,16 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			sidebarVisible: false,
 			appReady: false,
 		};
+	}
+
+	trackHeaderClicked = (model: TrackModel) => {
+		if (model.type === 'variant') {
+			const variantTrackModel = model as VariantTrackModel;
+			if (variantTrackModel.query) this.displaySearchResults(variantTrackModel.query);
+		} else if (model.type === 'interval') {
+			const intervalTrackModel = model as IntervalTrackModel;
+			this.displaySearchResults(intervalTrackModel.query);
+		}
 	}
 
 	getPersistentState(): PersistentAppState {
