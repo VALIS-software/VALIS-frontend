@@ -51,6 +51,16 @@ export class SignalTileLoader extends TileLoader<SignalTilePayload, BlockPayload
 
             this.ready = true;
         });
+
+        // preload low-resolution data when we know the size of the contig
+        dataSource.getContigs().then((contigs) => {
+            let contigInfo = contigs.find((c) => c.id === contig);
+            if (contigInfo != null) {
+                let maxX = contigInfo.span - 1;
+                let minSpan = 512;
+                this.getTiles(0, maxX, contigInfo.span / minSpan, true, () => { });
+            }
+        });
     }
 
     protected generateLodLookups(bigWigHeader: HeaderData): {
@@ -71,7 +81,7 @@ export class SignalTileLoader extends TileLoader<SignalTilePayload, BlockPayload
         let lodMap = new Array(highestLod);
         let lodZoomIndexMap = new Array(highestLod);
 
-        console.log(availableLods);
+        const diffLowerLimit = 2;
 
         for (let i = 0; i < highestLod; i++) {
 
@@ -81,8 +91,13 @@ export class SignalTileLoader extends TileLoader<SignalTilePayload, BlockPayload
                 if (l > i) { // we've found the upper lod
                     let upperLod = l;
                     let lowerLod = availableLods[j - 1];
+                    let diffLower = i - lowerLod;
+                    let diffUpper = upperLod - i;
+
                     // pick closest lod
-                    let bestLod = ((i - lowerLod) <= (upperLod - i)) ? lowerLod : upperLod;
+                    // prevent picking lower-lod if the different is too great – this is to prevent performance issues displaying many tiles
+                    let bestLod = ((diffLower < diffUpper) && (diffLower <= diffLowerLimit)) ? lowerLod : upperLod;
+
                     lodMap[i] = bestLod;
                     break;
                 }
@@ -97,9 +112,6 @@ export class SignalTileLoader extends TileLoader<SignalTilePayload, BlockPayload
                 lodZoomIndexMap[i] = zoomHeaderEntry.index;
             }
         }
-
-        console.log('lodmap', lodMap);
-        console.log('lodZoomIndexMap', lodZoomIndexMap);
 
         return {
             lodMap: lodMap,
@@ -123,6 +135,7 @@ export class SignalTileLoader extends TileLoader<SignalTilePayload, BlockPayload
 
         // @! use for normalization
         let dataMultiplier = 0.1;
+        // @! review floor in i0, i1
 
         let dataPromise: Promise<Float32Array>;
 
@@ -143,8 +156,8 @@ export class SignalTileLoader extends TileLoader<SignalTilePayload, BlockPayload
                 for (let entry of zoomData) {
                     let x0 = entry.start - tile.x;
                     let x1 = entry.end - tile.x;
-                    let i0 = Math.round(x0 / lodDensity);
-                    let i1 = Math.round(x1 / lodDensity);
+                    let i0 = Math.floor(x0 / lodDensity);
+                    let i1 = Math.floor(x1 / lodDensity);
 
                     // fake norm
                     let value = (entry.sumData / entry.validCount) * dataMultiplier;
@@ -172,12 +185,13 @@ export class SignalTileLoader extends TileLoader<SignalTilePayload, BlockPayload
                 for (let entry of rawData) {
                     let x0 = entry.start - tile.x;
                     let x1 = entry.end - tile.x;
-                    let i0 = Math.round(x0 / lodDensity);
-                    let i1 = Math.round(x1 / lodDensity);
+                    let i0 = Math.floor(x0);
+                    let i1 = Math.floor(x1);
 
                     let value = entry.value;
 
                     for (let i = i0; i < i1; i++) {
+                        if ((i < 0) || (i >= tile.lodSpan)) continue; // out of range
                         floatArray[i * nChannels] = value * dataMultiplier;
                     }
                 }
