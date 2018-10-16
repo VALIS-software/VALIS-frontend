@@ -60,6 +60,7 @@
     "@fortawesome/react-fontawesome": "0.0.x",
     "@types/react-select": "^2.0.4",
     "axios": "0.18.x",
+    "bigwig-reader": "^1.0.6",
     "fast-deep-equal": "^2.0.1",
     "genome-browser": "github:VALIS-software/Genome-Browser",
     "genomics-formats": "github:VALIS-software/Genomics-Formats",
