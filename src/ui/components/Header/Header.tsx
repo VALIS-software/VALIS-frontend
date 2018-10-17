@@ -1,11 +1,12 @@
 // Dependencies
 import * as React from 'react';
 // Material-UI
-import IconButton from 'material-ui/IconButton';
+
 import FlatButton from 'material-ui/FlatButton';
-import { Toolbar, ToolbarGroup, ToolbarTitle } from 'material-ui/Toolbar';
 // Material-UI Icons
-import Menu from 'material-ui/svg-icons/navigation/menu';
+import IconMenu from 'material-ui/IconMenu';
+
+import MenuItem from 'material-ui/MenuItem';
 import CloudUpload from "material-ui/svg-icons/file/cloud-upload";
 import ActionTimeline from "material-ui/svg-icons/action/timeline";
 import SocialShare from "material-ui/svg-icons/social/share";
@@ -14,6 +15,7 @@ import TokenBox from '../Shared/TokenBox/TokenBox';
 import UserProfileButton from '../Shared/UserProfileButton/UserProfileButton';
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 import AnalysisSelector from '../AnalysisSelector/AnalysisSelector';
+import AnalysisResultSelector from '../AnalysisResultSelector/AnalysisResultSelector';
 import UserFilesPanel from '../UserFilesPanel/UserFilesPanel';
 // Models
 import AppModel from '../../../model/AppModel';
@@ -69,13 +71,17 @@ class Header extends React.Component<Props, State> {
   openAnalysis = () => {
     this.props.viewModel.pushView('Analysis', '', (<AnalysisSelector appModel={this.props.appModel} />));
   }
+
+  openResults = () => {
+    this.props.viewModel.pushView('My Results', '', (<AnalysisResultSelector appModel={this.props.appModel} />));
+  }
   
   openUserFiles = () => {
-    this.props.viewModel.pushView('UserFiles', '', (<UserFilesPanel appModel={this.props.appModel} />));
+    this.props.viewModel.pushView('Uploaded Files', '', (<UserFilesPanel appModel={this.props.appModel} />));
   }
 
   render() {
-    const analysisButton = <FlatButton style={{color: 'white'}} onClick={this.openAnalysis} label="Analyze" icon={(<ActionTimeline/>)} />;
+    const analysisButton = <FlatButton style={{color: 'white'}} label="Analysis" icon={(<ActionTimeline/>)} />;
     const userFileButton = <FlatButton style={{color: 'white'}} onClick={this.openUserFiles} label="Upload Data" icon={(<CloudUpload/>)} />;
     const shareButton = <FlatButton style={{color: 'white'}} onClick={this.props.onShowShare} label="Share" icon={(<SocialShare/>)} />;
     return (<div>
@@ -86,7 +92,14 @@ class Header extends React.Component<Props, State> {
             <div className="header-search-box" style={{marginTop: -16}}>
               <TokenBox appModel={this.props.appModel} viewModel={this.props.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>
             </div>
-            <div className="header-button">{analysisButton}</div>
+            <div className="header-button">
+            <IconMenu
+              iconButtonElement={analysisButton}
+            >
+              <MenuItem value="1" onClick={this.openAnalysis}  primaryText="Create Analysis" />
+              <MenuItem value="2" onClick={this.openResults} primaryText="View Results" />
+            </IconMenu>
+            </div>
             <div className="header-button">{shareButton}</div>
             <div className="header-item"><UserFeedBackButton userProfile={this.props.userProfile} /></div>
             <div className="header-item" style={{marginTop:2}}>

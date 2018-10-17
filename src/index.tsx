@@ -4,14 +4,16 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import BasicTheme from "./ui/themes/BasicTheme";
 
 import App from "./App";
-import { SiriusApi } from 'valis';
+import { SiriusApi, Canis} from 'valis';
 
 import './index.html';
 import './index.scss';
 
 // determine API url from environment
 const LOCAL_API_URL = 'http://127.0.0.1:5000';
+const LOCAL_CANIS_API_URL = 'http://127.0.0.1:3000';
 let apiBaseUrl = '';
+let canisApiBaseUrl = '';
 if (process != null && process.env != null) {
 	if (process.env.API_URL != null) {
 		// url override set
@@ -20,10 +22,20 @@ if (process != null && process.env != null) {
 		// use default dev url
 		apiBaseUrl = process.env.dev ? LOCAL_API_URL : '';
 	}
+
+	if (process.env.CANIS_API_URL != null) {
+		// url override set
+		canisApiBaseUrl = process.env.CANIS_API_URL;
+	} else {
+		// use default dev url
+		canisApiBaseUrl = process.env.dev ? LOCAL_CANIS_API_URL : '';
+	}
 }
 
 // set sirius API root
 SiriusApi.apiUrl = apiBaseUrl;
+
+Canis.Api.apiUrl = canisApiBaseUrl;
 
 // render app
 ReactDOM.render(

@@ -20,6 +20,11 @@ const fixedAnalysisData = [
   }, 
   {
     "track_type": 'premium', 
+    "title": "Linkage Disequillibrium Expansion", 
+    "description": "Expand a variant set by finding all variants in LD."
+  },
+  {
+    "track_type": 'premium', 
     "title": "Correlate Regulatory Elements", 
     "description": "Find regulatory annotations correlated with elements in your tracks."
   },
@@ -31,7 +36,7 @@ const fixedAnalysisData = [
   {
     "track_type": 'premium', 
     "title": "Export Data", 
-    "description": "Download data from track in BED format."
+    "description": "Download data from track in BED or VCF format."
   },
 ];
 
