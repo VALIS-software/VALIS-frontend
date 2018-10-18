@@ -9,8 +9,10 @@ import { ContentReport } from "material-ui/svg-icons";
 import * as React from "react";
 import { EntityType, SiriusApi, AppStatePersistence } from "valis";
 import { ValisBrowserConfig } from "valis/lib/valis-browser/ValisBrowserConfig";
-import ExpandLessIcon from "@material-ui/icons/ExpandLess";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
+
+import ExpandLessIcon from "material-ui/svg-icons/navigation/expand-less";
+import ExpandMoreIcon from "material-ui/svg-icons/navigation/expand-more";
+
 // styles
 import "./App.scss";
 import AppModel, { AppEvent } from "./model/AppModel";
@@ -128,8 +130,8 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			const expandArrow = (<ArrowElem
 				style={style}
 				viewBox={iconViewBoxSize}
-			// color={iconColor}	
-			// hoverColor={iconHoverColor}	
+				color={iconColor}
+				hoverColor={iconHoverColor}
 			/>);
 			return (<div
 				style={{
