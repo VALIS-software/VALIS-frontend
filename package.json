@@ -10,6 +10,7 @@
     "analyze": "webpack --mode=production --env.analyze",
     "dev": "webpack-dev-server --env.dev",
     "dev-remote": "webpack-dev-server --env.dev --env.API_URL=http://35.185.230.75 --env.CANIS_API_URL=http://35.185.236.30",
+    "prod-remote": "webpack-dev-server --env.production --env.API_URL=http://35.185.230.75 --env.CANIS_API_URL=http://35.185.236.30",
     "production": "webpack --env.production",
     "deploy": "webpack --env.deploy --display-error-details",
     "test": "jest"
