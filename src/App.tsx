@@ -171,12 +171,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 					name: 'Sequence',
 				} },
 				{ model: {
-					type: 'signal',
-					name: 'Signal',
-					path: 'data/bigwig-test/ENCFF000WGM.bigWig',
-				} },
-				/*
-				{ model: {
 					type: 'variant',
 					name: 'Variants',
 				} },
@@ -190,7 +184,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 					name: '→ Strand Genes',
 					strand: Strand.Negative,
 				} },
-				*/
 			],
 		});
 
