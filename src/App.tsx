@@ -30,15 +30,12 @@ import { VariantTrackOverride } from "./track/variant/VariantTrackOverride";
 import { SiriusDataSource } from "./data-sources/SiriusDataSource";
 import { VariantTileLoaderOverride } from "./track/variant/VariantTileLoaderOverride";
 import { IntervalTileLoaderOverride } from "./track/interval/IntervalTileLoaderOverride";
-import { SignalTileLoader } from "./track/signal/SignalTileLoader";
-import { SignalTrack } from "./track/signal/SignalTrack";
 const deepEqual = require('fast-deep-equal');
 
 // register custom / override tracks
 GenomeBrowser.registerTrackType('annotation', AnnotationTileLoader, AnnotationTrackOverride);
 GenomeBrowser.registerTrackType('variant', VariantTileLoaderOverride, VariantTrackOverride);
 GenomeBrowser.registerTrackType('interval', IntervalTileLoaderOverride, IntervalTrack);
-GenomeBrowser.registerTrackType('signal', SignalTileLoader, SignalTrack);
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
