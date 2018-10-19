@@ -25,6 +25,16 @@ const fixedAnalysisData = [
   },
   {
     "track_type": 'premium', 
+    "title": "Kaplan Meier Curve", 
+    "description": "Estimate survival of a patient cohort based on a mutation or set of mutations."
+  },
+  {
+    "track_type": 'premium', 
+    "title": "Cohort Analysis", 
+    "description": "Visualize patient outcomes by cohort."
+  },
+  {
+    "track_type": 'premium', 
     "title": "Correlate Regulatory Elements", 
     "description": "Find regulatory annotations correlated with elements in your tracks."
   },
