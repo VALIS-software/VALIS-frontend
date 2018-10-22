@@ -200,6 +200,10 @@ class SearchResultsView extends React.Component {
     </div>);
 
     const openResult = () => {
+      const query = this.fetchedQueryModel.getFilteredQuery();
+      if (query.userFileID) {
+        result.userFileID = query.userFileID;
+      }
       App.displayEntityDetails(result);
     }
     return (<CellMeasurer
