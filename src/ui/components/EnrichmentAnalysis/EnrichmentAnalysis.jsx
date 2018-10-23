@@ -1,13 +1,14 @@
 // Dependencies
 import * as React from "react";
 import * as PropTypes from "prop-types";
+import JobDetails from "../JobDetails/JobDetails";
 import RaisedButton from "material-ui/RaisedButton/RaisedButton";
 import CircularProgress from "material-ui/CircularProgress";
-import Select from 'react-select';
 import TextField from 'material-ui/TextField';
 import MenuItem from 'material-ui/MenuItem';
 import SelectField from 'material-ui/SelectField';
 import { App } from '../../../App';
+import { Canis } from 'valis';
 
 class EnrichmentAnalysis extends React.Component {
   constructor(props) {
@@ -33,15 +34,24 @@ class EnrichmentAnalysis extends React.Component {
   }
 
   isValid = () => {
-    if (!this.state.selectedIndex || this.state.selectedIndex.length === 0) return false;
-    if (!this.state.selectedTrack) return false;
     if (!this.state.title || this.state.title.length === 0) return false;
     return true;
   }
 
   runAnalysis = () => {
-    
-    this.props.viewModel.closeNavigationView();
+    let a = Canis.Api.getApp('giggle');
+    Canis.Api.getApp('giggle').then((app) => {
+      app.createJob({
+        name: this.state.title,
+        query: this.state.availableAnnotationTracks[this.state.selectedTrack].query,
+      }).then(result => {
+        this.props.appModel.viewModel.pushView(
+          'Job Status',
+          result.id,
+          <JobDetails appModel={this.appModel} job={result} />
+        );
+      });
+    });
   }
 
   handleUpdateSelectedIndex = (event, index, value) => {

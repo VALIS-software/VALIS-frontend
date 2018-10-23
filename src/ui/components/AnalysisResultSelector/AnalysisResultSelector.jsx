@@ -2,7 +2,7 @@
 import * as React from "react";
 import * as PropTypes from "prop-types";
 import DataListItem from "../DataListItem/DataListItem";
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
+import JobDetails from "../JobDetails/JobDetails";
 import { Canis } from 'valis';
 // Styles
 import "./AnalysisResultSelector.scss";
@@ -22,10 +22,20 @@ class AnalysisResultSelector extends React.Component {
   }
 
   componentDidMount() {
-    // TODO: fetch data from CANIS
+    Canis.Api.getJobs('None').then((jobList) => {
+      this.setState({
+        dataInfo: jobList.reverse()
+      })
+    });
   }
 
-
+  handleOpen = (job) => {
+    this.props.appModel.viewModel.pushView(
+			'Job Status',
+			job.id,
+			<JobDetails appModel={this.appModel} job={job} />
+		)
+  }
 
   render() {
     if (!this.state.dataInfo) {
@@ -35,15 +45,14 @@ class AnalysisResultSelector extends React.Component {
       return (<ErrorDetails error={this.state.error} />);
     }
     const dataInfoBlocks = [];
-    const dataInfo = [{title:'TODO', description: 'Fetch user job from CANIS api'}];
+    const dataInfo = this.state.dataInfo;
     for (const di of dataInfo) {
-      const fn = (di.track_type === 'premium') ? this.handleOpen : () => console.log(di.track_type);
       dataInfoBlocks.push(
         <DataListItem
-          title={di.title}
-          description={di.description}
-          onClick={fn}
-          key={di.title}
+          title={di.name}
+          description={'Created by ' + di.author}
+          onClick={() => this.handleOpen(di)}
+          key={di.name}
         />
       );
     }
