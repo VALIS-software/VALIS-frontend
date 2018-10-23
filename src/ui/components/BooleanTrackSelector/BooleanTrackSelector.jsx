@@ -159,6 +159,7 @@ class BooleanTrackSelector extends React.Component {
           floatingLabelText="Track Title"
           onChange={this.handleUpdateTitle}
           errorText={!this.state.title ? 'This field is required' : ''}
+          fullWidth={true}
         /><br /> <br />
         <SelectField
           value={this.state.operatorValue}
@@ -173,6 +174,7 @@ class BooleanTrackSelector extends React.Component {
           floatingLabelText="Source Track"
           onChange={this.handleUpdateTrackA}
           maxHeight={200}
+          fullWidth={true}
         >
           {availableAnnotationTrackItems}
         </SelectField><br /> <br />
@@ -181,6 +183,7 @@ class BooleanTrackSelector extends React.Component {
           floatingLabelText="Filter Track"
           onChange={this.handleUpdateTrackB}
           maxHeight={200}
+          fullWidth={true}
         >
           {availableAnnotationTrackItems}
         </SelectField><br /> <br /> <br />

@@ -3,18 +3,16 @@ import * as React from "react";
 import * as PropTypes from "prop-types";
 import UpgradeDialog from "../Shared/UpgradeDialog/UpgradeDialog";
 import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector";
+import EnrichmentAnalysis from "../EnrichmentAnalysis/EnrichmentAnalysis";
 import DataListItem from "../DataListItem/DataListItem";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-import {
-  TRACK_TYPE_BOOLEAN,
-} from "../../helpers/constants";
 
 // Styles
 import "./AnalysisSelector.scss";
 
 const fixedAnalysisData = [
   {
-    "track_type": TRACK_TYPE_BOOLEAN, 
+    "track_type": 'arithmetic', 
     "title": "Genomic Arithmetic", 
     "description": "Combine track regions, find regions that overlap, or subtract regions."
   }, 
@@ -34,9 +32,9 @@ const fixedAnalysisData = [
     "description": "Visualize patient outcomes by cohort."
   },
   {
-    "track_type": 'premium', 
-    "title": "Correlate Regulatory Elements", 
-    "description": "Find regulatory annotations correlated with elements in your tracks."
+    "track_type": 'enrichment', 
+    "title": "Enrichment Analysis", 
+    "description": "Test regulatory annotations, pathways or gene-sets for enrichment against elements in a track."
   },
   {
     "track_type": 'premium', 
@@ -65,11 +63,17 @@ class AnalysisSelector extends React.Component {
 
 
   dataSetSelected = (trackType) => {
-    if (trackType === TRACK_TYPE_BOOLEAN) {
+    if (trackType === 'arithmetic') {
       this.viewModel.pushView(
-        "Boolean Tracks",
+        "Genomic Arithmetic",
         null,
         <BooleanTrackSelector appModel={this.appModel} />
+      );
+    } else if (trackType === 'enrichment') {
+      this.viewModel.pushView(
+        "Enrichment Analysis",
+        null,
+        <EnrichmentAnalysis appModel={this.appModel} />
       );
     }
   }
