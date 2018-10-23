@@ -28,7 +28,7 @@ if (process != null && process.env != null) {
 		canisApiBaseUrl = process.env.CANIS_API_URL;
 	} else {
 		// use default dev url
-		canisApiBaseUrl = process.env.dev ? LOCAL_CANIS_API_URL : '';
+		canisApiBaseUrl = process.env.dev ? LOCAL_CANIS_API_URL : null;
 	}
 }
 
@@ -36,6 +36,12 @@ if (process != null && process.env != null) {
 SiriusApi.apiUrl = apiBaseUrl;
 
 Canis.Api.apiUrl = canisApiBaseUrl;
+
+if (!process.env.dev) {
+	SiriusApi.getCanisApiUrl().then(url => {
+		Canis.Api.apiUrl = url;
+	});
+}
 
 // render app
 ReactDOM.render(
