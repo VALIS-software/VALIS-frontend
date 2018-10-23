@@ -690,6 +690,10 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		this.appInstance.displaySearchResults(query, text);
 	}
 
+	static closeNavigationView() {
+		this.appInstance.viewModel.closeNavigationView();
+	}
+
 }
 
 export default App;

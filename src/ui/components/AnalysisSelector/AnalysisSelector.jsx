@@ -17,6 +17,11 @@ const fixedAnalysisData = [
     "description": "Combine track regions, find regions that overlap, or subtract regions."
   }, 
   {
+    "track_type": 'enrichment', 
+    "title": "Enrichment Analysis", 
+    "description": "Test regulatory annotations, pathways or gene-sets for enrichment against elements in a track."
+  },
+  {
     "track_type": 'premium', 
     "title": "Linkage Disequillibrium Expansion", 
     "description": "Expand a variant set by finding all variants in LD."
@@ -32,14 +37,9 @@ const fixedAnalysisData = [
     "description": "Visualize patient outcomes by cohort."
   },
   {
-    "track_type": 'enrichment', 
-    "title": "Enrichment Analysis", 
-    "description": "Test regulatory annotations, pathways or gene-sets for enrichment against elements in a track."
-  },
-  {
     "track_type": 'premium', 
-    "title": "Predict Functional Effects", 
-    "description": "Find variants that regulate a particular set of genes using predictive models."
+    "title": "Regulatory Effect Prediction", 
+    "description": "Find variants that regulate a particular set of genes."
   },
   {
     "track_type": 'premium', 
