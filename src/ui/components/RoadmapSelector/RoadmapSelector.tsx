@@ -10,7 +10,7 @@ import { DATA_SOURCE_ROADMAP } from "../../helpers/constants";
 import AppModel from "../../../model/AppModel";
 import ViewModel from "../../../model/ViewModel";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-// Styles
+
 
 type Props = {
   appModel: AppModel,
@@ -216,7 +216,7 @@ class RoadmapSelector extends React.Component<Props, State> {
           primary={true}
           onClick={() => this.addQueryTrack()}
           disabled={this.state.biosampleValue === null || this.state.genomeTypeValue === null}
-          style={{ position: "absolute", bottom: "10px", width: "90%" }}
+          style={{ position: "absolute", left: "0px", bottom: "10px", paddingLeft:"5%", paddingRight:"5%", width: "100%" }}
         />
       </div>
     );
