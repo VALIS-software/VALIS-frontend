@@ -146,7 +146,7 @@ class RoadmapSelector extends React.Component<Props, State> {
     builder.newGenomeQuery();
     const genomeType = this.state.availableTypes[this.state.genomeTypeValue];
     builder.filterType(genomeType);
-    const biosample = this.state.biosampleValue;
+    const biosample = this.state.availableBiosamples[this.state.biosampleValue];
     builder.filterBiosample(biosample);
     builder.setLimit(this.state.maxnumber);
     const genomeQuery = builder.build();
