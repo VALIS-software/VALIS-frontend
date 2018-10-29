@@ -1,20 +1,24 @@
 // Dependencies
 import * as React from "react";
 import * as PropTypes from "prop-types";
-import RaisedButton from "material-ui/RaisedButton/RaisedButton";
+
+import Select from 'react-select';
+
+import RaisedButton from "material-ui/RaisedButton";
+import TableView, { TableViewDataResult } from '../Shared/TableView/TableView';
+import { QueryBuilder, SiriusApi } from 'valis';
 import SelectField from "material-ui/SelectField";
-import MenuItem from "material-ui/MenuItem";
-import { QueryBuilder } from 'valis'
-import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
-import { SiriusApi } from 'valis';
 import { DATA_SOURCE_TCGA } from "../../helpers/constants";
 import { App } from '../../../App';
 
+import { CANCER_NAMES, CANCER_NAME_MAP, GENDER_NAMES, VITAL_STATUS_NAMES, VITAL_STATUS_MAP, GENDER_NAME_MAP, MIN_AGE, MAX_AGE } from './TCGAConstants';
 // Styles
-import "./TCGASelector.scss";
+
+import './TCGASelector.scss';
 
 
 class TCGASelector extends React.Component {
+
   constructor(props) {
     super(props);
     if (props.appModel) {
@@ -22,166 +26,173 @@ class TCGASelector extends React.Component {
       this.api = this.appModel.api;
     }
     this.state = {
-      title: "",
-      biosampleValue: null,
-      availableBiosamples: [],
-      variantTagValue: null,
-      availableVariantTags: [],
+      filterState: '',
     };
+
+    this.filters = new Map();
+    this.ageFilter = { '>=': MIN_AGE, '<=': MAX_AGE };
   }
 
-  updateAvailableBiosamples = () => {
-    if (this.selectedBiosample) return;
-    const builder = new QueryBuilder();
-    builder.newInfoQuery();
-    builder.filterSource(DATA_SOURCE_TCGA);
-    const infoQuery = builder.build();
-    SiriusApi.getDistinctValues('info.biosample', infoQuery).then(data => {
-      // Keep the current selection of biosample
-      let newBiosampleValue = null;
-      if (this.state.biosampleValue !== null) {
-        const currentBiosample = this.state.availableBiosamples[this.state.biosampleValue];
-        newBiosampleValue = data.indexOf(currentBiosample);
-        if (newBiosampleValue < 0) {
-          newBiosampleValue = null;
-        }
-      }
-      this.setState({
-        availableBiosamples: data,
-        biosampleValue: newBiosampleValue,
-      });
-    }, err => {
-      this.appModel.error(this, err);
-      this.setState({
-        error: err,
-      });
-    });
-  }
+  buildPatientQuery = () => {
+    let patientQuery = this.props.patientQuery;
 
-
-  handelUpdateBiosample = (event, index, value) => {
-    this.setState({
-      biosampleValue: value
-    });
-    if (!this.state.fixTitle) {
-      const newTitle =
-        value === null ? "" : this.state.availableBiosamples[value];
-      this.setState({
-        title: newTitle
-      });
+    if (!patientQuery) {
+        const builder = new QueryBuilder();
+        builder.newInfoQuery();
+        builder.filterType("patient");
+        patientQuery = builder.build();
     }
-  }
 
-  updateAvailableVariantTags = () => {
-    const builder = new QueryBuilder();
-    builder.newInfoQuery();
-    builder.filterSource(DATA_SOURCE_TCGA);
-    const infoQuery = builder.build();
-    SiriusApi.getDistinctValues('info.variant_tags', infoQuery).then(data => {
-      this.setState({
-        availableVariantTags: data,
-        loading: false,
-      });
-    }, err => {
-      this.appModel.error(this, err);
-      this.setState({
-        error: err,
-        loading: false,
-      });
+    this.filters.forEach((v, k) => {
+        patientQuery.filters[k] = v;
     });
+    if (this.ageFilter['>='] > MIN_AGE || this.ageFilter['<='] < MAX_AGE) {
+        patientQuery.filters['info.age'] = this.ageFilter;
+    }
+    return patientQuery;
   }
 
-  handelUpdateVariantTag = (event, index, value) => {
+  fetchFunction = (start, end)  => {
+      return SiriusApi.getQueryResults(this.buildPatientQuery(), true, start, end);
+  }
+
+  handleFilterChange = (filter, value) => {
+    if (filter === 'Indication') {
+        if (value.length === 0) {
+            this.filters.delete('info.disease_code');
+        } else {
+            this.filters.set('info.disease_code', { $in : value });
+        }
+    } else if (filter === 'Gender') {
+        if (value.length === 0) {
+            this.filters.delete('info.gender');
+        } else {
+            this.filters.set('info.gender',  { $in : value });
+        }
+    } else if (filter === 'Vital Status') {
+        if (value.length === 0) {
+            this.filters.delete('info.vital_status');
+        } else {
+            this.filters.set('info.vital_status',  { $in : value });
+        }
+    } else if (filter === 'Age') {
+        const range = value;
+        this.ageFilter = { '>=': range[0], '<=': range[1] };
+    }
     this.setState({
-      variantTagValue: value
+        filterState: JSON.stringify([...this.filters, this.ageFilter])
     });
   }
 
-  buildQuery = () => {
+
+  renderRow = (patient) => {
+    const gender = patient.info.gender.toLowerCase();;
+    const age = Math.round(patient.info.age);
+    const cancerType = CANCER_NAME_MAP[patient.info.disease_code];
+    const vitalStatus = patient.info.vital_status === 'Dead' ? 'Deceased' : patient.info.vital_status;
+    const patientDesc = `${gender}, ${age} years old, ${cancerType} (${vitalStatus})`;
+    return (<div className='table-row'>
+        <div className='table-row-title'>{patient.name} </div>
+        <div className='table-row-description'>{patientDesc} </div>
+    </div>);
+  }
+
+  clickRow = (patient) => {
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
     builder.filterType({'$in': ['SNP', 'variant']});
     builder.filterSource(DATA_SOURCE_TCGA);
-    const biosample = this.state.availableBiosamples[this.state.biosampleValue];
-    builder.filterBiosample(biosample);
-    if (this.state.variantTagValue !== null) {
-      const variantTag = this.state.availableVariantTags[this.state.variantTagValue];
-      builder.filterVariantTag(variantTag);
-    }
-    return builder.build();
+    builder.filterPatientBarCode(patient.info.patient_barcode)
+    const variantQuery = builder.build();
+    App.addVariantTrack(patient.name, variantQuery);
   }
 
-  addQueryTrack = () => {
-    const query = this.buildQuery();
-    this.appModel.trackMixPanel("Add TCGA Track", { "query": query });
-    const biosample = this.state.availableBiosamples[this.state.biosampleValue];
-    let variantTag = '';
-    if (this.state.variantTagValue !== null) {
-      variantTag = this.state.availableVariantTags[this.state.variantTagValue];
-    }
-    App.addVariantTrack(`${biosample} ${variantTag} (TCGA)`, query);
-    this.props.viewModel.closeNavigationView();
-  }
-
-  componentDidMount() {
-    // use api to pull all available biosamples and variant_tags for TCGA
-    this.updateAvailableBiosamples();
-    this.updateAvailableVariantTags();
+  addAll = () => {
+    SiriusApi.getQueryResults(this.buildPatientQuery(), true, 0, 15000).then(data=> {
+      const builder = new QueryBuilder();
+      builder.newGenomeQuery();
+      builder.filterType({'$in': ['SNP', 'variant']});
+      builder.filterSource(DATA_SOURCE_TCGA);
+      builder.filterPatientBarCode({ $in : data.data.map(d=> d.info.patient_barcode) })
+      const variantQuery = builder.build();
+      App.addVariantTrack('TCGA variants', variantQuery);
+    });
   }
 
   render() {
-    if (this.state.error) {
-      return (<ErrorDetails error={this.state.error} />);
-    }
-    const {
-      availableBiosamples,
-      availableVariantTags,
-    } = this.state;
+    const fetchFunction = this.fetchFunction.bind(this);
+    const indicationItems = CANCER_NAMES.map((d) => {
+      return { label : d[0], value: d[1] };
+    });
 
-    const biosampleItems = [<MenuItem value={null} primaryText="" key={-1} />];
-    for (let i = 0; i < availableBiosamples.length; i++) {
-      biosampleItems.push(
-        <MenuItem value={i} key={i} primaryText={availableBiosamples[i]} />
-      );
-    }
+    let codes = this.filters.get('info.disease_code') ? this.filters.get('info.disease_code').$in : null;
+    if (codes) codes = codes.map(d => {
+      return {
+        label: CANCER_NAME_MAP[d],
+        value: d,
+      }
+    });
 
-    const variantTagItems = [<MenuItem value={null} primaryText="" key={-1} />];
-    for (let i = 0; i < availableVariantTags.length; i++) {
-      variantTagItems.push(
-        <MenuItem value={i} key={i} primaryText={availableVariantTags[i]} />
-      );
-    }
+    const genderItems =  GENDER_NAMES.map((d) => {
+      return { label : d[0], value: d[1] };
+    });
 
-    return (
-      <div className="track-editor">
-        <SelectField
-          value={this.state.biosampleValue}
-          floatingLabelText="Biosample"
-          onChange={this.handelUpdateBiosample}
-          maxHeight={200}
-          errorText={this.state.biosampleValue === null ? "Pick one" : null}
-        >
-          {biosampleItems}
-        </SelectField>
-        <br/>
-        <SelectField
-          value={this.state.variantTagValue}
-          floatingLabelText="Variant Tag"
-          onChange={this.handelUpdateVariantTag}
-          maxHeight={200}
-        >
-          {variantTagItems}
-        </SelectField>
-        <br/>
+    let genders = this.filters.get('info.gender') ? this.filters.get('info.gender').$in : null;
+    if (genders) genders = genders.map(d => {
+      return {
+        label: GENDER_NAME_MAP[d],
+        value: d,
+      }
+    });
+
+    const statusItems = VITAL_STATUS_NAMES.map((d) => {
+      return { label : d[0], value: d[1] };
+    });
+
+    let statuses = this.filters.get('info.vital_status') ? this.filters.get('info.vital_status').$in : null;
+    if (statuses) statuses = statuses.map(d => {
+      return {
+        label: VITAL_STATUS_MAP[d],
+        value: d,
+      }
+    });
+
+
+    return (<div className='tcga-selector'>
+        <div className='options'>
+          <div class='selector'><Select
+            value={codes}
+            onChange={(d) => this.handleFilterChange('Indication', Array.isArray(d) ? d.map(x => x.value) : [d.value])}
+            options={indicationItems}
+            placeholder='Limit by indication'
+            isMulti={true}
+          />
+          </div>{" "}
+          <div class='selector'><Select
+            value={statuses}
+            onChange={(d) => this.handleFilterChange('Vital Status', Array.isArray(d) ? d.map(x => x.value) : [d.value])}
+            options={statusItems}
+            placeholder='Limit by vital status'
+            isMulti={true}
+          />
+          </div>{" "}
+          <div class='selector'><Select
+            value={genders}
+            onChange={(d) => this.handleFilterChange('Gender', Array.isArray(d) ? d.map(x => x.value) : [d.value])}
+            options={genderItems}
+            placeholder='Limit by gender'
+            isMulti={true}
+          />
+          </div>{" "}
+        </div>
+        <TableView fetchId={this.state.filterState} fetch={fetchFunction} rowRenderer={this.renderRow} onClick={this.clickRow}/>
         <RaisedButton
-          label="Add Track"
+          label="Add All"
           primary={true}
-          onClick={() => this.addQueryTrack()}
-          disabled={this.state.biosampleValue === null}
-          style={{ position: "absolute", bottom: "10px", width: "90%" }}
+          onClick={() => this.addAll()}
+          style={{ position: "absolute", bottom: "10px", marginLeft:"5%", width: "90%" }}
         />
-      </div>
-    );
+      </div>)
   }
 }
 

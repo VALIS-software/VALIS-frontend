@@ -295,7 +295,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		// Get User Profile, redirect if not logged in
 		// @! this isn't a good way to handle login – it causes a number of problems
 		// should be handled server-side instead
-		/*
 		SiriusApi.getUserProfile().then((userProfile: any) => {
 			if (!userProfile.name) {
 				window.location.href = '/login';
@@ -312,11 +311,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			})
 		}, (err: object) => {
 			window.location.href = '/login';
-		});
-		*/
-		this.setState({
-			userProfile: {},
-			appReady: true,
 		});
 	}
 
@@ -694,6 +688,10 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 	static displaySearchResults(query: any, text: string = 'Search') {
 		this.appInstance.displaySearchResults(query, text);
+	}
+
+	static closeNavigationView() {
+		this.appInstance.viewModel.closeNavigationView();
 	}
 
 }

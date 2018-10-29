@@ -1,0 +1,32 @@
+@import "../../../../variables.scss";
+
+.table-view {
+	.table-item {
+		.table-row {
+			padding: 32px;
+			height: auto;
+			&:hover {
+				background-color: lighten($valis-theme-light-green, 10%);
+				cursor: pointer;
+			}
+			
+		}
+
+		&:nth-child(even) {
+			background-color: lighten(lightgray, 15%);
+		}
+
+		&:nth-child(odd) {
+			background-color: lighten(lightgray, 17%);
+		}
+
+		.table-row-description {
+			font-size: 14px;
+			color: darkgray;
+		}
+	}
+
+	.table-view-empty {
+		padding: 32px;
+	}
+}

@@ -6,6 +6,7 @@ import GWASSelector from "../GWASSelector/GWASSelector";
 import GenomeSelector from "../GenomeSelector/GenomeSelector";
 import UserFilesPanel from "../UserFilesPanel/UserFilesPanel";
 import ENCODESelector from "../ENCODESelector/ENCODESelector";
+import RoadmapSelector from "../RoadmapSelector/RoadmapSelector";
 import GTEXSelector from "../GTEXSelector/GTEXSelector";
 import ExACSelector from "../ExACSelector/ExACSelector";
 import TCGASelector from "../TCGASelector/TCGASelector";
@@ -20,6 +21,7 @@ const TRACK_TYPE_TCGA = 'track_type_tcga';
 const TRACK_TYPE_EQTL = 'track_type_eqtl';
 const TRACK_TYPE_EXAC = 'track_type_exac';
 const TRACK_TYPE_ENCODE = 'track_type_encode';
+const TRACK_TYPE_ROADMAP = 'track_type_roadmap';
 const TRACK_TYPE_BOOLEAN = 'track_type_boolean';
 const TRACK_TYPE_SEQUENCE = 'track_type_sequence';
 const TRACK_TYPE_GENES = 'track_type_gene';
@@ -44,6 +46,11 @@ const fixedTrackData = [
     "track_type": TRACK_TYPE_ENCODE,
     "title": "ENCODE DNA Elements",
     "description": "Comprehensive parts list of functional elements in the human genome."
+  },
+  {
+    "track_type": TRACK_TYPE_ROADMAP,
+    "title": "Roadmap Chromatin States",
+    "description": "ChromHMM annotations for 127 reference epigenomes."
   },
   {
     "track_type": TRACK_TYPE_EXAC,
@@ -106,6 +113,12 @@ class DatasetSelector extends React.Component {
         "ENCODE Track",
         null,
         <ENCODESelector appModel={this.appModel} viewModel={this.viewModel} />
+      );
+    } else if (trackType === TRACK_TYPE_ROADMAP) {
+      this.viewModel.pushView(
+        "Roadmap Track",
+        null,
+        <RoadmapSelector appModel={this.appModel} viewModel={this.viewModel} />
       );
     } else if (trackType === TRACK_TYPE_EQTL) {
       this.viewModel.pushView(
