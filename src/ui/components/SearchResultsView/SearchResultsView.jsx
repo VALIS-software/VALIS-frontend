@@ -8,9 +8,8 @@ import Pills from "../Shared/Pills/Pills";
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import { prettyPrint } from "../TraitDetails/TraitDetails";
-import { SiriusApi } from 'valis';
+import { SiriusApi, QueryType } from 'valis';
 import QueryModel, { FilterType } from "../../../model/QueryModel";
-import { QueryType } from 'valis';
 
 // Styles
 import "./SearchResultsView.scss";

@@ -60,6 +60,7 @@
     "@fortawesome/fontawesome-free-solid": "5.0.x",
     "@fortawesome/react-fontawesome": "0.0.x",
     "@types/react-select": "^2.0.4",
+    "@types/react-virtualized": "^9.18.7",
     "axios": "0.18.x",
     "bigwig-reader": "^1.0.6",
     "fast-deep-equal": "^2.0.1",
