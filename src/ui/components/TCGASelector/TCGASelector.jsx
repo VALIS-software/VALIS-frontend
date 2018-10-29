@@ -115,7 +115,7 @@ class TCGASelector extends React.Component {
       builder.filterSource(DATA_SOURCE_TCGA);
       builder.filterPatientBarCode({ $in : data.data.map(d=> d.info.patient_barcode) })
       const variantQuery = builder.build();
-      App.addVariantTrack('TCGA variants', variantQuery);
+      App.addVariantTrack(`TCGA variants`, variantQuery);
     });
   }
 

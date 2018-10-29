@@ -272,8 +272,10 @@ class SearchResultsView extends React.Component {
     }
 
     let addTrackButton = null;
+    let exportTrackButton = null;
     if (this.state.results && this.queryModel && this.queryModel.query && this.queryModel.query.type === QueryType.GENOME) {
       addTrackButton = (<button className="float-left" onClick={this.addQueryAsTrack}>Add as Track</button>);
+      exportTrackButton = (<button className="float-left" onClick={this.addQueryAsTrack}>Export BED</button>);
     }
 
     return (
@@ -281,6 +283,7 @@ class SearchResultsView extends React.Component {
         <div className="search-filters">
           <div className="clearfix">
             {addTrackButton}
+            {exportTrackButton}
             <button className="float-right" onClick={this.toggleFilters}>Filter</button>
           </div>
           <div>{filterMenu}</div>

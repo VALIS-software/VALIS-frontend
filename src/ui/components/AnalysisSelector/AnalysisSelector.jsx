@@ -23,13 +23,13 @@ const fixedAnalysisData = [
   },
   {
     "track_type": 'premium', 
-    "title": "Linkage Disequillibrium Expansion", 
-    "description": "Expand a variant set by finding all variants in LD."
+    "title": "Kaplan Meier Curve", 
+    "description": "Estimate survival of a patient cohort based on a mutation or set of mutations."
   },
   {
     "track_type": 'premium', 
-    "title": "Kaplan Meier Curve", 
-    "description": "Estimate survival of a patient cohort based on a mutation or set of mutations."
+    "title": "Linkage Disequillibrium Expansion", 
+    "description": "Expand a variant set by finding all variants in LD."
   },
   {
     "track_type": 'premium', 
@@ -38,13 +38,8 @@ const fixedAnalysisData = [
   },
   {
     "track_type": 'premium', 
-    "title": "Regulatory Effect Prediction", 
-    "description": "Find variants that regulate a particular set of genes."
-  },
-  {
-    "track_type": 'premium', 
-    "title": "Export Data", 
-    "description": "Download data from track in BED or VCF format."
+    "title": "Variant Effect Prediction", 
+    "description": "Algorithms that predict changes in RNA-splicing, Methylation or other functional effects"
   },
 ];
 
@@ -60,7 +55,6 @@ class AnalysisSelector extends React.Component {
       showUpgrade: false,
     };
   }
-
 
   dataSetSelected = (trackType) => {
     if (trackType === 'arithmetic') {
@@ -103,8 +97,8 @@ class AnalysisSelector extends React.Component {
         />
       );
     }
-    const dialog = this.state.showUpgrade ? (<UpgradeDialog open={true}/>) : (<span/>);
-    return (<div className="dataset-selector">{dialog}{dataInfoBlocks}</div>);
+
+    return (<div className="dataset-selector"><UpgradeDialog onClose={() => this.setState({showUpgrade: false})} open={this.state.showUpgrade}/>{dataInfoBlocks}</div>);
   }
 }
 
