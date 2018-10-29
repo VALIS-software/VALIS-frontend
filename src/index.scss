@@ -10,3 +10,7 @@ body {
 	font-family: $valis-body-font;
 	overflow: hidden;
 }
+
+*:focus {
+    outline: none;
+}
