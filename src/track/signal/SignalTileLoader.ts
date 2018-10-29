@@ -1,5 +1,5 @@
 import { TileLoader, IDataSource, Tile } from "genome-browser";
-import { GPUDevice, GPUTexture, TextureFormat, TextureDataType, TextureMagFilter, TextureMinFilter, TextureWrapMode, ColorSpaceConversion } from "engine/rendering/GPUDevice";
+import { GPUDevice, GPUTexture, TextureFormat, TextureDataType, TextureMagFilter, TextureMinFilter, TextureWrapMode, ColorSpaceConversion } from "genome-browser";
 import { SignalTrackModel } from "./SignalTrackModel";
 
 import { AxiosDataLoader, BigWigReader, HeaderData } from  "bigwig-reader";
@@ -141,7 +141,6 @@ export class SignalTileLoader extends TileLoader<SignalTilePayload, BlockPayload
 
         if (zoomIndex !== null) {
             // fetch from zoomed
-            console.log('fetch zoomed', zoomIndex);
             dataPromise = this.bigWigReader.readZoomData(
                 this.contig,
                 tile.x,
@@ -171,7 +170,6 @@ export class SignalTileLoader extends TileLoader<SignalTilePayload, BlockPayload
             });
         } else {
             // fetch 'raw'
-            console.log('fetch raw');
             dataPromise = this.bigWigReader.readBigWigData(
                 this.contig,
                 tile.x,
@@ -221,8 +219,6 @@ export class SignalTileLoader extends TileLoader<SignalTilePayload, BlockPayload
                         let nChannels = 4;
                         let dataWidthPixels = payload.array.length / nChannels;
 
-                        console.log(`%cupload row ${tile.lodLevel}`, 'color: green');
-
                         gpuTexture.updateTextureData(
                             0,
                             TextureFormat.RGBA,
@@ -230,6 +226,8 @@ export class SignalTileLoader extends TileLoader<SignalTilePayload, BlockPayload
                             0, tile.blockRowIndex, // x, y
                             Math.min(gpuTexture.w, dataWidthPixels), 1, // w, h
                         );
+
+                        console.log(`%cupload row: ${tile.blockRowIndex}, key: ${tile.key}`, 'color: green');
 
                         payload.dataUploaded = true;
                     }
