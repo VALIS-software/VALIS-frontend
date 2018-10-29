@@ -1,9 +1,7 @@
 import { ShaderTrack, TileNode, Tile } from "genome-browser";
 import { SignalTrackModel } from "./SignalTrackModel";
 import { SignalTilePayload, SignalTileLoader } from "./SignalTileLoader";
-import GPUDevice, { GPUTexture, AttributeType } from "engine/rendering/GPUDevice";
-import { SharedResources } from "genome-browser";
-import { DrawMode, DrawContext } from "engine/rendering/Renderer";
+import { GPUDevice, GPUTexture, AttributeType, SharedResources, DrawMode, DrawContext } from "genome-browser";
 
 export class SignalTrack extends ShaderTrack<SignalTrackModel, SignalTileLoader> {
 
@@ -77,6 +75,7 @@ class SignalTile extends TileNode<SignalTilePayload> {
     protected static vertexShader = `
         #version 100
 
+        precision mediump float;
         attribute vec2 position;
         uniform mat4 model;
         uniform vec2 size;
@@ -98,6 +97,7 @@ class SignalTile extends TileNode<SignalTilePayload> {
         precision mediump float;
         uniform float opacity;
         uniform sampler2D memoryBlock;
+        uniform vec2 size;
 
         varying vec2 texCoord;
         varying vec2 vUv;
@@ -115,8 +115,22 @@ class SignalTile extends TileNode<SignalTilePayload> {
         
         void main() {
             vec4 texRaw = texture2D(memoryBlock, texCoord);
-            float debug = step(0.9, vUv.y);
-            gl_FragColor = vec4(vec3(texRaw.r, vUv.xy * debug), 1.0) * opacity;
+
+            // heatmap style
+            #if 0
+            vec3 col = viridis(texRaw.r);
+            #else
+            vec3 col = step(1.0 - texRaw.r, vUv.y) * viridis(texRaw.r * vUv.y); // * vec3( 1., 0., 0. );
+            #endif
+            
+            float debug = step((1.0 - vUv.y) * size.y, 10.);
+            
+            gl_FragColor = vec4(
+                mix(
+                    col,
+                    vec3( 0., vUv.xy ),
+                    debug
+                ), 1.0) * opacity;
         }
     `;
 
