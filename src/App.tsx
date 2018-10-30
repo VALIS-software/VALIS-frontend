@@ -1,4 +1,4 @@
-import { GenomeBrowser, Track, TrackModel, IntervalTrackModel, VariantTrackModel, TrackViewer, AnnotationTileLoader, IDataSource, Strand, IntervalTrack } from "genome-browser";
+import { GenomeBrowser, Track, TrackModel, IntervalTrackModel, VariantTrackModel, TrackViewer, AnnotationTileLoader, IDataSource, Strand, IntervalTrack, GenomeBrowserConfiguration } from "genome-browser";
 
 import Dialog from "material-ui/Dialog";
 import FlatButton from "material-ui/FlatButton";
@@ -158,33 +158,41 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 					</div>
 				</div>
 			</div>);
-			return null;
+		}
+
+		let initialBrowserConfiguration: GenomeBrowserConfiguration;
+
+		if (!!window.location.hash) {
+			initialBrowserConfiguration = AppStatePersistence.parseUrlHash(window.location.hash).genomeBrowser;
+		} else {
+			// default configuration
+			initialBrowserConfiguration = {
+				panels: [{ location: { contig: 'chr1', x0: 0, x1: 249e6 } }],
+				tracks: [
+					{
+						type: 'sequence',
+						name: 'Sequence',
+					},
+					{
+						type: 'variant',
+						name: 'Variants',
+					},
+					{
+						type: 'annotation',
+						name: '→ Strand Genes',
+						strand: Strand.Positive,
+					},
+					{
+						type: 'annotation',
+						name: '← Strand Genes',
+						strand: Strand.Negative,
+					},
+				],
+			};
 		}
 
 		let dataSource: IDataSource = new SiriusDataSource(SiriusApi);
-		this.genomeBrowser = new GenomeBrowser(dataSource, {
-			panels: [ { location: { contig: 'chr1', x0: 0, x1: 249e6 } } ],
-			tracks: [
-				{ model: {
-					type: 'sequence',
-					name: 'Sequence',
-				} },
-				{ model: {
-					type: 'variant',
-					name: 'Variants',
-				} },
-				{ model: {
-					type: 'annotation',
-					name: '→ Strand Genes',
-					strand: Strand.Positive,
-				} },
-				{ model: {
-					type: 'annotation',
-					name: '← Strand Genes',
-					strand: Strand.Negative,
-				} },
-			],
-		});
+		this.genomeBrowser = new GenomeBrowser(dataSource, initialBrowserConfiguration);
 
 		this.state = {
 			views: [],
@@ -598,7 +606,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	}
 
 	protected addTrack(model: TrackModel) {
-		this.genomeBrowser.addTrack(model, undefined, true);
+		this.genomeBrowser.addTrack(model, true);
 	}
 
 	protected uniqueTitle(title: string) : string {
