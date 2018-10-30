@@ -19,6 +19,7 @@ class UpgradeDialog extends React.Component {
 
   handleClose = () => {
     this.setState({open: false});
+    if (this.props.onClose) this.props.onClose();
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
@@ -53,6 +54,7 @@ class UpgradeDialog extends React.Component {
 
 UpgradeDialog.propTypes = {
     open: PropTypes.bool,
+    onClose: PropTypes.func,
 };
 
 export default UpgradeDialog;

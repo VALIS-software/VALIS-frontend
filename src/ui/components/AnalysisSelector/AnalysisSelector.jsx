@@ -4,6 +4,7 @@ import * as PropTypes from "prop-types";
 import UpgradeDialog from "../Shared/UpgradeDialog/UpgradeDialog";
 import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector";
 import EnrichmentAnalysis from "../EnrichmentAnalysis/EnrichmentAnalysis";
+import KaplanMeierAnalysis from "../KaplanMeierAnalysis/KaplanMeierAnalysis";
 import DataListItem from "../DataListItem/DataListItem";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
@@ -22,29 +23,19 @@ const fixedAnalysisData = [
     "description": "Test regulatory annotations, pathways or gene-sets for enrichment against elements in a track."
   },
   {
+    "track_type": 'kaplanmeier', 
+    "title": "Kaplan Meier Curve", 
+    "description": "Estimate survival of a patient cohort based on a mutation or set of mutations."
+  },
+  {
     "track_type": 'premium', 
     "title": "Linkage Disequillibrium Expansion", 
     "description": "Expand a variant set by finding all variants in LD."
   },
   {
     "track_type": 'premium', 
-    "title": "Kaplan Meier Curve", 
-    "description": "Estimate survival of a patient cohort based on a mutation or set of mutations."
-  },
-  {
-    "track_type": 'premium', 
-    "title": "Cohort Analysis", 
-    "description": "Visualize patient outcomes by cohort."
-  },
-  {
-    "track_type": 'premium', 
-    "title": "Regulatory Effect Prediction", 
-    "description": "Find variants that regulate a particular set of genes."
-  },
-  {
-    "track_type": 'premium', 
-    "title": "Export Data", 
-    "description": "Download data from track in BED or VCF format."
+    "title": "Variant Effect Prediction", 
+    "description": "Algorithms that predict changes in RNA-splicing, Methylation or other functional effects"
   },
 ];
 
@@ -61,7 +52,6 @@ class AnalysisSelector extends React.Component {
     };
   }
 
-
   dataSetSelected = (trackType) => {
     if (trackType === 'arithmetic') {
       this.viewModel.pushView(
@@ -74,6 +64,12 @@ class AnalysisSelector extends React.Component {
         "Enrichment Analysis",
         null,
         <EnrichmentAnalysis appModel={this.appModel} />
+      );
+    } else if (trackType === 'kaplanmeier') {
+      this.viewModel.pushView(
+        "Kaplan Meier Curve",
+        null,
+        <KaplanMeierAnalysis appModel={this.appModel} />
       );
     }
   }
@@ -103,8 +99,8 @@ class AnalysisSelector extends React.Component {
         />
       );
     }
-    const dialog = this.state.showUpgrade ? (<UpgradeDialog open={true}/>) : (<span/>);
-    return (<div className="dataset-selector">{dialog}{dataInfoBlocks}</div>);
+
+    return (<div className="dataset-selector"><UpgradeDialog onClose={() => this.setState({showUpgrade: false})} open={this.state.showUpgrade}/>{dataInfoBlocks}</div>);
   }
 }
 

@@ -61,6 +61,25 @@ class SearchResultsView extends React.Component {
     }
   }
 
+  downloadQuery = () => {
+    if (this.state.downloading) return;
+    this.setState({
+      downloading: true,
+    });
+    SiriusApi.downloadQuery(this.queryModel.getFilteredQuery()).then(response => {
+      var headers = response.headers;
+      var blob = new Blob([response.data],{type: headers['content-type']});
+      var link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      const formatted = this.props.text.replace(/[^\w\s]/gi, '_');
+      link.download = `query_results_${formatted}.bed`;
+      link.click();
+      this.setState({
+        downloading: false,
+      });
+    });
+  }
+
   fetch = (clearResults = false) => {
     // clear the results if needed
     if (clearResults) {
@@ -272,8 +291,11 @@ class SearchResultsView extends React.Component {
     }
 
     let addTrackButton = null;
+    let exportTrackButton = null;
     if (this.state.results && this.queryModel && this.queryModel.query && this.queryModel.query.type === QueryType.GENOME) {
       addTrackButton = (<button className="float-left" onClick={this.addQueryAsTrack}>Add as Track</button>);
+      const exportText = this.state.downloading ? 'Downloading...' : 'Export BED';
+      exportTrackButton = (<button className="float-left" onClick={this.downloadQuery}>{exportText}</button>);
     }
 
     return (
@@ -281,6 +303,7 @@ class SearchResultsView extends React.Component {
         <div className="search-filters">
           <div className="clearfix">
             {addTrackButton}
+            {exportTrackButton}
             <button className="float-right" onClick={this.toggleFilters}>Filter</button>
           </div>
           <div>{filterMenu}</div>

@@ -1,4 +1,4 @@
-import { GenomeBrowser, TrackModel, IntervalTrackModel, VariantTrackModel, TrackViewer, AnnotationTileLoader, IDataSource, Strand, IntervalTrack, GenomeBrowserConfiguration } from "genome-browser";
+import { GenomeBrowser, Track, TrackModel, IntervalTrackModel, VariantTrackModel, TrackViewer, AnnotationTileLoader, IDataSource, Strand, IntervalTrack, GenomeBrowserConfiguration } from "genome-browser";
 
 import Dialog from "material-ui/Dialog";
 import FlatButton from "material-ui/FlatButton";
@@ -211,10 +211,10 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	trackHeaderClicked = (model: TrackModel) => {
 		if (model.type === 'variant') {
 			const variantTrackModel = model as VariantTrackModel;
-			if (variantTrackModel.query) this.displaySearchResults(variantTrackModel.query);
+			if (variantTrackModel.query) this.displaySearchResults(variantTrackModel.query, model.name);
 		} else if (model.type === 'interval') {
 			const intervalTrackModel = model as IntervalTrackModel;
-			this.displaySearchResults(intervalTrackModel.query);
+			this.displaySearchResults(intervalTrackModel.query, model.name);
 		}
 	}
 
@@ -566,10 +566,10 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	}
 
 	protected _searchIncrementalId = 0;
-	protected displaySearchResults(query: any, text: string = 'Search') {
+	protected displaySearchResults(query: any, text: string = 'Search Results') {
 		const uid = `search-result-#${this._searchIncrementalId++}`;
 		const view = (<SearchResultsView key={uid} text={text} query={query} viewModel={this.viewModel} appModel={this.appModel}/>);
-		this.viewModel.pushView('Search Results', query, view);
+		this.viewModel.pushView(text, query, view);
 	}
 
 	protected displayDatasetBrowser() {
@@ -609,7 +609,18 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		this.genomeBrowser.addTrack(model, true);
 	}
 
+	protected uniqueTitle(title: string) : string {
+		let i = 0;
+		this.genomeBrowser.getTracks().forEach((m : Track) => {
+			if (m.model.name.indexOf(title) >= 0) {
+				i++;
+			}
+		});
+		return i ?  `${title} (${i})` : title;
+	}
+
 	protected addVariantTrack(title: string, query: any) {
+		title = this.uniqueTitle(title);
 		this.addTrack({
 			type: 'variant',
 			name: title,
