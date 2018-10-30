@@ -71,7 +71,8 @@ class SearchResultsView extends React.Component {
       var blob = new Blob([response.data],{type: headers['content-type']});
       var link = document.createElement('a');
       link.href = window.URL.createObjectURL(blob);
-      link.download = `query_results.bed`;
+      const formatted = this.props.text.replace(/[^\w\s]/gi, '_');
+      link.download = `query_results_${formatted}.bed`;
       link.click();
       this.setState({
         downloading: false,
