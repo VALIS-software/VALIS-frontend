@@ -174,9 +174,18 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						name: 'Sequence',
 					},
 					{
-						type: 'signal',
-						name: 'Signal',
-						path: 'data/bigwig-test/ENCFF000WGM.bigWig',
+						type: 'variant',
+						name: 'Variants',
+					},
+					{
+						type: 'annotation',
+						name: '→ Strand Genes',
+						strand: Strand.Positive,
+					},
+					{
+						type: 'annotation',
+						name: '← Strand Genes',
+						strand: Strand.Negative,
 					},
 				],
 			};
