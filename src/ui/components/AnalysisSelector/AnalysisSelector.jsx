@@ -4,6 +4,7 @@ import * as PropTypes from "prop-types";
 import UpgradeDialog from "../Shared/UpgradeDialog/UpgradeDialog";
 import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector";
 import EnrichmentAnalysis from "../EnrichmentAnalysis/EnrichmentAnalysis";
+import KaplanMeierAnalysis from "../KaplanMeierAnalysis/KaplanMeierAnalysis";
 import DataListItem from "../DataListItem/DataListItem";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
@@ -22,7 +23,7 @@ const fixedAnalysisData = [
     "description": "Test regulatory annotations, pathways or gene-sets for enrichment against elements in a track."
   },
   {
-    "track_type": 'premium', 
+    "track_type": 'kaplanmeier', 
     "title": "Kaplan Meier Curve", 
     "description": "Estimate survival of a patient cohort based on a mutation or set of mutations."
   },
@@ -30,11 +31,6 @@ const fixedAnalysisData = [
     "track_type": 'premium', 
     "title": "Linkage Disequillibrium Expansion", 
     "description": "Expand a variant set by finding all variants in LD."
-  },
-  {
-    "track_type": 'premium', 
-    "title": "Cohort Analysis", 
-    "description": "Visualize patient outcomes by cohort."
   },
   {
     "track_type": 'premium', 
@@ -68,6 +64,12 @@ class AnalysisSelector extends React.Component {
         "Enrichment Analysis",
         null,
         <EnrichmentAnalysis appModel={this.appModel} />
+      );
+    } else if (trackType === 'kaplanmeier') {
+      this.viewModel.pushView(
+        "Kaplan Meier Curve",
+        null,
+        <KaplanMeierAnalysis appModel={this.appModel} />
       );
     }
   }

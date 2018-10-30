@@ -1,13 +1,10 @@
 // Dependencies
 import * as React from "react";
 import * as PropTypes from "prop-types";
-
 import Select from 'react-select';
-
 import RaisedButton from "material-ui/RaisedButton";
-import TableView, { TableViewDataResult } from '../Shared/TableView/TableView';
+import TableView from '../Shared/TableView/TableView';
 import { QueryBuilder, SiriusApi } from 'valis';
-import SelectField from "material-ui/SelectField";
 import { DATA_SOURCE_TCGA } from "../../helpers/constants";
 import { App } from '../../../App';
 
@@ -108,15 +105,30 @@ class TCGASelector extends React.Component {
   }
 
   addAll = () => {
-    SiriusApi.getQueryResults(this.buildPatientQuery(), true, 0, 15000).then(data=> {
+    if (this.filters.size === 0) {
       const builder = new QueryBuilder();
       builder.newGenomeQuery();
       builder.filterType({'$in': ['SNP', 'variant']});
       builder.filterSource(DATA_SOURCE_TCGA);
-      builder.filterPatientBarCode({ $in : data.data.map(d=> d.info.patient_barcode) })
       const variantQuery = builder.build();
       App.addVariantTrack(`TCGA variants`, variantQuery);
-    });
+    } else {
+      this.setState({
+        disableAdd: true
+      });
+      SiriusApi.getQueryResults(this.buildPatientQuery(), true, 0, 15000).then(data=> {
+        const builder = new QueryBuilder();
+        builder.newGenomeQuery();
+        builder.filterType({'$in': ['SNP', 'variant']});
+        builder.filterSource(DATA_SOURCE_TCGA);
+        builder.filterPatientBarCode({ $in : data.data.map(d=> d.info.patient_barcode) })
+        const variantQuery = builder.build();
+        App.addVariantTrack(`TCGA variants`, variantQuery);
+        this.setState({
+          disableAdd: false
+        });
+      });
+    }
   }
 
   render() {
@@ -190,6 +202,7 @@ class TCGASelector extends React.Component {
           label="Add All"
           primary={true}
           onClick={() => this.addAll()}
+          disabled={this.state.disableAdd}
           style={{ position: "absolute", bottom: "10px", marginLeft:"5%", width: "90%" }}
         />
       </div>)
