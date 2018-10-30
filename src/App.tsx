@@ -180,7 +180,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 				} },
 				{ model: {
 					type: 'annotation',
-					name: '→ Strand Genes',
+					name: '← Strand Genes',
 					strand: Strand.Negative,
 				} },
 			],
