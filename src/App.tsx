@@ -30,15 +30,12 @@ import { VariantTrackOverride } from "./track/variant/VariantTrackOverride";
 import { SiriusDataSource } from "./data-sources/SiriusDataSource";
 import { VariantTileLoaderOverride } from "./track/variant/VariantTileLoaderOverride";
 import { IntervalTileLoaderOverride } from "./track/interval/IntervalTileLoaderOverride";
-import { SignalTileLoader } from "./track/signal/SignalTileLoader";
-import { SignalTrack } from "./track/signal/SignalTrack";
 const deepEqual = require('fast-deep-equal');
 
 // register custom / override tracks
 GenomeBrowser.registerTrackType('annotation', AnnotationTileLoader, AnnotationTrackOverride);
 GenomeBrowser.registerTrackType('variant', VariantTileLoaderOverride, VariantTrackOverride);
 GenomeBrowser.registerTrackType('interval', IntervalTileLoaderOverride, IntervalTrack);
-GenomeBrowser.registerTrackType('signal', SignalTileLoader, SignalTrack);
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
@@ -173,17 +170,13 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 				panels: [{ location: { contig: 'chr1', x0: 0, x1: 249e6 } }],
 				tracks: [
 					{
-						model: {
-							type: 'sequence',
-							name: 'Sequence',
-						}
+						type: 'sequence',
+						name: 'Sequence',
 					},
 					{
-						model: {
-							type: 'signal',
-							name: 'Signal',
-							path: 'data/bigwig-test/ENCFF000WGM.bigWig',
-						}
+						type: 'signal',
+						name: 'Signal',
+						path: 'data/bigwig-test/ENCFF000WGM.bigWig',
 					},
 				],
 			};
@@ -604,7 +597,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	}
 
 	protected addTrack(model: TrackModel) {
-		this.genomeBrowser.addTrack(model, undefined, true);
+		this.genomeBrowser.addTrack(model, true);
 	}
 
 	protected addVariantTrack(title: string, query: any) {
