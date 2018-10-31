@@ -34,6 +34,8 @@ type VariantInfo = {
 
 export class VariantTileLoaderOverride extends VariantTileLoader {
 
+    static cacheKey = VariantTileLoader.cacheKey;
+
     protected getTilePayload(tile: Tile<VariantTilePayload>): Promise<VariantTilePayload> | VariantTilePayload {
         const startBase = tile.x + 1;
         const endBase = startBase + tile.span;

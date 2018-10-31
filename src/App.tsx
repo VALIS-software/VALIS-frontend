@@ -30,12 +30,13 @@ import { VariantTrackOverride } from "./track/variant/VariantTrackOverride";
 import { SiriusDataSource } from "./data-sources/SiriusDataSource";
 import { VariantTileLoaderOverride } from "./track/variant/VariantTileLoaderOverride";
 import { IntervalTileLoaderOverride } from "./track/interval/IntervalTileLoaderOverride";
+import { IntervalTrackOverride } from "./track/interval/IntervalTrackOverride";
 const deepEqual = require('fast-deep-equal');
 
 // register custom / override tracks
 GenomeBrowser.registerTrackType('annotation', AnnotationTileLoader, AnnotationTrackOverride);
 GenomeBrowser.registerTrackType('variant', VariantTileLoaderOverride, VariantTrackOverride);
-GenomeBrowser.registerTrackType('interval', IntervalTileLoaderOverride, IntervalTrack);
+GenomeBrowser.registerTrackType('interval', IntervalTileLoaderOverride, IntervalTrackOverride);
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
@@ -637,7 +638,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		this.addTrack({
 			name: title,
 			type: 'interval',
-			tileStoreType: 'interval',
 			query: query,
 			blendEnabled: blendEnabled
 		});

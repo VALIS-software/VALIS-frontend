@@ -1,7 +1,20 @@
-import { IntervalTileLoader, Tile } from "genome-browser";
+import { IntervalTileLoader, Tile, IDataSource } from "genome-browser";
 import { SiriusApi } from "valis";
+import { IntervalTrackModelOverride } from "./IntervalTrackModelOverride";
 
 export class IntervalTileLoaderOverride extends IntervalTileLoader {
+
+    static cacheKey(model: IntervalTrackModelOverride): string {
+        return JSON.stringify(model.query);
+    }
+
+    constructor(
+        protected readonly dataSource: IDataSource,
+        protected readonly model: IntervalTrackModelOverride,
+        protected readonly contig: string,
+    ) {
+        super(dataSource, model, contig);
+    }
 
     protected getTilePayload(tile: Tile<Float32Array>): Promise<Float32Array> | Float32Array {
         // @! quality improvement; reduce perception of shivering when zooming in
