@@ -6,7 +6,7 @@ import SelectField from "material-ui/SelectField";
 import * as React from "react";
 import { SiriusApi, QueryBuilder  } from 'valis';
 import App from "../../../App";
-import { DATA_SOURCE_ROADMAP } from "../../helpers/constants";
+import { DATA_SOURCE_IMMUNE_ATLAS } from "../../helpers/constants";
 import AppModel from "../../../model/AppModel";
 import ViewModel from "../../../model/ViewModel";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
@@ -23,12 +23,11 @@ type State = {
   genomeTypeValue: any,
   chromoNameValue: number,
   maxnumber: number,
-  availableTypes: Array<any>,
   availableBiosamples: Array<any>,
   checked: Array<any>,
 }
 
-class RoadmapSelector extends React.Component<Props, State> {
+class ImmuneAtlasSelector extends React.Component<Props, State> {
 
   appModel: AppModel;
   selectedBiosample: any;
@@ -44,8 +43,7 @@ class RoadmapSelector extends React.Component<Props, State> {
       biosampleValue: null,
       genomeTypeValue: null,
       chromoNameValue: 0,
-      maxnumber: 100000,
-      availableTypes: [],
+      maxnumber: 1000000,
       availableBiosamples: [],
       checked: [],
       error: undefined,
@@ -56,13 +54,8 @@ class RoadmapSelector extends React.Component<Props, State> {
     if (this.selectedBiosample) return;
     const builder = new QueryBuilder();
     builder.newInfoQuery();
-    builder.filterSource(DATA_SOURCE_ROADMAP);
-    if (this.selectedType) {
-      builder.filterInfotypes(this.selectedType);
-    }
-    if (this.selectedTargets) {
-      builder.filterTargets(this.selectedTargets);
-    }
+    builder.filterSource(DATA_SOURCE_IMMUNE_ATLAS);
+
     const infoQuery = builder.build();
     SiriusApi.getDistinctValues('info.biosample', infoQuery).then(data => {
       // Keep the current selection of biosample
@@ -86,46 +79,14 @@ class RoadmapSelector extends React.Component<Props, State> {
     });
   }
 
-  updateAvailableTypes = () => {
-    const builder = new QueryBuilder();
-    builder.newInfoQuery();
-    builder.filterSource(DATA_SOURCE_ROADMAP);
-    if (this.selectedBiosample) {
-      builder.filterBiosample(this.selectedBiosample);
-    }
-    const infoQuery = builder.build();
-    SiriusApi.getDistinctValues("info.types", infoQuery).then(data => {
-      // Keep the current selection of type
-
-      this.setState({
-        availableTypes: data,
-        genomeTypeValue: null,
-      });
-    }, err => {
-      this.appModel.error(this, err);
-    });
-  }
-
 
   handleUpdateBiosample = (value: any) => {
     this.setState({
       biosampleValue: value,
-      availableTypes: [],
     });
     // Update the available types and targets
     if (value !== null) {
       this.selectedBiosample = value;
-    }
-    this.updateAvailableTypes();
-  }
-
-  handleUpdateType = (event: any, index: number, value: any) => {
-    this.setState({
-      genomeTypeValue: value,
-    });
-    // Update the available biosample and targets
-    if (value !== null) {
-      this.selectedType = this.state.availableTypes[value];
     }
   }
 
@@ -137,17 +98,15 @@ class RoadmapSelector extends React.Component<Props, State> {
 
   buildTitle() {
     const biosample = this.state.biosampleValue;
-    const genomeType = this.state.availableTypes[this.state.genomeTypeValue];
-    return `${biosample} ${genomeType}`;
+    return `${biosample}`;
   }
 
   buildQuery = () => {
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
-    const genomeType = this.state.availableTypes[this.state.genomeTypeValue];
-    builder.filterType(genomeType);
     const biosample = this.state.availableBiosamples[this.state.biosampleValue];
     builder.filterBiosample(biosample);
+    builder.filterSource(DATA_SOURCE_IMMUNE_ATLAS);
     builder.setLimit(this.state.maxnumber);
     const genomeQuery = builder.build();
     return genomeQuery;
@@ -170,15 +129,8 @@ class RoadmapSelector extends React.Component<Props, State> {
       return (<ErrorDetails error={this.state.error} />);
     }
     const {
-      availableTypes,
       availableBiosamples,
     } = this.state;
-    const genomeTypeItems = [<MenuItem value={null} primaryText="" key={-1} />];
-    for (let i = 0; i < availableTypes.length; i++) {
-      genomeTypeItems.push(
-        <MenuItem value={i} key={i} primaryText={availableTypes[i]} />
-      );
-    }
     const biosampleItems = [];
     for (let i = 0; i < availableBiosamples.length; i++) {
       biosampleItems.push(
@@ -200,22 +152,11 @@ class RoadmapSelector extends React.Component<Props, State> {
           placeholder='Choose a cell type'
         />{" "}
         <br />
-        {
-          this.state.availableTypes.length ? (<SelectField
-            value={this.state.genomeTypeValue}
-            floatingLabelText="Type"
-            onChange={this.handleUpdateType}
-            maxHeight={200}
-            errorText={this.state.genomeTypeValue === null ? "Pick one" : null}
-          >
-            {genomeTypeItems}
-          </SelectField>) : null
-        }
         <RaisedButton
           label="Add Track"
           primary={true}
           onClick={() => this.addQueryTrack()}
-          disabled={this.state.biosampleValue === null || this.state.genomeTypeValue === null}
+          disabled={this.state.biosampleValue === null}
           style={{ position: "absolute", left: "0px", bottom: "10px", paddingLeft:"5%", paddingRight:"5%", width: "100%" }}
         />
       </div>
@@ -223,4 +164,4 @@ class RoadmapSelector extends React.Component<Props, State> {
   }
 }
 
-export default RoadmapSelector;
+export default ImmuneAtlasSelector;

@@ -6,6 +6,7 @@ import GWASSelector from "../GWASSelector/GWASSelector";
 import GenomeSelector from "../GenomeSelector/GenomeSelector";
 import UserFilesPanel from "../UserFilesPanel/UserFilesPanel";
 import ENCODESelector from "../ENCODESelector/ENCODESelector";
+import ImmuneAtlasSelector from "../ImmuneAtlasSelector/ImmuneAtlasSelector";
 import RoadmapSelector from "../RoadmapSelector/RoadmapSelector";
 import GTEXSelector from "../GTEXSelector/GTEXSelector";
 import ExACSelector from "../ExACSelector/ExACSelector";
@@ -26,6 +27,7 @@ const TRACK_TYPE_BOOLEAN = 'track_type_boolean';
 const TRACK_TYPE_SEQUENCE = 'track_type_sequence';
 const TRACK_TYPE_GENES = 'track_type_gene';
 const TRACK_TYPE_USER_FILE = 'track_type_user_file';
+const TRACK_TYPE_IMMUNE_ATLAS = 'track_type_immune_atlas';
 
 // Styles
 import "./DatasetSelector.scss";
@@ -51,6 +53,11 @@ const fixedTrackData = [
     "track_type": TRACK_TYPE_ROADMAP,
     "title": "Roadmap Chromatin States",
     "description": "ChromHMM annotations for 127 reference epigenomes."
+  },
+  {
+    "track_type": TRACK_TYPE_IMMUNE_ATLAS,
+    "title": "Immune Atlas",
+    "description": "Landscape of stimulation-responsive chromatin across human immune cells. ATAC data for 25 cell types."
   },
   {
     "track_type": TRACK_TYPE_EXAC,
@@ -120,7 +127,13 @@ class DatasetSelector extends React.Component {
         null,
         <RoadmapSelector appModel={this.appModel} viewModel={this.viewModel} />
       );
-    } else if (trackType === TRACK_TYPE_EQTL) {
+    } else if (trackType === TRACK_TYPE_IMMUNE_ATLAS) {
+      this.viewModel.pushView(
+        "Immune Atlas Track",
+        null,
+        <ImmuneAtlasSelector appModel={this.appModel} viewModel={this.viewModel} />
+      );
+    }else if (trackType === TRACK_TYPE_EQTL) {
       this.viewModel.pushView(
         "GTEx eQTL's",
         null,
