@@ -1,9 +1,6 @@
 - Variants:
     - Improve colors and rendering
 
-- Preload high sequence lods to avoid black when zooming out
-
-
 - Integrate latest UI
     --- PR
     - Fill out viewModel.js and appModel.ts functionality
@@ -22,9 +19,6 @@
 
 - Slow down at large zoom-out because there's no limit on tiles
     - Track request boundaries
-
-- Wrap up dev colors code
-    - Maybe make the color dev trick into a separate dev/utils module
 
 - Large-scale annotation rendering
     - generate gene tiles, = array of genes with transcript count
@@ -48,32 +42,17 @@
 - Handle overlapping gene names * After July 1st
 
 # Tracks
-- Track Resizing, should move tracks below rather than resizing
 - Prevent tracks from being dragged off, clamp to edges
 - Track grid lines to match the x-axis
 - Momentum in panel zoom and pan via Animator
-- Add removeTrack and cleanupTrack
-
-# PR
-- Merge in latest UI
-
-# App
-- TrackViewer serializeState() / getState()
 
 # Tiling
 - Chrome bug, why cache return 0 for 10.bin?
     - Produce repo example for bug report
-- Move tile texture management out of Sequence track
 - Improve performance by pooling tile textures system
     - Allocate a pool of textures to use to avoid creating new textures frequently
 - Fix out of bounds sequence
     - .minmax file should report sequence length?
-- Remove hard coding in sirius test API
-- Switch to real sirius
-- Tile request ordering
-    - If we have a big list of unset requests we want to cancel and ensure the most recent request is executed first
-    - Should this be API level or TileEngine level?
-- Preload low-resolution version of sequence
 - Global cache pruning
 - Cache most important tiles in local storage
 - Pre-emptive loading when zooming out
@@ -88,9 +67,6 @@
 
 - State management, undo/redo
 
-- GPUText.ts should be moved into gputext repo
-    - build gputext.js
-    - update example
 - Publish GPUText on NPM
 
 - Support touch events (or use pointer events polyfill)
