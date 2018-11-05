@@ -1,4 +1,4 @@
-import { GenomeBrowser, Track, TrackModel, IntervalTrackModel, VariantTrackModel, TrackViewer, AnnotationTileLoader, IDataSource, Strand, IntervalTrack, GenomeBrowserConfiguration } from "genome-browser";
+import { GenomeBrowser, Track, TrackModel, IntervalTrackModel, VariantTrackModel, TrackViewer, AnnotationTileLoader, IDataSource, Strand, IntervalTrack, GenomeBrowserConfiguration } from "genome-visualizer";
 
 import Dialog from "material-ui/Dialog";
 import FlatButton from "material-ui/FlatButton";
@@ -607,6 +607,9 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	}
 
 	protected addTrack(model: TrackModel) {
+		if (model.heightPx == null) {
+			model.heightPx = 50;
+		}
 		this.genomeBrowser.addTrack(model, true);
 	}
 
