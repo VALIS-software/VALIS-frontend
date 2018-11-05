@@ -427,7 +427,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 							zIndex: 1
 						}}
 					>Add Track</button> 
-					{this.genomeBrowser.render({
+					{this.genomeBrowser.reactRender({
 						width: this.state.viewerWidth,
 						height: this.state.viewerHeight,
 						pixelRatio: App.canvasPixelRatio,
