@@ -1,4 +1,4 @@
-import { IntervalTrack, BlendMode, Tile } from "genome-browser";
+import { IntervalTrack, BlendMode, Tile } from "genome-visualizer";
 import { IntervalTrackModelOverride } from "./IntervalTrackModelOverride";
 
 /**

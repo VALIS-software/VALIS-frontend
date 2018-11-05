@@ -1,4 +1,4 @@
-import { IDataSource, Contig, GenomeFeature } from "genome-browser";
+import { IDataSource, Contig, GenomeFeature } from "genome-visualizer";
 import { SiriusApi } from "valis";
 
 export class SiriusDataSource implements IDataSource {

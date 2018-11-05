@@ -1,4 +1,4 @@
-import { IntervalTileLoader, Tile, IDataSource } from "genome-browser";
+import { IntervalTileLoader, Tile, IDataSource } from "genome-visualizer";
 import { SiriusApi } from "valis";
 import { IntervalTrackModelOverride } from "./IntervalTrackModelOverride";
 

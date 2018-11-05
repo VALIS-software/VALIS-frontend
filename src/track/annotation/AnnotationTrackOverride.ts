@@ -1,4 +1,4 @@
-import { AnnotationTrack, Gene, GenomeFeature } from 'genome-browser';
+import { AnnotationTrack, Gene, GenomeFeature } from 'genome-visualizer';
 import App from '../../App';
 import { QueryBuilder, SiriusApi } from 'valis';
 

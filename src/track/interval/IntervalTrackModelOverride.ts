@@ -1,4 +1,4 @@
-import { IntervalTrackModel } from "genome-browser";
+import { IntervalTrackModel } from "genome-visualizer";
 
 export type IntervalTrackModelOverride = IntervalTrackModel & {
     readonly query: any,

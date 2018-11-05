@@ -1,4 +1,4 @@
-import { VariantTrack } from "genome-browser";
+import { VariantTrack } from "genome-visualizer";
 import { EntityType } from "valis";
 import { App } from "../../App";
 

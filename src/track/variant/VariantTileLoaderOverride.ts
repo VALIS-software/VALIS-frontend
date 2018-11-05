@@ -1,4 +1,4 @@
-import { VariantTileLoader, VariantTilePayload, Tile } from "genome-browser";
+import { VariantTileLoader, VariantTilePayload, Tile } from "genome-visualizer";
 import { SiriusApi } from "valis";
 
 // Tile payload is a list of genes extended with nesting
