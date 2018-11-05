@@ -63,7 +63,7 @@
     "@types/react-virtualized": "^9.18.7",
     "axios": "0.18.x",
     "fast-deep-equal": "^2.0.1",
-    "genome-browser": "github:VALIS-software/genome-browser",
+    "genome-visualizer": "github:VALIS-software/High-Performance-Genome-Visualizer",
     "genomics-formats": "github:VALIS-software/Genomics-Formats",
     "immutable": "3.8.x",
     "material-ui": "0.20.x",
