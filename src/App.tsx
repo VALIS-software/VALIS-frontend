@@ -173,21 +173,25 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 					{
 						type: 'sequence',
 						name: 'Sequence',
+						heightPx: 50,
 					},
 					{
 						type: 'variant',
 						name: 'Variants',
+						heightPx: 100,
 					},
 					{
 						type: 'annotation',
 						name: '→ Strand Genes',
 						strand: Strand.Positive,
+						heightPx: 100,
 					},
 					{
 						type: 'annotation',
 						name: '← Strand Genes',
 						strand: Strand.Negative,
-					},
+						heightPx: 100,
+					}
 				],
 			};
 		}
