@@ -197,7 +197,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		}
 
 		let dataSource: IDataSource = new SiriusDataSource(SiriusApi);
-		this.genomeBrowser = new GenomeBrowser(dataSource, initialBrowserConfiguration);
+		this.genomeBrowser = new GenomeBrowser(initialBrowserConfiguration, dataSource);
 
 		this.state = {
 			views: [],
