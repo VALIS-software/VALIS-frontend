@@ -1,4 +1,4 @@
-import { GenomeBrowser, Track, TrackModel, IntervalTrackModel, VariantTrackModel, TrackViewer, AnnotationTileLoader, IDataSource, Strand, IntervalTrack, GenomeBrowserConfiguration } from "genome-visualizer";
+import { GenomeVisualizer, Track, TrackModel, IntervalTrackModel, VariantTrackModel, TrackViewer, AnnotationTileLoader, IDataSource, Strand, IntervalTrack, GenomeVisualizerConfiguration } from "genome-visualizer";
 
 import Dialog from "material-ui/Dialog";
 import FlatButton from "material-ui/FlatButton";
@@ -34,9 +34,9 @@ import { IntervalTrackOverride } from "./track/interval/IntervalTrackOverride";
 const deepEqual = require('fast-deep-equal');
 
 // register custom / override tracks
-GenomeBrowser.registerTrackType('annotation', AnnotationTileLoader, AnnotationTrackOverride);
-GenomeBrowser.registerTrackType('variant', VariantTileLoaderOverride, VariantTrackOverride);
-GenomeBrowser.registerTrackType('interval', IntervalTileLoaderOverride, IntervalTrackOverride);
+GenomeVisualizer.registerTrackType('annotation', AnnotationTileLoader, AnnotationTrackOverride);
+GenomeVisualizer.registerTrackType('variant', VariantTileLoaderOverride, VariantTrackOverride);
+GenomeVisualizer.registerTrackType('interval', IntervalTileLoaderOverride, IntervalTrackOverride);
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
@@ -82,7 +82,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	protected viewModel: ViewModel;
 
 	protected headerRef: Header;
-	protected genomeBrowser: GenomeBrowser;
+	protected genomeVisualizer: GenomeVisualizer;
 
 	protected _currentPersistentState: PersistentAppState;
 
@@ -161,14 +161,17 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			</div>);
 		}
 
-		let initialBrowserConfiguration: GenomeBrowserConfiguration;
+		let initialBrowserConfiguration: GenomeVisualizerConfiguration;
 
 		if (!!window.location.hash) {
-			initialBrowserConfiguration = AppStatePersistence.parseUrlHash(window.location.hash).genomeBrowser;
+			initialBrowserConfiguration = AppStatePersistence.parseUrlHash(window.location.hash).genomeVisualizer;
 		} else {
 			// default configuration
 			initialBrowserConfiguration = {
-				panels: [{ location: { contig: 'chr1', x0: 0, x1: 249e6 } }],
+				allowNewPanels: true,
+				panels: [{
+					location: { contig: 'chr1', x0: 0, x1: 249e6 }
+				}],
 				tracks: [
 					{
 						type: 'sequence',
@@ -197,7 +200,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		}
 
 		let dataSource: IDataSource = new SiriusDataSource(SiriusApi);
-		this.genomeBrowser = new GenomeBrowser(initialBrowserConfiguration, dataSource);
+		this.genomeVisualizer = new GenomeVisualizer(initialBrowserConfiguration, dataSource);
 
 		this.state = {
 			views: [],
@@ -255,14 +258,14 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		}
 
 		return {
-			genomeBrowser: this.genomeBrowser.getConfiguration(),
+			genomeVisualizer: this.genomeVisualizer.getConfiguration(),
 			sidebar: currentSidebarView,
 			headerVisible: this.state.headerHeight > 0
 		}
 	}
 
 	setPersistentState(state: PersistentAppState) {
-		this.genomeBrowser.setConfiguration(state.genomeBrowser);
+		this.genomeVisualizer.setConfiguration(state.genomeVisualizer);
 		let viewProps = state.sidebar.viewProps;
 		switch (state.sidebar.viewType) {
 			case SidebarViewType.None: {
@@ -336,7 +339,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		this.viewModel.removeListener(this.onCloseView);
 
 		// release shared resources
-		this.genomeBrowser.clearCaches();
+		this.genomeVisualizer.clearCaches();
 	}
 
 	componentDidUpdate(prevProps: Props, prevState: State, snapshot: any) {
@@ -431,7 +434,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 							zIndex: 1
 						}}
 					>Add Track</button> 
-					{this.genomeBrowser.reactRender({
+					{this.genomeVisualizer.reactRender({
 						width: this.state.viewerWidth,
 						height: this.state.viewerHeight,
 						pixelRatio: App.canvasPixelRatio,
@@ -553,7 +556,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		let startIndex = startBase - 1;
 		let endIndex = endBase;
 
-		for (let panel of this.genomeBrowser.getPanels()) {
+		for (let panel of this.genomeVisualizer.getPanels()) {
 			if (panel.column === 0) {
 				panel.setContig(contig);
 				panel.setRange(startIndex, endIndex);
@@ -614,12 +617,12 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		if (model.heightPx == null) {
 			model.heightPx = 50;
 		}
-		this.genomeBrowser.addTrack(model, true);
+		this.genomeVisualizer.addTrack(model, true);
 	}
 
 	protected uniqueTitle(title: string) : string {
 		let i = 0;
-		this.genomeBrowser.getTracks().forEach((m : Track) => {
+		this.genomeVisualizer.getTracks().forEach((m : Track) => {
 			if (m.model.name.indexOf(title) >= 0) {
 				i++;
 			}
@@ -651,7 +654,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	}
 
 	protected getQueryTracks() : Map<string, any> {
-		let tracks = this.genomeBrowser.getTracks();
+		let tracks = this.genomeVisualizer.getTracks();
 
 		let ret = new Map<string, any>();
 
