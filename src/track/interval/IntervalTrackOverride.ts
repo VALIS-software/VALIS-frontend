@@ -8,7 +8,7 @@ type ColorPalette = {
 };
 
 // thanks to ShaderToy user 'blackjero' for his qunitic regression of popular scientific color palettes
-// https://www.shadertoy.com/view/XtGGzG 
+// https://www.shadertoy.com/view/XtGGzG
 const plasmaPalette: ColorPalette = {
     r: [+0.063861086, +1.992659096, -1.023901152, -0.490832805, +1.308442123, -0.914547012],
     g: [+0.049718590, -0.791144343, +2.892305078, +0.811726816, -4.686502417, +2.717794514],
@@ -19,6 +19,12 @@ const magmaPalette: ColorPalette = {
     r: [-0.023226960, +1.087154378, -0.109964741, +6.333665763, -11.640596589, +5.337625354],
     g: [+0.010680993, +0.176613780, +1.638227448, -6.743522237, +11.426396979, -5.523236379],
     b: [-0.008260782, +2.244286052, +3.005587601, -24.279769818, +32.484310068, -12.688259703],
+}
+
+const viridis = {
+    r: [+0.280268003, -0.143510503, +2.225793877, -14.815088879, +25.212752309, -11.772589584],
+    g: [-0.002117546, +1.617109353, -1.909305070, +2.701152864, -1.685288385, +0.178738871],
+    b: [+0.300805501, +2.614650302, -12.019139090, +28.933559110, -33.491294770, +13.762053843],
 }
 
 function quintic(constants: Array<number>, x: number) {
@@ -57,13 +63,19 @@ export class IntervalTrackOverride extends IntervalTrack<IntervalTrackModelOverr
 
         if (this.model.displayCount && tilePayload.userdata && tilePayload.userdata.hasCounts) {
             let count = tilePayload.userdata.counts[intervalIndex];
+
             let x = count / this.model.maxCount;
+
             x = Math.min(Math.max(x, 0), 1);
+
+            // @! hack to make the data appear less exponential for aesthetics
+            x = Math.pow(x, 0.75);
+
             instance.color = [
                 quintic(magmaPalette.r, x),
                 quintic(magmaPalette.g, x),
                 quintic(magmaPalette.b, x),
-                1.0,
+                0.66,
             ];
         }
 
