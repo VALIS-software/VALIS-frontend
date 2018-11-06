@@ -649,7 +649,9 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			name: title,
 			type: 'interval',
 			query: query,
-			blendEnabled: blendEnabled
+			blendEnabled: blendEnabled,
+			displayCount: true,
+			maxCount: 300, // @! should be set dynamically
 		});
 	}
 

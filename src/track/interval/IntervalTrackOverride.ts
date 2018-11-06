@@ -1,10 +1,40 @@
-import { IntervalTrack, BlendMode, Tile } from "genome-visualizer";
+import { IntervalTrack, BlendMode, Tile, IntervalInstance, IntervalInstances, IntervalTilePayload } from "genome-visualizer";
 import { IntervalTrackModelOverride } from "./IntervalTrackModelOverride";
+
+type ColorPalette = {
+    r: Array<number>,
+    g: Array<number>,
+    b: Array<number>,
+};
+
+// thanks to ShaderToy user 'blackjero' for his qunitic regression of popular scientific color palettes
+// https://www.shadertoy.com/view/XtGGzG 
+const plasmaPalette: ColorPalette = {
+    r: [+0.063861086, +1.992659096, -1.023901152, -0.490832805, +1.308442123, -0.914547012],
+    g: [+0.049718590, -0.791144343, +2.892305078, +0.811726816, -4.686502417, +2.717794514],
+    b: [+0.513275779, +1.580255060, -5.164414457, +4.559573646, -1.916810682, +0.570638854],
+};
+
+const magmaPalette: ColorPalette = {
+    r: [-0.023226960, +1.087154378, -0.109964741, +6.333665763, -11.640596589, +5.337625354],
+    g: [+0.010680993, +0.176613780, +1.638227448, -6.743522237, +11.426396979, -5.523236379],
+    b: [-0.008260782, +2.244286052, +3.005587601, -24.279769818, +32.484310068, -12.688259703],
+}
+
+function quintic(constants: Array<number>, x: number) {
+    let x2 = x * x, x3 = x2 * x, x4 = x3 * x, x5 = x4 * x;
+    return constants[0]
+        + constants[1] * x
+        + constants[2] * x2
+        + constants[3] * x3
+        + constants[4] * x4
+        + constants[5] * x5;
+}
 
 /**
  * Override interval track to add a 'blendEnabled' flag
  */
-export class IntervalTrackOverride extends IntervalTrack {
+export class IntervalTrackOverride extends IntervalTrack<IntervalTrackModelOverride> {
 
     constructor(model: IntervalTrackModelOverride) {
         super(model);
@@ -12,6 +42,7 @@ export class IntervalTrackOverride extends IntervalTrack {
 
     protected displayTileNode(tile: Tile<any>, z: number, x0: number, span: number, continuousLodLevel: number) {
         let node = super.displayTileNode(tile, z, x0, span, continuousLodLevel);
+        node.borderStrength = 0.1;
 
         if (this.model.blendEnabled === false) {
             node.opacity = 1;
@@ -19,6 +50,24 @@ export class IntervalTrackOverride extends IntervalTrack {
         }
 
         return node;
+    }
+
+    protected createInstance(tilePayload: IntervalTilePayload, intervalIndex: number, relativeX: number, relativeW: number): IntervalInstance {
+        let instance = super.createInstance(tilePayload, intervalIndex, relativeX, relativeW);
+
+        if (this.model.displayCount && tilePayload.userdata && tilePayload.userdata.hasCounts) {
+            let count = tilePayload.userdata.counts[intervalIndex];
+            let x = count / this.model.maxCount;
+            x = Math.min(Math.max(x, 0), 1);
+            instance.color = [
+                quintic(magmaPalette.r, x),
+                quintic(magmaPalette.g, x),
+                quintic(magmaPalette.b, x),
+                1.0,
+            ];
+        }
+
+        return instance;
     }
 
 }
