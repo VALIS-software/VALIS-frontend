@@ -6,6 +6,7 @@ import GWASSelector from "../GWASSelector/GWASSelector";
 import GenomeSelector from "../GenomeSelector/GenomeSelector";
 import UserFilesPanel from "../UserFilesPanel/UserFilesPanel";
 import ENCODESelector from "../ENCODESelector/ENCODESelector";
+import RemoteSelector from "../RemoteSelector/RemoteSelector";
 import ImmuneAtlasSelector from "../ImmuneAtlasSelector/ImmuneAtlasSelector";
 import RoadmapSelector from "../RoadmapSelector/RoadmapSelector";
 import GTEXSelector from "../GTEXSelector/GTEXSelector";
@@ -28,7 +29,7 @@ const TRACK_TYPE_SEQUENCE = 'track_type_sequence';
 const TRACK_TYPE_GENES = 'track_type_gene';
 const TRACK_TYPE_USER_FILE = 'track_type_user_file';
 const TRACK_TYPE_IMMUNE_ATLAS = 'track_type_immune_atlas';
-
+const TRACK_TYPE_REMOTE_FILE = 'track_type_remote';
 // Styles
 import "./DatasetSelector.scss";
 import GeneAnnotationSelector from "../GeneAnnotationSelector/GeneAnnotationSelector";
@@ -38,6 +39,11 @@ const fixedTrackData = [
     "track_type": TRACK_TYPE_USER_FILE,
     "title": "Uploaded files",
     "description": "Browse, manage, or upload custom files in VCF, 23andMe or BED format."
+  },
+  {
+    "track_type": TRACK_TYPE_REMOTE_FILE,
+    "title": "Remote files",
+    "description": "Access files stored on a remote server (FTP) in Bigwig format."
   },
   {
     "track_type": TRACK_TYPE_GWAS,
@@ -139,13 +145,13 @@ class DatasetSelector extends React.Component {
         null,
         <GTEXSelector appModel={this.appModel} viewModel={this.viewModel} />
       );
-    }else if (trackType === TRACK_TYPE_TCGA) {
+    } else if (trackType === TRACK_TYPE_TCGA) {
       this.viewModel.pushView(
         "TCGA Variants",
         null,
         <TCGASelector appModel={this.appModel} viewModel={this.viewModel} />
       );
-    }else if (trackType === TRACK_TYPE_EXAC) {
+    } else if (trackType === TRACK_TYPE_EXAC) {
       this.viewModel.pushView(
         "ExAC Variants",
         null,
@@ -171,7 +177,13 @@ class DatasetSelector extends React.Component {
         null,
         <UserFilesPanel />
       );
-    } else if (trackType === 'premium') {
+    } else if (trackType === TRACK_TYPE_REMOTE_FILE) {
+      this.viewModel.pushView(
+        "Remote File",
+        null,
+        <RemoteSelector appModel={this.appModel} viewModel={this.viewModel} />
+      );
+    }else if (trackType === 'premium') {
       this.setState({
         showUpgrade: true,
       });

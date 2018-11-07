@@ -655,6 +655,17 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		});
 	}
 
+	protected addSignalTrack(
+		title: string,
+		path: string,
+	) {
+		this.addTrack({
+			name: title,
+			type: 'signal',
+			path: path,
+		});
+	}
+
 	protected getQueryTracks() : Map<string, any> {
 		let tracks = this.genomeVisualizer.getTracks();
 
@@ -705,6 +716,12 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		blendEnabled?: boolean,
 	) {
 		this.appInstance.addIntervalTrack(title, query, blendEnabled);
+	}
+	static addSignalTrack(
+		title: string,
+		path: string,
+	) {
+		this.appInstance.addSignalTrack(title, path);
 	}
 
 	static displayEntityDetails(entity: { id: string, type: EntityType, userFileID?: string }) {

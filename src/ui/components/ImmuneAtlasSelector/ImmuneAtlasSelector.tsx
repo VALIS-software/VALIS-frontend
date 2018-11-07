@@ -84,17 +84,8 @@ class ImmuneAtlasSelector extends React.Component<Props, State> {
     this.setState({
       biosampleValue: value,
     });
-    // Update the available types and targets
-    if (value !== null) {
-      this.selectedBiosample = value;
-    }
   }
 
-  handleUpdateChromName = (event: any, index: number, value: any) => {
-    this.setState({
-      chromoNameValue: value
-    });
-  }
 
   buildTitle() {
     const biosample = this.state.biosampleValue;
@@ -104,8 +95,7 @@ class ImmuneAtlasSelector extends React.Component<Props, State> {
   buildQuery = () => {
     const builder = new QueryBuilder();
     builder.newGenomeQuery();
-    const biosample = this.state.availableBiosamples[this.state.biosampleValue];
-    builder.filterBiosample(biosample);
+    builder.filterBiosample(this.state.biosampleValue);
     builder.filterSource(DATA_SOURCE_IMMUNE_ATLAS);
     builder.setLimit(this.state.maxnumber);
     const genomeQuery = builder.build();
