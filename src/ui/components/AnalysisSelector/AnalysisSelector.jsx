@@ -35,7 +35,7 @@ const fixedAnalysisData = [
   {
     "track_type": 'premium', 
     "title": "Variant Effect Prediction", 
-    "description": "Algorithms that predict changes in RNA-splicing, Methylation or other functional effects"
+    "description": "Run the ENSEMBL VEP pipeline to label variants."
   },
 ];
 
