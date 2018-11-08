@@ -471,7 +471,7 @@ class TokenBox extends React.Component {
     }
     const tokenChips = this.renderTokenChips();
 
-    const hintText = this.state.tokens.length === 0 ? 'gene, trait or rs#' : '';
+    const hintText = this.state.tokens.length === 0 ? '' : '';
 
     // TODO: the AutoComplete component auto-closes when you click a menu item
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.

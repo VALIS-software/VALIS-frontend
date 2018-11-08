@@ -36,19 +36,9 @@ import GeneAnnotationSelector from "../GeneAnnotationSelector/GeneAnnotationSele
 
 const fixedTrackData = [
   {
-    "track_type": TRACK_TYPE_USER_FILE,
-    "title": "Uploaded files",
-    "description": "Browse, manage, or upload custom files in VCF, 23andMe or BED format."
-  },
-  {
-    "track_type": TRACK_TYPE_REMOTE_FILE,
-    "title": "Remote files",
-    "description": "Access files stored on a remote server (FTP) in Bigwig format."
-  },
-  {
     "track_type": TRACK_TYPE_GWAS,
-    "title": "Genome Wide Associations",
-    "description": "Add variants related to traits or diseases from the EMBL-EBI GWAS database."
+    "title": "ENCODE Functional Tracks",
+    "description": "View bigwig signal for ENCODE experiments."
   },
   {
     "track_type": TRACK_TYPE_ENCODE,
@@ -56,14 +46,14 @@ const fixedTrackData = [
     "description": "Comprehensive parts list of functional elements in the human genome."
   },
   {
+    "track_type": TRACK_TYPE_GWAS,
+    "title": "Genome Wide Associations",
+    "description": "Add variants related to traits or diseases from the EMBL-EBI GWAS database."
+  },
+  {
     "track_type": TRACK_TYPE_ROADMAP,
     "title": "Roadmap Chromatin States",
     "description": "ChromHMM annotations for 127 reference epigenomes."
-  },
-  {
-    "track_type": TRACK_TYPE_IMMUNE_ATLAS,
-    "title": "Immune Atlas",
-    "description": "Landscape of stimulation-responsive chromatin across human immune cells. ATAC data for 25 cell types."
   },
   {
     "track_type": TRACK_TYPE_EXAC,
@@ -75,21 +65,6 @@ const fixedTrackData = [
     "title": "GTEx eQTLs",
     "description": "Quantitative trait loci from 53 human tissues curated from the Genotype-Tissue Expression project."
   },
-  {
-    "track_type": TRACK_TYPE_TCGA,
-    "title": "TCGA Variants",
-    "description": "Search germline and somatic mutations from The Cancer Genome Atlas."
-  },
-  {
-    "track_type": TRACK_TYPE_SEQUENCE,
-    "title": "Sequence",
-    "description": "Nucleobase sequence of the forward strand (ENSEMBL)."
-  },
-  {
-    "track_type": TRACK_TYPE_GENES,
-    "title": "Gene Annotations",
-    "description": "Filterable gene annotation track. (ENSEMBL)"
-  }
 ];
 
 class DatasetSelector extends React.Component {

@@ -81,30 +81,23 @@ class Header extends React.Component<Props, State> {
   }
 
   render() {
-    const analysisButton = <FlatButton style={{color: 'white'}} label="Analysis" icon={(<ActionTimeline/>)} />;
-    const userFileButton = <FlatButton style={{color: 'white'}} onClick={this.openUserFiles} label="Upload Data" icon={(<CloudUpload/>)} />;
     const shareButton = <FlatButton style={{color: 'white'}} onClick={this.props.onShowShare} label="Share" icon={(<SocialShare/>)} />;
     return (<div>
         <div className="header" style={{height: '56px', width: '100%'}}>
             <div className="header-item">
-            <img style={{ cursor: 'pointer', height: 45, marginTop: 6 }} src={logoPath}/> 
+              <span style={{color: 'white', fontWeight: 'bold', marginLeft: 12}}> ENCODE </span>
+              <span style={{color: 'white', marginLeft: 8, marginRight: 12, fontSize: 12}}> annotations near:</span>
             </div>
             <div className="header-search-box" style={{marginTop: -16}}>
               <TokenBox appModel={this.props.appModel} viewModel={this.props.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>
             </div>
             <div className="header-button">
-            <IconMenu
-              iconButtonElement={analysisButton}
-            >
-              <MenuItem value="1" onClick={this.openAnalysis}  primaryText="Create Analysis" />
-              <MenuItem value="2" onClick={this.openResults} primaryText="View Results" />
-            </IconMenu>
+            <span style={{color: 'white', fontSize: 12}}> powered by </span>
+            </div>
+            <div className="header-button">
+              <a href="http://www.valis.bio"><img style={{ cursor: 'pointer', height: 45, marginTop: 6 }} src={logoPath}/></a>
             </div>
             <div className="header-button">{shareButton}</div>
-            <div className="header-item"><UserFeedBackButton userProfile={this.props.userProfile} /></div>
-            <div className="header-item" style={{marginTop:2}}>
-              <UserProfileButton userProfile={this.props.userProfile} />
-            </div>
       </div>
     </div>);
   }
