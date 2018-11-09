@@ -16,6 +16,7 @@ import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 import "./ENCODESelector.scss";
 
 type Props = {
+  biosample?: string,
   appModel: AppModel,
   viewModel: ViewModel,
 }
@@ -46,7 +47,7 @@ class ENCODESelector extends React.Component<Props, State> {
       this.appModel = props.appModel;
     }
     this.state = {
-      biosampleValue: null,
+      biosampleValue: props.biosample || null,
       genomeTypeValue: null,
       chromoNameValue: 0,
       maxnumber: 1000000,
@@ -56,10 +57,10 @@ class ENCODESelector extends React.Component<Props, State> {
       checked: [],
       error: undefined,
     };
+    this.selectedBiosample = props.biosample;
   }
 
   updateAvailableBiosamples = () => {
-    if (this.selectedBiosample) return;
     const builder = new QueryBuilder();
     builder.newInfoQuery();
     builder.filterSource(DATA_SOURCE_ENCODE);
@@ -83,8 +84,11 @@ class ENCODESelector extends React.Component<Props, State> {
       }
       this.setState({
         availableBiosamples: data,
-        biosampleValue: newBiosampleValue,
+        biosampleValue: data[newBiosampleValue],
       });
+      if (newBiosampleValue) {
+        this.updateAvailableTypes();
+      }
     }, err => {
       this.appModel.error(this, err);
       this.setState({
@@ -234,13 +238,15 @@ class ENCODESelector extends React.Component<Props, State> {
     const query = this.buildQuery();
     this.appModel.trackMixPanel("Add ENCODE Track", { "query": query });
     App.addIntervalTrack(this.buildTitle(), query);
-    this.props.viewModel.closeNavigationView();
   }
 
   componentDidMount() {
-    this.availableChromoNames = ['Any'].concat(CHROMOSOME_NAMES);
     // use api to pull all available biosamples
     this.updateAvailableBiosamples();
+  }
+
+  componentWillReceiveProps(nextProps: any) {
+    this.handleUpdateBiosample(nextProps.biosample);
   }
 
   render() {

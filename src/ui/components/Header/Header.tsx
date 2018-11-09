@@ -4,20 +4,13 @@ import * as React from 'react';
 
 import FlatButton from 'material-ui/FlatButton';
 // Material-UI Icons
-import IconMenu from 'material-ui/IconMenu';
 import Chip from 'material-ui/Chip';
 import Select from "react-select";
 import { SiriusApi, QueryBuilder  } from 'valis';
-import MenuItem from 'material-ui/MenuItem';
-import CloudUpload from "material-ui/svg-icons/file/cloud-upload";
-import ActionTimeline from "material-ui/svg-icons/action/timeline";
 import SocialShare from "material-ui/svg-icons/social/share";
 // components
 import TokenBox from '../Shared/TokenBox/TokenBox';
-import UserProfileButton from '../Shared/UserProfileButton/UserProfileButton';
-import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 import ENCODESelector from '../ENCODESelector/ENCODESelector';
-import UserFilesPanel from '../UserFilesPanel/UserFilesPanel';
 // Models
 import AppModel from '../../../model/AppModel';
 import ViewModel from '../../../model/ViewModel';
@@ -35,11 +28,11 @@ type Props = {
 }
 
 type State = {
-  availableBiosamples: string[],
+  availableBiosamples: Set<string>,
   biosampleValue: string,
   isSearching: boolean,
-  availableSignals: any,
-  availableAnnotations: any,
+  availableSignals: Set<string>,
+  availableAnnotations: Set<string>,
 }
 
 class Header extends React.Component<Props, State> {
@@ -49,9 +42,9 @@ class Header extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      availableBiosamples: [],
-      availableAnnotations: {},
-      availableSignals: {},
+      availableBiosamples: new Set<string>(),
+      availableAnnotations: new Set<string>(),
+      availableSignals: new Set<string>(),
       isSearching: false,
       biosampleValue: null,
     };
@@ -89,22 +82,24 @@ class Header extends React.Component<Props, State> {
   updateAvailableBiosamples = () => {
     const builder = new QueryBuilder();
     builder.newInfoQuery();
-    builder.filterSource({ $in: ['ENCODE', 'ENCODEbigwig'] });
-    const infoQuery = builder.build();
-    SiriusApi.getDistinctValues('info.biosample', infoQuery).then(data => {
-      // Keep the current selection of biosample
-      let newBiosampleValue = null;
-      if (this.state.biosampleValue !== null) {
-        const currentBiosample = this.state.biosampleValue;
-        newBiosampleValue = data.indexOf(currentBiosample);
-        if (newBiosampleValue < 0) {
-          newBiosampleValue = null;
-        }
-      }
+    builder.filterSource('ENCODE');
+    const annotationQuery = SiriusApi.getDistinctValues('info.biosample', builder.build());
+    builder.newInfoQuery();
+    builder.filterSource('ENCODEbigwig');
+    const bigwigQuery = SiriusApi.getDistinctValues('info.biosample', builder.build());
+
+    Promise.all([annotationQuery, bigwigQuery]).then(results => {
+      console.log(results);
+      let ann = new Set<string>(results[0]);
+      let signals = new Set<string>(results[1]);
+      let all = new Set<string>([...results[0], ...results[1]]);
       this.setState({
-        availableBiosamples: data,
-        biosampleValue: newBiosampleValue,
+        availableAnnotations: ann,
+        availableSignals: signals,
+        availableBiosamples: all,
       });
+    }, err=> {
+      console.log(err);
     });
   }
 
@@ -118,7 +113,7 @@ class Header extends React.Component<Props, State> {
     this.props.viewModel.pushView(
       "ENCODE Annotations",
       null,
-      <ENCODESelector appModel={this.props.appModel} viewModel={this.props.viewModel} />
+      <ENCODESelector biosample={this.state.biosampleValue} appModel={this.props.appModel} viewModel={this.props.viewModel} />
     );
   }
 
@@ -138,19 +133,29 @@ class Header extends React.Component<Props, State> {
 
   render() {
     const shareButton = <FlatButton style={{color: 'white'}} onClick={this.props.onShowShare} label="Share" icon={(<SocialShare/>)} />;
-    const availableBiosamples = this.state.availableBiosamples;
-    const biosampleItems = [];
-    for (let i = 0; i < availableBiosamples.length; i++) {
-      biosampleItems.push(
-        { label: availableBiosamples[i], value: availableBiosamples[i]}
-      );
-    }
     
+    const availableBiosamples = this.state.availableBiosamples;
+    
+    const biosampleItems = new Array<any>();
+    availableBiosamples.forEach(curr => {
+      biosampleItems.push(
+        { label: curr, value: curr}
+      );
+    });
 
     const options = this.state.biosampleValue  && !this.state.isSearching ? (<div style={{marginTop: -4}}>
-      <button onClick={this.showEncodeAnnotations}>Add Annotations</button>
-      <button onClick={this.showEncodeSignals}>Add Signal Tracks</button>
-      <button onClick={()=> { this.setState({isSearching: true })}}>Search Nearby</button>
+      {
+        this.state.availableSignals.has(this.state.biosampleValue) ? 
+        (<button onClick={this.showEncodeSignals}>Signal Tracks</button>) : (<button disabled={true}>No signal tracks</button>)
+      }
+      {
+        this.state.availableAnnotations.has(this.state.biosampleValue) ? 
+        (<button onClick={this.showEncodeAnnotations}>Annotation Tracks</button>) : null
+      }
+      {
+        this.state.availableAnnotations.has(this.state.biosampleValue) ? 
+        (<button onClick={()=> { this.setState({isSearching: true })}}>Search Nearby</button>) : null
+      }
     </div>) : null;
 
     return (<div>
@@ -173,7 +178,7 @@ class Header extends React.Component<Props, State> {
                 placeholder='Select Biosample'
               />)}
               </div>
-              {this.state.biosampleValue && this.state.isSearching ? (<TokenBox onCancel={this.hideSearch} appModel={this.props.appModel} viewModel={this.props.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>) : null}
+              {this.state.biosampleValue && this.state.isSearching ? (<TokenBox biosample={this.state.biosampleValue} onCancel={this.hideSearch} appModel={this.props.appModel} viewModel={this.props.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>) : null}
               {options}
             </div>
             <div className="header-button">

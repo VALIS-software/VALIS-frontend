@@ -15,6 +15,14 @@ import './TokenBox.scss';
 
 const DEBOUNCE_TIME = 200;
 
+const shorten = (str, len) => {
+  if ((str).length > len) {
+    return str.slice(0, len - 2) + '..';
+  } else {
+    return str;
+  }
+}
+
 class TokenBox extends React.Component {
   constructor(props) {
     super(props);
@@ -110,7 +118,7 @@ class TokenBox extends React.Component {
     const encodeBuilder = new QueryBuilder();
     encodeBuilder.newGenomeQuery();
     encodeBuilder.filterSource('ENCODE');
-    encodeBuilder.setLimit(2000000);
+    encodeBuilder.filterBiosample(this.props.biosample);
 
     const builder = new QueryBuilder(query);
     if (query) {
@@ -457,7 +465,7 @@ class TokenBox extends React.Component {
         this.handleRemoveToken(i);
       }
       tokenChips.push(<li key={i} className="token">
-        <Chip onClick={clickToken} onRequestDelete={clickRemoveToken}> {token.value} </Chip>
+        <Chip title={token.value} onClick={clickToken} onRequestDelete={clickRemoveToken}> {shorten(token.value, 25)} </Chip>
       </li>);
     }
     return tokenChips;
@@ -485,7 +493,7 @@ class TokenBox extends React.Component {
     }
     const tokenChips = this.renderTokenChips();
     
-    const hintText = this.state.tokens.length === 0 ? 'query for items near peaks' : '';
+    const hintText = this.state.tokens.length === 0 ? 'find items near peaks' : '';
 
     // TODO: the AutoComplete component auto-closes when you click a menu item
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
@@ -516,13 +524,14 @@ class TokenBox extends React.Component {
       {clearButton}
       {searchButton}
     </div>);
-    return (<div className="token-box">{tokenChips}<div>{input}</div>{status}<button onClick={this.props.onCancel}>Cancel</button></div>);
+    return (<div className="token-box">{tokenChips}<div>{input}</div>{status}<button style={{marginBottom: 12}} onClick={this.props.onCancel}>Cancel</button></div>);
   }
 }
 
 TokenBox.propTypes = {
   appModel: PropTypes.object,
   onCancel: PropTypes.func,
+  biosample: PropTypes.string,
 };
 
 export default TokenBox;
