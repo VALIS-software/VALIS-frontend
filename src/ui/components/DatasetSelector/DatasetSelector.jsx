@@ -48,6 +48,11 @@ const fixedTrackData = [
     "description": "Comprehensive parts list of functional elements in the human genome."
   },
   {
+    "track_type": TRACK_TYPE_REMOTE_FILE,
+    "title": "Remote hosted Bigwig",
+    "description": "Add a bigwig file by specifying an FTP or HTTP address."
+  },
+  {
     "track_type": TRACK_TYPE_GWAS,
     "title": "Genome Wide Associations",
     "description": "Add variants related to traits or diseases from the EMBL-EBI GWAS database."
