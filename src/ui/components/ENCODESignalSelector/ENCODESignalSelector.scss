@@ -1,0 +1,16 @@
+.track-editor {
+    padding: 15px;
+    .item-header{
+        font-size: 18px;
+    }
+    .target-selections{
+        margin: 10px;
+        font-size: 16px;
+    }
+    .table-view {
+        height: calc(100vh - 350px);
+        margin-left: 12px;
+        margin-right: 12px;
+        border: 1px solid lightgray;
+    }
+}

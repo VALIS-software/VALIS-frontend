@@ -6,6 +6,7 @@ import GWASSelector from "../GWASSelector/GWASSelector";
 import GenomeSelector from "../GenomeSelector/GenomeSelector";
 import UserFilesPanel from "../UserFilesPanel/UserFilesPanel";
 import ENCODESelector from "../ENCODESelector/ENCODESelector";
+import ENCODESignalSelector from "../ENCODESignalSelector/ENCODESignalSelector";
 import RemoteSelector from "../RemoteSelector/RemoteSelector";
 import ImmuneAtlasSelector from "../ImmuneAtlasSelector/ImmuneAtlasSelector";
 import RoadmapSelector from "../RoadmapSelector/RoadmapSelector";
@@ -23,6 +24,7 @@ const TRACK_TYPE_TCGA = 'track_type_tcga';
 const TRACK_TYPE_EQTL = 'track_type_eqtl';
 const TRACK_TYPE_EXAC = 'track_type_exac';
 const TRACK_TYPE_ENCODE = 'track_type_encode';
+const TRACK_TYPE_ENCODE_SIGNAL = 'track_type_encode_signal';
 const TRACK_TYPE_ROADMAP = 'track_type_roadmap';
 const TRACK_TYPE_BOOLEAN = 'track_type_boolean';
 const TRACK_TYPE_SEQUENCE = 'track_type_sequence';
@@ -36,7 +38,7 @@ import GeneAnnotationSelector from "../GeneAnnotationSelector/GeneAnnotationSele
 
 const fixedTrackData = [
   {
-    "track_type": TRACK_TYPE_GWAS,
+    "track_type": TRACK_TYPE_ENCODE_SIGNAL,
     "title": "ENCODE Functional Tracks",
     "description": "View bigwig signal for ENCODE experiments."
   },
@@ -95,6 +97,12 @@ class DatasetSelector extends React.Component {
         "GWAS Track",
         null,
         <GWASSelector appModel={this.appModel} viewModel={this.viewModel} />
+      );
+    } else if (trackType === TRACK_TYPE_ENCODE_SIGNAL) {
+      this.viewModel.pushView(
+        "ENCODE Signal",
+        null,
+        <ENCODESignalSelector appModel={this.appModel} viewModel={this.viewModel} />
       );
     } else if (trackType === TRACK_TYPE_ENCODE) {
       this.viewModel.pushView(

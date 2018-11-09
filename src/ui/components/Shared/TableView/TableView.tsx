@@ -24,8 +24,8 @@ type TableViewProps = {
   fetch: TableViewDataFetchFn,
   fetchId: string,
   rowRenderer: TableViewRowRenderer,
-  onClick: TableViewOnClick,
-  style: any,
+  onClick?: TableViewOnClick,
+  style?: any,
 };
 
 type TableViewState = {

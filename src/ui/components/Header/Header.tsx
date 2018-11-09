@@ -11,6 +11,7 @@ import SocialShare from "material-ui/svg-icons/social/share";
 // components
 import TokenBox from '../Shared/TokenBox/TokenBox';
 import ENCODESelector from '../ENCODESelector/ENCODESelector';
+import ENCODESignalSelector from '../ENCODESignalSelector/ENCODESignalSelector';
 // Models
 import AppModel from '../../../model/AppModel';
 import ViewModel from '../../../model/ViewModel';
@@ -86,7 +87,9 @@ class Header extends React.Component<Props, State> {
     const annotationQuery = SiriusApi.getDistinctValues('info.biosample', builder.build());
     builder.newInfoQuery();
     builder.filterSource('ENCODEbigwig');
-    const bigwigQuery = SiriusApi.getDistinctValues('info.biosample', builder.build());
+    const signalQuery = builder.build();
+    signalQuery.filters['info.assembly'] = 'GRCh38';
+    const bigwigQuery = SiriusApi.getDistinctValues('info.biosample', signalQuery);
 
     Promise.all([annotationQuery, bigwigQuery]).then(results => {
       console.log(results);
@@ -121,7 +124,7 @@ class Header extends React.Component<Props, State> {
     this.props.viewModel.pushView(
       "ENCODE Signals",
       null,
-      <ENCODESelector appModel={this.props.appModel} viewModel={this.props.viewModel} />
+      <ENCODESignalSelector biosample={this.state.biosampleValue} appModel={this.props.appModel} viewModel={this.props.viewModel} />
     );
   }
 
