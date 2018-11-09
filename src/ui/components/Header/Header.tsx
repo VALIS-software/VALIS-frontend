@@ -5,7 +5,9 @@ import * as React from 'react';
 import FlatButton from 'material-ui/FlatButton';
 // Material-UI Icons
 import IconMenu from 'material-ui/IconMenu';
-
+import Chip from 'material-ui/Chip';
+import Select from "react-select";
+import { SiriusApi, QueryBuilder  } from 'valis';
 import MenuItem from 'material-ui/MenuItem';
 import CloudUpload from "material-ui/svg-icons/file/cloud-upload";
 import ActionTimeline from "material-ui/svg-icons/action/timeline";
@@ -14,8 +16,7 @@ import SocialShare from "material-ui/svg-icons/social/share";
 import TokenBox from '../Shared/TokenBox/TokenBox';
 import UserProfileButton from '../Shared/UserProfileButton/UserProfileButton';
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
-import AnalysisSelector from '../AnalysisSelector/AnalysisSelector';
-import AnalysisResultSelector from '../AnalysisResultSelector/AnalysisResultSelector';
+import ENCODESelector from '../ENCODESelector/ENCODESelector';
 import UserFilesPanel from '../UserFilesPanel/UserFilesPanel';
 // Models
 import AppModel from '../../../model/AppModel';
@@ -33,7 +34,13 @@ type Props = {
   style?: React.CSSProperties,
 }
 
-type State = {}
+type State = {
+  availableBiosamples: string[],
+  biosampleValue: string,
+  isSearching: boolean,
+  availableSignals: any,
+  availableAnnotations: any,
+}
 
 class Header extends React.Component<Props, State> {
 
@@ -41,7 +48,17 @@ class Header extends React.Component<Props, State> {
 
   constructor(props: Props) {
     super(props);
-    this.state = {};
+    this.state = {
+      availableBiosamples: [],
+      availableAnnotations: {},
+      availableSignals: {},
+      isSearching: false,
+      biosampleValue: null,
+    };
+  }
+
+  componentDidMount() {
+    this.updateAvailableBiosamples();
   }
 
   getTokenBoxState() {
@@ -68,28 +85,96 @@ class Header extends React.Component<Props, State> {
     }
   }
 
-  openAnalysis = () => {
-    this.props.viewModel.pushView('Analysis', '', (<AnalysisSelector appModel={this.props.appModel} />));
+
+  updateAvailableBiosamples = () => {
+    const builder = new QueryBuilder();
+    builder.newInfoQuery();
+    builder.filterSource({ $in: ['ENCODE', 'ENCODEbigwig'] });
+    const infoQuery = builder.build();
+    SiriusApi.getDistinctValues('info.biosample', infoQuery).then(data => {
+      // Keep the current selection of biosample
+      let newBiosampleValue = null;
+      if (this.state.biosampleValue !== null) {
+        const currentBiosample = this.state.biosampleValue;
+        newBiosampleValue = data.indexOf(currentBiosample);
+        if (newBiosampleValue < 0) {
+          newBiosampleValue = null;
+        }
+      }
+      this.setState({
+        availableBiosamples: data,
+        biosampleValue: newBiosampleValue,
+      });
+    });
   }
 
-  openResults = () => {
-    this.props.viewModel.pushView('My Results', '', (<AnalysisResultSelector appModel={this.props.appModel} />));
+  handleUpdateBiosample = (value: any) => {
+    this.setState({
+      biosampleValue: value,
+    });
   }
-  
-  openUserFiles = () => {
-    this.props.viewModel.pushView('Uploaded Files', '', (<UserFilesPanel appModel={this.props.appModel} />));
+
+  showEncodeAnnotations = () => {
+    this.props.viewModel.pushView(
+      "ENCODE Annotations",
+      null,
+      <ENCODESelector appModel={this.props.appModel} viewModel={this.props.viewModel} />
+    );
+  }
+
+  showEncodeSignals = () => {
+    this.props.viewModel.pushView(
+      "ENCODE Signals",
+      null,
+      <ENCODESelector appModel={this.props.appModel} viewModel={this.props.viewModel} />
+    );
+  }
+
+  hideSearch = () => {
+    this.setState({
+      isSearching: false,
+    });
   }
 
   render() {
     const shareButton = <FlatButton style={{color: 'white'}} onClick={this.props.onShowShare} label="Share" icon={(<SocialShare/>)} />;
+    const availableBiosamples = this.state.availableBiosamples;
+    const biosampleItems = [];
+    for (let i = 0; i < availableBiosamples.length; i++) {
+      biosampleItems.push(
+        { label: availableBiosamples[i], value: availableBiosamples[i]}
+      );
+    }
+    
+
+    const options = this.state.biosampleValue  && !this.state.isSearching ? (<div style={{marginTop: -4}}>
+      <button onClick={this.showEncodeAnnotations}>Add Annotations</button>
+      <button onClick={this.showEncodeSignals}>Add Signal Tracks</button>
+      <button onClick={()=> { this.setState({isSearching: true })}}>Search Nearby</button>
+    </div>) : null;
+
     return (<div>
         <div className="header" style={{height: '56px', width: '100%'}}>
             <div className="header-item">
               <span style={{color: 'white', fontWeight: 'bold', marginLeft: 12}}> ENCODE </span>
-              <span style={{color: 'white', marginLeft: 8, marginRight: 12, fontSize: 12}}> annotations near:</span>
             </div>
+            {this.state.biosampleValue ? 
+              <div className="header-item" style={{marginLeft: 12, marginRight: 12}}>
+                <Chip onRequestDelete={() => { this.setState({biosampleValue: null})}}> {this.state.biosampleValue} </Chip>
+              </div>
+              : null
+            }
             <div className="header-search-box" style={{marginTop: -16}}>
-              <TokenBox appModel={this.props.appModel} viewModel={this.props.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>
+              <div style={{maxWidth: 300, marginTop: 4, marginLeft: 16}}>
+              {this.state.biosampleValue ? null : (<Select
+                value={null}
+                onChange={(d: any) => this.handleUpdateBiosample(d.value)}
+                options={biosampleItems}
+                placeholder='Select Biosample'
+              />)}
+              </div>
+              {this.state.biosampleValue && this.state.isSearching ? (<TokenBox onCancel={this.hideSearch} appModel={this.props.appModel} viewModel={this.props.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>) : null}
+              {options}
             </div>
             <div className="header-button">
             <span style={{color: 'white', fontSize: 12}}> powered by </span>

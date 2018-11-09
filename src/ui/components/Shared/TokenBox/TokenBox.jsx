@@ -7,7 +7,8 @@ import ActionSearch from 'material-ui/svg-icons/action/search';
 import SvgClose from "material-ui/svg-icons/navigation/close";
 import CircularProgress from "material-ui/CircularProgress";
 import ErrorDetails from "../ErrorDetails/ErrorDetails";
-import { SiriusApi, QueryBuilder, buildQueryParser } from 'valis';
+import { SiriusApi, QueryBuilder } from 'valis';
+import { buildEncodeQueryParser } from './EncodeQueryParser';
 import { App } from '../../../../App';
 
 import './TokenBox.scss';
@@ -20,7 +21,7 @@ class TokenBox extends React.Component {
     this.autoComplete = React.createRef();
     this.appModel = props.appModel;
 
-    this.queryParser = buildQueryParser(this.getSuggestionHandlers());
+    this.queryParser = buildEncodeQueryParser(this.getSuggestionHandlers());
 
     this.timeOfLastRequest = null;
     this.lastRequest = null;
@@ -105,6 +106,19 @@ class TokenBox extends React.Component {
     }
   };
 
+  intersectWithEncodeQuery = (query) => {
+    const encodeBuilder = new QueryBuilder();
+    encodeBuilder.newGenomeQuery();
+    encodeBuilder.filterSource('ENCODE');
+    encodeBuilder.setLimit(2000000);
+
+    const builder = new QueryBuilder(query);
+    if (query) {
+      builder.addArithmeticWindow(encodeBuilder.build(), 1e6);
+    }
+    return builder.build();
+  }
+
   handleSelectItem = (chosenRequest, index) => {
     // handle enter key event
     if (index === -1) {
@@ -148,10 +162,10 @@ class TokenBox extends React.Component {
       const testParse = this.queryParser.getSuggestions(newString);
       if (testParse.query !== null) {
         this.setState({
-          query: testParse.query
+          query: this.intersectWithEncodeQuery(testParse.query)
         })
         // choose to display single result details or display search results
-        this.displaySearchResults(newTokens, testParse.query, true);
+        this.displaySearchResults(newTokens, this.intersectWithEncodeQuery(testParse.query), true);
       } else {
         this.getSuggestions(newTokens, true);
       }
@@ -251,7 +265,7 @@ class TokenBox extends React.Component {
     });
 
     this.setState({
-      query: result.query,
+      query: this.intersectWithEncodeQuery(result.query),
       quoteInput: result.isQuoted,
       open: openOnLoad,
     });
@@ -470,8 +484,8 @@ class TokenBox extends React.Component {
       return (<ErrorDetails error={this.state.error} />);
     }
     const tokenChips = this.renderTokenChips();
-
-    const hintText = this.state.tokens.length === 0 ? '' : '';
+    
+    const hintText = this.state.tokens.length === 0 ? 'query for items near peaks' : '';
 
     // TODO: the AutoComplete component auto-closes when you click a menu item
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
@@ -502,12 +516,13 @@ class TokenBox extends React.Component {
       {clearButton}
       {searchButton}
     </div>);
-    return (<div className="token-box">{tokenChips}<div>{input}</div>{status}</div>);
+    return (<div className="token-box">{tokenChips}<div>{input}</div>{status}<button onClick={this.props.onCancel}>Cancel</button></div>);
   }
 }
 
 TokenBox.propTypes = {
   appModel: PropTypes.object,
+  onCancel: PropTypes.func,
 };
 
 export default TokenBox;
