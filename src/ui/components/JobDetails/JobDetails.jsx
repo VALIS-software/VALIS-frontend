@@ -19,7 +19,7 @@ class JobDetails extends React.Component {
 	componentDidMount() {
     this.refresh();
   }
-  
+
   refresh = () => {
     Canis.Api.getJob(this.props.job.id).then(d=> {
       this.setState({
@@ -29,7 +29,7 @@ class JobDetails extends React.Component {
   }
 
   showResult = () => {
-    window.open(`${Canis.Api.apiUrl}/files/jobfiles/${this.state.job.id}/giggle_heatmap.pdf`);
+    window.open(`${Canis.Api.apiUrl}/files/jobfiles/${this.state.job.id}/${this.props.resultFile}`);
   }
 
   render() {
@@ -44,7 +44,7 @@ class JobDetails extends React.Component {
 
       if (this.state.job.result === 'Success') {
         link = (<Collapsible onClick={() => this.showResult()} title={'View results'}  isLink={true}/>);
-      } 
+      }
     }
     const header = (<div className="sidebar-header">
       <div className="sidebar-name">{this.props.job.name}</div>
@@ -60,6 +60,7 @@ class JobDetails extends React.Component {
 JobDetails.propTypes = {
   job: PropTypes.object,
   appModel: PropTypes.object,
+  resultFile: PropTypes.string,
 };
 
 export default JobDetails;
