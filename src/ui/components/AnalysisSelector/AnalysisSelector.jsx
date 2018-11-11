@@ -5,6 +5,7 @@ import UpgradeDialog from "../Shared/UpgradeDialog/UpgradeDialog";
 import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector";
 import EnrichmentAnalysis from "../EnrichmentAnalysis/EnrichmentAnalysis";
 import KaplanMeierAnalysis from "../KaplanMeierAnalysis/KaplanMeierAnalysis";
+import LDExpansionAnalysis from "../LDExpansionAnalysis/LDExpansionAnalysis";
 import DataListItem from "../DataListItem/DataListItem";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
@@ -13,28 +14,28 @@ import "./AnalysisSelector.scss";
 
 const fixedAnalysisData = [
   {
-    "track_type": 'arithmetic', 
-    "title": "Genomic Arithmetic", 
+    "track_type": 'arithmetic',
+    "title": "Genomic Arithmetic",
     "description": "Combine track regions, find regions that overlap, or subtract regions."
-  }, 
+  },
   {
-    "track_type": 'enrichment', 
-    "title": "Enrichment Analysis", 
+    "track_type": 'enrichment',
+    "title": "Enrichment Analysis",
     "description": "Test regulatory annotations, pathways or gene-sets for enrichment against elements in a track."
   },
   {
-    "track_type": 'kaplanmeier', 
-    "title": "Kaplan Meier Curve", 
+    "track_type": 'kaplanmeier',
+    "title": "Kaplan Meier Curve",
     "description": "Estimate survival of a patient cohort based on a mutation or set of mutations."
   },
   {
-    "track_type": 'premium', 
-    "title": "Linkage Disequillibrium Expansion", 
+    "track_type": 'ldexpansion',
+    "title": "Linkage Disequillibrium Expansion",
     "description": "Expand a variant set by finding all variants in LD."
   },
   {
-    "track_type": 'premium', 
-    "title": "Variant Effect Prediction", 
+    "track_type": 'premium',
+    "title": "Variant Effect Prediction",
     "description": "Run the ENSEMBL VEP pipeline to label variants."
   },
 ];
@@ -70,6 +71,12 @@ class AnalysisSelector extends React.Component {
         "Kaplan Meier Curve",
         null,
         <KaplanMeierAnalysis appModel={this.appModel} />
+      );
+    } else if (trackType === 'ldexpansion') {
+      this.viewModel.pushView(
+        "Linkage Disequillibrium Expansion",
+        null,
+        <LDExpansionAnalysis appModel={this.appModel} />
       );
     }
   }
