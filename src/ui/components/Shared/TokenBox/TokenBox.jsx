@@ -8,6 +8,7 @@ import SvgClose from "material-ui/svg-icons/navigation/close";
 import CircularProgress from "material-ui/CircularProgress";
 import ErrorDetails from "../ErrorDetails/ErrorDetails";
 import { SiriusApi, QueryBuilder, buildQueryParser } from 'valis';
+import { buildEncodeQueryParser } from './EncodeQueryParser';
 import { App } from '../../../../App';
 
 import './TokenBox.scss';
@@ -20,7 +21,7 @@ class TokenBox extends React.Component {
     this.autoComplete = React.createRef();
     this.appModel = props.appModel;
 
-    this.queryParser = buildQueryParser(this.getSuggestionHandlers());
+    this.queryParser = buildEncodeQueryParser(this.getSuggestionHandlers());
 
     this.timeOfLastRequest = null;
     this.lastRequest = null;

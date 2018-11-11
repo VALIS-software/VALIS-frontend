@@ -29,25 +29,25 @@ function buildEncodeQueryParser(suggestions) {
 
     const expansions = new Map();
     expansions.set('GENE_IN_PATHWAY', [ALL, 'IN_PATHWAY_T', 'PATHWAY']);
-    expansions.set('GENE_QUERY_TYPE', [ANY, 'INFLUENCING_TRAIT', 'GENE_IN_PATHWAY']);
-    expansions.set('EQTL_QUERY_TYPE', [ANY, 'INFLUENCING_GENE']);
-    expansions.set('VARIANT_QUERY_TYPE', [ANY, 'INFLUENCING_TRAIT']);
+    expansions.set('GENE_QUERY_TYPE', [ANY, 'INFLUENCING_TRAIT', 'NAMED_GENE', 'GENE_IN_PATHWAY']);
+    expansions.set('EQTL_QUERY_TYPE', [ANY, 'INFLUENCING_GENE', 'NAMED_SNP_RS']);
+    expansions.set('VARIANT_QUERY_TYPE', [ANY, 'INFLUENCING_TRAIT', 'NAMED_SNP_RS']);
     expansions.set('INFLUENCING_TRAIT', [ALL, 'INFLUENCING', 'TRAIT']);
     expansions.set('INFLUENCING_GENE', [ALL, 'INFLUENCING', 'GENE']);
     expansions.set('NAMED_GENE', [ALL, 'NAMED', 'GENE']);
     expansions.set('NAMED_SNP_RS', [ALL, 'NAMED', 'RS_T']);
     expansions.set('ANNOTATION_TYPE', [ANY, 'PROMOTER', 'ENHANCER']);
-    expansions.set('CELL_ANNOTATION', [ALL, 'ANNOTATION_TYPE', 'OF', 'TARGET', 'IN', 'CELL_TYPE']);
+    expansions.set('CELL_ANNOTATION', [ALL, 'ANNOTATION_TYPE', 'IN', 'CELL_TYPE', 'OF', 'TARGET']);
     // The root query rules
     expansions.set('VARIANT_QUERY', [ALL, 'VARIANTS', 'VARIANT_QUERY_TYPE', EOF]);
     expansions.set('GENE_QUERY', [ALL, 'GENE_T', 'GENE_QUERY_TYPE', EOF]);
     expansions.set('TRAIT_QUERY', [ALL, 'TRAIT_T', 'TRAIT', EOF]);
     expansions.set('EQTL_QUERY', [ALL, 'EQTL', 'EQTL_QUERY_TYPE', EOF]);
     expansions.set('ANNOTATION_QUERY', [ALL, 'CELL_ANNOTATION', EOF]);
-    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'EQTL_QUERY']);
+    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'EQTL_QUERY', 'ANNOTATION_QUERY', 'TRAIT_QUERY']);
 
     // return empty result for rs prefix queries
-    
+    suggestions.set('RS_T', (q, num) => new Promise((resolve, reject) => resolve([])));
     return new QueryParser(expansions, terminals, suggestions);
 }
 
