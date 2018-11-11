@@ -69,7 +69,8 @@ class ENCODESignalSelector extends React.Component<Props, State> {
 
   clickRow = (signalData: any) => {
     const target = signalData.info.experiment_target;
-    const title = `${signalData.name} (${signalData.info.assay}) ${target}`;
+    let title = `${signalData.info.biosample}, ${signalData.info.assay} ${target}`;
+    if (!target) title = `${signalData.info.biosample}, ${signalData.info.assay}`;
     App.addSignalTrack(title, signalData.info.fileurl);
   }
 

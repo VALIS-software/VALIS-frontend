@@ -29,8 +29,8 @@ function buildEncodeQueryParser(suggestions) {
 
     const expansions = new Map();
     expansions.set('GENE_IN_PATHWAY', [ALL, 'IN_PATHWAY_T', 'PATHWAY']);
-    expansions.set('GENE_QUERY_TYPE', [ANY, 'INFLUENCING_TRAIT', 'NAMED_GENE', 'GENE_IN_PATHWAY']);
-    expansions.set('EQTL_QUERY_TYPE', [ANY, 'INFLUENCING_GENE', 'NAMED_SNP_RS']);
+    expansions.set('GENE_QUERY_TYPE', [ANY, 'INFLUENCING_TRAIT', 'GENE_IN_PATHWAY']);
+    expansions.set('EQTL_QUERY_TYPE', [ANY, 'INFLUENCING_GENE']);
     expansions.set('VARIANT_QUERY_TYPE', [ANY, 'INFLUENCING_TRAIT']);
     expansions.set('INFLUENCING_TRAIT', [ALL, 'INFLUENCING', 'TRAIT']);
     expansions.set('INFLUENCING_GENE', [ALL, 'INFLUENCING', 'GENE']);
@@ -44,7 +44,7 @@ function buildEncodeQueryParser(suggestions) {
     expansions.set('TRAIT_QUERY', [ALL, 'TRAIT_T', 'TRAIT', EOF]);
     expansions.set('EQTL_QUERY', [ALL, 'EQTL', 'EQTL_QUERY_TYPE', EOF]);
     expansions.set('ANNOTATION_QUERY', [ALL, 'CELL_ANNOTATION', EOF]);
-    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY']);
+    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'EQTL_QUERY']);
 
     // return empty result for rs prefix queries
     

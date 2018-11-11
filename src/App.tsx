@@ -175,21 +175,26 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 				tracks: [
 					{
 						type: 'sequence',
-						name: 'Sequence',
-						heightPx: 50,
+						name: 'GRCh38',
+						heightPx: 34,
 					},
 					{
 						type: 'annotation',
 						name: '→ Strand Genes',
 						strand: Strand.Positive,
-						heightPx: 100,
+						heightPx: 34,
 					},
 					{
 						type: 'annotation',
 						name: '← Strand Genes',
 						strand: Strand.Negative,
-						heightPx: 100,
-					}
+						heightPx: 34,
+					},
+					{
+						type: 'variant',
+						name: 'dbSNP variants',
+						heightPx: 50,
+					},
 				],
 			};
 		}

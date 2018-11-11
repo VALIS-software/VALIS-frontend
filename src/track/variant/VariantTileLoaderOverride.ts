@@ -58,5 +58,4 @@ export class VariantTileLoaderOverride extends VariantTileLoader {
             } });
         });
     }
-
 }

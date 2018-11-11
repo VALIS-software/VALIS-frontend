@@ -7,21 +7,12 @@ import ActionSearch from 'material-ui/svg-icons/action/search';
 import SvgClose from "material-ui/svg-icons/navigation/close";
 import CircularProgress from "material-ui/CircularProgress";
 import ErrorDetails from "../ErrorDetails/ErrorDetails";
-import { SiriusApi, QueryBuilder } from 'valis';
-import { buildEncodeQueryParser } from './EncodeQueryParser';
+import { SiriusApi, QueryBuilder, buildQueryParser } from 'valis';
 import { App } from '../../../../App';
 
 import './TokenBox.scss';
 
 const DEBOUNCE_TIME = 200;
-
-const shorten = (str, len) => {
-  if ((str).length > len) {
-    return str.slice(0, len - 2) + '..';
-  } else {
-    return str;
-  }
-}
 
 class TokenBox extends React.Component {
   constructor(props) {
@@ -29,7 +20,7 @@ class TokenBox extends React.Component {
     this.autoComplete = React.createRef();
     this.appModel = props.appModel;
 
-    this.queryParser = buildEncodeQueryParser(this.getSuggestionHandlers());
+    this.queryParser = buildQueryParser(this.getSuggestionHandlers());
 
     this.timeOfLastRequest = null;
     this.lastRequest = null;
@@ -114,19 +105,6 @@ class TokenBox extends React.Component {
     }
   };
 
-  intersectWithEncodeQuery = (query) => {
-    const encodeBuilder = new QueryBuilder();
-    encodeBuilder.newGenomeQuery();
-    encodeBuilder.filterSource('ENCODE');
-    encodeBuilder.filterBiosample(this.props.biosample);
-
-    const builder = new QueryBuilder(query);
-    if (query) {
-      builder.addArithmeticWindow(encodeBuilder.build(), 1e6);
-    }
-    return builder.build();
-  }
-
   handleSelectItem = (chosenRequest, index) => {
     // handle enter key event
     if (index === -1) {
@@ -170,10 +148,10 @@ class TokenBox extends React.Component {
       const testParse = this.queryParser.getSuggestions(newString);
       if (testParse.query !== null) {
         this.setState({
-          query: this.intersectWithEncodeQuery(testParse.query)
+          query: testParse.query
         })
         // choose to display single result details or display search results
-        this.displaySearchResults(newTokens, this.intersectWithEncodeQuery(testParse.query), true);
+        this.displaySearchResults(newTokens, testParse.query, true);
       } else {
         this.getSuggestions(newTokens, true);
       }
@@ -273,7 +251,7 @@ class TokenBox extends React.Component {
     });
 
     this.setState({
-      query: this.intersectWithEncodeQuery(result.query),
+      query: result.query,
       quoteInput: result.isQuoted,
       open: openOnLoad,
     });
@@ -465,7 +443,7 @@ class TokenBox extends React.Component {
         this.handleRemoveToken(i);
       }
       tokenChips.push(<li key={i} className="token">
-        <Chip title={token.value} onClick={clickToken} onRequestDelete={clickRemoveToken}> {shorten(token.value, 25)} </Chip>
+        <Chip onClick={clickToken} onRequestDelete={clickRemoveToken}> {token.value} </Chip>
       </li>);
     }
     return tokenChips;
@@ -492,8 +470,8 @@ class TokenBox extends React.Component {
       return (<ErrorDetails error={this.state.error} />);
     }
     const tokenChips = this.renderTokenChips();
-    
-    const hintText = this.state.tokens.length === 0 ? 'find items near peaks' : '';
+
+    const hintText = this.state.tokens.length === 0 ? 'gene, trait or rs#' : '';
 
     // TODO: the AutoComplete component auto-closes when you click a menu item
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
@@ -524,14 +502,12 @@ class TokenBox extends React.Component {
       {clearButton}
       {searchButton}
     </div>);
-    return (<div className="token-box">{tokenChips}<div>{input}</div>{status}<button style={{marginBottom: 12}} onClick={this.props.onCancel}>Cancel</button></div>);
+    return (<div className="token-box">{tokenChips}<div>{input}</div>{status}</div>);
   }
 }
 
 TokenBox.propTypes = {
   appModel: PropTypes.object,
-  onCancel: PropTypes.func,
-  biosample: PropTypes.string,
 };
 
 export default TokenBox;

@@ -166,23 +166,8 @@ class Header extends React.Component<Props, State> {
             <div className="header-item">
               <span style={{color: 'white', fontWeight: 'bold', marginLeft: 12}}> ENCODE </span>
             </div>
-            {this.state.biosampleValue ? 
-              <div className="header-item" style={{marginLeft: 12, marginRight: 12}}>
-                <Chip onRequestDelete={() => { this.setState({biosampleValue: null})}}> {this.state.biosampleValue} </Chip>
-              </div>
-              : null
-            }
-            <div className="header-search-box" style={{marginTop: -16}}>
-              <div style={{maxWidth: 300, marginTop: 4, marginLeft: 16}}>
-              {this.state.biosampleValue ? null : (<Select
-                value={null}
-                onChange={(d: any) => this.handleUpdateBiosample(d.value)}
-                options={biosampleItems}
-                placeholder='Select Biosample'
-              />)}
-              </div>
-              {this.state.biosampleValue && this.state.isSearching ? (<TokenBox biosample={this.state.biosampleValue} onCancel={this.hideSearch} appModel={this.props.appModel} viewModel={this.props.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>) : null}
-              {options}
+            <div className="header-search-box" style={{marginTop: -16, marginLeft: 16}}>
+              <TokenBox appModel={this.props.appModel} viewModel={this.props.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>
             </div>
             <div className="header-button">
             <span style={{color: 'white', fontSize: 12}}> powered by </span>

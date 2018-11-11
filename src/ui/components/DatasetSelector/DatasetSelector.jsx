@@ -48,6 +48,11 @@ const fixedTrackData = [
     "description": "Comprehensive parts list of functional elements in the human genome."
   },
   {
+    "track_type": TRACK_TYPE_ROADMAP,
+    "title": "Roadmap Chromatin States",
+    "description": "ChromHMM annotations for 127 reference epigenomes."
+  },
+  {
     "track_type": TRACK_TYPE_REMOTE_FILE,
     "title": "Remote hosted Bigwig",
     "description": "Add a bigwig file by specifying an FTP or HTTP address."
@@ -58,19 +63,14 @@ const fixedTrackData = [
     "description": "Add variants related to traits or diseases from the EMBL-EBI GWAS database."
   },
   {
-    "track_type": TRACK_TYPE_ROADMAP,
-    "title": "Roadmap Chromatin States",
-    "description": "ChromHMM annotations for 127 reference epigenomes."
+    "track_type": TRACK_TYPE_EQTL,
+    "title": "GTEx eQTLs",
+    "description": "Quantitative trait loci from 53 human tissues curated from the Genotype-Tissue Expression project."
   },
   {
     "track_type": TRACK_TYPE_EXAC,
     "title": "ExAC Variants",
     "description": "Search labeled variants of over 60k exomes from the Exome Aggregation Consortium."
-  },
-  {
-    "track_type": TRACK_TYPE_EQTL,
-    "title": "GTEx eQTLs",
-    "description": "Quantitative trait loci from 53 human tissues curated from the Genotype-Tissue Expression project."
   },
 ];
 
