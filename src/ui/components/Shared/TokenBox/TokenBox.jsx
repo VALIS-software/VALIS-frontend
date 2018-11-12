@@ -176,7 +176,7 @@ class TokenBox extends React.Component {
 
   getSuggestionHandlers() {
     const suggestionMap = new Map();
-    ['TRAIT', 'GENE', 'CELL_TYPE', 'TUMOR_SITE', 'TARGET', 'PATHWAY'].forEach(rule => {
+    ['TRAIT', 'GENE', 'CELL_TYPE_PROMOTER', 'CELL_TYPE_ENHANCER', 'TUMOR_SITE', 'TARGET', 'PATHWAY'].forEach(rule => {
       suggestionMap.set(rule, (searchText, maxResults) => {
         return this.getThrottledResultPromise(rule, searchText, maxResults).then(d=> {
           return d;
