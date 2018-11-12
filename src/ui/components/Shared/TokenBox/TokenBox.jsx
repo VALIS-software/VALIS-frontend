@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as ReactDOM from "react-dom";
 import * as PropTypes from 'prop-types';
 import Chip from 'material-ui/Chip';
 import AutoComplete from 'material-ui/AutoComplete';
@@ -19,6 +20,7 @@ class TokenBox extends React.Component {
   constructor(props) {
     super(props);
     this.autoComplete = React.createRef();
+    this.tokenBox = React.createRef();
     this.appModel = props.appModel;
 
     this.queryParser = buildEncodeQueryParser(this.getSuggestionHandlers());
@@ -177,13 +179,14 @@ class TokenBox extends React.Component {
 
   getSuggestionHandlers() {
     const suggestionMap = new Map();
-    ['TRAIT', 'GENE', 'CELL_TYPE', 'TUMOR_SITE', 'TARGET', 'PATHWAY'].forEach(rule => {
+    ['TRAIT', 'GENE', 'CELL_TYPE', 'TUMOR_SITE', 'TARGET', 'PATHWAY', 'CELL_TYPE_PROMOTER', 'CELL_TYPE_ENHANCER'].forEach(rule => {
       suggestionMap.set(rule, (searchText, maxResults) => {
         return this.getThrottledResultPromise(rule, searchText, maxResults).then(d=> {
           return d;
         });
       });
     });
+    console.log(suggestionMap);
     return suggestionMap;
   }
 
@@ -466,13 +469,69 @@ class TokenBox extends React.Component {
     }
   }
 
+  getTokenHint(tokens) {
+    if (!tokens || !tokens.length) return 'search the genome';
+    const rootOptions = ['variants', 'gene', 'eqtl', 'enhancers', 'promoters'];
+    let nestedTokens  = null;
+    for (let i = tokens.length - 1; i >= 0; i--) {
+      if (tokens[i].value === 'within') {
+        return 'choose annotation type';
+      }
+      if (rootOptions.indexOf(tokens[i].value) >= 0) {
+        nestedTokens =  tokens.slice(i);
+        break;
+      }
+    }
+    if (nestedTokens[0].value === 'variants') {
+      if (nestedTokens[1]) {
+        if (nestedTokens[1].value === 'named') {
+          return 'enter rs#';
+        } else if (nestedTokens[1].value === 'influencing') {
+          return 'enter trait name';
+        }
+      }
+    } else if (nestedTokens[0].value === 'gene') {
+      if (nestedTokens[1]) {
+        if (nestedTokens[1].value === 'named') {
+          return 'enter gene name';
+        } else if (nestedTokens[1].value === 'influencing') {
+          return 'enter trait name';
+        } else if (nestedTokens[1].value === 'in pathway') {
+          return 'enter pathway name';
+        }
+      }
+    } else if (nestedTokens[0].value === 'eqtl') {
+      if (nestedTokens[1]) {
+        if (nestedTokens[1].value === 'named') {
+          return 'enter rs#';
+        } else if (nestedTokens[1].value === 'influencing') {
+          return 'enter gene name';
+        } 
+      }
+    } else if (nestedTokens[0].value === 'trait') {
+      return 'enter a trait name';
+    } else if (nestedTokens[0].value === 'enhancers' || nestedTokens[0].value === 'promoters') {
+      if (nestedTokens[1]) {
+        if (nestedTokens[1].value === 'in') {
+          return 'enter a cell type';
+        }
+      }
+    }
+    
+    if (tokens.length > 1 && tokens[1].value === 'within') {
+      return 'choose a distance'
+    }
+    return '';
+  }
+
   render() {
     if (this.state.error) {
       return (<ErrorDetails error={this.state.error} />);
     }
     const tokenChips = this.renderTokenChips();
+    const hintText = this.getTokenHint(this.state.tokens);
 
-    const hintText = this.state.tokens.length === 0 ? 'gene, trait or rs#' : '';
+
 
     // TODO: the AutoComplete component auto-closes when you click a menu item
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
@@ -498,12 +557,18 @@ class TokenBox extends React.Component {
     const clearButton = drawClear ? (<IconButton tooltip="Clear" onClick={this.clearSearch}><SvgClose color='white'/></IconButton>) : (<div />);
     const searchButton = (<IconButton onClick={this.runCurrentSearch}  tooltip={tooltip}><ActionSearch color='white'/></IconButton>);
     const progress = this.state.loading ? (<CircularProgress size={80} thickness={5} />) : null;
-    const status = (<div>
+    const status = (<div style={{whiteSpace: 'nowrap'}}>
       {progress}
       {clearButton}
       {searchButton}
     </div>);
-    return (<div className="token-box">{tokenChips}<div>{input}</div>{status}</div>);
+    
+    let delta = 0;
+    if (this.refs.tokenbox) {
+      let scroll = Math.min(0, 1000 - this.refs.tokenbox.scrollWidth);
+      delta = scroll;
+    }
+    return (<div className='tokenbox-wrapper' style={{maxWidth: 1000, height: 48, overflowX: 'scroll'}} ><div ref='tokenbox' style={{position: 'absolute', height: 48, left: delta}} className="token-box">{tokenChips}<div>{input}</div>{status}</div></div>);
   }
 }
 
