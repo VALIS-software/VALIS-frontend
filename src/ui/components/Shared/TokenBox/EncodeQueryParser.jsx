@@ -41,7 +41,8 @@ function buildEncodeQueryParser(suggestions) {
     expansions.set('GENE_IN_PATHWAY', [ALL, 'IN_PATHWAY_T', 'PATHWAY','OPTIONAL_WITHIN']);
     expansions.set('GENE_QUERY_TYPE', [ANY, 'INFLUENCING_TRAIT', 'NAMED_GENE', 'GENE_IN_PATHWAY', 'WITHIN_QUERY']);
     expansions.set('IN_EQTL_CELL_TYPE', [ALL, 'IN', 'CELL_TYPE_EQTL']);
-    expansions.set('EQTL_QUERY_TYPE', [ANY, 'INFLUENCING_GENE', 'NAMED_SNP_RS', 'WITHIN_QUERY', 'IN_EQTL_CELL_TYPE']);
+    expansions.set('OF_GENE', [ALL, 'OF', 'GENE'])
+    expansions.set('EQTL_QUERY_TYPE', [ANY, 'OF_GENE', 'NAMED_SNP_RS', 'WITHIN_QUERY', 'IN_EQTL_CELL_TYPE']);
     expansions.set('VARIANT_QUERY_TYPE', [ANY, 'INFLUENCING_TRAIT', 'NAMED_SNP_RS', 'WITHIN_QUERY', 'OF_ANNOTATION_QUERY']);
     expansions.set('OPTIONAL_WITHIN', [ANY, 'WITHIN_QUERY', EOF]);
     expansions.set('ANNOTATION_QUERY', [ANY, 'GENE_QUERY', 'EQTL_QUERY', 'ENHANCER_QUERY',  'PROMOTER_QUERY']);
