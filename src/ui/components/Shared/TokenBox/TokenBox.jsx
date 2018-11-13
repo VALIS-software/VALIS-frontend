@@ -34,6 +34,7 @@ class TokenBox extends React.Component {
       open: false,
       searchString: '',
       query: null,
+      inputHidden: false,
     };
   }
 
@@ -62,8 +63,20 @@ class TokenBox extends React.Component {
   clearSearchText() {
     this.autoComplete.current.setState({ searchText: '' });
     this.setState({
-      searchString: ''
-    })
+      searchString: '',
+    });
+  }
+
+  resetSearch = () => {
+    this.setState({
+      searchString: '',
+      tokens: [],
+      inputHidden: false,
+    });
+    setTimeout(() => {
+      this.autoComplete.current.setState({ searchText: '' });
+      this.autoComplete.current.focus();
+    }, 100);
   }
 
   handleKeyDown = (evt) => {
@@ -371,6 +384,9 @@ class TokenBox extends React.Component {
     } else {
       this.pushSearchResultsView(tokens, query);
     }
+    this.setState({
+      inputHidden: true,
+    });
   }
 
 
@@ -510,8 +526,8 @@ class TokenBox extends React.Component {
       if (nestedTokens[1]) {
         if (nestedTokens[1].value === 'named') {
           return 'enter rs#';
-        } else if (nestedTokens[1].value === 'influencing') {
-          return 'enter gene name';
+        } else if (nestedTokens[1].value === 'in') {
+          return 'enter cell type';
         } 
       }
     } else if (nestedTokens[0].value === 'trait') {
@@ -541,7 +557,7 @@ class TokenBox extends React.Component {
 
     // TODO: the AutoComplete component auto-closes when you click a menu item
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
-    const input = (<AutoComplete
+    const input = this.state.inputHidden ? null : (<AutoComplete
       id='search-box'
       ref={this.autoComplete}
       onKeyDown={this.handleKeyDown}
@@ -560,13 +576,13 @@ class TokenBox extends React.Component {
     const drawClear = this.state.searchString.length > 0 || this.state.tokens.length > 0;
     const searchEnabled = this.state.query !== null;
     const tooltip = searchEnabled ? 'Search' : 'Enter a valid search';
-    const clearButton = drawClear ? (<IconButton tooltip="Clear" onClick={this.clearSearch}><SvgClose color='white'/></IconButton>) : (<div />);
+    const clearButton = drawClear ? (<IconButton tooltip="Clear" onClick={this.resetSearch}><SvgClose color='white'/></IconButton>) : (<div />);
     const searchButton = (<IconButton onClick={this.runCurrentSearch}  tooltip={tooltip}><ActionSearch color='white'/></IconButton>);
     const progress = this.state.loading ? (<CircularProgress size={80} thickness={5} />) : null;
     const status = (<div style={{whiteSpace: 'nowrap'}}>
       {progress}
       {clearButton}
-      {searchButton}
+      {this.state.inputHidden ? null : searchButton}
     </div>);
     
     let delta = 0;
