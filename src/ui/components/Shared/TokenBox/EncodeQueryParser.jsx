@@ -9,7 +9,7 @@ function buildEncodeQueryParser(suggestions) {
     terminals.set('GENE', /"(.+?)"/g);
     terminals.set('INFLUENCING', /influencing/g);
     terminals.set('OF', /of/g);
-    terminals.set('VARIANTS', /variants/g);
+    terminals.set('VARIANTS_T', /variants/g);
     terminals.set('GENE_T', /gene/g);
     terminals.set('TRAIT_T', /trait/g);
     terminals.set('NEAR', /near/g);
@@ -20,6 +20,9 @@ function buildEncodeQueryParser(suggestions) {
     terminals.set('ENHANCER', /enhancers/g);
     terminals.set('TARGET', /"(.+?)"/g);
     terminals.set('CELL_TYPE', /"(.+?)"/g);
+    terminals.set('CELL_TYPE_ENHANCER', /"(.+?)"/g);
+    terminals.set('CELL_TYPE_PROMOTER', /"(.+?)"/g);
+    terminals.set('CELL_TYPE_EQTL', /"(.+?)"/g);
     terminals.set('EQTL', /eqtl/g);
     terminals.set('NAMED', /named/g);
     terminals.set('TUMOR_SITE', /"(.+?)"/g);
@@ -37,29 +40,46 @@ function buildEncodeQueryParser(suggestions) {
 
 
     const expansions = new Map();
-    expansions.set('DIST_QUERY', [ANY, '1kbp_T', '5kbp_T', '10kbp_T', '50kbp_T', '100kbp_T', '1mbp_T']);
-    expansions.set('GENE_IN_PATHWAY', [ALL, 'IN_PATHWAY_T', 'PATHWAY','OPTIONAL_WITHIN']);
-    expansions.set('GENE_QUERY_TYPE', [ANY, 'INFLUENCING_TRAIT', 'NAMED_GENE', 'GENE_IN_PATHWAY', 'WITHIN_QUERY']);
-    expansions.set('IN_EQTL_CELL_TYPE', [ALL, 'IN', 'CELL_TYPE_EQTL']);
+    
+    // distance window queries
+    expansions.set('GENOMIC_DISTANCE', [ANY, '1kbp_T', '5kbp_T', '10kbp_T', '50kbp_T', '100kbp_T', '1mbp_T']);
+    expansions.set('WITHIN_QUERY', [ALL, 'WITHIN_T', 'GENOMIC_DISTANCE', 'GENOME_QUERY', EOF])
+    expansions.set('OPTIONAL_WITHIN', [ANY, 'WITHIN_QUERY', EOF]);
+
+
+    // variant's
+    expansions.set('VARIANT_QUERY', [ALL, 'VARIANTS_T', 'VARIANT_QUERY_TYPE', EOF]);
+    expansions.set('VARIANT_QUERY_TYPE', [ANY, 'INFLUENCING_TRAIT', 'NAMED_SNP_RS', 'WITHIN_QUERY', 'OF_ANNOTATION_QUERY']);
+    expansions.set('NAMED_SNP_RS', [ALL, 'NAMED', 'RS_T']);
+
+    // eqtl's
     expansions.set('OF_GENE', [ALL, 'OF', 'GENE'])
     expansions.set('EQTL_QUERY_TYPE', [ANY, 'OF_GENE', 'NAMED_SNP_RS', 'WITHIN_QUERY', 'IN_EQTL_CELL_TYPE']);
-    expansions.set('VARIANT_QUERY_TYPE', [ANY, 'INFLUENCING_TRAIT', 'NAMED_SNP_RS', 'WITHIN_QUERY', 'OF_ANNOTATION_QUERY']);
-    expansions.set('OPTIONAL_WITHIN', [ANY, 'WITHIN_QUERY', EOF]);
+    expansions.set('IN_EQTL_CELL_TYPE', [ALL, 'IN', 'CELL_TYPE_EQTL']);
+    expansions.set('EQTL_QUERY', [ALL, 'EQTL', 'EQTL_QUERY_TYPE', EOF]);
+
+    
+    // general annotation query
     expansions.set('ANNOTATION_QUERY', [ANY, 'GENE_QUERY', 'EQTL_QUERY', 'ENHANCER_QUERY',  'PROMOTER_QUERY']);
     expansions.set('OF_ANNOTATION_QUERY', [ALL, 'OF', 'ANNOTATION_QUERY',  EOF]);
+
+    // gene queries
     expansions.set('INFLUENCING_TRAIT', [ALL, 'INFLUENCING', 'TRAIT', 'OPTIONAL_WITHIN']);
-    expansions.set('INFLUENCING_GENE', [ALL, 'INFLUENCING', 'GENE']);
-    expansions.set('NAMED_GENE', [ALL, 'NAMED', 'GENE']);
-    expansions.set('NAMED_SNP_RS', [ALL, 'NAMED', 'RS_T']);
+    expansions.set('GENE_WITH_NAME', [ALL, 'NAMED', 'GENE']);
+    expansions.set('GENE_QUERY', [ALL, 'GENE_T', 'GENE_QUERY_TYPES', EOF]);
+    expansions.set('GENE_IN_PATHWAY', [ALL, 'IN_PATHWAY_T', 'PATHWAY','OPTIONAL_WITHIN']);
+    expansions.set('GENE_QUERY_TYPES', [ANY, 'INFLUENCING_TRAIT', 'GENE_WITH_NAME', 'GENE_IN_PATHWAY', 'WITHIN_QUERY']);
+
+    // enhancer promoter queries
     expansions.set('ENHANCER_QUERY', [ALL, 'ENHANCER', 'IN', 'CELL_TYPE_ENHANCER', 'OPTIONAL_WITHIN']);
     expansions.set('PROMOTER_QUERY', [ALL, 'PROMOTER', 'IN', 'CELL_TYPE_PROMOTER', 'OPTIONAL_WITHIN']);
-    expansions.set('WITHIN_QUERY', [ALL, 'WITHIN_T', 'DIST_QUERY', 'GENOME_QUERY', EOF])
-    // The root query rules
-    expansions.set('VARIANT_QUERY', [ALL, 'VARIANTS', 'VARIANT_QUERY_TYPE', EOF]);
-    expansions.set('GENE_QUERY', [ALL, 'GENE_T', 'GENE_QUERY_TYPE', EOF]);
+    
+    // trait queries:
     expansions.set('TRAIT_QUERY', [ALL, 'TRAIT_T', 'TRAIT', EOF]);
-    expansions.set('EQTL_QUERY', [ALL, 'EQTL', 'EQTL_QUERY_TYPE', EOF]);
-    expansions.set('GENOME_QUERY', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'EQTL_QUERY', 'ENHANCER_QUERY', 'PROMOTER_QUERY',]);
+
+    // The root query rules
+    expansions.set('GENOME_QUERY', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'EQTL_QUERY', 'ENHANCER_QUERY', 'PROMOTER_QUERY',]);    
+
     expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'EQTL_QUERY', 'ENHANCER_QUERY',  'PROMOTER_QUERY','TRAIT_QUERY']);
 
     // return empty result for rs prefix queries
