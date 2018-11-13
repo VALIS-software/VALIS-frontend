@@ -130,6 +130,7 @@ function buildCellQuery(parsePath) {
 
 function buildEQTLQuery(parsePath) {
     const token = parsePath[0];
+    if (!token) return null;
     if (token.rule === 'OF') {
         if (parsePath.length < 2) return null;
         const geneQuery = buildGeneQuery(parsePath.slice(2))
