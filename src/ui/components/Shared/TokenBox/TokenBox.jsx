@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as ReactDOM from "react-dom";
+import { buildQuery } from './EncodeQueryBuilder';
 import * as PropTypes from 'prop-types';
 import Chip from 'material-ui/Chip';
 import AutoComplete from 'material-ui/AutoComplete';
@@ -162,12 +162,15 @@ class TokenBox extends React.Component {
       const newString = this.buildQueryStringFromTokens(newTokens);
       // if query is ready, run search
       const testParse = this.queryParser.getSuggestions(newString);
-      if (testParse.query !== null) {
+      const currQuery = buildQuery(testParse.tokens);
+      if (currQuery !== null) {
         this.setState({
-          query: testParse.query
+          query: currQuery,
+          dataSource: []
         })
         // choose to display single result details or display search results
-        this.displaySearchResults(newTokens, testParse.query, true);
+        console.log(currQuery);
+        this.displaySearchResults(newTokens, currQuery, true);
       } else {
         this.getSuggestions(newTokens, true);
       }
@@ -265,14 +268,14 @@ class TokenBox extends React.Component {
       }, err => {
       this.appModel.popLoading();
     });
-
+    const currQuery = buildQuery(result.tokens);
     this.setState({
-      query: result.query,
+      query: currQuery,
       quoteInput: result.isQuoted,
       open: openOnLoad,
     });
 
-    if (!result.query && openOnLoad) {
+    if (!currQuery && openOnLoad) {
       setTimeout(() => {
         this.autoComplete.current.focus();
       }, 100);
@@ -443,7 +446,8 @@ class TokenBox extends React.Component {
     this.setState({
       tokens: newTokens,
       inputHidden: false,
-      // dataSource: []
+      query: null,
+      dataSource: []
     })
     this.clearSearchText();
     this.getSuggestions(newTokens, true);
@@ -532,11 +536,7 @@ class TokenBox extends React.Component {
     } else if (nestedTokens[0].value === 'trait') {
       return 'enter a trait name';
     } else if (nestedTokens[0].value === 'enhancers' || nestedTokens[0].value === 'promoters') {
-      if (nestedTokens[1]) {
-        if (nestedTokens[1].value === 'in') {
-          return 'enter a cell type';
-        }
-      }
+      return 'enter a cell type';
     }
     
     if (tokens.length > 1 && tokens[1].value === 'within') {

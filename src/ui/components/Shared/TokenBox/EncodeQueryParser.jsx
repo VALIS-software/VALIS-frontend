@@ -43,8 +43,8 @@ function buildEncodeQueryParser(suggestions) {
     
     // distance window queries
     expansions.set('GENOMIC_DISTANCE', [ANY, '1kbp_T', '5kbp_T', '10kbp_T', '50kbp_T', '100kbp_T', '1mbp_T']);
-    expansions.set('WITHIN_QUERY', [ALL, 'WITHIN_T', 'GENOMIC_DISTANCE', 'GENOME_QUERY', EOF])
-    expansions.set('OPTIONAL_WITHIN', [ANY, 'WITHIN_QUERY', EOF]);
+    expansions.set('WITHIN_QUERY', [ALL, 'WITHIN_T', 'GENOMIC_DISTANCE', 'GENOME_QUERY'])
+    
 
 
     // variant's
@@ -64,15 +64,15 @@ function buildEncodeQueryParser(suggestions) {
     expansions.set('OF_ANNOTATION_QUERY', [ALL, 'OF', 'ANNOTATION_QUERY',  EOF]);
 
     // gene queries
-    expansions.set('INFLUENCING_TRAIT', [ALL, 'INFLUENCING', 'TRAIT', 'OPTIONAL_WITHIN']);
+    expansions.set('INFLUENCING_TRAIT', [ALL, 'INFLUENCING', 'TRAIT']);
     expansions.set('GENE_WITH_NAME', [ALL, 'NAMED', 'GENE']);
     expansions.set('GENE_QUERY', [ALL, 'GENE_T', 'GENE_QUERY_TYPES', EOF]);
-    expansions.set('GENE_IN_PATHWAY', [ALL, 'IN_PATHWAY_T', 'PATHWAY','OPTIONAL_WITHIN']);
+    expansions.set('GENE_IN_PATHWAY', [ALL, 'IN_PATHWAY_T', 'PATHWAY']);
     expansions.set('GENE_QUERY_TYPES', [ANY, 'INFLUENCING_TRAIT', 'GENE_WITH_NAME', 'GENE_IN_PATHWAY', 'WITHIN_QUERY']);
 
     // enhancer promoter queries
-    expansions.set('ENHANCER_QUERY', [ALL, 'ENHANCER', 'IN', 'CELL_TYPE_ENHANCER', 'OPTIONAL_WITHIN']);
-    expansions.set('PROMOTER_QUERY', [ALL, 'PROMOTER', 'IN', 'CELL_TYPE_PROMOTER', 'OPTIONAL_WITHIN']);
+    expansions.set('ENHANCER_QUERY', [ALL, 'ENHANCER', 'CELL_TYPE_ENHANCER']);
+    expansions.set('PROMOTER_QUERY', [ALL, 'PROMOTER', 'CELL_TYPE_PROMOTER']);
     
     // trait queries:
     expansions.set('TRAIT_QUERY', [ALL, 'TRAIT_T', 'TRAIT', EOF]);
