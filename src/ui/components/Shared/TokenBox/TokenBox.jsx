@@ -212,7 +212,7 @@ class TokenBox extends React.Component {
     return pieces.join(' ');
   }
 
-  buildResultTitleFromTokens(tokens, searchString) {
+  buildResultTitleFromTokens(tokens) {
     let prefix = '';
     if (tokens && tokens.length) {
       if (tokens[0].value === 'eqtl') {
@@ -223,9 +223,10 @@ class TokenBox extends React.Component {
         prefix = 'variants→'
       }
     }
-    if (!tokens || tokens.length === 0) return prefix + searchString;
+    if (!tokens || tokens.length === 0) return prefi;
     let quotedStrs = tokens.filter(token => token.quoted);
-    let value = (quotedStrs.length > 0) ? quotedStrs.map(x => x.value).join(' | ') : searchString;
+    let value = (quotedStrs.length > 0) ? quotedStrs.map(x => x.value).join(' | ') : null;
+    if (!value) value = tokens[tokens.length - 1].value;
     value = value.length > 18 ? value.slice(0, 15) + '...' : value;
     return prefix + value;
   }
@@ -383,7 +384,7 @@ class TokenBox extends React.Component {
           this.pushSearchResultsView(tokens, traitQuery);
         }
       });
-    } else {
+    } else if (query) {
       this.pushSearchResultsView(tokens, query);
     }
     this.setState({
@@ -392,7 +393,7 @@ class TokenBox extends React.Component {
   }
 
   pushSearchResultsView = (tokens, query) => {
-    let queryTitle = this.buildResultTitleFromTokens(tokens, '');
+    let queryTitle = this.buildResultTitleFromTokens(tokens);
     App.displaySearchResults(query, queryTitle);
   }
 
@@ -540,7 +541,9 @@ class TokenBox extends React.Component {
     }
     
     if (tokens.length > 1 && tokens[1].value === 'within') {
-      return 'choose a distance'
+      if (tokens.length < 3) {
+        return 'choose a distance'
+      }
     }
     return '';
   }
@@ -578,7 +581,7 @@ class TokenBox extends React.Component {
     const progress = this.state.loading ? (<CircularProgress size={80} thickness={5} />) : null;
     const status = (<div style={{whiteSpace: 'nowrap'}}>
       {progress}
-      {clearButton}
+      {this.state.inputHidden ? null : clearButton}
       {this.state.inputHidden ? null : searchButton}
     </div>);
     

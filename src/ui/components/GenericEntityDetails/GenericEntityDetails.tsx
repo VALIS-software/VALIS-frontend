@@ -150,6 +150,7 @@ function DetailsTable(props: any) {
 	const viewKeys = ['type', 'contig', 'start', 'end', 'length', 'source'];
 	for (const k of viewKeys) {
 		if (details[k]) {
+			
 			const valueStr = details[k].toString();
 			detailItems.push(
 				<TableRow key={k}>

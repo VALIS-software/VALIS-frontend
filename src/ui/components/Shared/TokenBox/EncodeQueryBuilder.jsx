@@ -12,6 +12,30 @@ const TRIM = (x) => {
     return x.replace(/(^[ '\^\$\*#&]+)|([ '\^\$\*#&]+$)/g, '');
 }
 
+const parseGenomicDistanceString = (str) => {
+    let kbp = str.indexOf('kbp');
+    let mbp = str.indexOf('mbp');
+    if ( kbp >= 0) {
+        return parseFloat(str.slice(0, kbp)) * 1000;
+    } else if ( mbp >= 0) {
+        return parseFloat(str.slice(0, mbp)) * 1000000;
+    } else {
+        return null;
+    }
+}
+
+function buildWithinQueryForType(parsePath, type) {
+    if (parsePath.length < 3) return null;
+    const dist = parseGenomicDistanceString(parsePath[1].value);
+    const rest = parsePath.slice(2);
+    let window = buildQuery(rest);
+    if (!window || !dist) return null;
+    builder.newGenomeQuery();
+    builder.filterType(type);
+    builder.addArithmeticWindow(window, dist);
+    return builder.build();
+}
+
 function buildVariantQuery(parsePath) {
     if (!parsePath || parsePath.length < 2) return null;
     const token = parsePath[0];
@@ -34,7 +58,19 @@ function buildVariantQuery(parsePath) {
         builder.filterID('Gsnp_' + snpRS);
         const snpQuery = builder.build();
         return snpQuery;
+    } else if (token.rule === 'OF') {
+        const rest = parsePath.slice(1);
+        let intersect = buildQuery(rest);
+        if (!intersect) return null;
+        builder.newGenomeQuery();
+        builder.filterType("SNP");
+        builder.addArithmeticIntersect(intersect);
+        return builder.build();
+    } else if (token.rule === 'WITHIN_T') {
+        console.log('within', parsePath);
+        return buildWithinQueryForType(parsePath, "SNP");
     }
+    return null;
 }
 
 function buildTraitQuery(parsePath) {
@@ -77,6 +113,8 @@ function buildGeneQuery(parsePath) {
         builder.newGenomeQuery();
         builder.filterPathway(pathwayName);
         return builder.build();
+    } else if (token.rule === 'WITHIN_T') {
+        return buildWithinQueryForType(parsePath, "gene");
     }
 }
 
@@ -93,11 +131,10 @@ function buildCellQuery(parsePath) {
 
 function buildEQTLQuery(parsePath) {
     const token = parsePath[0];
-    if (token.rule === 'INFLUENCING') {
-        const geneName = STRIP_QUOTES(parsePath[1].value);
-        builder.newGenomeQuery();
-        builder.filterName(geneName.toUpperCase());
-        const geneQuery = builder.build()
+    if (token.rule === 'OF') {
+        if (parsePath.length < 2) return null;
+        const geneQuery = buildGeneQuery(parsePath.slice(2))
+        if (!geneQuery) return null;
         builder.newEdgeQuery();
         builder.setToNode(geneQuery);
         const edgeQuery = builder.build();
@@ -114,6 +151,20 @@ function buildEQTLQuery(parsePath) {
         builder.setToNode(snpQuery, true);
         const edgeQuery = builder.build();
         return edgeQuery;
+    } else if (token.rule === 'IN') {
+        if (parsePath.length < 2) return null;
+        const biosample = STRIP_QUOTES(parsePath[1].value);
+        builder.newGenomeQuery();
+        builder.filterType('gene');
+        const geneQuery = builder.build();
+        builder.newEdgeQuery();
+        builder.setToNode(geneQuery);
+        builder.filterBiosample(biosample);
+        const edgeQuery = builder.build();
+        builder.newGenomeQuery();
+        builder.addToEdge(edgeQuery);
+        builder.setLimit(1000000);
+        return builder.build();
     }
 }
 
