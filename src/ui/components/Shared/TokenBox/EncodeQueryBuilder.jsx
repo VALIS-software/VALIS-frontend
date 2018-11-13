@@ -67,7 +67,6 @@ function buildVariantQuery(parsePath) {
         builder.addArithmeticIntersect(intersect);
         return builder.build();
     } else if (token.rule === 'WITHIN_T') {
-        console.log('within', parsePath);
         return buildWithinQueryForType(parsePath, "SNP");
     }
     return null;
@@ -165,6 +164,26 @@ function buildEQTLQuery(parsePath) {
         builder.addToEdge(edgeQuery);
         builder.setLimit(1000000);
         return builder.build();
+    } else if (token.rule === 'WITHIN_T') {
+        console.log(parsePath);
+        if (parsePath.length < 3) return null;
+        const dist = parseGenomicDistanceString(parsePath[1].value);
+        const rest = parsePath.slice(2);
+        let window = buildQuery(rest);
+        if (!window || !dist) return null;
+        builder.newGenomeQuery();
+        builder.filterType('gene');
+        const geneQuery = builder.build();
+        builder.newEdgeQuery();
+        builder.setToNode(geneQuery);
+        const edgeQuery = builder.build();
+        builder.newGenomeQuery();
+        builder.filterType('SNP')
+        builder.filterSource('GTEx');
+        builder.addArithmeticWindow(window, dist);
+        builder.addToEdge(edgeQuery);
+        const snpQuery = builder.build();
+        return snpQuery;
     }
 }
 

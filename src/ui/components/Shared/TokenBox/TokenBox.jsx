@@ -252,6 +252,7 @@ class TokenBox extends React.Component {
         this.setState({
           dataSource: results,
         });
+        console.log(results);
       } else if (result.additionalSuggestions){
         // if we have additional suggestions (full text search)
         // fire them iff they are newer than any other promise
