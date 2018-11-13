@@ -471,7 +471,7 @@ class TokenBox extends React.Component {
 
   getTokenHint(tokens) {
     if (!tokens || !tokens.length) return 'search the genome';
-    const rootOptions = ['variants', 'gene', 'eqtl', 'enhancers', 'promoters'];
+    const rootOptions = ['variants', 'gene', 'eqtl', 'enhancers', 'promoters', 'trait'];
     const distances = ['1kbp of', '5kbp of', '10kbp of', '100kbp of', '1mbp of'];
     let nestedTokens  = null;
     for (let i = tokens.length - 1; i >= 0; i--) {
