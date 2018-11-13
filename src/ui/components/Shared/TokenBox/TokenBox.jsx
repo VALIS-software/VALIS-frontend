@@ -434,7 +434,7 @@ class TokenBox extends React.Component {
     // convert the last token into search text
     this.autoComplete.current.setState({ searchText: clickedToken.value });
     this.autoComplete.current.focus();
-    
+
     // the fakeToken here is a trick to get suggestions for the current editing token
     const fakeToken = {
       value: clickedToken.value.slice(0, -1),
@@ -535,14 +535,14 @@ class TokenBox extends React.Component {
           return 'enter rs#';
         } else if (nestedTokens[1].value === 'in') {
           return 'enter cell type';
-        } 
+        }
       }
     } else if (nestedTokens[0].value === 'trait') {
       return 'enter a trait name';
     } else if (nestedTokens[0].value === 'enhancers' || nestedTokens[0].value === 'promoters') {
       return 'enter a cell type';
     }
-    
+
     if (tokens.length > 1 && tokens[1].value === 'within') {
       if (tokens.length < 3) {
         return 'choose a distance'
@@ -580,14 +580,14 @@ class TokenBox extends React.Component {
     const searchEnabled = this.state.query !== null;
     const tooltip = searchEnabled ? 'Search' : 'Enter a valid search';
     const clearButton = drawClear ? (<IconButton tooltip="Clear" onClick={this.resetSearch}><SvgClose color='white'/></IconButton>) : (<div />);
-    const searchButton = (<IconButton onClick={this.runCurrentSearch}  tooltip={tooltip}><ActionSearch color='white'/></IconButton>);
+    const searchButton = (<IconButton onClick={searchEnabled? this.runCurrentSearch: null} tooltip={tooltip}><ActionSearch color='white'/></IconButton>);
     const progress = this.state.loading ? (<CircularProgress size={80} thickness={5} />) : null;
     const status = (<div style={{whiteSpace: 'nowrap'}}>
       {progress}
       {this.state.inputHidden ? null : clearButton}
       {this.state.inputHidden ? null : searchButton}
     </div>);
-    
+
     let delta = 0;
     if (this.refs.tokenbox) {
       let scroll = Math.min(0, 1000 - this.refs.tokenbox.scrollWidth);
