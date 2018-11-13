@@ -199,7 +199,6 @@ class TokenBox extends React.Component {
         });
       });
     });
-    console.log(suggestionMap);
     return suggestionMap;
   }
 
@@ -389,7 +388,6 @@ class TokenBox extends React.Component {
     });
   }
 
-
   pushSearchResultsView = (tokens, query) => {
     let queryTitle = this.buildResultTitleFromTokens(tokens, '');
     App.displaySearchResults(query, queryTitle);
@@ -444,6 +442,7 @@ class TokenBox extends React.Component {
     // remove tokens after clicked one
     this.setState({
       tokens: newTokens,
+      inputHidden: false,
       // dataSource: []
     })
     this.clearSearchText();
@@ -552,8 +551,6 @@ class TokenBox extends React.Component {
     }
     const tokenChips = this.renderTokenChips();
     const hintText = this.getTokenHint(this.state.tokens);
-
-
 
     // TODO: the AutoComplete component auto-closes when you click a menu item
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
