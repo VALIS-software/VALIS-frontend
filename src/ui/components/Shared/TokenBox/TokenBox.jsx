@@ -428,11 +428,13 @@ class TokenBox extends React.Component {
     // remove tokens after clicked one
     this.setState({
       tokens: newTokens,
+      inputHidden: false,
       searchString: clickedToken.value
     })
     // convert the last token into search text
     this.autoComplete.current.setState({ searchText: clickedToken.value });
     this.autoComplete.current.focus();
+    
     // the fakeToken here is a trick to get suggestions for the current editing token
     const fakeToken = {
       value: clickedToken.value.slice(0, -1),
