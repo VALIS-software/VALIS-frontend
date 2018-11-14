@@ -19,7 +19,7 @@ class TokenBox extends React.Component {
   constructor(props) {
     super(props);
     this.autoComplete = React.createRef();
-    this.tokenBox = React.createRef();
+    this.tokenDiv = React.createRef();
     this.appModel = props.appModel;
 
     this.queryParser = buildEncodeQueryParser(this.getSuggestionHandlers());
@@ -447,7 +447,6 @@ class TokenBox extends React.Component {
 
   renderTokenChips() {
     const {tokens} = this.state;
-    if (tokens.length === 0) return [];
     const tokenChips = [];
     for (const i = 0; i < tokens.length; i++) {
       const token = tokens[i];
@@ -461,7 +460,7 @@ class TokenBox extends React.Component {
         <Chip onClick={clickToken} onRequestDelete={clickRemoveToken}> {token.value} </Chip>
       </li>);
     }
-    return <div className="chips">{tokenChips}</div>;
+    return <div ref={this.tokenDiv} className="chips">{tokenChips}</div>;
   }
 
   filter = (searchText, key) => {
@@ -548,7 +547,11 @@ class TokenBox extends React.Component {
 
     // TODO: the AutoComplete component auto-closes when you click a menu item
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
-    const textBoxWidth = Math.max(500 - this.state.tokens.length * 100, 100);
+    let textBoxWidth = 500;
+    if (this.tokenDiv.current) {
+      textBoxWidth = Math.max(500 - this.tokenDiv.current.offsetWidth, 100);
+    }
+
     const input = (<div className="textbox">
       <AutoComplete
         id='search-box'
