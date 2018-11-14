@@ -547,9 +547,9 @@ class TokenBox extends React.Component {
 
     // TODO: the AutoComplete component auto-closes when you click a menu item
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
-    let textBoxWidth = 500;
+    let textBoxWidth = Math.min(500, window.innerWidth * 0.9 - 400);
     if (this.tokenDiv.current) {
-      textBoxWidth = Math.max(500 - this.tokenDiv.current.offsetWidth, 100);
+      textBoxWidth = Math.max(textBoxWidth - this.tokenDiv.current.offsetWidth, 100);
     }
 
     const input = (<div className="textbox">

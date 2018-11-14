@@ -166,7 +166,7 @@ class Header extends React.Component<Props, State> {
             <div className="header-item">
               <span style={{color: 'white', fontWeight: 'bold', marginLeft: 12}}> ENCODE </span>
             </div>
-            <div className="header-search-box" style={{marginTop: -16, marginLeft: 16, width: '75%'}}>
+            <div className="header-search-box">
               <TokenBox appModel={this.props.appModel} viewModel={this.props.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>
             </div>
             <div className="header-button">
