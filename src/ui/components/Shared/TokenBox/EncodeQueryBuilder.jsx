@@ -166,7 +166,6 @@ function buildEQTLQuery(parsePath) {
         builder.setLimit(1000000);
         return builder.build();
     } else if (token.rule === 'WITHIN_T') {
-        console.log(parsePath);
         if (parsePath.length < 3) return null;
         const dist = parseGenomicDistanceString(parsePath[1].value);
         const rest = parsePath.slice(2);
@@ -213,7 +212,6 @@ function buildFullTextQuery(inputText)  {
 }
 
 function buildQuery(parsePath) {
-    console.log(parsePath);
     if (!parsePath || parsePath.length === 0) return null;
     const token= parsePath[0];
     let query = null;
@@ -232,7 +230,6 @@ function buildQuery(parsePath) {
     } else if (token.rule === 'RS_T') {
         query = buildSNPrsQuery(parsePath);
     }
-    console.log(query);
     return query;
 }
 

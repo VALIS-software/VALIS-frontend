@@ -49,7 +49,7 @@ function buildEncodeQueryParser(suggestions) {
 
     // variant's
     expansions.set('VARIANT_QUERY', [ALL, 'VARIANTS_T', 'VARIANT_QUERY_TYPE', EOF]);
-    expansions.set('VARIANT_QUERY_TYPE', [ANY, 'INFLUENCING_TRAIT', 'NAMED_SNP_RS', 'WITHIN_QUERY', 'OF_ANNOTATION_QUERY']);
+    expansions.set('VARIANT_QUERY_TYPE', [ANY, 'INFLUENCING_TRAIT', 'NAMED_SNP_RS', 'WITHIN_QUERY']);
     expansions.set('NAMED_SNP_RS', [ALL, 'NAMED', 'RS_T']);
 
     // eqtl's
@@ -61,7 +61,6 @@ function buildEncodeQueryParser(suggestions) {
     
     // general annotation query
     expansions.set('ANNOTATION_QUERY', [ANY, 'GENE_QUERY', 'EQTL_QUERY', 'ENHANCER_QUERY',  'PROMOTER_QUERY']);
-    expansions.set('OF_ANNOTATION_QUERY', [ALL, 'OF', 'ANNOTATION_QUERY',  EOF]);
 
     // gene queries
     expansions.set('INFLUENCING_TRAIT', [ALL, 'INFLUENCING', 'TRAIT']);

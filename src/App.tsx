@@ -7,6 +7,7 @@ import IconButton from "material-ui/IconButton";
 import CircularProgress from "material-ui/CircularProgress";
 import { ContentReport } from "material-ui/svg-icons";
 import * as React from "react";
+import * as ReactDOM from "react-dom";
 import { EntityType, SiriusApi, AppStatePersistence } from "valis";
 import { ValisBrowserConfig } from "valis/lib/valis-browser/ValisBrowserConfig";
 
@@ -20,6 +21,7 @@ import Persistable from "./model/Persistable";
 import ViewModel, { ViewEvent } from "./model/ViewModel";
 import { EntityDetails } from "./ui/components/EntityDetails/EntityDetails";
 import Header from "./ui/components/Header/Header";
+import TutorialIndicator from "./ui/components/Shared/TutorialIndicator/TutorialIndicator";
 import NavigationController from "./ui/components/NavigationController/NavigationController";
 import SearchResultsView from "./ui/components/SearchResultsView/SearchResultsView";
 import ShareLinkDialog from "./ui/components/ShareLink/ShareLinkDialog";
@@ -131,19 +133,8 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 				color={iconColor}
 				hoverColor={iconHoverColor}
 			/>);
-			return (<div
-				style={{
-					position: 'relative',
-					width: '100%',
-					height: '100%',
-					color: '#e8e8e8',
-					backgroundColor: '#171615',
-					borderRadius: '8px 0px 0px 8px',
-					fontSize: '15px',
-					overflow: 'hidden',
-					userSelect: 'none',
-				}}
-			>
+			const headerClassName = this.trackHeaderClickable(props.model) ? 'track-header track-header-clickable' : 'track-header';
+			return (<div className={headerClassName}>
 				<div style={{
 					position: 'absolute',
 					width: '100%',
@@ -152,10 +143,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 					transform: 'translate(0, -50%)',
 				}}>
 					<div style={headerContainerStyle} onClick={() => { this.trackHeaderClicked(props.model); }}>
-						<IconButton onClick={(e: any) => { props.setExpanded(!props.isExpanded); e.stopPropagation(); }} color="inherit">
-							{expandArrow}
-						</IconButton>
-						<div>{props.model.name}</div>
+						<div className='track-title'>{props.model.name}</div>
 					</div>
 				</div>
 			</div>);
@@ -180,13 +168,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 					},
 					{
 						type: 'annotation',
-						name: '→ Strand Genes',
-						strand: Strand.Positive,
-						heightPx: 34,
-					},
-					{
-						type: 'annotation',
-						name: '← Strand Genes',
+						name: 'ENSEMBL genes',
 						strand: Strand.Negative,
 						heightPx: 34,
 					},
@@ -214,6 +196,10 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			sidebarVisible: false,
 			appReady: false,
 		};
+	}
+
+	trackHeaderClickable = (model: TrackModel) => {
+		return ((model.type === 'variant' || model.type === 'interval') && model.name !== 'dbSNP variants');
 	}
 
 	trackHeaderClicked = (model: TrackModel) => {
@@ -613,6 +599,11 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		}
 	}
 
+	protected launchHelp() {
+		const currNode = ReactDOM.findDOMNode(this) as Element;
+		const helpOptions = currNode.getElementsByClassName('help-enabled');
+	}
+
 	protected addTrack(model: TrackModel) {
 		if (model.heightPx == null) {
 			model.heightPx = 50;
@@ -694,6 +685,10 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	static readonly canvasPixelRatio = window.devicePixelRatio || 1;
 
 	private static appInstance: App;
+
+	static launchHelp() {
+		this.appInstance.launchHelp();
+	}
 
 	static getQueryTracks() : Map<string, any> {
 		return this.appInstance.getQueryTracks();

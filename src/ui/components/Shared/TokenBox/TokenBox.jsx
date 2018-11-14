@@ -7,6 +7,7 @@ import IconButton from 'material-ui/IconButton';
 import ActionSearch from 'material-ui/svg-icons/action/search';
 import SvgClose from "material-ui/svg-icons/navigation/close";
 import CircularProgress from "material-ui/CircularProgress";
+import TutorialIndicator from "../TutorialIndicator/TutorialIndicator";
 import ErrorDetails from "../ErrorDetails/ErrorDetails";
 import { SiriusApi, QueryBuilder, buildQueryParser } from 'valis';
 import { buildEncodeQueryParser } from './EncodeQueryParser';
@@ -574,7 +575,7 @@ class TokenBox extends React.Component {
       onUpdateInput={this.handleUpdateInput}
       onNewRequest={this.handleSelectItem}
       menuProps={{onKeyDown: this.handleMenuKeyDown}}
-    />);
+    ></AutoComplete>);
 
     const drawClear = this.state.searchString.length > 0 || this.state.tokens.length > 0;
     const searchEnabled = this.state.query !== null;

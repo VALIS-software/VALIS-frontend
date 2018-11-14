@@ -21,6 +21,34 @@
 .clearfix {
     overflow: auto;
 }
+.track-header {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    color: #171615;
+    background: linear-gradient($valis-theme-lightest, $valis-theme-light);
+    border-radius: 8px 0px 0px 8px;
+    font-size: 14px;
+    overflow: hidden;
+    user-select: none;
+    .track-title {
+        margin-left: 8px;
+    }
+}
+
+.track-header-clickable {
+    .track-title {
+        cursor: pointer;
+        &:hover {
+            text-decoration: underline;
+        }
+        &:before {
+            content: '▶';
+            display: inline-block;
+            transform: scale(0.4, 0.7);
+        }
+    }
+}
 
 button {
     &:focus {

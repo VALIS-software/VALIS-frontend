@@ -4,8 +4,6 @@ import * as React from 'react';
 
 import FlatButton from 'material-ui/FlatButton';
 // Material-UI Icons
-import Chip from 'material-ui/Chip';
-import Select from "react-select";
 import { SiriusApi, QueryBuilder  } from 'valis';
 import SocialShare from "material-ui/svg-icons/social/share";
 // components
@@ -17,6 +15,7 @@ import AppModel from '../../../model/AppModel';
 import ViewModel from '../../../model/ViewModel';
 // Styles
 import './Header.scss';
+import { App } from '../../../App';
 const logoPath = require('./valis-logo.png');
 
 type Props = {
@@ -134,6 +133,10 @@ class Header extends React.Component<Props, State> {
     });
   }
 
+  launchHelp = () => {
+    App.launchHelp();
+  }
+
   render() {
     const shareButton = <FlatButton style={{color: 'white'}} onClick={this.props.onShowShare} label="Share" icon={(<SocialShare/>)} />;
     
@@ -172,8 +175,8 @@ class Header extends React.Component<Props, State> {
             <div className="header-button">
             <span style={{color: 'white', fontSize: 12}}> powered by </span>
             </div>
-            <div className="header-button">
-              <a href="http://www.valis.bio"><img style={{ cursor: 'pointer', height: 45, marginTop: 6 }} src={logoPath}/></a>
+            <div className="header-button" onClick={this.launchHelp}>
+              <a ><img style={{ cursor: 'pointer', height: 45, marginTop: 6 }} src={logoPath}/></a>
             </div>
             <div className="header-button">{shareButton}</div>
       </div>
