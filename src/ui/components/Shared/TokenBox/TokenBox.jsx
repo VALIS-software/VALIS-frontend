@@ -461,7 +461,7 @@ class TokenBox extends React.Component {
         <Chip onClick={clickToken} onRequestDelete={clickRemoveToken}> {token.value} </Chip>
       </li>);
     }
-    return tokenChips;
+    return <div className="chips">{tokenChips}</div>;
   }
 
   filter = (searchText, key) => {
@@ -548,33 +548,38 @@ class TokenBox extends React.Component {
 
     // TODO: the AutoComplete component auto-closes when you click a menu item
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
-    const input = <AutoComplete
-      id='search-box'
-      ref={this.autoComplete}
-      onKeyDown={this.handleKeyDown}
-      openOnFocus={true}
-      open={this.state.open}
-      filter={AutoComplete.fuzzyFilter}
-      hintText={hintText}
-      menuCloseDelay={0}
-      dataSource={this.state.dataSource}
-      dataSourceConfig={{text: 'value', value: 'value'}}
-      onUpdateInput={this.handleUpdateInput}
-      onNewRequest={this.handleSelectItem}
-      menuProps={{onKeyDown: this.handleMenuKeyDown}}
-      style={this.state.inputHidden? {display: 'none'}: null}
-    />
+    const textBoxWidth = Math.max(500 - this.state.tokens.length * 100, 100);
+    const input = (<div className="textbox">
+      <AutoComplete
+        id='search-box'
+        ref={this.autoComplete}
+        onKeyDown={this.handleKeyDown}
+        openOnFocus={true}
+        open={this.state.open}
+        filter={AutoComplete.fuzzyFilter}
+        hintText={hintText}
+        menuCloseDelay={0}
+        dataSource={this.state.dataSource}
+        dataSourceConfig={{text: 'value', value: 'value'}}
+        onUpdateInput={this.handleUpdateInput}
+        onNewRequest={this.handleSelectItem}
+        menuProps={{onKeyDown: this.handleMenuKeyDown}}
+        style={this.state.inputHidden? {display: 'none'}: {width: textBoxWidth}}
+        textFieldStyle={{width: textBoxWidth}}
+      />
+    </div>);
 
     const drawClear = this.state.searchString.length > 0 || this.state.tokens.length > 0;
     const searchEnabled = this.state.query !== null;
-    const clearButton = drawClear ? (<IconButton onClick={this.clearSearch}><SvgClose color='white'/></IconButton>) : (<div />);
-    const searchButton = (<IconButton onClick={searchEnabled? this.runCurrentSearch: null}><ActionSearch color={searchEnabled?'white':'gray'}/></IconButton>);
-    const status = (<div style={{whiteSpace: 'nowrap'}}>
+    const clearButton = drawClear ? (<IconButton tooltip="clear" onClick={this.clearSearch}><SvgClose color='white'/></IconButton>) : (<div />);
+    const searchTooltip = searchEnabled ? "Search" : "Enter a valid search";
+    const searchButton = (<IconButton onClick={searchEnabled? this.runCurrentSearch: null} tooltip={searchTooltip}><ActionSearch color={searchEnabled?'white':'gray'}/></IconButton>);
+    const status = (<div className="buttons">
       {clearButton}
       {this.state.inputHidden ? null : searchButton}
     </div>);
 
-    return (<div className="token-box">{tokenChips}<div>{input}</div>{status}</div>);
+    return (<div className="token-box">{tokenChips}{input}{status}</div>);
   }
 }
 

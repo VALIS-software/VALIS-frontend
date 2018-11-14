@@ -3,12 +3,25 @@
 .token-box {
 	display: flex;
 	list-style: none;
-	max-width: 1000px;
-	overflow: scroll;
-	.token {
-		cursor: pointer;
-		margin: 2px 2px 2px 0px;
-		padding-top: 8px;
+	.chips {
+		display: flex;
+		flex-wrap: wrap;
+		max-width: 1000px;
+		.token {
+			cursor: pointer;
+			margin: 2px 2px 2px 0px;
+			padding-top: 8px;
+		}
+	}
+	.textbox {
+		max-width: 500px;
+		margin-top: auto;
+		margin-bottom: auto;
+	}
+	.buttons {
+		white-space: nowrap;
+		margin-top: auto;
+		margin-bottom: auto;
 	}
 
 	& > div > div > div > div {
