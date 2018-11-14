@@ -139,9 +139,9 @@ class Header extends React.Component<Props, State> {
 
   render() {
     const shareButton = <FlatButton style={{color: 'white'}} onClick={this.props.onShowShare} label="Share" icon={(<SocialShare/>)} />;
-    
+
     const availableBiosamples = this.state.availableBiosamples;
-    
+
     const biosampleItems = new Array<any>();
     availableBiosamples.forEach(curr => {
       biosampleItems.push(
@@ -151,15 +151,15 @@ class Header extends React.Component<Props, State> {
 
     const options = this.state.biosampleValue  && !this.state.isSearching ? (<div style={{marginTop: -4}}>
       {
-        this.state.availableSignals.has(this.state.biosampleValue) ? 
+        this.state.availableSignals.has(this.state.biosampleValue) ?
         (<button onClick={this.showEncodeSignals}>Signal Tracks</button>) : (<button disabled={true}>No signal tracks</button>)
       }
       {
-        this.state.availableAnnotations.has(this.state.biosampleValue) ? 
+        this.state.availableAnnotations.has(this.state.biosampleValue) ?
         (<button onClick={this.showEncodeAnnotations}>Annotation Tracks</button>) : null
       }
       {
-        this.state.availableAnnotations.has(this.state.biosampleValue) ? 
+        this.state.availableAnnotations.has(this.state.biosampleValue) ?
         (<button onClick={()=> { this.setState({isSearching: true })}}>Search Nearby</button>) : null
       }
     </div>) : null;
@@ -169,7 +169,7 @@ class Header extends React.Component<Props, State> {
             <div className="header-item">
               <span style={{color: 'white', fontWeight: 'bold', marginLeft: 12}}> ENCODE </span>
             </div>
-            <div className="header-search-box" style={{marginTop: -16, marginLeft: 16, overflow: 'hidden'}}>
+            <div className="header-search-box">
               <TokenBox appModel={this.props.appModel} viewModel={this.props.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>
             </div>
             <div className="header-button">

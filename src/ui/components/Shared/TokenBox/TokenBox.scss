@@ -1,15 +1,32 @@
 @import "../../../../variables.scss";
 
-.tokenbox-wrapper {
-}
-
 .token-box {
 	display: flex;
 	list-style: none;
-	.token {
-		cursor: pointer;
-		margin: 2px 2px 2px 0px;
-		padding-top: 8px;
+	.chips {
+		display: flex;
+		flex-wrap: wrap;
+		max-width: calc(100% - 250px);
+		.token {
+			cursor: pointer;
+			margin: 2px 2px 2px 0px;
+			padding-top: 8px;
+		}
+	}
+	.textbox {
+		min-width: 100px;
+		margin-top: auto;
+		margin-bottom: auto;
+		margin-left: 0px;
+		margin-right: 0px;
+	}
+	.buttons {
+		min-width: 150px;
+		white-space: nowrap;
+		margin-top: auto;
+		margin-bottom: auto;
+		margin-left: 0px;
+		margin-right: 0px;
 	}
 
 	& > div > div > div > div {
