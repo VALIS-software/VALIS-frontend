@@ -188,10 +188,20 @@ class SearchResultsView extends React.Component {
   }
 
   rowRenderer = ({ index, key, parent, style }) => {
-    if (index === this.state.results.length && this.state.hasMore) {
-      return (<div key={key} style={{}}>Loading...</div>);
-    } else if (index === this.state.results.length) {
-      return (<div key={key} style={{}}> End of results </div>);
+    if (index === this.state.results.length) {
+      if (this.state.hasMore) {
+        return (<CellMeasurer cache={this._cache} columnIndex={0} key={key} rowIndex={index} parent={parent}>
+          <div className="search-results-list" style={style}>
+            <div className="search-result-inner">Loading...</div>
+          </div>
+        </CellMeasurer >);
+      } else {
+        return (<CellMeasurer cache={this._cache} columnIndex={0} key={key} rowIndex={index} parent={parent}>
+          <div className="search-results-list" style={style}>
+            <div className="search-result-inner">End of results</div>
+          </div>
+        </CellMeasurer >);
+      }
     }
     const result = this.state.results[index];
     let title = "";
@@ -230,7 +240,7 @@ class SearchResultsView extends React.Component {
       key={key}
       rowIndex={index}
       parent={parent}>
-      <div className="search-result" onClick={openResult} style={
+      <div className="search-results-list" onClick={openResult} style={
         {
           ...style,
           height: (isGenomeNode ? 'auto' : 80)
