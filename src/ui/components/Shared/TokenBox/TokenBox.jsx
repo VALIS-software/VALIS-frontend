@@ -6,11 +6,8 @@ import AutoComplete from 'material-ui/AutoComplete';
 import IconButton from 'material-ui/IconButton';
 import ActionSearch from 'material-ui/svg-icons/action/search';
 import SvgClose from "material-ui/svg-icons/navigation/close";
-<<<<<<< HEAD
 import CircularProgress from "material-ui/CircularProgress";
 import TutorialIndicator from "../TutorialIndicator/TutorialIndicator";
-=======
->>>>>>> 1bff4ee5654dd7f97bad9e4911affacee3dce975
 import ErrorDetails from "../ErrorDetails/ErrorDetails";
 import { SiriusApi, QueryBuilder, buildQueryParser } from 'valis';
 import { buildEncodeQueryParser } from './EncodeQueryParser';
