@@ -560,7 +560,7 @@ class TokenBox extends React.Component {
 
     // TODO: the AutoComplete component auto-closes when you click a menu item
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
-    const input = this.state.inputHidden ? null : (<AutoComplete
+    const input = <AutoComplete
       id='search-box'
       ref={this.autoComplete}
       onKeyDown={this.handleKeyDown}
@@ -574,7 +574,8 @@ class TokenBox extends React.Component {
       onUpdateInput={this.handleUpdateInput}
       onNewRequest={this.handleSelectItem}
       menuProps={{onKeyDown: this.handleMenuKeyDown}}
-    />);
+      style={{visibility: this.state.inputHidden? 'hidden': 'visible'}}
+    />
 
     const drawClear = this.state.searchString.length > 0 || this.state.tokens.length > 0;
     const searchEnabled = this.state.query !== null;
