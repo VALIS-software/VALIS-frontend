@@ -6,7 +6,6 @@ import AutoComplete from 'material-ui/AutoComplete';
 import IconButton from 'material-ui/IconButton';
 import ActionSearch from 'material-ui/svg-icons/action/search';
 import SvgClose from "material-ui/svg-icons/navigation/close";
-import CircularProgress from "material-ui/CircularProgress";
 import ErrorDetails from "../ErrorDetails/ErrorDetails";
 import { SiriusApi, QueryBuilder, buildQueryParser } from 'valis';
 import { buildEncodeQueryParser } from './EncodeQueryParser';
@@ -568,21 +567,13 @@ class TokenBox extends React.Component {
 
     const drawClear = this.state.searchString.length > 0 || this.state.tokens.length > 0;
     const searchEnabled = this.state.query !== null;
-    const tooltip = searchEnabled ? 'Search' : 'Enter a valid search';
-    const clearButton = drawClear ? (<IconButton tooltip="Clear" onClick={this.clearSearch}><SvgClose color='white'/></IconButton>) : (<div />);
-    const searchButton = (<IconButton onClick={searchEnabled? this.runCurrentSearch: null} tooltip={tooltip}><ActionSearch color='white'/></IconButton>);
-    const progress = this.state.loading ? (<CircularProgress size={80} thickness={5} />) : null;
+    const clearButton = drawClear ? (<IconButton onClick={this.clearSearch}><SvgClose color='white'/></IconButton>) : (<div />);
+    const searchButton = (<IconButton onClick={searchEnabled? this.runCurrentSearch: null}><ActionSearch color={searchEnabled?'white':'gray'}/></IconButton>);
     const status = (<div style={{whiteSpace: 'nowrap'}}>
-      {progress}
       {clearButton}
       {this.state.inputHidden ? null : searchButton}
     </div>);
 
-    let delta = 0;
-    if (this.refs.tokenbox) {
-      let scroll = Math.min(0, 1000 - this.refs.tokenbox.scrollWidth);
-      delta = scroll;
-    }
     return (<div className="token-box">{tokenChips}<div>{input}</div>{status}</div>);
   }
 }
