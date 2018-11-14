@@ -555,7 +555,7 @@ class TokenBox extends React.Component {
 
     let textBoxWidth = Math.min(500, window.innerWidth * 0.9 - 400);
     if (this.tokenDiv.current) {
-      textBoxWidth = Math.max(textBoxWidth - this.tokenDiv.current.offsetWidth, 100);
+      textBoxWidth = Math.max(textBoxWidth - this.tokenDiv.current.offsetWidth, 150);
     }
 
     const input = (<div className="textbox">
