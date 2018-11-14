@@ -67,18 +67,6 @@ class TokenBox extends React.Component {
     });
   }
 
-  resetSearch = () => {
-    this.setState({
-      searchString: '',
-      tokens: [],
-      inputHidden: false,
-    });
-    setTimeout(() => {
-      this.autoComplete.current.setState({ searchText: '' });
-      this.autoComplete.current.focus();
-    }, 100);
-  }
-
   handleKeyDown = (evt) => {
     const formValue = evt.target.value;
     if (formValue.length === 0 && evt.key === 'Backspace') {
@@ -405,6 +393,7 @@ class TokenBox extends React.Component {
       searchString: '',
       open: false,
       query: null,
+      inputHidden: false,
     });
     this.autoComplete.current.setState({ searchText: '' });
     this.getSuggestions([]);
@@ -574,18 +563,18 @@ class TokenBox extends React.Component {
       onUpdateInput={this.handleUpdateInput}
       onNewRequest={this.handleSelectItem}
       menuProps={{onKeyDown: this.handleMenuKeyDown}}
-      style={{visibility: this.state.inputHidden? 'hidden': 'visible'}}
+      style={this.state.inputHidden? {display: 'none'}: null}
     />
 
     const drawClear = this.state.searchString.length > 0 || this.state.tokens.length > 0;
     const searchEnabled = this.state.query !== null;
     const tooltip = searchEnabled ? 'Search' : 'Enter a valid search';
-    const clearButton = drawClear ? (<IconButton tooltip="Clear" onClick={this.resetSearch}><SvgClose color='white'/></IconButton>) : (<div />);
+    const clearButton = drawClear ? (<IconButton tooltip="Clear" onClick={this.clearSearch}><SvgClose color='white'/></IconButton>) : (<div />);
     const searchButton = (<IconButton onClick={searchEnabled? this.runCurrentSearch: null} tooltip={tooltip}><ActionSearch color='white'/></IconButton>);
     const progress = this.state.loading ? (<CircularProgress size={80} thickness={5} />) : null;
     const status = (<div style={{whiteSpace: 'nowrap'}}>
       {progress}
-      {this.state.inputHidden ? null : clearButton}
+      {clearButton}
       {this.state.inputHidden ? null : searchButton}
     </div>);
 
@@ -594,7 +583,7 @@ class TokenBox extends React.Component {
       let scroll = Math.min(0, 1000 - this.refs.tokenbox.scrollWidth);
       delta = scroll;
     }
-    return (<div className='tokenbox-wrapper' style={{maxWidth: 1000, height: 48, overflowX: 'scroll'}} ><div ref='tokenbox' style={{position: 'absolute', height: 48, left: delta}} className="token-box">{tokenChips}<div>{input}</div>{status}</div></div>);
+    return (<div className="token-box">{tokenChips}<div>{input}</div>{status}</div>);
   }
 }
 
