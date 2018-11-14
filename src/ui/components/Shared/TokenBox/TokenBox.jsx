@@ -556,7 +556,7 @@ class TokenBox extends React.Component {
       return (<ErrorDetails error={this.state.error} />);
     }
     const tokenChips = this.renderTokenChips();
-    const hintText = this.getTokenHint(this.state.tokens);
+    const hintText = this.state.inputHidden? '' : this.getTokenHint(this.state.tokens);
 
     // TODO: the AutoComplete component auto-closes when you click a menu item
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
