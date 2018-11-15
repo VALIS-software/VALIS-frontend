@@ -576,7 +576,7 @@ class TokenBox extends React.Component {
     const searchEnabled = this.state.query !== null;
     const clearButton = drawClear ? (<IconButton tooltip="clear" onClick={this.clearSearch}><SvgClose color='white'/></IconButton>) : (<div />);
     const searchTooltip = searchEnabled ? "Search" : "Enter a valid search";
-    const searchButton = (<IconButton onClick={searchEnabled? this.runCurrentSearch: null} tooltip={searchTooltip}><ActionSearch color={searchEnabled?'white':'gray'}/></IconButton>);
+    const searchButton = (<IconButton onClick={searchEnabled? this.runCurrentSearch: undefined} tooltip={searchTooltip}><ActionSearch color={searchEnabled?'white':'gray'}/></IconButton>);
     const status = (<div className="buttons">
       {clearButton}
       {this.state.inputHidden ? null : searchButton}
