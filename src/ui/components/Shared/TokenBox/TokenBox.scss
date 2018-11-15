@@ -5,7 +5,8 @@
 	list-style: none;
 	.chips {
 		display: flex;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
+		overflow: scroll;
 		max-width: calc(100% - 250px);
 		.token {
 			cursor: pointer;
