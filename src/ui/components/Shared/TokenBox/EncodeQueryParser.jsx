@@ -8,6 +8,7 @@ function buildEncodeQueryParser(suggestions) {
     terminals.set('TRAIT', /"(.+?)"/g);
     terminals.set('GENE', /"(.+?)"/g);
     terminals.set('INFLUENCING', /influencing/g);
+    terminals.set('INFLUENCED_BY', /influenced by/g);
     terminals.set('OF', /of/g);
     terminals.set('VARIANTS_T', /variants/g);
     terminals.set('GENE_T', /gene/g);
@@ -44,12 +45,17 @@ function buildEncodeQueryParser(suggestions) {
     // distance window queries
     expansions.set('GENOMIC_DISTANCE', [ANY, '1kbp_T', '5kbp_T', '10kbp_T', '50kbp_T', '100kbp_T', '1mbp_T']);
     expansions.set('WITHIN_QUERY', [ALL, 'WITHIN_T', 'GENOMIC_DISTANCE', 'GENOME_QUERY'])
+    expansions.set('WITHIN_QUERY_NO_FUNCTIONAL', [ALL, 'GENOMIC_DISTANCE', 'GENOME_QUERY_NO_FUNCTIONAL'])
+    expansions.set('GENOME_QUERY', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'ENHANCER_QUERY_WITHIN_1', 'PROMOTER_QUERY_WITHIN_1']);    
+    expansions.set('GENOME_QUERY_NO_FUNCTIONAL', [ANY, 'VARIANT_QUERY', 'GENE_QUERY']);    
     
 
 
     // variant's
     expansions.set('VARIANT_QUERY', [ALL, 'VARIANTS_T', 'VARIANT_QUERY_TYPE', EOF]);
-    expansions.set('VARIANT_QUERY_TYPE', [ANY, 'INFLUENCING_TRAIT', 'NAMED_SNP_RS', 'WITHIN_QUERY']);
+    expansions.set('VARIANT_INFLUENCING_ARGS', [ANY, 'GENE_QUERY', 'TRAIT_QUERY']);
+    expansions.set('VARIANT_INFLUENCING', [ALL, 'INFLUENCING', 'VARIANT_INFLUENCING_ARGS']);
+    expansions.set('VARIANT_QUERY_TYPE', [ANY, 'VARIANT_INFLUENCING', 'NAMED_SNP_RS']);
     expansions.set('NAMED_SNP_RS', [ALL, 'NAMED', 'RS_T']);
 
     // eqtl's
@@ -67,19 +73,19 @@ function buildEncodeQueryParser(suggestions) {
     expansions.set('GENE_WITH_NAME', [ALL, 'NAMED', 'GENE']);
     expansions.set('GENE_QUERY', [ALL, 'GENE_T', 'GENE_QUERY_TYPES', EOF]);
     expansions.set('GENE_IN_PATHWAY', [ALL, 'IN_PATHWAY_T', 'PATHWAY']);
-    expansions.set('GENE_QUERY_TYPES', [ANY, 'INFLUENCING_TRAIT', 'GENE_WITH_NAME', 'GENE_IN_PATHWAY', 'WITHIN_QUERY']);
+    expansions.set('GENE_QUERY_TYPES', [ANY, 'GENE_WITH_NAME', 'GENE_IN_PATHWAY']);
 
     // enhancer promoter queries
-    expansions.set('ENHANCER_QUERY', [ALL, 'ENHANCER', 'CELL_TYPE_ENHANCER']);
-    expansions.set('PROMOTER_QUERY', [ALL, 'PROMOTER', 'CELL_TYPE_PROMOTER']);
-    
+    expansions.set('ENHANCER_QUERY', [ALL, 'ENHANCER', 'IN','CELL_TYPE_ENHANCER', 'WITHIN_QUERY']);
+    expansions.set('PROMOTER_QUERY', [ALL, 'PROMOTER', 'IN','CELL_TYPE_PROMOTER', 'WITHIN_QUERY']);
+    expansions.set('ENHANCER_QUERY_WITHIN_1', [ALL, 'ENHANCER', 'CELL_TYPE_ENHANCER', 'WITHIN_QUERY_NO_FUNCTIONAL']);
+    expansions.set('PROMOTER_QUERY_WITHIN_1', [ALL, 'PROMOTER', 'CELL_TYPE_PROMOTER', 'WITHIN_QUERY_NO_FUNCTIONAL']);
+
     // trait queries:
     expansions.set('TRAIT_QUERY', [ALL, 'TRAIT_T', 'TRAIT', EOF]);
 
     // The root query rules
-    expansions.set('GENOME_QUERY', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'EQTL_QUERY', 'ENHANCER_QUERY', 'PROMOTER_QUERY',]);    
-
-    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'EQTL_QUERY', 'ENHANCER_QUERY',  'PROMOTER_QUERY','TRAIT_QUERY']);
+    expansions.set('ROOT', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'ENHANCER_QUERY',  'PROMOTER_QUERY', 'TRAIT_QUERY']);
 
     // return empty result for rs prefix queries
     suggestions.set('RS_T', (q, num) => new Promise((resolve, reject) => resolve([])));

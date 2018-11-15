@@ -20,6 +20,7 @@ import { App } from '../../../App';
 const FETCH_SIZE = 30;
 
 function truncate(str, length) {
+  if (!str) return '';
   return str.length <= length ? str : str.slice(0,length-1) + '...';
 }
 
@@ -51,8 +52,6 @@ class SearchResultsView extends React.Component {
 
   addQueryAsTrack = () => {
     let trackTitle = this.props.text;
-    const filterStr = this.queryModel.printFilters();
-    if (filterStr) trackTitle = [trackTitle, '|', filterStr].join(' ');
     const resultType = this.state.results[0].type;
     if (['SNP', 'variant'].indexOf(resultType) > -1) {
       App.addVariantTrack(trackTitle, this.queryModel.getFilteredQuery());

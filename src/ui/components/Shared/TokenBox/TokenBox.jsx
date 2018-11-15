@@ -158,7 +158,6 @@ class TokenBox extends React.Component {
           dataSource: []
         })
         // choose to display single result details or display search results
-        console.log(currQuery);
         this.displaySearchResults(newTokens, currQuery, true);
       } else {
         this.getSuggestions(newTokens, true);
@@ -228,7 +227,6 @@ class TokenBox extends React.Component {
     const searchText = this.buildQueryStringFromTokens(tokens);
     this.searchText = searchText;
     const result = this.queryParser.getSuggestions(searchText);
-
     this.appModel.pushLoading();
     result.suggestions.then(results => {
       if (this.searchText !== searchText) return;
@@ -241,7 +239,6 @@ class TokenBox extends React.Component {
         this.setState({
           dataSource: results,
         });
-        console.log(results);
       } else if (result.additionalSuggestions){
         // if we have additional suggestions (full text search)
         // fire them iff they are newer than any other promise

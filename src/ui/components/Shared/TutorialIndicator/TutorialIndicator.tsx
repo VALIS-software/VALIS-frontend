@@ -11,6 +11,7 @@ type State = {
 }
 
 type Props = {
+    tutorialId: string,
 }
 
 class TutorialIndicator extends React.Component<Props, State> {
