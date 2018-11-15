@@ -13,10 +13,6 @@ const TRIM = (x) => {
 }
 
 const parseGenomicDistanceString = (str) => {
-    const w = str.indexOf('within ');
-    if (w < 0) return null;
-    str = str.slice(w + 7);
-    console.log('rest', str);
     let kbp = str.indexOf('kbp');
     let mbp = str.indexOf('mbp');
     if ( kbp >= 0) {
@@ -30,10 +26,11 @@ const parseGenomicDistanceString = (str) => {
 
 function buildWithinQuery(parsePath) {
     if (parsePath.length < 2) return null;
-    const dist = parseGenomicDistanceString(parsePath[0].value);
+    const dist = parseGenomicDistanceString(parsePath[1].value);
     if (!dist) return null;
-    const rest = parsePath.slice(1);
+    const rest = parsePath.slice(2);
     let window = buildQuery(rest);
+    if (!window) return null;
     return [window, dist];
 }
 
@@ -87,10 +84,10 @@ function buildGeneQuery(parsePath) {
 
 function buildCellQuery(parsePath) {
     if (!parsePath || parsePath.length < 3) return null;
-    const withinQuery = buildWithinQuery(parsePath.slice(2));
+    const withinQuery = buildWithinQuery(parsePath.slice(3));
     if (!withinQuery) return null;
     const annotationType = (parsePath[0].rule == 'PROMOTER') ? "Promoter-like" : "Enhancer-like";
-    const cellType = STRIP_QUOTES(parsePath[1].value);
+    const cellType = STRIP_QUOTES(parsePath[2].value);
     builder.newGenomeQuery();
     builder.filterType(annotationType);
     builder.filterBiosample(cellType);
