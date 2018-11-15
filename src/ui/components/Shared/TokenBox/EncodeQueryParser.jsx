@@ -45,7 +45,7 @@ function buildEncodeQueryParser(suggestions) {
     // distance window queries
     expansions.set('GENOMIC_DISTANCE', [ANY, '1kbp_T', '5kbp_T', '10kbp_T', '50kbp_T', '100kbp_T', '1mbp_T']);
     expansions.set('WITHIN_QUERY', [ALL, 'WITHIN_T', 'GENOMIC_DISTANCE', 'GENOME_QUERY'])
-    expansions.set('WITHIN_QUERY_NO_FUNCTIONAL', [ALL, 'GENOMIC_DISTANCE', 'GENOME_QUERY_NO_FUNCTIONAL'])
+    expansions.set('WITHIN_QUERY_NO_FUNCTIONAL', [ALL, 'WITHIN_T', 'GENOMIC_DISTANCE', 'GENOME_QUERY_NO_FUNCTIONAL'])
     expansions.set('GENOME_QUERY', [ANY, 'VARIANT_QUERY', 'GENE_QUERY', 'ENHANCER_QUERY_WITHIN_1', 'PROMOTER_QUERY_WITHIN_1']);    
     expansions.set('GENOME_QUERY_NO_FUNCTIONAL', [ANY, 'VARIANT_QUERY', 'GENE_QUERY']);    
     
@@ -78,8 +78,8 @@ function buildEncodeQueryParser(suggestions) {
     // enhancer promoter queries
     expansions.set('ENHANCER_QUERY', [ALL, 'ENHANCER', 'IN','CELL_TYPE_ENHANCER', 'WITHIN_QUERY']);
     expansions.set('PROMOTER_QUERY', [ALL, 'PROMOTER', 'IN','CELL_TYPE_PROMOTER', 'WITHIN_QUERY']);
-    expansions.set('ENHANCER_QUERY_WITHIN_1', [ALL, 'ENHANCER', 'CELL_TYPE_ENHANCER', 'WITHIN_QUERY_NO_FUNCTIONAL']);
-    expansions.set('PROMOTER_QUERY_WITHIN_1', [ALL, 'PROMOTER', 'CELL_TYPE_PROMOTER', 'WITHIN_QUERY_NO_FUNCTIONAL']);
+    expansions.set('ENHANCER_QUERY_WITHIN_1', [ALL, 'ENHANCER', 'IN', 'CELL_TYPE_ENHANCER', 'WITHIN_QUERY_NO_FUNCTIONAL']);
+    expansions.set('PROMOTER_QUERY_WITHIN_1', [ALL, 'PROMOTER', 'IN', 'CELL_TYPE_PROMOTER', 'WITHIN_QUERY_NO_FUNCTIONAL']);
 
     // trait queries:
     expansions.set('TRAIT_QUERY', [ALL, 'TRAIT_T', 'TRAIT', EOF]);
