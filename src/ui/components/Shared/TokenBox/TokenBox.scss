@@ -6,7 +6,8 @@
 	.chips {
 		display: flex;
 		flex-wrap: nowrap;
-		overflow: scroll;
+		overflow-x: scroll;
+		flex-direction: row-reverse;
 		max-width: calc(100% - 250px);
 		.token {
 			cursor: pointer;

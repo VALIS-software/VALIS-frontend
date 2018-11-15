@@ -459,7 +459,10 @@ class TokenBox extends React.Component {
         <Chip onClick={clickToken} onRequestDelete={clickRemoveToken}> {token.value} </Chip>
       </li>);
     }
-    return <div ref={this.tokenDiv} className="chips">{tokenChips}</div>;
+    // note by QYD: Here we use a trick to keep the scroll-x at the right.
+    // First we reserve the chips, then we use flex-direction: row-reverse in the css.
+    const reversedTokenChips = tokenChips.reverse();
+    return <div ref={this.tokenDiv} className="chips">{reversedTokenChips}</div>;
   }
 
   filter = (searchText, key) => {
