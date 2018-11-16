@@ -302,8 +302,10 @@ class SearchResultsView extends React.Component {
 
     let addTrackButton = null;
     let exportTrackButton = null;
+    let refineButton = null;
     if (this.state.results && this.queryModel && this.queryModel.query && this.queryModel.query.type === QueryType.GENOME) {
       addTrackButton = (<button className="float-left glow" onClick={this.addQueryAsTrack}>Add as Track</button>);
+      refineButton = (<button className="float-left glow" onClick={this.addQueryAsTrack}>Intersect</button>);
       const exportText = this.state.downloading ? 'Downloading...' : 'Export BED';
       exportTrackButton = (<button className="float-left" onClick={this.downloadQuery}>{exportText}</button>);
     }
@@ -313,6 +315,7 @@ class SearchResultsView extends React.Component {
         <div className="search-filters">
           <div className="clearfix">
             {addTrackButton}
+            {refineButton}
             {exportTrackButton}
             <button className="float-right" onClick={this.toggleFilters}>Filter</button>
           </div>
@@ -331,7 +334,7 @@ class SearchResultsView extends React.Component {
               rowCount={rowCount}
               rowHeight={this._cache.rowHeight}
               deferredMeasurementCache={this._cache}
-              width={400}
+              width={450}
               queryModel={this.state.queryModel}
               onRowsRendered={onRowsRendered}
               rowRenderer={this.rowRenderer}

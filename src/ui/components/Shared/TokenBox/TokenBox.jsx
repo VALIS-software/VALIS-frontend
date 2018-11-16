@@ -558,7 +558,11 @@ class TokenBox extends React.Component {
     } else if (nestedTokens[0].value === 'trait') {
       return 'enter a trait name';
     } else if (nestedTokens[0].value === 'enhancers' || nestedTokens[0].value === 'promoters') {
-      return 'enter a cell type';
+      if (nestedTokens[1] && !nestedTokens[2]) {
+        return 'enter a cell type';
+      } else if (nestedTokens[3]) {
+        return 'choose a distance';
+      }
     }
 
     if (tokens.length > 1 && tokens[1].value === 'within') {
