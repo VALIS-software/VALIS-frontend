@@ -6,18 +6,18 @@ import NavigationClose from "material-ui/svg-icons/navigation/close";
 import NavigationArrowBack from "material-ui/svg-icons/navigation/arrow-back";
 import IconButton from "material-ui/IconButton";
 import './TutorialDialog.scss';
-const slide1 = require('./slide1.gif');
 
 type Props = {
     open: boolean,
-    appModel: any,
-    viewModel: any,
-    nextReady: boolean,
+    appModel: object,
+    viewModel: object,
     closeClicked: () => void,
 };
+
 type State = { 
-    items: Array<{title: string, body: React.Component, imageUrl: string  }>
+    items: Array<{title: string, body: any, imageUrl: string  }>
     currItem: number,
+    nextReady: boolean,
  };
 
 const pathwayExample = [{value: "gene", quoted: false},
@@ -120,7 +120,7 @@ export default class TutorialDialog extends React.Component<Props, State> {
             title={currTitle}
             modal={false}
             open={this.props.open}
-            onRequestClose={this.props.handleClose}
+            onRequestClose={this.props.closeClicked}
             autoScrollBodyContent={true}
             actions={actions}
         >
