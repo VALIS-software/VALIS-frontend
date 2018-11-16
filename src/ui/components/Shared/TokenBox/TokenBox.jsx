@@ -17,6 +17,7 @@ import './TokenBox.scss';
 
 const DEBOUNCE_TIME = 200;
 
+
 class TokenBox extends React.Component {
   constructor(props) {
     super(props);
@@ -39,8 +40,24 @@ class TokenBox extends React.Component {
     };
   }
 
+  resetState() {
+    this.setState({
+      tokens: [],
+      dataSource: [],
+      open: false,
+      searchString: '',
+      query: null,
+      inputHidden: false,
+    });
+  }
+
   componentDidMount() {
+    if (this.props.demo) {
+      this.runExample(this.props.demo);  
+    }
+    
     this.getSuggestions([], false);
+
   }
 
   perfectMatch(dataSource, value) {
@@ -110,7 +127,8 @@ class TokenBox extends React.Component {
     }
   };
 
-  handleSelectItem = (chosenRequest, index) => {
+  handleSelectItem = (chosenRequest, index, force=false) => {
+    if (this.props.demo && !force) return;
     // handle enter key event
     if (index === -1) {
       this.runCurrentSearch();
@@ -306,6 +324,9 @@ class TokenBox extends React.Component {
   }
 
   displaySearchResults = (tokens, query, fromSelect = false) => {
+    if (this.props.demo) {
+      if (this.props.onFinishDemo) this.props.onFinishDemo();
+    }
     // track queryStr
     const queryStr = this.buildQueryStringFromTokens(tokens);
     this.appModel.trackMixPanel("Run search", { 'queryStr': queryStr });
@@ -455,9 +476,17 @@ class TokenBox extends React.Component {
       const clickRemoveToken = () => {
         this.handleRemoveToken(i);
       }
-      tokenChips.push(<li key={i} className="token">
-        <Chip onClick={clickToken} onRequestDelete={clickRemoveToken}> {token.value} </Chip>
-      </li>);
+      
+      if (this.props.demo) {
+          tokenChips.push(<li key={i} className="token">
+            <Chip> {token.value} </Chip>
+          </li>);
+      } else {
+        tokenChips.push(<li key={i} className="token">
+          <Chip onClick={clickToken} onRequestDelete={clickRemoveToken}> {token.value} </Chip>
+        </li>);
+      }
+      
     }
     // note by QYD: Here we use a trick to keep the scroll-x at the right.
     // First we reserve the chips, then we use flex-direction: row-reverse in the css.
@@ -540,6 +569,23 @@ class TokenBox extends React.Component {
     return '';
   }
 
+  runExample = (example, idx=0) => {
+    if (idx >= example[0].value.length ) {
+      this.handleSelectItem (example[0], undefined, true);
+      if (example.length > 0) {
+        setTimeout(() => {
+          this.runExample(example.slice(1), 0);
+        }, 500);
+      }
+    } else {
+      this.autoComplete.current.setState({ searchText:  example[0].value.slice(0, idx) });
+      this.getSuggestions(this.state.tokens, true);
+      setTimeout(() => {
+        this.runExample(example, idx + 1);
+      }, 100);
+    }
+  }
+
   render() {
     if (this.state.error) {
       return (<ErrorDetails error={this.state.error} />);
@@ -584,13 +630,14 @@ class TokenBox extends React.Component {
       {clearButton}
       {this.state.inputHidden ? null : searchButton}
     </div>);
-
     return (<div className="token-box">{tokenChips}{input}{status}</div>);
   }
 }
 
 TokenBox.propTypes = {
   appModel: PropTypes.object,
+  demo: PropTypes.array,
+  onFinishDemo: PropTypes.array,
 };
 
 export default TokenBox;

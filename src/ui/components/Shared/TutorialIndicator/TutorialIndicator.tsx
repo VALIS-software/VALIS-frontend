@@ -43,7 +43,7 @@ class TutorialIndicator extends React.Component<Props, State> {
 
     render() {
 
-        return (<div onClick={this.showAlert} style={{width: this.state.offsetX, height: this.state.offsetY, paddingTop: this.state.offsetY/2}} className='tutorial-indicator'><div className='glow'/></div>);
+        return (<div onClick={this.showAlert} className='tutorial-indicator'><div className='glow-wrapper' style={{width: this.state.offsetX, height: this.state.offsetY, paddingTop: this.state.offsetY/2}}><div className='glow'/></div></div>);
     }
 }
 

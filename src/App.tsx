@@ -22,6 +22,7 @@ import ViewModel, { ViewEvent } from "./model/ViewModel";
 import { EntityDetails } from "./ui/components/EntityDetails/EntityDetails";
 import Header from "./ui/components/Header/Header";
 import TutorialIndicator from "./ui/components/Shared/TutorialIndicator/TutorialIndicator";
+import TutorialDialog from "./ui/components/TutorialDialog/TutorialDialog";
 import NavigationController from "./ui/components/NavigationController/NavigationController";
 import SearchResultsView from "./ui/components/SearchResultsView/SearchResultsView";
 import ShareLinkDialog from "./ui/components/ShareLink/ShareLinkDialog";
@@ -65,6 +66,8 @@ type State = {
 	sidebarVisible: boolean,
 
 	appReady: boolean,
+
+	showTutorial: boolean,
 }
 
 enum SidebarViewType {
@@ -195,6 +198,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			userProfile: null,
 			sidebarVisible: false,
 			appReady: false,
+			showTutorial: true,
 		};
 	}
 
@@ -447,7 +451,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						open={this.state.displayShareDialog}
 						handleClose={() => this.setState({displayShareDialog: false})}
 					/>
-
+					<TutorialDialog appModel={this.appModel} viewModel={this.viewModel} open={this.state.showTutorial} closeClicked={() => this.setState({ showTutorial: false })}/>
 					<div className="page-buttons">
 						{errorButton}
 					</div>

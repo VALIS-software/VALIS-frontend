@@ -3,6 +3,7 @@ import * as React from "react";
 import * as PropTypes from "prop-types";
 import CircularProgress from "material-ui/CircularProgress";
 import SearchFilter from "../Shared/SearchFilter/SearchFilter";
+import TutorialIndicator from "../Shared/TutorialIndicator/TutorialIndicator";
 import GenomicLocation from "../Shared/GenomicLocation/GenomicLocation";
 import Pills from "../Shared/Pills/Pills";
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
@@ -302,7 +303,7 @@ class SearchResultsView extends React.Component {
     let addTrackButton = null;
     let exportTrackButton = null;
     if (this.state.results && this.queryModel && this.queryModel.query && this.queryModel.query.type === QueryType.GENOME) {
-      addTrackButton = (<button className="float-left" onClick={this.addQueryAsTrack}>Add as Track</button>);
+      addTrackButton = (<button className="float-left glow" onClick={this.addQueryAsTrack}>Add as Track</button>);
       const exportText = this.state.downloading ? 'Downloading...' : 'Export BED';
       exportTrackButton = (<button className="float-left" onClick={this.downloadQuery}>{exportText}</button>);
     }

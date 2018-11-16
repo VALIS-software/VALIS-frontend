@@ -54,7 +54,7 @@ module.exports = (env) => {
 
 				// Copy assets into dist/static/
 				{
-					test: /\.json|\.png|\.bin/,
+					test: /\.json|\.png|\.gif|\.bin/,
 					type: 'javascript/auto',
 					use: [{
 						loader: 'file-loader',
