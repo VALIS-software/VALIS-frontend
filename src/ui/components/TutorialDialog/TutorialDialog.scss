@@ -5,6 +5,11 @@
         #search-box {
             color: black !important,
         }
+
+        & > div > div > div > div {
+            color: darken($valis-theme-light, 50%) !important;
+        }
+
     }
 
 
