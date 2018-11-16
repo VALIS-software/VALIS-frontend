@@ -658,6 +658,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			name: title,
 			type: 'signal',
 			path: path,
+			heightPx: 150,
 		});
 	}
 
