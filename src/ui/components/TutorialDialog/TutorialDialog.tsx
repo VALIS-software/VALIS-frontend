@@ -14,7 +14,7 @@ type Props = {
     closeClicked: () => void,
 };
 
-type State = { 
+type State = {
     items: Array<{title: string, body: any, imageUrl: string  }>
     currItem: number,
     nextReady: boolean,
@@ -44,6 +44,15 @@ export default class TutorialDialog extends React.Component<Props, State> {
 
     constructor(props: Props, ctx?: any) {
         super(props, ctx);
+
+        this.state = {
+            items: [],
+            currItem: 0,
+            nextReady: false,
+        }
+    }
+
+    componentDidMount() {
         const tutorialItems = [
             {
                 title: 'Search the genome',
@@ -70,12 +79,11 @@ export default class TutorialDialog extends React.Component<Props, State> {
                 imageUrl: '',
             },
         ]
-        this.state = {
+        this.setState({
             items: tutorialItems,
-            currItem: 0,
-            nextReady: false,
-        }
+        })
     }
+
     nextReady = () => {
         this.setState({
             nextReady: true,
@@ -101,6 +109,8 @@ export default class TutorialDialog extends React.Component<Props, State> {
 
     render() {
         let shareLinkTextareaRef: HTMLTextAreaElement;
+        const item = this.state.items[this.state.currItem];
+        if (!item) return <div/>;
         const currTitle = (<div>
             {this.state.items[this.state.currItem].title}
             <IconButton style={{position: 'absolute', right: 0, top: 0}} onClick={this.props.closeClicked}>
@@ -115,6 +125,7 @@ export default class TutorialDialog extends React.Component<Props, State> {
                 onClick={this.next}
             />,
         ];
+
         return (<Dialog
             className='tutorial-dialog'
             title={currTitle}
@@ -124,10 +135,10 @@ export default class TutorialDialog extends React.Component<Props, State> {
             autoScrollBodyContent={true}
             actions={actions}
         >
-            
-            <div style={{padding: 24}}>{this.state.items[this.state.currItem].body}</div>
-            <img style={{maxWidth: 400}} src={this.state.items[this.state.currItem].imageUrl}/>
-        </Dialog>)
+
+            <div style={{padding: 24}}>{item.body}</div>
+            <img style={{maxWidth: 400}} src={item.imageUrl}/>
+        </Dialog>);
     }
 
 }
