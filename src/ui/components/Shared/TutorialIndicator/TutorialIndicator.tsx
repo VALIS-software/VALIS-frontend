@@ -18,7 +18,7 @@ class TutorialIndicator extends React.Component<Props, State> {
     }
 
     render() {
-        const style = {
+        const style : React.CSSProperties = {
             position: 'absolute',
             backgroundColor: 'rgba(1., 1., 1., 0.8)',
             bottom: 0,
