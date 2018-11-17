@@ -6,6 +6,7 @@ import FlatButton from 'material-ui/FlatButton';
 // Material-UI Icons
 import { SiriusApi, QueryBuilder  } from 'valis';
 import SocialShare from "material-ui/svg-icons/social/share";
+import ActionTimeline from "material-ui/svg-icons/action/timeline";
 // components
 import TokenBox from '../Shared/TokenBox/TokenBox';
 import ENCODESelector from '../ENCODESelector/ENCODESelector';
@@ -13,10 +14,13 @@ import ENCODESignalSelector from '../ENCODESignalSelector/ENCODESignalSelector';
 // Models
 import AppModel from '../../../model/AppModel';
 import ViewModel from '../../../model/ViewModel';
+import AnalysisMenu from './AnalysisMenu';
 // Styles
 import './Header.scss';
 import { App } from '../../../App';
 const logoPath = require('./valis-logo.png');
+
+const SHARE_TUTORIAL = 'Create a link to your current view that can be shared or embedded';
 
 type Props = {
   viewModel: ViewModel,
@@ -133,36 +137,11 @@ class Header extends React.Component<Props, State> {
     });
   }
 
-  launchHelp = () => {
-    App.launchHelp();
-  }
-
   render() {
-    const shareButton = <FlatButton style={{color: 'white'}} onClick={this.props.onShowShare} label="Share" icon={(<SocialShare/>)} />;
+    const shareButton = <FlatButton onMouseEnter={()=> App.setHelpMessage(SHARE_TUTORIAL)} onMouseLeave={() => App.clearHelpMessage()} style={{color: 'white'}} onClick={this.props.onShowShare} label="Share" icon={(<SocialShare/>)} />;
 
-    const availableBiosamples = this.state.availableBiosamples;
 
-    const biosampleItems = new Array<any>();
-    availableBiosamples.forEach(curr => {
-      biosampleItems.push(
-        { label: curr, value: curr}
-      );
-    });
-
-    const options = this.state.biosampleValue  && !this.state.isSearching ? (<div style={{marginTop: -4}}>
-      {
-        this.state.availableSignals.has(this.state.biosampleValue) ?
-        (<button onClick={this.showEncodeSignals}>Signal Tracks</button>) : (<button disabled={true}>No signal tracks</button>)
-      }
-      {
-        this.state.availableAnnotations.has(this.state.biosampleValue) ?
-        (<button onClick={this.showEncodeAnnotations}>Annotation Tracks</button>) : null
-      }
-      {
-        this.state.availableAnnotations.has(this.state.biosampleValue) ?
-        (<button onClick={()=> { this.setState({isSearching: true })}}>Search Nearby</button>) : null
-      }
-    </div>) : null;
+    const analysisButton = <FlatButton style={{color: 'white'}} label="Analysis" icon={(<ActionTimeline/>)} />;
 
     return (<div>
         <div className="header" style={{height: '56px', width: '100%'}}>
@@ -175,7 +154,7 @@ class Header extends React.Component<Props, State> {
             <div className="header-button">
             <span style={{color: 'white', fontSize: 12}}> powered by </span>
             </div>
-            <div className="header-button" onClick={this.launchHelp}>
+            <div className="header-button">
               <a ><img style={{ cursor: 'pointer', height: 45, marginTop: 6 }} src={logoPath}/></a>
             </div>
             <div className="header-button">{shareButton}</div>

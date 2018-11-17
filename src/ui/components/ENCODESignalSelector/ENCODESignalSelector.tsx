@@ -253,7 +253,8 @@ class ENCODESignalSelector extends React.Component<Props, State> {
     const filterState = `${this.state.biosampleValue}|${this.state.targetValue}|${this.state.genomeTypeValue}`;
 
     return (
-      <div className="track-editor">
+      <div className="signal-track-editor">
+        <div style={{padding: 15}}>
         <Select
           value={currentValue}
           onChange={(d: any) => this.handleUpdateBiosample(d.value)}
@@ -281,6 +282,7 @@ class ENCODESignalSelector extends React.Component<Props, State> {
         }
         {" "}
         <br/>
+        </div>
         <TableView fetchId={filterState} fetch={fetchFunction} rowRenderer={this.renderRow} onClick={this.clickRow}/>
       </div>
     );

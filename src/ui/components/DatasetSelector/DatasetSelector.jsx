@@ -197,8 +197,8 @@ class DatasetSelector extends React.Component {
         />
       );
     }
-    const dialog = this.state.showUpgrade ? (<UpgradeDialog open={true}/>) : (<span/>);
-    return <div className="dataset-selector">{dialog}{dataInfoBlocks}</div>;
+    const dialog = this.state.showUpgrade ? (<UpgradeDialog open={true}/>) : null;
+    return (<div className="dataset-selector">{dataInfoBlocks}</div>);
   }
 }
 

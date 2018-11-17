@@ -53,7 +53,9 @@ class TokenBox extends React.Component {
 
   componentDidMount() {
     if (this.props.demo) {
-      this.runExample(this.props.demo);  
+      setTimeout(() => {
+        this.runExample(this.props.demo);  
+      }, 2000);
     }
     
     this.getSuggestions([], false);

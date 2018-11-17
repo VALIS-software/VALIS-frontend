@@ -46,9 +46,9 @@ export default class TutorialDialog extends React.Component<Props, State> {
         super(props, ctx);
         const tutorialItems = [
             {
-                title: 'ENCODE powered by VALIS',
+                title: 'Search the genome',
                 body: (<div>
-                    <div>VALIS queries relationships across disparate genomic datasets such as ENCODE, ExAC, Roadmap, and GTEx.</div>
+                    <div>Query relationships across disparate genomic datasets such as ENCODE, ExAC, Roadmap, and GTEx.</div>
                     <TokenBox key={'1'} onFinishDemo={this.nextReady} demo={enhancerExample} appModel={this.props.appModel} demoMode={true} viewModel={this.props.viewModel}/>
                 </div>),
                 imageUrl: '',

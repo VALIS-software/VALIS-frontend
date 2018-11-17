@@ -41,6 +41,9 @@ GenomeVisualizer.registerTrackType('annotation', AnnotationTileLoader, Annotatio
 GenomeVisualizer.registerTrackType('variant', VariantTileLoaderOverride, VariantTrackOverride);
 GenomeVisualizer.registerTrackType('interval', IntervalTileLoaderOverride, IntervalTrackOverride);
 
+
+const ADD_TRACK_TUTORIAL: string = 'Add GWAS, functional, or other annotation data from a variety of sources.';
+
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern
 (window as any).mixpanel = require('mixpanel-browser');
@@ -67,6 +70,8 @@ type State = {
 
 	appReady: boolean,
 
+	helpMessage: string,
+	helpMessageVisible: boolean,
 	showTutorial: boolean,
 }
 
@@ -198,6 +203,8 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			userProfile: null,
 			sidebarVisible: false,
 			appReady: false,
+			helpMessage: '',
+			helpMessageVisible: false,
 			showTutorial: true,
 		};
 	}
@@ -277,6 +284,19 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 		let headerVisible = (state.headerVisible != null) ? (!!state.headerVisible) : true;
 		this.setHeaderVisibility(headerVisible);
+	}
+
+	setHelpMessage(message: string) {
+		this.setState({
+			helpMessage: message,
+			helpMessageVisible: true,
+		});
+	}
+
+	clearHelpMessage() {
+		this.setState({
+			helpMessageVisible: false,
+		});
 	}
 
 	componentDidMount() {
@@ -413,6 +433,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						}}
 					/>
 					<button 
+					onMouseEnter={()=> App.setHelpMessage(ADD_TRACK_TUTORIAL)} onMouseLeave={() => App.clearHelpMessage()}
 					onClick={() => this.displayDatasetBrowser()}
 						style={{
 							position: 'absolute',
@@ -451,6 +472,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						open={this.state.displayShareDialog}
 						handleClose={() => this.setState({displayShareDialog: false})}
 					/>
+					<TutorialIndicator visible={this.state.helpMessageVisible} message={this.state.helpMessage}/>
 					<TutorialDialog appModel={this.appModel} viewModel={this.viewModel} open={this.state.showTutorial} closeClicked={() => this.setState({ showTutorial: false })}/>
 					<div className="page-buttons">
 						{errorButton}
@@ -603,11 +625,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		}
 	}
 
-	protected launchHelp() {
-		const currNode = ReactDOM.findDOMNode(this) as Element;
-		const helpOptions = currNode.getElementsByClassName('help-enabled');
-	}
-
 	protected addTrack(model: TrackModel) {
 		if (model.heightPx == null) {
 			model.heightPx = 50;
@@ -690,8 +707,12 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 	private static appInstance: App;
 
-	static launchHelp() {
-		this.appInstance.launchHelp();
+	static setHelpMessage(message: string) {
+		this.appInstance.setHelpMessage(message);
+	}
+
+	static clearHelpMessage() {
+		this.appInstance.clearHelpMessage();
 	}
 
 	static getQueryTracks() : Map<string, any> {

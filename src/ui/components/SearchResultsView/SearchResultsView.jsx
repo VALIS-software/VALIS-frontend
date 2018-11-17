@@ -20,6 +20,11 @@ import { App } from '../../../App';
 
 const FETCH_SIZE = 30;
 
+const ADD_TRACK_TUTORIAL = 'Add the results of this search as a new track in the genome browser';
+const INTERSECT_TUTORIAL = 'Limit search results to those within a certain distance of another search (e.g within 5kbp of a promoter)';
+const DOWNLOAD_TUTORIAL = 'Download the search results in BED format';
+const FILTER_TUTORIAL = 'Filter by dataset, chromosome, or mutation type';
+
 function truncate(str, length) {
   if (!str) return '';
   return str.length <= length ? str : str.slice(0,length-1) + '...';
@@ -304,10 +309,10 @@ class SearchResultsView extends React.Component {
     let exportTrackButton = null;
     let refineButton = null;
     if (this.state.results && this.queryModel && this.queryModel.query && this.queryModel.query.type === QueryType.GENOME) {
-      addTrackButton = (<button className="float-left glow" onClick={this.addQueryAsTrack}>Add as Track</button>);
-      refineButton = (<button className="float-left glow" onClick={this.addQueryAsTrack}>Intersect</button>);
+      addTrackButton = (<button onMouseEnter={()=> App.setHelpMessage(ADD_TRACK_TUTORIAL)} onMouseLeave={() => App.clearHelpMessage()} className="float-left glow" onClick={this.addQueryAsTrack}>Add as Track</button>);
+      refineButton = (<button onMouseEnter={()=> App.setHelpMessage(INTERSECT_TUTORIAL)} onMouseLeave={() => App.clearHelpMessage()} className="float-left glow" onClick={this.addQueryAsTrack}>Intersect</button>);
       const exportText = this.state.downloading ? 'Downloading...' : 'Export BED';
-      exportTrackButton = (<button className="float-left" onClick={this.downloadQuery}>{exportText}</button>);
+      exportTrackButton = (<button className="float-left" onMouseEnter={()=> App.setHelpMessage(DOWNLOAD_TUTORIAL)} onMouseLeave={() => App.clearHelpMessage()} onClick={this.downloadQuery}>{exportText}</button>);
     }
 
     return (
@@ -317,7 +322,7 @@ class SearchResultsView extends React.Component {
             {addTrackButton}
             {refineButton}
             {exportTrackButton}
-            <button className="float-right" onClick={this.toggleFilters}>Filter</button>
+            <button className="float-right" onMouseEnter={()=> App.setHelpMessage(FILTER_TUTORIAL)} onMouseLeave={() => App.clearHelpMessage()} onClick={this.toggleFilters}>Filter</button>
           </div>
           <div>{filterMenu}</div>
         </div>
