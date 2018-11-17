@@ -177,7 +177,8 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 					{
 						type: 'annotation',
 						name: 'ENSEMBL genes',
-						strand: Strand.Negative,
+						strand: null, // don't filter by strand
+						compact: true,
 						heightPx: 34,
 					},
 					{
@@ -675,6 +676,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			name: title,
 			type: 'signal',
 			path: path,
+			heightPx: 150,
 		});
 	}
 
