@@ -155,7 +155,7 @@ class Header extends React.Component<Props, State> {
             <span style={{color: 'white', fontSize: 12}}> powered by </span>
             </div>
             <div className="header-button">
-              <a ><img style={{ cursor: 'pointer', height: 45, marginTop: 6 }} src={logoPath}/></a>
+              <a href="http://www.valis.bio"  target="new"><img style={{ cursor: 'pointer', height: 45, marginTop: 6 }} src={logoPath}/></a>
             </div>
             <div className="header-button">{shareButton}</div>
       </div>

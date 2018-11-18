@@ -186,6 +186,60 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						name: 'dbSNP variants',
 						heightPx: 50,
 					},
+					{
+						"name": "K562, ChIP-seq H3K9ac-human",
+						"type": "signal",
+						"path": "https://www.encodeproject.org/files/ENCFF073LKV/@@download/ENCFF073LKV.bigWig",
+						"heightPx": 40
+					},
+					{
+						"name": "GM12878, ChIP-seq H3K9ac-human",
+						"type": "signal",
+						"path": "https://www.encodeproject.org/files/ENCFF951NPL/@@download/ENCFF951NPL.bigWig",
+						"heightPx": 40
+					},
+					{
+						"name": "regulatory T cell, ChIP-seq H3K9me3-human",
+						"type": "signal",
+						"path": "https://www.encodeproject.org/files/ENCFF516NRP/@@download/ENCFF516NRP.bigWig",
+						"heightPx": 40
+					},
+					{
+						"name": "regulatory T cell, ChIP-seq H3K27me3-human",
+						"type": "signal",
+						"path": "https://www.encodeproject.org/files/ENCFF564MDP/@@download/ENCFF564MDP.bigWig",
+						"heightPx": 40
+					},
+					{
+						"name": "B cell, ChIP-seq H3K27me3-human",
+						"type": "signal",
+						"path": "https://www.encodeproject.org/files/ENCFF385PQZ/@@download/ENCFF385PQZ.bigWig",
+						"heightPx": 40
+					},
+					{
+						"name": "heart, ChIP-seq H3K27me3-human",
+						"type": "signal",
+						"path": "https://www.encodeproject.org/files/ENCFF089NNB/@@download/ENCFF089NNB.bigWig",
+						"heightPx": 40
+					},
+					{
+						"name": "brain, ChIP-seq H3K27me3-human",
+						"type": "signal",
+						"path": "https://www.encodeproject.org/files/ENCFF908KQH/@@download/ENCFF908KQH.bigWig",
+						"heightPx": 40
+					},
+					{
+						"name": "liver, ChIP-seq H3K27me3-human",
+						"type": "signal",
+						"path": "https://www.encodeproject.org/files/ENCFF375FGA/@@download/ENCFF375FGA.bigWig",
+						"heightPx": 40
+					},
+					{
+						"name": "kidney, ChIP-seq H3K27me3-human",
+						"type": "signal",
+						"path": "https://www.encodeproject.org/files/ENCFF416WIU/@@download/ENCFF416WIU.bigWig",
+						"heightPx": 40
+					}
 				],
 			};
 		}
@@ -254,6 +308,8 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 				}
 			}
 		}
+
+		console.log(JSON.stringify(this.genomeVisualizer.getConfiguration(),null, 2));
 
 		return {
 			genomeVisualizer: this.genomeVisualizer.getConfiguration(),
