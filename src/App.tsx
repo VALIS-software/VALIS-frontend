@@ -309,8 +309,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			}
 		}
 
-		console.log(JSON.stringify(this.genomeVisualizer.getConfiguration(),null, 2));
-
 		return {
 			genomeVisualizer: this.genomeVisualizer.getConfiguration(),
 			sidebar: currentSidebarView,
