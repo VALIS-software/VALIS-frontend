@@ -179,7 +179,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						name: 'ENSEMBL genes',
 						strand: null, // don't filter by strand
 						compact: true,
-						heightPx: 34,
+						heightPx: 75,
 					},
 					{
 						type: 'variant',
