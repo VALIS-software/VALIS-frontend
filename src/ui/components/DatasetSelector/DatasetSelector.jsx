@@ -72,6 +72,16 @@ const fixedTrackData = [
     "title": "ExAC Variants",
     "description": "Search labeled variants of over 60k exomes from the Exome Aggregation Consortium."
   },
+  {
+    "track_type": TRACK_TYPE_IMMUNE_ATLAS,
+    "title": "Immune Atlas",
+    "description": "Landscape of stimulation-responsive chromatin across human immune cells. ATAC data for 25 cell types."
+  },
+  {
+    "track_type": TRACK_TYPE_TCGA,
+    "title": "TCGA Variants",
+    "description": "Search germline and somatic mutations from The Cancer Genome Atlas."
+  },
 ];
 
 class DatasetSelector extends React.Component {

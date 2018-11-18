@@ -6,7 +6,12 @@ import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
-import { QueryBuilder } from 'valis'
+import { QueryBuilder } from 'valis';
+import TokenBox from '../Shared/TokenBox/TokenBox';
+import Dialog from "material-ui/Dialog";
+import NavigationClose from "material-ui/svg-icons/navigation/close";
+import NavigationArrowBack from "material-ui/svg-icons/navigation/arrow-back";
+import IconButton from "material-ui/IconButton";
 
 // Styles
 import './BooleanTrackSelector.scss';
@@ -35,7 +40,6 @@ class BooleanTrackSelector extends React.Component {
     this.state = {
       title: '',
       operatorValue: 0,
-      trackAValue: 0,
       trackBValue: 0,
       windowSize: 1000,
       availableOperators: [],
@@ -61,12 +65,6 @@ class BooleanTrackSelector extends React.Component {
     }
   }
 
-  handleUpdateTrackA = (event, index, value) => {
-    this.setState({
-      trackAValue: value,
-    });
-  }
-
   handleUpdateTrackB = (event, index, value) => {
     this.setState({
       trackBValue: value,
@@ -80,7 +78,7 @@ class BooleanTrackSelector extends React.Component {
   }
 
   getOutputQueryType() {
-      const queryA = this.state.availableAnnotationTracks[this.state.trackAValue];
+      const queryA = this.props.sourceQuery;
       const queryB = this.state.availableAnnotationTracks[this.state.trackBValue];
       const op = this.state.availableOperators[this.state.operatorValue];
       if (op === 'intersect' || op === 'window' || op === 'difference') {
@@ -152,15 +150,22 @@ class BooleanTrackSelector extends React.Component {
       const queryId = JSON.stringify(availableAnnotationTracks[i].query);
       availableAnnotationTrackItems.push(<MenuItem value={i} key={queryId} primaryText={queryTitle} />);
     }
+
+    const currTitle = (<div>
+        {'Enter Intersection Query'}
+        <IconButton style={{position: 'absolute', right: 0, top: 0}} onClick={this.props.closeClicked}>
+            <NavigationClose />
+        </IconButton>
+    </div>);
     return (
-      <div className="track-editor">
-        <TextField
-          value={this.state.title}
-          floatingLabelText="Track Title"
-          onChange={this.handleUpdateTitle}
-          errorText={!this.state.title ? 'This field is required' : ''}
-          fullWidth={true}
-        /><br /> <br />
+        <Dialog
+          title={currTitle}
+          modal={false}
+          open={this.props.visible}
+          onRequestClose={this.props.closeClicked}
+          autoScrollBodyContent={true}
+          className='boolean-selector'
+        ><TokenBox appModel={this.props.appModel} viewModel={this.props.appModel.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>
         <SelectField
           value={this.state.operatorValue}
           floatingLabelText="Operator"
@@ -169,24 +174,6 @@ class BooleanTrackSelector extends React.Component {
         >
           {availableOperatorItems}
         </SelectField><br /> <br />
-        <SelectField
-          value={this.state.trackAValue}
-          floatingLabelText="Source Track"
-          onChange={this.handleUpdateTrackA}
-          maxHeight={200}
-          fullWidth={true}
-        >
-          {availableAnnotationTrackItems}
-        </SelectField><br /> <br />
-        <SelectField
-          value={this.state.trackBValue}
-          floatingLabelText="Filter Track"
-          onChange={this.handleUpdateTrackB}
-          maxHeight={200}
-          fullWidth={true}
-        >
-          {availableAnnotationTrackItems}
-        </SelectField><br /> <br /> <br />
         <div> {'Window Size  '} {this.state.windowSize} </div>
         <Slider
           min={logmin}
@@ -197,19 +184,20 @@ class BooleanTrackSelector extends React.Component {
           disabled={op !== 'window'}
         />
         <RaisedButton
-          label="Create Track"
+          label="Finish"
           primary={true}
           onClick={() => this.addQueryTrack()}
-          disabled={!this.state.title}
           style={{ position: 'absolute', bottom: '10px', width: '90%' }}
         />
-      </div>
+        </Dialog>
     );
   }
 }
 
 BooleanTrackSelector.propTypes = {
   appModel: PropTypes.object,
+  sourceQuery: PropTypes.object,
+  visible: PropTypes.boolean,
 };
 
 export default BooleanTrackSelector;

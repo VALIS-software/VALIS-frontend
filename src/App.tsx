@@ -42,7 +42,7 @@ GenomeVisualizer.registerTrackType('variant', VariantTileLoaderOverride, Variant
 GenomeVisualizer.registerTrackType('interval', IntervalTileLoaderOverride, IntervalTrackOverride);
 
 
-const ADD_TRACK_TUTORIAL: string = 'Add GWAS, functional, or other annotation data from a variety of sources.';
+const ADD_TRACK_TUTORIAL: string = 'Add GWAS, functional signal, or other data from a variety of sources.';
 
 // telemetry
 // add mixpanel to the global context, this is a bit of a hack but it's the usual mixpanel pattern

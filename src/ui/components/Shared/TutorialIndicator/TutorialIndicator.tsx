@@ -20,7 +20,7 @@ class TutorialIndicator extends React.Component<Props, State> {
     render() {
         const style : React.CSSProperties = {
             position: 'absolute',
-            backgroundColor: 'rgba(1., 1., 1., 0.8)',
+            backgroundColor: 'white',
             bottom: 0,
             left: 0,
             borderRadius: 8,
@@ -33,7 +33,7 @@ class TutorialIndicator extends React.Component<Props, State> {
             transition: 'opacity .5s ease-in-out',
         };
 
-        return (<Paper style={style} zDepth={1}><div style={{padding: 16}}>{this.props.message}</div></Paper>);
+        return (<Paper className='tutorial-indicator' style={style} zDepth={1}><div style={{padding: 16}}>{this.props.message}</div></Paper>);
     }
 }
 

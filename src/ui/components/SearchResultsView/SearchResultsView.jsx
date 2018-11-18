@@ -9,6 +9,7 @@ import Pills from "../Shared/Pills/Pills";
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import { prettyPrint } from "../TraitDetails/TraitDetails";
+import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector";
 import { SiriusApi, QueryType } from 'valis';
 import QueryModel, { FilterType } from "../../../model/QueryModel";
 
@@ -43,6 +44,7 @@ class SearchResultsView extends React.Component {
       isLoading: true,
       results: [],
       query: props.query,
+      showIntersect: false,
     };
     this._cache = new CellMeasurerCache({
       fixedWidth: true,
@@ -147,6 +149,12 @@ class SearchResultsView extends React.Component {
 
   pushNewSearchResults = (queryModel) => {
     App.displaySearchResults(queryModel.getFilteredQuery(), this.props.text);
+  }
+
+  intersectAndAdd = () => {
+    this.setState({
+      showIntersect: true,
+    });
   }
 
   renderRightInfo = (result) => {
@@ -310,13 +318,14 @@ class SearchResultsView extends React.Component {
     let refineButton = null;
     if (this.state.results && this.queryModel && this.queryModel.query && this.queryModel.query.type === QueryType.GENOME) {
       addTrackButton = (<button onMouseEnter={()=> App.setHelpMessage(ADD_TRACK_TUTORIAL)} onMouseLeave={() => App.clearHelpMessage()} className="float-left glow" onClick={this.addQueryAsTrack}>Add as Track</button>);
-      refineButton = (<button onMouseEnter={()=> App.setHelpMessage(INTERSECT_TUTORIAL)} onMouseLeave={() => App.clearHelpMessage()} className="float-left glow" onClick={this.addQueryAsTrack}>Intersect</button>);
+      refineButton = (<button onMouseEnter={()=> App.setHelpMessage(INTERSECT_TUTORIAL)} onMouseLeave={() => App.clearHelpMessage()} className="float-left glow" onClick={this.intersectAndAdd}>Intersect</button>);
       const exportText = this.state.downloading ? 'Downloading...' : 'Export BED';
       exportTrackButton = (<button className="float-left" onMouseEnter={()=> App.setHelpMessage(DOWNLOAD_TUTORIAL)} onMouseLeave={() => App.clearHelpMessage()} onClick={this.downloadQuery}>{exportText}</button>);
     }
 
     return (
       <div id="search-results-view" className="search-results-view">
+        <BooleanTrackSelector visible={this.state.showIntersect} appModel={this.appModel} sourceQuery={this.state.query} />
         <div className="search-filters">
           <div className="clearfix">
             {addTrackButton}
