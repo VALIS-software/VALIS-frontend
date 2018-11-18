@@ -54,12 +54,14 @@ class TokenBox extends React.Component {
   componentDidMount() {
     if (this.props.demo) {
       setTimeout(() => {
-        this.runExample(this.props.demo);  
+        this.runExample(this.props.demo);
       }, 2000);
     }
-    
     this.getSuggestions([], false);
+  }
 
+  componentWillUnmount() {
+    this.resetState();
   }
 
   perfectMatch(dataSource, value) {
@@ -478,7 +480,7 @@ class TokenBox extends React.Component {
       const clickRemoveToken = () => {
         this.handleRemoveToken(i);
       }
-      
+
       if (this.props.demo) {
           tokenChips.push(<li key={i} className="token">
             <Chip> {token.value} </Chip>
@@ -488,7 +490,7 @@ class TokenBox extends React.Component {
           <Chip onClick={clickToken} onRequestDelete={clickRemoveToken}> {token.value} </Chip>
         </li>);
       }
-      
+
     }
     // note by QYD: Here we use a trick to keep the scroll-x at the right.
     // First we reserve the chips, then we use flex-direction: row-reverse in the css.
@@ -576,6 +578,7 @@ class TokenBox extends React.Component {
   }
 
   runExample = (example, idx=0) => {
+    if (!this.autoComplete.current) return;
     if (idx >= example[0].value.length ) {
       this.handleSelectItem (example[0], undefined, true);
       if (example.length > 0) {
@@ -643,7 +646,7 @@ class TokenBox extends React.Component {
 TokenBox.propTypes = {
   appModel: PropTypes.object,
   demo: PropTypes.array,
-  onFinishDemo: PropTypes.array,
+  onFinishDemo: PropTypes.func,
 };
 
 export default TokenBox;
