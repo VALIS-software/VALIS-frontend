@@ -62,13 +62,15 @@ export class IntervalTrackOverride extends IntervalTrack<IntervalTrackModelOverr
     }
 
     protected intervalLabelKey(tile: Tile<IntervalTilePayload>, index: number, startIndex: number, endIndex: number) {
-        let count = tile.payload.userdata.counts[index];
-        return startIndex + ':' + endIndex + '/' + count;
+        let hasCount = this.model.displayCount && tile.payload.userdata && tile.payload.userdata.hasCounts;
+        let superKey = super.intervalLabelKey(tile, index, startIndex, endIndex);
+        return hasCount ? (superKey + '/' + tile.payload.userdata.counts[index]) : superKey;
     }
 
     protected createLabel(tile: Tile<IntervalTilePayload>, index: number) {
         let label = super.createLabel(tile, index);
 
+        // set the label text to the interval count if it exists
         if (this.model.displayCount && tile.payload.userdata && tile.payload.userdata.hasCounts) {
             label.string = tile.payload.userdata.counts[index];
         }
