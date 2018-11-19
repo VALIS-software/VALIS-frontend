@@ -166,7 +166,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			initialBrowserConfiguration = {
 				allowNewPanels: true,
 				panels: [{
-					location: { contig: 'chr1', x0: 0, x1: 249e6 }
+					location: { contig: 'chrX', x0: 71094900, x1: 71104400 }
 				}],
 				tracks: [
 					{
