@@ -26,9 +26,9 @@
     width: 100%;
     height: 100%;
     color: #171615;
-    background: linear-gradient($valis-theme-lightest, $valis-theme-light);
+    background: $valis-theme-light;
     border-radius: 8px 0px 0px 8px;
-    font-size: 14px;
+    font-size: 12px;
     overflow: hidden;
     user-select: none;
     .track-title {

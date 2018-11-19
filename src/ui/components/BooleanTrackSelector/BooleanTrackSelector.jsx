@@ -3,8 +3,8 @@ import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import Slider from 'material-ui/Slider';
 import TextField from 'material-ui/TextField';
-import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import SelectField from 'material-ui/SelectField';
+import FlatButton from 'material-ui/FlatButton';
 import MenuItem from 'material-ui/MenuItem';
 import { QueryBuilder } from 'valis';
 import TokenBox from '../Shared/TokenBox/TokenBox';
@@ -18,7 +18,7 @@ import './BooleanTrackSelector.scss';
 import { App } from '../../../App';
 
 const logmin = 0;
-const logmax = 5 * Math.pow(10, 6);
+const logmax = Math.pow(10, 6);
 const power = 12;
 
 function transform(value) {
@@ -39,11 +39,12 @@ class BooleanTrackSelector extends React.Component {
     }
     this.state = {
       title: '',
-      operatorValue: 0,
+      operatorValue: 1,
       trackBValue: 0,
       windowSize: 1000,
       availableOperators: [],
       availableAnnotationTracks: [],
+      query: null,
     };
   }
 
@@ -137,6 +138,13 @@ class BooleanTrackSelector extends React.Component {
     });
   }
 
+  cancel = () => {
+    this.setState({
+      query: null,
+    });
+    this.props.onCancel();
+  }
+
   render() {
     const { availableOperators, operatorValue, availableAnnotationTracks } = this.state;
     const op = availableOperators[operatorValue];
@@ -153,42 +161,55 @@ class BooleanTrackSelector extends React.Component {
 
     const currTitle = (<div>
         {'Enter Intersection Query'}
-        <IconButton style={{position: 'absolute', right: 0, top: 0}} onClick={this.props.closeClicked}>
+        <IconButton style={{position: 'absolute', right: 0, top: 0}} onClick={()=> { this.cancel()}}>
             <NavigationClose />
         </IconButton>
     </div>);
-    return (
-        <Dialog
-          title={currTitle}
-          modal={false}
-          open={this.props.visible}
-          onRequestClose={this.props.closeClicked}
-          autoScrollBodyContent={true}
-          className='boolean-selector'
-        ><TokenBox appModel={this.props.appModel} viewModel={this.props.appModel.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>
-        <SelectField
-          value={this.state.operatorValue}
-          floatingLabelText="Operator"
-          onChange={this.handleUpdateOperator}
-          maxHeight={200}
-        >
-          {availableOperatorItems}
-        </SelectField><br /> <br />
-        <div> {'Window Size  '} {this.state.windowSize} </div>
+
+    const window =  op === 'window' ? (<div>
+        <div> {'Window Size (bp) '} {this.state.windowSize} </div>
         <Slider
           min={logmin}
           max={logmax}
           step={(logmax - logmin) / 100}
           value={reverse(this.state.windowSize)}
           onChange={this.handleUpdateWindowSize}
-          disabled={op !== 'window'}
         />
-        <RaisedButton
-          label="Finish"
-          primary={true}
-          onClick={() => this.addQueryTrack()}
-          style={{ position: 'absolute', bottom: '10px', width: '90%' }}
-        />
+    </div>) : null;
+
+    const actions = [
+      <FlatButton
+        label={"Apply"}
+        primary={true}
+        disabled={!this.state.query}
+        onClick={() => { this.props.onFinish(this.state.query, op, this.state.windowSize)}}
+      />,
+      <FlatButton
+        label={"Cancel"}
+        primary={true}
+        onClick={() => { this.cancel()}}
+      />,
+    ]
+
+    return (
+        <Dialog
+          title={currTitle}
+          modal={false}
+          open={this.props.visible}
+          onRequestClose={() => { this.props.onCancel()}}
+          autoScrollBodyContent={true}
+          className='boolean-selector'
+          actions={actions}
+        ><TokenBox onFinishCallback={(query) => { this.setState({query: query})}} appModel={this.props.appModel} viewModel={this.props.appModel.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>
+        <SelectField
+          value={this.state.operatorValue}
+          floatingLabelText="Intersection Operator"
+          onChange={this.handleUpdateOperator}
+          maxHeight={200}
+        >
+          {availableOperatorItems}
+        </SelectField><br /> <br />
+        {window}
         </Dialog>
     );
   }
@@ -197,7 +218,9 @@ class BooleanTrackSelector extends React.Component {
 BooleanTrackSelector.propTypes = {
   appModel: PropTypes.object,
   sourceQuery: PropTypes.object,
-  visible: PropTypes.boolean,
+  visible: PropTypes.bool,
+  onCancel: PropTypes.func,
+  onFinish: PropTypes.func,
 };
 
 export default BooleanTrackSelector;

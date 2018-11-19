@@ -25,7 +25,7 @@ class TokenBox extends React.Component {
     this.tokenDiv = React.createRef();
     this.appModel = props.appModel;
 
-    this.queryParser = buildEncodeQueryParser(this.getSuggestionHandlers());
+    this.queryParser = buildEncodeQueryParser(this.getSuggestionHandlers(), true);
 
     this.timeOfLastRequest = null;
     this.lastRequest = null;
@@ -55,7 +55,7 @@ class TokenBox extends React.Component {
     if (this.props.demo) {
       setTimeout(() => {
         this.runExample(this.props.demo);
-      }, 2000);
+      }, 1500);
     }
     this.getSuggestions([], false);
   }
@@ -330,6 +330,13 @@ class TokenBox extends React.Component {
   displaySearchResults = (tokens, query, fromSelect = false) => {
     if (this.props.demo) {
       if (this.props.onFinishDemo) this.props.onFinishDemo();
+    }
+    if (this.props.onFinishCallback) {
+      this.setState({
+        inputHidden: true,
+      });
+      this.props.onFinishCallback(query);
+      return;
     }
     // track queryStr
     const queryStr = this.buildQueryStringFromTokens(tokens);
@@ -647,6 +654,7 @@ TokenBox.propTypes = {
   appModel: PropTypes.object,
   demo: PropTypes.array,
   onFinishDemo: PropTypes.func,
+  onFinishCallback: PropTypes.func,
 };
 
 export default TokenBox;

@@ -24,14 +24,14 @@ const pathwayExample = [{value: "gene", quoted: false},
 {value: "in pathway", quoted: false},
 {value: "p53 signaling pathway", quoted: true}]
 
-const enhancerExample = [{value: "enhancers", quoted: false},
-{value: "in", quoted: false},
-{value: "K562", quoted: true},
-{value: "within", quoted: false},
-{value: "50kbp of", quoted: false},
-{value: "gene", quoted: false},
-{value: "in pathway", quoted: false},
-{value: "Ras signaling pathway", quoted: true}];
+const enhancerExample = [{rule: "ENHANCER", quoted: false, value: "enhancers"},
+{rule: "WITHIN_T", value: "within", quoted: false},
+{rule: "1kbp_T", value: "1kbp of", quoted: false},
+{rule: "GENE_T", value: "gene", quoted: false},
+{rule: "IN_PATHWAY_T", value: "in pathway", quoted: false},
+{rule: "PATHWAY", value: "Ras signaling pathway", quoted: true},
+{rule: "IN_CELL", value: "in cell", quoted: false},
+{rule: "CELL_TYPE_ENHANCER", value: "K562" , quoted: true}];
 
 const eqtlExample = [{value: "variants", quoted: false},
 {value: "influencing", quoted: false},

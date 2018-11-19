@@ -190,54 +190,61 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						"name": "K562, ChIP-seq H3K9ac-human",
 						"type": "signal",
 						"path": "https://www.encodeproject.org/files/ENCFF073LKV/@@download/ENCFF073LKV.bigWig",
-						"heightPx": 40
+						"heightPx": 50
 					},
 					{
 						"name": "GM12878, ChIP-seq H3K9ac-human",
 						"type": "signal",
 						"path": "https://www.encodeproject.org/files/ENCFF951NPL/@@download/ENCFF951NPL.bigWig",
+						"heightPx": 50
+					},
+					{
+						"name":"K562 DNase","type":"interval","query":{"type":"GenomeNode","filters":{"type":"DNase-only","info.biosample":"K562"},"toEdges":[],"arithmetics":[],"limit":1000000},
+						"blendEnabled":true,
+						"displayCount":true, 
+						"maxCount":300,
 						"heightPx": 40
 					},
 					{
-						"name": "regulatory T cell, ChIP-seq H3K9me3-human",
-						"type": "signal",
-						"path": "https://www.encodeproject.org/files/ENCFF516NRP/@@download/ENCFF516NRP.bigWig",
+						"name":"GM12878 DNase","type":"interval","query":{"type":"GenomeNode","filters":{"type":"DNase-only","info.biosample":"GM12878"},"toEdges":[],"arithmetics":[],"limit":1000000},
+						"blendEnabled":true,
+						"displayCount":true, 
+						"maxCount":300,
 						"heightPx": 40
 					},
 					{
-						"name": "regulatory T cell, ChIP-seq H3K27me3-human",
-						"type": "signal",
-						"path": "https://www.encodeproject.org/files/ENCFF564MDP/@@download/ENCFF564MDP.bigWig",
+						"name":"B cell DNase","type":"interval","query":{"type":"GenomeNode","filters":{"type":"DNase-only","info.biosample":"B Cell"},"toEdges":[],"arithmetics":[],"limit":1000000},
+						"blendEnabled":true,
+						"displayCount":true, 
+						"maxCount":300,
 						"heightPx": 40
 					},
 					{
-						"name": "B cell, ChIP-seq H3K27me3-human",
-						"type": "signal",
-						"path": "https://www.encodeproject.org/files/ENCFF385PQZ/@@download/ENCFF385PQZ.bigWig",
+						"name":"CD4+ helper T-cell DNase","type":"interval","query":{"type":"GenomeNode","filters":{"type":"DNase-only","info.biosample":"CD4-positive helper T cell"},"toEdges":[],"arithmetics":[],"limit":1000000},
+						"blendEnabled":true,
+						"displayCount":true, 
+						"maxCount":300,
 						"heightPx": 40
 					},
 					{
-						"name": "heart, ChIP-seq H3K27me3-human",
-						"type": "signal",
-						"path": "https://www.encodeproject.org/files/ENCFF089NNB/@@download/ENCFF089NNB.bigWig",
+						"name":"heart DNase","type":"interval","query":{"type":"GenomeNode","filters":{"type":"DNase-only","info.biosample":"heart"},"toEdges":[],"arithmetics":[],"limit":1000000},
+						"blendEnabled":true,
+						"displayCount":true, 
+						"maxCount":300,
 						"heightPx": 40
 					},
 					{
-						"name": "brain, ChIP-seq H3K27me3-human",
-						"type": "signal",
-						"path": "https://www.encodeproject.org/files/ENCFF908KQH/@@download/ENCFF908KQH.bigWig",
+						"name":"brain DNase","type":"interval","query":{"type":"GenomeNode","filters":{"type":"DNase-only","info.biosample":"brain"},"toEdges":[],"arithmetics":[],"limit":1000000},
+						"blendEnabled":true,
+						"displayCount":true, 
+						"maxCount":300,
 						"heightPx": 40
 					},
 					{
-						"name": "liver, ChIP-seq H3K27me3-human",
-						"type": "signal",
-						"path": "https://www.encodeproject.org/files/ENCFF375FGA/@@download/ENCFF375FGA.bigWig",
-						"heightPx": 40
-					},
-					{
-						"name": "kidney, ChIP-seq H3K27me3-human",
-						"type": "signal",
-						"path": "https://www.encodeproject.org/files/ENCFF416WIU/@@download/ENCFF416WIU.bigWig",
+						"name":"kidney DNase","type":"interval","query":{"type":"GenomeNode","filters":{"type":"DNase-only","info.biosample":"kidney"},"toEdges":[],"arithmetics":[],"limit":1000000},
+						"blendEnabled":true,
+						"displayCount":true, 
+						"maxCount":300,
 						"heightPx": 40
 					}
 				],

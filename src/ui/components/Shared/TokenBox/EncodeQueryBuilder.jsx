@@ -84,16 +84,31 @@ function buildGeneQuery(parsePath) {
 
 function buildCellQuery(parsePath) {
     if (!parsePath || parsePath.length < 3) return null;
-    const withinQuery = buildWithinQuery(parsePath.slice(3));
-    if (!withinQuery) return null;
     const annotationType = (parsePath[0].rule == 'PROMOTER') ? "Promoter-like" : "Enhancer-like";
-    const cellType = STRIP_QUOTES(parsePath[2].value);
-    builder.newGenomeQuery();
-    builder.filterType(annotationType);
-    builder.filterBiosample(cellType);
-    builder.setLimit(2000000);
-    builder.addArithmeticWindow(withinQuery[0], withinQuery[1]);
-    return builder.build();
+    if (parsePath[1].rule === 'WITHIN_T') {
+        let within = buildWithinQuery(parsePath.slice(1));
+        if (!within) return null;
+        // check that cell type is included
+        if (parsePath[parsePath.length - 2].rule === 'IN_CELL' && parsePath[parsePath.length - 1].value) {
+            const cellType = STRIP_QUOTES(parsePath[parsePath.length - 1].value);
+            builder.newGenomeQuery();
+            builder.filterType(annotationType);
+            builder.filterBiosample(cellType);
+            builder.addArithmeticWindow(within[0], within[1]);
+            builder.setLimit(2000000);
+            console.log(parsePath);
+            return builder.build();
+        } else {
+            return null;
+        }
+    } else {
+        const cellType = STRIP_QUOTES(parsePath[2].value);
+        builder.newGenomeQuery();
+        builder.filterType(annotationType);
+        builder.filterBiosample(cellType);
+        builder.setLimit(2000000);
+        return builder.build();
+    }
 }
 
 
