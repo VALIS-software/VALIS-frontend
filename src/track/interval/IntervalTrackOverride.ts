@@ -70,15 +70,16 @@ export class IntervalTrackOverride extends IntervalTrack<IntervalTrackModelOverr
         let label = super.createLabel(tile, index);
 
         if (this.model.displayCount && tile.payload.userdata && tile.payload.userdata.hasCounts) {
-
             label.string = tile.payload.userdata.counts[index];
         }
 
         // add click interaction
         label.cursorStyle = 'pointer';
+
         label.addInteractionListener('click', (e) => {
             console.log('click'); // need to do something here...
         });
+
         // change opacity on pointer hover to hint clickablity
         label.addInteractionListener('pointerenter', (e) => {
             Animator.springTo(label, { 'opacity': 0.1 }, 600);
