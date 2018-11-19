@@ -213,7 +213,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						"heightPx": 40
 					},
 					{
-						"name":"B cell DNase","type":"interval","query":{"type":"GenomeNode","filters":{"type":"DNase-only","info.biosample":"B Cell"},"toEdges":[],"arithmetics":[],"limit":1000000},
+						"name":"B cell DNase","type":"interval","query":{"type":"GenomeNode","filters":{"type":"DNase-only","info.biosample":"B cell"},"toEdges":[],"arithmetics":[],"limit":1000000},
 						"blendEnabled":true,
 						"displayCount":true, 
 						"maxCount":300,
