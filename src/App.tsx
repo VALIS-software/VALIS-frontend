@@ -132,9 +132,9 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 				alignItems: 'center',
 				justifyContent: 'flex-start'
 			};
-	
+
 			const ArrowElem = props.isExpanded ? ExpandLessIcon : ExpandMoreIcon;
-	
+
 			const expandArrow = (<ArrowElem
 				style={style}
 				viewBox={iconViewBoxSize}
@@ -201,49 +201,49 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 					{
 						"name":"K562 DNase","type":"interval","query":{"type":"GenomeNode","filters":{"type":"DNase-only","info.biosample":"K562"},"toEdges":[],"arithmetics":[],"limit":1000000},
 						"blendEnabled":true,
-						"displayCount":true, 
+						"displayCount":true,
 						"maxCount":300,
 						"heightPx": 40
 					},
 					{
 						"name":"GM12878 DNase","type":"interval","query":{"type":"GenomeNode","filters":{"type":"DNase-only","info.biosample":"GM12878"},"toEdges":[],"arithmetics":[],"limit":1000000},
 						"blendEnabled":true,
-						"displayCount":true, 
+						"displayCount":true,
 						"maxCount":300,
 						"heightPx": 40
 					},
 					{
 						"name":"B cell DNase","type":"interval","query":{"type":"GenomeNode","filters":{"type":"DNase-only","info.biosample":"B cell"},"toEdges":[],"arithmetics":[],"limit":1000000},
 						"blendEnabled":true,
-						"displayCount":true, 
+						"displayCount":true,
 						"maxCount":300,
 						"heightPx": 40
 					},
 					{
 						"name":"CD4+ helper T-cell DNase","type":"interval","query":{"type":"GenomeNode","filters":{"type":"DNase-only","info.biosample":"CD4-positive helper T cell"},"toEdges":[],"arithmetics":[],"limit":1000000},
 						"blendEnabled":true,
-						"displayCount":true, 
+						"displayCount":true,
 						"maxCount":300,
 						"heightPx": 40
 					},
 					{
 						"name":"heart DNase","type":"interval","query":{"type":"GenomeNode","filters":{"type":"DNase-only","info.biosample":"heart"},"toEdges":[],"arithmetics":[],"limit":1000000},
 						"blendEnabled":true,
-						"displayCount":true, 
+						"displayCount":true,
 						"maxCount":300,
 						"heightPx": 40
 					},
 					{
 						"name":"brain DNase","type":"interval","query":{"type":"GenomeNode","filters":{"type":"DNase-only","info.biosample":"brain"},"toEdges":[],"arithmetics":[],"limit":1000000},
 						"blendEnabled":true,
-						"displayCount":true, 
+						"displayCount":true,
 						"maxCount":300,
 						"heightPx": 40
 					},
 					{
 						"name":"kidney DNase","type":"interval","query":{"type":"GenomeNode","filters":{"type":"DNase-only","info.biosample":"kidney"},"toEdges":[],"arithmetics":[],"limit":1000000},
 						"blendEnabled":true,
-						"displayCount":true, 
+						"displayCount":true,
 						"maxCount":300,
 						"heightPx": 40
 					}
@@ -494,7 +494,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 							display: headerVisible ? '' : 'none'
 						}}
 					/>
-					<button 
+					<button
 					onMouseEnter={()=> App.setHelpMessage(ADD_TRACK_TUTORIAL)} onMouseLeave={() => App.clearHelpMessage()}
 					onClick={() => this.displayDatasetBrowser()}
 						style={{
@@ -506,7 +506,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 							width: 175,
 							zIndex: 1
 						}}
-					>Add Track</button> 
+					>Add Track</button>
 					{this.genomeVisualizer.reactRender({
 						width: this.state.viewerWidth,
 						height: this.state.viewerHeight,
@@ -679,7 +679,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		if (event.data !== null) {
 			// skip tracking for dev account
 			const uProf = this.state.userProfile;
-			if (uProf && uProf.user_id) {
+			if (uProf && uProf.name !== 'dev') {
 				const msg: string = event.data.msg;
 				const details: any = event.data.details;
 				mixpanel.track(msg, details);
