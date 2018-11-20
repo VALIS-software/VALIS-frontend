@@ -62,7 +62,7 @@ export class IntervalTrackOverride extends IntervalTrack<IntervalTrackModelOverr
     }
 
     protected intervalLabelKey(tile: Tile<IntervalTilePayload>, index: number, startIndex: number, endIndex: number) {
-        let hasCount = this.model.displayCount && tile.payload.userdata && tile.payload.userdata.hasCounts;
+        let hasCount = this.model.displayCount && tile.payload.userdata.hasCounts;
         let superKey = super.intervalLabelKey(tile, index, startIndex, endIndex);
         return hasCount ? (superKey + '/' + tile.payload.userdata.counts[index]) : superKey;
     }
@@ -71,7 +71,7 @@ export class IntervalTrackOverride extends IntervalTrack<IntervalTrackModelOverr
         let label = super.createLabel(tile, index);
 
         // set the label text to the interval count if it exists
-        if (this.model.displayCount && tile.payload.userdata && tile.payload.userdata.hasCounts) {
+        if (this.model.displayCount && tile.payload.userdata.hasCounts) {
             label.string = tile.payload.userdata.counts[index];
         }
 
@@ -79,7 +79,8 @@ export class IntervalTrackOverride extends IntervalTrack<IntervalTrackModelOverr
         label.cursorStyle = 'pointer';
 
         label.addInteractionListener('click', (e) => {
-            console.log('click'); // need to do something here...
+            const intervalId = tile.payload.userdata.ids[index];
+            console.log('click', intervalId); // need to do something here...
         });
 
         // change opacity on pointer hover to hint clickablity
