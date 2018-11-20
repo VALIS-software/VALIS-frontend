@@ -287,7 +287,9 @@ class TokenBox extends React.Component {
 
     if (!currQuery && openOnLoad) {
       setTimeout(() => {
-        this.autoComplete.current.focus();
+        if (this.autoComplete.current) {
+          this.autoComplete.current.focus();
+        }
       }, 100);
     }
   }
