@@ -1,5 +1,7 @@
 import { IntervalTrack, BlendMode, Tile, IntervalInstance, IntervalInstances, IntervalTilePayload, Rect, UsageCache, Object2D, Text, OpenSansRegular, Renderable, Animator } from "genome-visualizer";
 import { IntervalTrackModelOverride } from "./IntervalTrackModelOverride";
+import { EntityType } from "valis";
+import { App } from "../../App";
 
 type ColorPalette = {
     r: Array<number>,
@@ -80,7 +82,9 @@ export class IntervalTrackOverride extends IntervalTrack<IntervalTrackModelOverr
 
         label.addInteractionListener('click', (e) => {
             const intervalId = tile.payload.userdata.ids[index];
-            console.log('click', intervalId); // need to do something here...
+            const userFileID = this.model.query ? this.model.query.userFileID : null;
+            const entity = { id: intervalId, type: EntityType.INTERVAL, userFileID: userFileID };
+            App.displayEntityDetails(entity);
         });
 
         // change opacity on pointer hover to hint clickablity
