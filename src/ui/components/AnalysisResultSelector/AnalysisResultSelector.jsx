@@ -52,7 +52,7 @@ class AnalysisResultSelector extends React.Component {
           title={di.name}
           description={'Created by ' + di.author}
           onClick={() => this.handleOpen(di)}
-          key={di.name}
+          key={di.id}
         />
       );
     }

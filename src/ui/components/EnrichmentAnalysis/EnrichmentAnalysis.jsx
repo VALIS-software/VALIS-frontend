@@ -48,7 +48,7 @@ class EnrichmentAnalysis extends React.Component {
         this.props.appModel.viewModel.pushView(
           'Job Status',
           result.id,
-          <JobDetails appModel={this.appModel} job={result} resultFile="giggle_heat_map.pdf"/>
+          <JobDetails appModel={this.appModel} job={result}/>
         );
       });
     });

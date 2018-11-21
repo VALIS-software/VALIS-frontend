@@ -29,7 +29,17 @@ class JobDetails extends React.Component {
   }
 
   showResult = () => {
-    window.open(`${Canis.Api.apiUrl}/files/jobfiles/${this.state.job.id}/${this.props.resultFile}`);
+    // QYD: We pre-define some filenames to show as result, fallback to output.txt if not specified
+    const { job } = this.state;
+    let resultFile = 'output.txt';
+    if (job.jobType == 'spark_kaplan_meier') {
+      resultFile = 'survival_curve.pdf';
+    } else if (job.jobType == 'ld_expansion') {
+      resultFile = 'ld_expanded_results.vcf.gz';
+    } else if (job.jobType == 'giggle') {
+      resultFile = 'giggle_heat_map.pdf';
+    }
+    window.open(`${Canis.Api.apiUrl}/files/jobfiles/${job.id}/${resultFile}`);
   }
 
   render() {
@@ -42,7 +52,7 @@ class JobDetails extends React.Component {
         {this.state.job.result ? (<span>Result: <b>{this.state.job.result}</b></span>) : (<FlatButton onClick={this.refresh} style={{color: 'white'}} label="Refresh Status" icon={(<NavigationRefresh/>)} />) }
       </span>)
 
-      if (this.state.job.result === 'Success') {
+      if (this.state.job.status === 'DONE') {
         link = (<Collapsible onClick={() => this.showResult()} title={'View results'}  isLink={true}/>);
       }
     }
@@ -58,9 +68,8 @@ class JobDetails extends React.Component {
   }
 }
 JobDetails.propTypes = {
-  job: PropTypes.object,
-  appModel: PropTypes.object,
-  resultFile: PropTypes.string,
+  job: PropTypes.object.isRequired,
+  appModel: PropTypes.object.isRequired,
 };
 
 export default JobDetails;

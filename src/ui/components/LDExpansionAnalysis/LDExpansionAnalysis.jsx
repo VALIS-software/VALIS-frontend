@@ -67,7 +67,7 @@ class LDExpansionAnalysis extends React.Component {
         this.props.appModel.viewModel.pushView(
           'Job Status',
           job.id,
-          <JobDetails appModel={this.appModel} job={job} resultFile="ld_expanded_results.vcf.gz"/>
+          <JobDetails appModel={this.appModel} job={job}/>
         );
       });
     });
