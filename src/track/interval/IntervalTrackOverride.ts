@@ -7,7 +7,7 @@ type ColorPalette = {
     b: Array<number>,
 };
 
-// thanks to ShaderToy user 'blackjero' for his qunitic regression of popular scientific color palettes
+// thanks to ShaderToy user 'blackjero' for his quintic regression of popular scientific color palettes
 // https://www.shadertoy.com/view/XtGGzG
 const plasmaPalette: ColorPalette = {
     r: [+0.063861086, +1.992659096, -1.023901152, -0.490832805, +1.308442123, -0.914547012],
