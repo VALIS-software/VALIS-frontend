@@ -44,7 +44,7 @@ module.exports = (env) => {
 
 				// This enables us to copy index.html into dist/
 				{
-					test: /\.html/,
+					test: /\.html$/,
 					type: 'javascript/auto',
 					use: [{
 						loader: 'file-loader',
@@ -54,12 +54,17 @@ module.exports = (env) => {
 
 				// Copy assets into dist/static/
 				{
-					test: /\.json|\.png|\.gif|\.bin/,
-					type: 'javascript/auto',
+					test: /(\.json|\.png|\.gif|\.bin)$/,
 					use: [{
 						loader: 'file-loader',
 						options: { name: 'static/[path][name].[ext]' },
 					}],
+				},
+
+				// Import SVGs inline
+				{
+					test: /\.svg$/,
+					use: 'raw-loader',
 				},
 
 				// All files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'.
