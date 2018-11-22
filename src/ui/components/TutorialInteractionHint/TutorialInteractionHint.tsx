@@ -22,18 +22,6 @@ export class TutorialInteractionHint extends React.Component<Props, State>  {
     render() {
         return (
             <div style={{ position: 'absolute', top: 300, left: 300, zIndex: 100 }}>
-                {/* <div style={{
-                                width: 10,
-                                height: 10,
-                                background: '#81ce6e',
-                                border: '1px solid #40a973',
-                                borderRadius: 10,
-                                position: 'absolute',
-                                zIndex: 101,
-                                userSelect: 'none',
-                                top: -5,
-                                left: -5,
-                            }}></div> */}
                 <List
                     style={{
                         position: 'relative',
