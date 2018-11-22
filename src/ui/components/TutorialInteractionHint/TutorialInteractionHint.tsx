@@ -56,7 +56,6 @@ export default class TutorialInteractionHint extends React.Component<Props, Stat
                         !this.state.contentInDOM ? null : (
                             <List
                                 style={{
-                                    // position: 'relative',
                                     background: 'white',
                                     userSelect: 'none',
                                     borderRadius: 3,
