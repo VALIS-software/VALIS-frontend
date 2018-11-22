@@ -1,4 +1,4 @@
-import { GenomeVisualizer, Track, TrackModel, IntervalTrackModel, VariantTrackModel, TrackViewer, AnnotationTileLoader, IDataSource, Strand, IntervalTrack, GenomeVisualizerConfiguration } from "genome-visualizer";
+import { GenomeVisualizer, Track, TrackModel, IntervalTrackModel, VariantTrackModel, TrackViewer, AnnotationTileLoader, IDataSource, GenomeVisualizerConfiguration, Panel, GenomicLocation } from "genome-visualizer";
 
 import Dialog from "material-ui/Dialog";
 import FlatButton from "material-ui/FlatButton";
@@ -34,6 +34,7 @@ import { SiriusDataSource } from "./data-sources/SiriusDataSource";
 import { VariantTileLoaderOverride } from "./track/variant/VariantTileLoaderOverride";
 import { IntervalTileLoaderOverride } from "./track/interval/IntervalTileLoaderOverride";
 import { IntervalTrackOverride } from "./track/interval/IntervalTrackOverride";
+import TutorialInteractionHint from "./ui/components/TutorialInteractionHint/TutorialInteractionHint";
 const deepEqual = require('fast-deep-equal');
 
 // register custom / override tracks
@@ -72,7 +73,8 @@ type State = {
 
 	helpMessage: string,
 	helpMessageVisible: boolean,
-	showTutorial: boolean,
+	showTutorialDialog: boolean,
+	showTutorialInteractionHint: boolean,
 }
 
 enum SidebarViewType {
@@ -87,6 +89,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 	readonly HEADER_HEIGHT: number = 56;
 	readonly HEADER_MARGIN: number = 20;
+	readonly TUTORIAL_SHOW_SCROLL_HINT: boolean = true;
 
 	protected appModel: AppModel;
 	protected viewModel: ViewModel;
@@ -267,7 +270,8 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			appReady: false,
 			helpMessage: '',
 			helpMessageVisible: false,
-			showTutorial: true,
+			showTutorialDialog: true,
+			showTutorialInteractionHint: false,
 		};
 	}
 
@@ -507,6 +511,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 							zIndex: 1
 						}}
 					>Add Track</button>
+
 					{this.genomeVisualizer.reactRender({
 						width: this.state.viewerWidth,
 						height: this.state.viewerHeight,
@@ -516,6 +521,19 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 							marginTop: this.HEADER_MARGIN + 'px',
 						}
 					})}
+
+					<TutorialInteractionHint
+						show={this.state.showTutorialInteractionHint}
+						onRequestClose={() => this.setState({
+							showTutorialInteractionHint: false,
+						})}
+						style={{
+							position: 'absolute',
+							top: 300,
+							left: 300,
+							zIndex: 100,
+						}}
+					/>
 
 					<NavigationController
 						viewModel={this.viewModel}
@@ -535,7 +553,10 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						handleClose={() => this.setState({displayShareDialog: false})}
 					/>
 					<TutorialIndicator visible={this.state.helpMessageVisible} message={this.state.helpMessage}/>
-					<TutorialDialog appModel={this.appModel} viewModel={this.viewModel} open={this.state.showTutorial} closeClicked={() => this.setState({ showTutorial: false })}/>
+					<TutorialDialog appModel={this.appModel} viewModel={this.viewModel} open={this.state.showTutorialDialog} closeClicked={() => {
+						this.setState({ showTutorialDialog: false });
+						this.initializeScrollHint();
+					}}/>
 					<div className="page-buttons">
 						{errorButton}
 					</div>
@@ -571,6 +592,8 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		// if the persistent state hasn't changed for some time then update the url
 		let latestState = this.getPersistentState();
 		if (!deepEqual(latestState, this._currentPersistentState)) {
+			this.onStateChanged(this._currentPersistentState, latestState);
+
 			this._currentPersistentState = latestState;
 			this._lastStateChangeT_ms = t_ms;
 			this._urlStateNeedsUpdate = true;
@@ -763,6 +786,47 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		}
 
 		return ret;
+	}
+
+	protected onStateChanged(previousState: ValisBrowserConfig, currentState: ValisBrowserConfig) {
+		// hide the interaction hint if it's visible
+		if (this.state.showTutorialInteractionHint) {
+			let panelStateChanged = !deepEqual(previousState.genomeVisualizer.panels, currentState.genomeVisualizer.panels);
+			if (panelStateChanged) {
+				this.setState({
+					showTutorialInteractionHint: false,
+				});
+			}
+		}
+	}
+
+	protected getPanel0Location() {
+		let panels = this.genomeVisualizer.getPanels();
+		let panel0: Panel;
+		for (let panel of panels) {
+			panel0 = panel;
+			break;
+		}
+		return { contig: panel0.contig, x0: panel0.x0, x1: panel0.x1 };
+	}
+
+	protected _initializedScrollHint: boolean = false;
+	protected initializeScrollHint() {
+		if (this._initializedScrollHint) return;
+		this._initializedScrollHint = true;
+
+		const hintTimeout_ms = 3000;
+
+		let initialLocation: GenomicLocation = this.getPanel0Location();
+
+		setTimeout(() => {
+			let locationUnchanged = deepEqual(initialLocation, this.getPanel0Location());
+			if (locationUnchanged) {
+				this.setState({
+					showTutorialInteractionHint: true,
+				});
+			}
+		}, hintTimeout_ms);
 	}
 
 	// global app methods, assumes a single instance of App

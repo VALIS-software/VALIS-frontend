@@ -8,6 +8,7 @@ import SvgIcon from "material-ui/SvgIcon";
 type Props = {
     onRequestClose: () => void,
     show: boolean,
+    style?: React.CSSProperties,
 }
 
 type State = {
@@ -40,17 +41,13 @@ export default class TutorialInteractionHint extends React.Component<Props, Stat
     }
 
     render() {
-        console.log('hint render');
             return (
                 <div
                     style={{
-                        position: 'absolute',
-                        top: 300,
-                        left: 300,
-                        zIndex: 100,
                         opacity: this.props.show ? 1 : 0,
                         willChange: 'opacity',
                         transition: 'opacity 0.5s',
+                        ...this.props.style,
                     }}
 
                     onTransitionEnd={this.onTransitionEnd}
@@ -59,17 +56,16 @@ export default class TutorialInteractionHint extends React.Component<Props, Stat
                         !this.state.contentInDOM ? null : (
                             <List
                                 style={{
-                                    position: 'relative',
+                                    // position: 'relative',
                                     background: 'white',
                                     userSelect: 'none',
                                     borderRadius: 3,
-                                    zIndex: 102,
                                     boxShadow: '0px 3px 15px 3px #000000ab'
                                 }}
                             >
                                 <Subheader>
                                     Instructions
-                            <IconButton
+                                    <IconButton
                                         style={{
                                             position: 'absolute',
                                             right: 0,
