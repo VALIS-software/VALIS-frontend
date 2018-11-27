@@ -29,11 +29,14 @@ export class IntervalTileLoaderOverride extends IntervalTileLoader {
             // allocate interval buffer
             let intervals = new Float32Array(r.data.length * 2);
             let counts = hasCounts ? new Int32Array(r.data.length) : null;
+            let ids = new Array<string>(r.data.length);
 
             for (let i = 0; i < r.data.length; i++) {
                 let entry = r.data[i];
                 intervals[i * 2 + 0] = entry.start - 1;
                 intervals[i * 2 + 1] = entry.length;
+
+                ids[i] = r.data[i].id;
 
                 if (hasCounts) {
                     counts[i] = entry.info.count;
@@ -45,6 +48,7 @@ export class IntervalTileLoaderOverride extends IntervalTileLoader {
                 userdata: {
                     hasCounts: hasCounts,
                     counts: counts,
+                    ids: ids,
                 }
             };
         });

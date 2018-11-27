@@ -1,5 +1,9 @@
-import { IntervalTrack, BlendMode, Tile, IntervalInstance, IntervalInstances, IntervalTilePayload } from "genome-visualizer";
+import { IntervalTrack, BlendMode, Tile, IntervalInstance, IntervalInstances, IntervalTilePayload, Rect, UsageCache, Object2D, Text, OpenSansRegular, Renderable, Animator } from "genome-visualizer";
 import { IntervalTrackModelOverride } from "./IntervalTrackModelOverride";
+
+import { EntityType } from "valis";
+import { App } from "../../App";
+
 
 type ColorPalette = {
     r: Array<number>,
@@ -44,10 +48,13 @@ export class IntervalTrackOverride extends IntervalTrack<IntervalTrackModelOverr
 
     constructor(model: IntervalTrackModelOverride) {
         super(model);
+        // enable interactive interval labels
+        this.intervalLabels = true;
     }
 
-    protected displayTileNode(tile: Tile<any>, z: number, x0: number, span: number, continuousLodLevel: number) {
-        let node = super.displayTileNode(tile, z, x0, span, continuousLodLevel);
+    protected displayTileNode(tile: Tile<IntervalTilePayload>, z: number, continuousLodLevel: number) {
+        const span = this.x1 - this.x0;
+        let node = super.displayTileNode(tile, z, continuousLodLevel);
         node.borderStrength = 0.1;
 
         if (this.model.blendEnabled === false) {
@@ -56,6 +63,35 @@ export class IntervalTrackOverride extends IntervalTrack<IntervalTrackModelOverr
         }
 
         return node;
+    }
+
+    protected intervalLabelKey(tile: Tile<IntervalTilePayload>, index: number, startIndex: number, endIndex: number) {
+        let hasCount = this.model.displayCount && tile.payload.userdata.hasCounts;
+        let superKey = super.intervalLabelKey(tile, index, startIndex, endIndex);
+        return hasCount ? (superKey + '/' + tile.payload.userdata.counts[index]) : superKey;
+    }
+     protected createLabel(tile: Tile<IntervalTilePayload>, index: number) {
+        let label = super.createLabel(tile, index);
+         // set the label text to the interval count if it exists
+        if (this.model.displayCount && tile.payload.userdata.hasCounts) {
+            label.string = tile.payload.userdata.counts[index];
+        }
+         // add click interaction
+        label.cursorStyle = 'pointer';
+         label.addInteractionListener('click', (e) => {
+            const intervalId = tile.payload.userdata.ids[index];
+            const userFileID = this.model.query ? this.model.query.userFileID : null;
+            const entity = { id: intervalId, type: EntityType.INTERVAL, userFileID: userFileID };
+            App.displayEntityDetails(entity);
+        });
+         // change opacity on pointer hover to hint clickablity
+        label.addInteractionListener('pointerenter', (e) => {
+            Animator.springTo(label, { 'opacity': 0.1 }, 600);
+        });
+         label.addInteractionListener('pointerleave', (e) => {
+            Animator.springTo(label, { 'opacity': 0.0 }, 600);
+        });
+         return label;
     }
 
     protected createInstance(tilePayload: IntervalTilePayload, intervalIndex: number, relativeX: number, relativeW: number): IntervalInstance {
