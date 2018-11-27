@@ -4,7 +4,7 @@ import MenuItem from "material-ui/MenuItem";
 import RaisedButton from "material-ui/RaisedButton";
 
 import App from "../../../App";
-import Strand from "genomics-formats/dist/gff3/Strand";
+import Strand from "genomics-formats/lib/gff3/Strand";
 
 type Props = {};
 type State = {
@@ -13,7 +13,7 @@ type State = {
 
 /**
  * Minimal gene annotation filter selector
- * 
+ *
  * Currently only allows selecting strand, once we have more complex gene annotation queries we can add more options
  */
 export default class GeneAnnotationSelector extends React.Component<Props, State> {
