@@ -6,13 +6,7 @@
     - Fill out viewModel.js and appModel.ts functionality
         - Connect up TrackViewSettings
     - Migrate constants to src/Constants.ts
-    - Reorganise directories:
-        - models shouldn't be in /ui
-        - helpers shouldn't be in /ui
     - EventCreator -> node.js events
-
-- Tracks should never have pan-y
-    - Should adaptively display
 
 - Search box should be like code editor command, can also do things like [goto] or @ to go to specific regions
     - Needs to be super fast
@@ -66,8 +60,6 @@
 - Open source
 
 - State management, undo/redo
-
-- Publish GPUText on NPM
 
 - Support touch events (or use pointer events polyfill)
 - Support pinch + drag gestures when multiple pointers are down on a panel
