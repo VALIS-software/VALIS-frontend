@@ -70,13 +70,16 @@ export class IntervalTrackOverride extends IntervalTrack<IntervalTrackModelOverr
         let superKey = super.intervalLabelKey(tile, index, startIndex, endIndex);
         return hasCount ? (superKey + '/' + tile.payload.userdata.counts[index]) : superKey;
     }
-     protected createLabel(tile: Tile<IntervalTilePayload>, index: number) {
+
+    protected createLabel(tile: Tile<IntervalTilePayload>, index: number) {
         let label = super.createLabel(tile, index);
-         // set the label text to the interval count if it exists
+
+        // set the label text to the interval count if it exists
         if (this.model.displayCount && tile.payload.userdata.hasCounts) {
             label.string = tile.payload.userdata.counts[index];
         }
-         // add click interaction
+
+        // add click interaction
         label.cursorStyle = 'pointer';
          label.addInteractionListener('click', (e) => {
             const intervalId = tile.payload.userdata.ids[index];
@@ -84,14 +87,17 @@ export class IntervalTrackOverride extends IntervalTrack<IntervalTrackModelOverr
             const entity = { id: intervalId, type: EntityType.INTERVAL, userFileID: userFileID };
             App.displayEntityDetails(entity);
         });
-         // change opacity on pointer hover to hint clickablity
+
+        // change opacity on pointer hover to hint clickablity
         label.addInteractionListener('pointerenter', (e) => {
             Animator.springTo(label, { 'opacity': 0.1 }, 600);
         });
-         label.addInteractionListener('pointerleave', (e) => {
+
+        label.addInteractionListener('pointerleave', (e) => {
             Animator.springTo(label, { 'opacity': 0.0 }, 600);
         });
-         return label;
+
+        return label;
     }
 
     protected createInstance(tilePayload: IntervalTilePayload, intervalIndex: number, relativeX: number, relativeW: number): IntervalInstance {
