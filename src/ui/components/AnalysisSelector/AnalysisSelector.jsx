@@ -14,11 +14,6 @@ import "./AnalysisSelector.scss";
 
 const fixedAnalysisData = [
   {
-    "track_type": 'arithmetic',
-    "title": "Genomic Arithmetic",
-    "description": "Combine track regions, find regions that overlap, or subtract regions."
-  },
-  {
     "track_type": 'enrichment',
     "title": "Enrichment Analysis",
     "description": "Test regulatory annotations, pathways or gene-sets for enrichment against elements in a track."

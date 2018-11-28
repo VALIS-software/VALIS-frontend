@@ -3,17 +3,22 @@ import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import Slider from 'material-ui/Slider';
 import TextField from 'material-ui/TextField';
-import RaisedButton from 'material-ui/RaisedButton/RaisedButton';
 import SelectField from 'material-ui/SelectField';
+import FlatButton from 'material-ui/FlatButton';
 import MenuItem from 'material-ui/MenuItem';
-import { QueryBuilder } from 'valis'
+import { QueryBuilder } from 'valis';
+import TokenBox from '../Shared/TokenBox/TokenBox';
+import Dialog from "material-ui/Dialog";
+import NavigationClose from "material-ui/svg-icons/navigation/close";
+import NavigationArrowBack from "material-ui/svg-icons/navigation/arrow-back";
+import IconButton from "material-ui/IconButton";
 
 // Styles
 import './BooleanTrackSelector.scss';
 import { App } from '../../../App';
 
 const logmin = 0;
-const logmax = 5 * Math.pow(10, 6);
+const logmax = Math.pow(10, 6);
 const power = 12;
 
 function transform(value) {
@@ -34,12 +39,12 @@ class BooleanTrackSelector extends React.Component {
     }
     this.state = {
       title: '',
-      operatorValue: 0,
-      trackAValue: 0,
+      operatorValue: 1,
       trackBValue: 0,
       windowSize: 1000,
       availableOperators: [],
       availableAnnotationTracks: [],
+      query: null,
     };
   }
 
@@ -61,12 +66,6 @@ class BooleanTrackSelector extends React.Component {
     }
   }
 
-  handleUpdateTrackA = (event, index, value) => {
-    this.setState({
-      trackAValue: value,
-    });
-  }
-
   handleUpdateTrackB = (event, index, value) => {
     this.setState({
       trackBValue: value,
@@ -80,7 +79,7 @@ class BooleanTrackSelector extends React.Component {
   }
 
   getOutputQueryType() {
-      const queryA = this.state.availableAnnotationTracks[this.state.trackAValue];
+      const queryA = this.props.sourceQuery;
       const queryB = this.state.availableAnnotationTracks[this.state.trackBValue];
       const op = this.state.availableOperators[this.state.operatorValue];
       if (op === 'intersect' || op === 'window' || op === 'difference') {
@@ -139,6 +138,13 @@ class BooleanTrackSelector extends React.Component {
     });
   }
 
+  cancel = () => {
+    this.setState({
+      query: null,
+    });
+    this.props.onCancel();
+  }
+
   render() {
     const { availableOperators, operatorValue, availableAnnotationTracks } = this.state;
     const op = availableOperators[operatorValue];
@@ -152,64 +158,69 @@ class BooleanTrackSelector extends React.Component {
       const queryId = JSON.stringify(availableAnnotationTracks[i].query);
       availableAnnotationTrackItems.push(<MenuItem value={i} key={queryId} primaryText={queryTitle} />);
     }
-    return (
-      <div className="track-editor">
-        <TextField
-          value={this.state.title}
-          floatingLabelText="Track Title"
-          onChange={this.handleUpdateTitle}
-          errorText={!this.state.title ? 'This field is required' : ''}
-          fullWidth={true}
-        /><br /> <br />
-        <SelectField
-          value={this.state.operatorValue}
-          floatingLabelText="Operator"
-          onChange={this.handleUpdateOperator}
-          maxHeight={200}
-        >
-          {availableOperatorItems}
-        </SelectField><br /> <br />
-        <SelectField
-          value={this.state.trackAValue}
-          floatingLabelText="Source Track"
-          onChange={this.handleUpdateTrackA}
-          maxHeight={200}
-          fullWidth={true}
-        >
-          {availableAnnotationTrackItems}
-        </SelectField><br /> <br />
-        <SelectField
-          value={this.state.trackBValue}
-          floatingLabelText="Filter Track"
-          onChange={this.handleUpdateTrackB}
-          maxHeight={200}
-          fullWidth={true}
-        >
-          {availableAnnotationTrackItems}
-        </SelectField><br /> <br /> <br />
-        <div> {'Window Size  '} {this.state.windowSize} </div>
+
+    const currTitle = (<div>
+        {'Enter Intersection Query'}
+        <IconButton style={{position: 'absolute', right: 0, top: 0}} onClick={()=> { this.cancel()}}>
+            <NavigationClose />
+        </IconButton>
+    </div>);
+
+    const window =  op === 'window' ? (<div>
+        <div> {'Window Size (bp) '} {this.state.windowSize} </div>
         <Slider
           min={logmin}
           max={logmax}
           step={(logmax - logmin) / 100}
           value={reverse(this.state.windowSize)}
           onChange={this.handleUpdateWindowSize}
-          disabled={op !== 'window'}
         />
-        <RaisedButton
-          label="Create Track"
-          primary={true}
-          onClick={() => this.addQueryTrack()}
-          disabled={!this.state.title}
-          style={{ position: 'absolute', bottom: '10px', width: '90%' }}
-        />
-      </div>
+    </div>) : null;
+
+    const actions = [
+      <FlatButton
+        label={"Apply"}
+        primary={true}
+        disabled={!this.state.query}
+        onClick={() => { this.props.onFinish(this.state.query, op, this.state.windowSize)}}
+      />,
+      <FlatButton
+        label={"Cancel"}
+        primary={true}
+        onClick={() => { this.cancel()}}
+      />,
+    ]
+
+    return (
+        <Dialog
+          title={currTitle}
+          modal={false}
+          open={this.props.visible}
+          onRequestClose={() => { this.props.onCancel()}}
+          autoScrollBodyContent={true}
+          className='boolean-selector'
+          actions={actions}
+        ><TokenBox onFinishCallback={(query) => { this.setState({query: query})}} appModel={this.props.appModel} viewModel={this.props.appModel.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>
+        <SelectField
+          value={this.state.operatorValue}
+          floatingLabelText="Intersection Operator"
+          onChange={this.handleUpdateOperator}
+          maxHeight={200}
+        >
+          {availableOperatorItems}
+        </SelectField><br /> <br />
+        {window}
+        </Dialog>
     );
   }
 }
 
 BooleanTrackSelector.propTypes = {
   appModel: PropTypes.object,
+  sourceQuery: PropTypes.object,
+  visible: PropTypes.bool,
+  onCancel: PropTypes.func,
+  onFinish: PropTypes.func,
 };
 
 export default BooleanTrackSelector;

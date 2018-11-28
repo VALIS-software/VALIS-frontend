@@ -50,7 +50,7 @@ class NavigationController extends React.Component<Props, State> {
     return (
       <Drawer
         className="navigation-controller"
-        width={400}
+        width={450}
         openSecondary={true}
         open={visible && this.props.visible}
         containerStyle={this.props.style}

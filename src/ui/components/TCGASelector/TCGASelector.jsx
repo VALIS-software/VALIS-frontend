@@ -198,13 +198,6 @@ class TCGASelector extends React.Component {
           </div>{" "}
         </div>
         <TableView fetchId={this.state.filterState} fetch={fetchFunction} rowRenderer={this.renderRow} onClick={this.clickRow}/>
-        <RaisedButton
-          label="Add All"
-          primary={true}
-          onClick={() => this.addAll()}
-          disabled={this.state.disableAdd}
-          style={{ position: "absolute", bottom: "10px", marginLeft:"5%", width: "90%" }}
-        />
       </div>)
   }
 }

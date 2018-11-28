@@ -1,6 +1,26 @@
 @import "../../../variables.scss";
 $filter-header-height: 48px;
 
+
+
+@-webkit-keyframes pulse {
+  0% {
+    -webkit-box-shadow: 0 0 5px 0 $valis-theme-lightest;
+  }
+  70% {
+      -webkit-box-shadow: 0 0 5px 10px rgba(204,169,44, 0);
+  }
+  100% {
+      -webkit-box-shadow: 0 0 5px 0 rgba(204,169,44, 0);
+  }
+}
+
+.glow {
+	box-shadow: 0 0 2px $valis-theme-lightest;
+	-webkit-animation: pulse 2.5s infinite;
+	animation: pulse 2.5s infinite;
+}
+
 .search-results-view {
 	font-family: $font-stack;
 	.search-filters {

@@ -1,3 +1,15 @@
-.track-editor {
+@import "../../../variables.scss";
+
+.boolean-selector {
     padding: 15px;
+    .token-box {
+        #search-box {
+            color: black !important,
+        }
+
+        & > div > div > div > div {
+            color: darken($valis-theme-light, 50%) !important;
+        }
+
+    }
 }

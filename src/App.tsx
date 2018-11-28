@@ -1,4 +1,4 @@
-import { GenomeVisualizer, Track, TrackModel, IntervalTrackModel, VariantTrackModel, TrackViewer, AnnotationTileLoader, IDataSource, Strand, IntervalTrack, GenomeVisualizerConfiguration } from "genome-visualizer";
+import { GenomeVisualizer, Track, TrackModel, IntervalTrackModel, VariantTrackModel, TrackViewer, AnnotationTileLoader, IDataSource, GenomicLocation, Panel, GenomeVisualizerConfiguration } from "genome-visualizer";
 
 import Dialog from "material-ui/Dialog";
 import FlatButton from "material-ui/FlatButton";
@@ -31,6 +31,10 @@ import { SiriusDataSource } from "./data-sources/SiriusDataSource";
 import { VariantTileLoaderOverride } from "./track/variant/VariantTileLoaderOverride";
 import { IntervalTileLoaderOverride } from "./track/interval/IntervalTileLoaderOverride";
 import { IntervalTrackOverride } from "./track/interval/IntervalTrackOverride";
+import TutorialInteractionHint from "./ui/components/TutorialInteractionHint/TutorialInteractionHint";
+import TutorialDialog from "./ui/components/TutorialDialog/TutorialDialog";
+import TutorialIndicator from "./ui/components/Shared/TutorialIndicator/TutorialIndicator";
+
 const deepEqual = require('fast-deep-equal');
 
 // register custom / override tracks
@@ -62,6 +66,11 @@ type State = {
 
 	sidebarVisible: boolean,
 
+	helpMessage: string,
+	helpMessageVisible: boolean,
+	showTutorialDialog: boolean,
+	showTutorialInteractionHint: boolean,
+
 	appReady: boolean,
 }
 
@@ -73,6 +82,9 @@ enum SidebarViewType {
 
 type PersistentAppState = ValisBrowserConfig;
 
+
+const ADD_TRACK_TUTORIAL: string = 'Add GWAS, functional signal, or other data from a variety of sources.';
+
 export class App extends React.Component<Props, State> implements Persistable<PersistentAppState> {
 
 	readonly HEADER_HEIGHT: number = 56;
@@ -83,6 +95,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 	protected headerRef: Header;
 	protected genomeVisualizer: GenomeVisualizer;
+	readonly TUTORIAL_SHOW_SCROLL_HINT: boolean = true;
 
 	protected _currentPersistentState: PersistentAppState;
 
@@ -125,25 +138,8 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	
 			const ArrowElem = props.isExpanded ? ExpandLessIcon : ExpandMoreIcon;
 	
-			const expandArrow = (<ArrowElem
-				style={style}
-				viewBox={iconViewBoxSize}
-				color={iconColor}
-				hoverColor={iconHoverColor}
-			/>);
-			return (<div
-				style={{
-					position: 'relative',
-					width: '100%',
-					height: '100%',
-					color: '#e8e8e8',
-					backgroundColor: '#171615',
-					borderRadius: '8px 0px 0px 8px',
-					fontSize: '15px',
-					overflow: 'hidden',
-					userSelect: 'none',
-				}}
-			>
+			const headerClassName = this.trackHeaderClickable(props.model) ? 'track-header track-header-clickable' : 'track-header';
+			return (<div className={headerClassName}>
 				<div style={{
 					position: 'absolute',
 					width: '100%',
@@ -152,10 +148,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 					transform: 'translate(0, -50%)',
 				}}>
 					<div style={headerContainerStyle} onClick={() => { this.trackHeaderClicked(props.model); }}>
-						<IconButton onClick={(e: any) => { props.setExpanded(!props.isExpanded); e.stopPropagation(); }} color="inherit">
-							{expandArrow}
-						</IconButton>
-						<div>{props.model.name}</div>
+						<div className='track-title'>{props.model.name}</div>
 					</div>
 				</div>
 			</div>);
@@ -170,31 +163,26 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			initialBrowserConfiguration = {
 				allowNewPanels: true,
 				panels: [{
-					location: { contig: 'chr1', x0: 0, x1: 249e6 }
+					location: { contig: 'chrX', x0: 71094900, x1: 71104400 }
 				}],
 				tracks: [
 					{
 						type: 'sequence',
-						name: 'Sequence',
-						heightPx: 50,
+						name: 'GRCh38.p12',
+						heightPx: 34,
+					},
+					{
+						type: 'annotation',
+						name: 'ENSEMBL genes',
+						strand: null, // don't filter by strand
+						compact: true,
+						heightPx: 75,
 					},
 					{
 						type: 'variant',
-						name: 'Variants',
-						heightPx: 100,
+						name: 'dbSNP variants',
+						heightPx: 50,
 					},
-					{
-						type: 'annotation',
-						name: '→ Strand Genes',
-						strand: Strand.Positive,
-						heightPx: 100,
-					},
-					{
-						type: 'annotation',
-						name: '← Strand Genes',
-						strand: Strand.Negative,
-						heightPx: 100,
-					}
 				],
 			};
 		}
@@ -213,7 +201,15 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			userProfile: null,
 			sidebarVisible: false,
 			appReady: false,
+			helpMessage: '',
+			helpMessageVisible: false,
+			showTutorialDialog: false,
+			showTutorialInteractionHint: false,
 		};
+	}
+
+	trackHeaderClickable = (model: TrackModel) => {
+		return ((model.type === 'variant' || model.type === 'interval') && model.name !== 'dbSNP variants');
 	}
 
 	trackHeaderClicked = (model: TrackModel) => {
@@ -224,6 +220,18 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			const intervalTrackModel = model as IntervalTrackModel;
 			this.displaySearchResults(intervalTrackModel.query, model.name);
 		}
+	}
+
+	setHelpMessage(message: string) {
+		this.setState({
+			helpMessage: message,
+			helpMessageVisible: true,
+		});
+	}
+ 	clearHelpMessage() {
+		this.setState({
+			helpMessageVisible: false,
+		});
 	}
 
 	getPersistentState(): PersistentAppState {
@@ -423,6 +431,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						}}
 					/>
 					<button 
+					onMouseEnter={()=> App.setHelpMessage(ADD_TRACK_TUTORIAL)} onMouseLeave={() => App.clearHelpMessage()}
 					onClick={() => this.displayDatasetBrowser()}
 						style={{
 							position: 'absolute',
@@ -444,6 +453,19 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						}
 					})}
 
+					<TutorialInteractionHint
+						show={this.state.showTutorialInteractionHint}
+						onRequestClose={() => this.setState({
+							showTutorialInteractionHint: false,
+						})}
+						style={{
+							position: 'absolute',
+							top: 300,
+							left: 300,
+							zIndex: 100,
+						}}
+					/>
+
 					<NavigationController
 						viewModel={this.viewModel}
 						views={this.state.views}
@@ -461,7 +483,11 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 						open={this.state.displayShareDialog}
 						handleClose={() => this.setState({displayShareDialog: false})}
 					/>
-
+					<TutorialIndicator visible={this.state.helpMessageVisible} message={this.state.helpMessage}/>
+					<TutorialDialog appModel={this.appModel} viewModel={this.viewModel} open={this.state.showTutorialDialog} closeClicked={() => {
+						this.setState({ showTutorialDialog: false });
+						this.initializeScrollHint();
+					}}/>
 					<div className="page-buttons">
 						{errorButton}
 					</div>
@@ -527,6 +553,44 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			viewerHeight: this.canvasHeight(this.state.headerHeight),
 		});
 	}
+
+
+	protected onStateChanged(previousState: ValisBrowserConfig, currentState: ValisBrowserConfig) {
+		// hide the interaction hint if it's visible
+		if (this.state.showTutorialInteractionHint) {
+			let panelStateChanged = !deepEqual(previousState.genomeVisualizer.panels, currentState.genomeVisualizer.panels);
+			if (panelStateChanged) {
+				this.setState({
+					showTutorialInteractionHint: false,
+				});
+			}
+		}
+	}
+ 	protected getPanel0Location() {
+		let panels = this.genomeVisualizer.getPanels();
+		let panel0: Panel;
+		for (let panel of panels) {
+			panel0 = panel;
+			break;
+		}
+		return { contig: panel0.contig, x0: panel0.x0, x1: panel0.x1 };
+	}
+ 	protected _initializedScrollHint: boolean = false;
+	protected initializeScrollHint() {
+		if (this._initializedScrollHint) return;
+		this._initializedScrollHint = true;
+ 		const hintTimeout_ms = 3000;
+ 		let initialLocation: GenomicLocation = this.getPanel0Location();
+ 		setTimeout(() => {
+			let locationUnchanged = deepEqual(initialLocation, this.getPanel0Location());
+			if (locationUnchanged) {
+				this.setState({
+					showTutorialInteractionHint: true,
+				});
+			}
+		}, hintTimeout_ms);
+	}
+
 
 	protected onPopState = (e: PopStateEvent) => {
 		if (e.state != null) {
@@ -694,6 +758,13 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	static readonly canvasPixelRatio = window.devicePixelRatio || 1;
 
 	private static appInstance: App;
+
+	static setHelpMessage(message: string) {
+		this.appInstance.setHelpMessage(message);
+	}
+ 	static clearHelpMessage() {
+		this.appInstance.clearHelpMessage();
+	}
 
 	static getQueryTracks() : Map<string, any> {
 		return this.appInstance.getQueryTracks();
