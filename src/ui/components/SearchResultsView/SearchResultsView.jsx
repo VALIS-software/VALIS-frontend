@@ -8,7 +8,9 @@ import Pills from "../Shared/Pills/Pills";
 import UserFeedBackButton from '../Shared/UserFeedBackButton/UserFeedBackButton';
 import { List, InfiniteLoader, CellMeasurer, CellMeasurerCache } from 'react-virtualized';
 import { prettyPrint } from "../TraitDetails/TraitDetails";
-import { SiriusApi, QueryType } from 'valis';
+import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector";
+import TitleSelector from "../TitleSelector/TitleSelector";
+import { SiriusApi, QueryType, QueryBuilder } from 'valis';
 import QueryModel, { FilterType } from "../../../model/QueryModel";
 
 // Styles
@@ -19,7 +21,13 @@ import { App } from '../../../App';
 
 const FETCH_SIZE = 30;
 
+const ADD_TRACK_TUTORIAL = 'Add the results of this search as a new track in the genome browser';
+const INTERSECT_TUTORIAL = 'Limit search results to those within a certain distance of another search (e.g within 5kbp of a promoter)';
+const DOWNLOAD_TUTORIAL = 'Download the search results in BED format';
+const FILTER_TUTORIAL = 'Filter by dataset, chromosome, or mutation type';
+
 function truncate(str, length) {
+  if (!str) return '';
   return str.length <= length ? str : str.slice(0,length-1) + '...';
 }
 
@@ -36,6 +44,8 @@ class SearchResultsView extends React.Component {
       isLoading: true,
       results: [],
       query: props.query,
+      showIntersect: false,
+      showTitle: false,
     };
     this._cache = new CellMeasurerCache({
       fixedWidth: true,
@@ -44,21 +54,28 @@ class SearchResultsView extends React.Component {
   }
 
   componentDidMount() {
-    this.updateQueryModel();
+    this.updateQueryModel(this.state.query);
     const height = document.getElementById('search-results-view').clientHeight;
     this.setState({ height });
   }
 
-  addQueryAsTrack = () => {
-    let trackTitle = this.props.text;
-    const filterStr = this.queryModel.printFilters();
-    if (filterStr) trackTitle = [trackTitle, '|', filterStr].join(' ');
+  addQueryAsTrack = (title) => {
+    let trackTitle = title;
     const resultType = this.state.results[0].type;
     if (['SNP', 'variant'].indexOf(resultType) > -1) {
       App.addVariantTrack(trackTitle, this.queryModel.getFilteredQuery());
     } else {
       App.addIntervalTrack(trackTitle, this.queryModel.getFilteredQuery(), false);
     }
+    this.setState({
+      showTitle: false,
+    });
+  }
+
+  displayQueryTitle = () => {
+    this.setState({
+      showTitle: true,
+    });
   }
 
   downloadQuery = () => {
@@ -126,8 +143,8 @@ class SearchResultsView extends React.Component {
     });
   }
 
-  updateQueryModel = () => {
-    this.queryModel = new QueryModel(this.state.query);
+  updateQueryModel = (query) => {
+    this.queryModel = new QueryModel(query);
     this.setState({
       showFilters: false,
     });
@@ -142,6 +159,12 @@ class SearchResultsView extends React.Component {
 
   pushNewSearchResults = (queryModel) => {
     App.displaySearchResults(queryModel.getFilteredQuery(), this.props.text);
+  }
+
+  intersectAndAdd = () => {
+    this.setState({
+      showIntersect: true,
+    });
   }
 
   renderRightInfo = (result) => {
@@ -240,7 +263,7 @@ class SearchResultsView extends React.Component {
       key={key}
       rowIndex={index}
       parent={parent}>
-      <div className="search-result" onClick={openResult} style={
+      <div className="search-results-list" onClick={openResult} style={
         {
           ...style,
           height: (isGenomeNode ? 'auto' : 80)
@@ -248,6 +271,26 @@ class SearchResultsView extends React.Component {
         <div className="search-result-inner">{title}{description}</div>
       </div>
     </CellMeasurer >);
+  }
+
+  updateQueryIntersection = (queryB, op, windowSize) => {
+    const builder = new QueryBuilder(this.state.query);
+    if (op === 'intersect') {
+      builder.addArithmeticIntersect(queryB);
+    } else if (op === 'window') {
+      builder.addArithmeticWindow(queryB, windowSize);
+    } else if (op === 'union') {
+      builder.addArithmeticUnion(queryB);
+    } else if (op === 'difference') {
+      builder.addArithmeticDiff(queryB);
+    }
+    const query = builder.build();
+    this.setState({
+      showIntersect: false,
+      query: query,
+      results: [],
+    });
+    this.updateQueryModel(query);
   }
 
   render() {
@@ -302,19 +345,24 @@ class SearchResultsView extends React.Component {
 
     let addTrackButton = null;
     let exportTrackButton = null;
+    let refineButton = null;
     if (this.state.results && this.queryModel && this.queryModel.query && this.queryModel.query.type === QueryType.GENOME) {
-      addTrackButton = (<button className="float-left" onClick={this.addQueryAsTrack}>Add as Track</button>);
+      addTrackButton = (<button onMouseEnter={()=> App.setHelpMessage(ADD_TRACK_TUTORIAL)} onMouseLeave={() => App.clearHelpMessage()} className="float-left glow" onClick={()=> {this.setState({showTitle: true})}}>Add as Track</button>);
+      refineButton = (<button onMouseEnter={()=> App.setHelpMessage(INTERSECT_TUTORIAL)} onMouseLeave={() => App.clearHelpMessage()} className="float-left glow" onClick={this.intersectAndAdd}>Intersect</button>);
       const exportText = this.state.downloading ? 'Downloading...' : 'Export BED';
-      exportTrackButton = (<button className="float-left" onClick={this.downloadQuery}>{exportText}</button>);
+      exportTrackButton = (<button className="float-left" onMouseEnter={()=> App.setHelpMessage(DOWNLOAD_TUTORIAL)} onMouseLeave={() => App.clearHelpMessage()} onClick={this.downloadQuery}>{exportText}</button>);
     }
 
     return (
       <div id="search-results-view" className="search-results-view">
+        <BooleanTrackSelector onFinish={this.updateQueryIntersection} onCancel={() => this.setState({showIntersect: false})} visible={this.state.showIntersect} appModel={this.appModel} sourceQuery={this.state.query} />
+        <TitleSelector onFinish={(title) => { this.addQueryAsTrack(title)} } onCancel={() => this.setState({showTitle: false})} visible={this.state.showTitle} />
         <div className="search-filters">
           <div className="clearfix">
             {addTrackButton}
+            {refineButton}
             {exportTrackButton}
-            <button className="float-right" onClick={this.toggleFilters}>Filter</button>
+            <button className="float-right" onMouseEnter={()=> App.setHelpMessage(FILTER_TUTORIAL)} onMouseLeave={() => App.clearHelpMessage()} onClick={this.toggleFilters}>Filter</button>
           </div>
           <div>{filterMenu}</div>
         </div>
@@ -331,7 +379,7 @@ class SearchResultsView extends React.Component {
               rowCount={rowCount}
               rowHeight={this._cache.rowHeight}
               deferredMeasurementCache={this._cache}
-              width={400}
+              width={450}
               queryModel={this.state.queryModel}
               onRowsRendered={onRowsRendered}
               rowRenderer={this.rowRenderer}

@@ -1,19 +1,18 @@
 // Dependencies
-import Checkbox from "material-ui/Checkbox";
-import Divider from "material-ui/Divider";
+
+import TableView from '../Shared/TableView/TableView';
 import MenuItem from "material-ui/MenuItem";
-import RaisedButton from "material-ui/RaisedButton";
 import Select from 'react-select';
 import SelectField from "material-ui/SelectField";
 import * as React from "react";
 import { SiriusApi, QueryBuilder  } from 'valis';
 import App from "../../../App";
-import { CHROMOSOME_NAMES, DATA_SOURCE_ENCODE } from "../../helpers/constants";
+import { DATA_SOURCE_ENCODEbigwig } from "../../helpers/constants";
 import AppModel from "../../../model/AppModel";
 import ViewModel from "../../../model/ViewModel";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 // Styles
-import "./ENCODESelector.scss";
+import "./ENCODESignalSelector.scss";
 
 type Props = {
   biosample?: string,
@@ -23,6 +22,7 @@ type Props = {
 
 type State = {
   biosampleValue: any,
+  targetValue: any,
   error: any,
   genomeTypeValue: any,
   chromoNameValue: number,
@@ -30,15 +30,13 @@ type State = {
   availableTypes: Array<any>,
   availableBiosamples: Array<any>,
   availableTargets: Array<any>,
-  checked: Array<any>,
 }
 
-class ENCODESelector extends React.Component<Props, State> {
+class ENCODESignalSelector extends React.Component<Props, State> {
 
   appModel: AppModel;
   selectedBiosample: any;
   selectedType: any;
-  selectedTargets: any;
   availableChromoNames: Array<string>;
 
   constructor(props: Props) {
@@ -49,29 +47,39 @@ class ENCODESelector extends React.Component<Props, State> {
     this.state = {
       biosampleValue: props.biosample || null,
       genomeTypeValue: null,
+      targetValue: null,
       chromoNameValue: 0,
       maxnumber: 1000000,
       availableTypes: [],
       availableBiosamples: [],
       availableTargets: [],
-      checked: [],
       error: undefined,
     };
     this.selectedBiosample = props.biosample;
   }
 
+
+  renderRow = (signalTrack: any) => {
+    const desc = `${signalTrack.info.lab}, ${signalTrack.info.output_type}, ${signalTrack.info.experiment_target}`;
+    return (<div className='table-row'>
+        <div className='table-row-title'>{signalTrack.name} ({signalTrack.info.assay}) </div>
+        <div className='table-row-description'>{desc} </div>
+    </div>);
+  }
+
+  clickRow = (signalData: any) => {
+    const target = signalData.info.experiment_target;
+    let title = `${signalData.info.biosample}, ${signalData.info.assay} ${target}`;
+    if (!target) title = `${signalData.info.biosample}, ${signalData.info.assay}`;
+    App.addSignalTrack(title, signalData.info.fileurl);
+  }
+
   updateAvailableBiosamples = () => {
     const builder = new QueryBuilder();
     builder.newInfoQuery();
-    builder.filterSource(DATA_SOURCE_ENCODE);
-    builder.filterType('ENCODE_accession');
-    if (this.selectedType) {
-      builder.filterInfotypes(this.selectedType);
-    }
-    if (this.selectedTargets) {
-      builder.filterTargets(this.selectedTargets);
-    }
+    builder.filterSource(DATA_SOURCE_ENCODEbigwig);
     const infoQuery = builder.build();
+    infoQuery.filters['info.assembly'] = 'GRCh38';
     SiriusApi.getDistinctValues('info.biosample', infoQuery).then(data => {
       // Keep the current selection of biosample
       let newBiosampleValue = null;
@@ -100,13 +108,13 @@ class ENCODESelector extends React.Component<Props, State> {
   updateAvailableTypes = () => {
     const builder = new QueryBuilder();
     builder.newInfoQuery();
-    builder.filterSource(DATA_SOURCE_ENCODE);
-    builder.filterType("ENCODE_accession");
+    builder.filterSource(DATA_SOURCE_ENCODEbigwig);
     if (this.selectedBiosample) {
       builder.filterBiosample(this.selectedBiosample);
     }
     const infoQuery = builder.build();
-    SiriusApi.getDistinctValues("info.types", infoQuery).then(data => {
+    infoQuery.filters['info.assembly'] = 'GRCh38';
+    SiriusApi.getDistinctValues("info.assay", infoQuery).then(data => {
       // Keep the current selection of type
 
       this.setState({
@@ -119,36 +127,28 @@ class ENCODESelector extends React.Component<Props, State> {
   }
 
   updateAvailableTargets = () => {
-    if (this.selectedTargets) return;
     const builder = new QueryBuilder();
     builder.newInfoQuery();
-    builder.filterSource(DATA_SOURCE_ENCODE);
-    builder.filterType("ENCODE_accession");
+    builder.filterSource(DATA_SOURCE_ENCODEbigwig);
     if (this.selectedBiosample) {
       builder.filterBiosample(this.selectedBiosample);
     }
-    if (this.selectedType) {
-      builder.filterInfotypes(this.selectedType);
-    }
     const infoQuery = builder.build();
-    SiriusApi.getDistinctValues("info.targets", infoQuery).then(data => {
+    infoQuery.filters['info.assay'] = this.selectedType;
+    infoQuery.filters['info.assembly'] = 'GRCh38';
+    SiriusApi.getDistinctValues("info.experiment_target", infoQuery).then(data => {
       // Keep the current selection of targets
-      const newChecked = new Array(data.length).fill(false);
-      for (let i = 0; i < this.state.checked.length; i++) {
-        if (this.state.checked[0]) {
-          const checkedTarget = this.state.availableTargets[i];
-          const newCheckedIndex = data.indexOf(checkedTarget);
-          if (newCheckedIndex > 0) {
-            newChecked[newCheckedIndex] = true;
-          }
-        }
-      }
       this.setState({
         availableTargets: data,
-        checked: newChecked
       });
     }, err => {
       this.appModel.error(this, err);
+    });
+  }
+
+  handleUpdateTarget = (value: any) => {
+    this.setState({
+      targetValue: value,
     });
   }
 
@@ -165,7 +165,7 @@ class ENCODESelector extends React.Component<Props, State> {
     this.updateAvailableTypes();
   }
 
-  handleUpdateType = (event: any, index: number, value: any) => {
+  handleUpdateAssayType = (event: any, index: number, value: any) => {
     this.setState({
       genomeTypeValue: value,
       availableTargets: [],
@@ -177,67 +177,11 @@ class ENCODESelector extends React.Component<Props, State> {
     this.updateAvailableTargets();
   }
 
-  handleCheckBox = (index: number) => {
-    const newChecked = this.state.checked;
-    newChecked[index] = !newChecked[index];
-    this.setState({
-      checked: newChecked
-    });
-    // Update the available biosamples and types
-    this.selectedTargets = [];
-    for (let i = 0; i < this.state.checked.length; i++) {
-      if (this.state.checked[i]) {
-        this.selectedTargets.push(this.state.availableTargets[i]);
-      }
-    }
-  }
-
-  handleUpdateChromName = (event: any, index: number, value: any) => {
-    this.setState({
-      chromoNameValue: value
-    });
-  }
-
   buildTitle() {
     const biosample = this.state.biosampleValue;
+    const target = this.state.targetValue;
     const genomeType = this.state.availableTypes[this.state.genomeTypeValue];
-    const targets = [];
-    for (let i = 0; i < this.state.checked.length; i++) {
-      if (this.state.checked[i] === true) {
-        targets.push(this.state.availableTargets[i]);
-      }
-    }
-    return `${biosample} ${genomeType}` + (targets.length ? ` (${targets.join(',')})` : '');
-  }
-
-  buildQuery = () => {
-    const builder = new QueryBuilder();
-    builder.newGenomeQuery();
-    if (this.state.chromoNameValue > 0) {
-      const contig = this.availableChromoNames[this.state.chromoNameValue];
-      builder.filterContig(contig);
-    }
-    const genomeType = this.state.availableTypes[this.state.genomeTypeValue];
-    builder.filterType(genomeType);
-    const biosample = this.state.biosampleValue;
-    builder.filterBiosample(biosample);
-    const targets = [];
-    for (let i = 0; i < this.state.checked.length; i++) {
-      if (this.state.checked[i] === true) {
-        targets.push(this.state.availableTargets[i]);
-      }
-    }
-    builder.filterTargets(targets);
-    builder.setLimit(this.state.maxnumber);
-    const genomeQuery = builder.build();
-    console.log(genomeQuery);
-    return genomeQuery;
-  }
-
-  addQueryTrack = () => {
-    const query = this.buildQuery();
-    this.appModel.trackMixPanel("Add ENCODE Track", { "query": query });
-    App.addIntervalTrack(this.buildTitle(), query);
+    return `${biosample} ${genomeType} (${target})`;
   }
 
   componentDidMount() {
@@ -249,6 +193,24 @@ class ENCODESelector extends React.Component<Props, State> {
     this.handleUpdateBiosample(nextProps.biosample);
   }
 
+  buildSignalQuery = () => {
+    const builder = new QueryBuilder();
+    builder.newInfoQuery();
+    builder.filterSource(DATA_SOURCE_ENCODEbigwig);
+    if (this.selectedBiosample) {
+      builder.filterBiosample(this.selectedBiosample);
+    }
+    const infoQuery = builder.build();
+    if (this.selectedType) infoQuery.filters['info.assay'] = this.selectedType;
+    if (this.state.targetValue) infoQuery.filters['info.experiment_target'] = this.state.targetValue;
+    infoQuery.filters['info.assembly'] = 'GRCh38';
+    return infoQuery;
+  }
+
+  fetchFunction = (start: number, end: number)  => {
+    return SiriusApi.getQueryResults(this.buildSignalQuery(), true, start, end);
+}
+
   render() {
     if (this.state.error) {
       return (<ErrorDetails error={this.state.error} />);
@@ -257,7 +219,6 @@ class ENCODESelector extends React.Component<Props, State> {
       availableTypes,
       availableBiosamples,
       availableTargets,
-      checked
     } = this.state;
     const genomeTypeItems = [<MenuItem value={null} primaryText="" key={-1} />];
     for (let i = 0; i < availableTypes.length; i++) {
@@ -271,61 +232,61 @@ class ENCODESelector extends React.Component<Props, State> {
         { label: availableBiosamples[i], value: availableBiosamples[i]}
       );
     }
-    const targetCheckboxes = [];
-    for (let i = 0; i < availableTargets.length; i++) {
-      targetCheckboxes.push(
-        <Checkbox
-          key={i}
-          label={availableTargets[i]}
-          checked={checked[i]}
-          onCheck={() => this.handleCheckBox(i)}
-        />
-      );
-    }
     const currentValue = this.state.biosampleValue ? {
       label: this.state.biosampleValue,
       value: this.state.biosampleValue,
     } : null;
 
+
+    const targetItems = [];
+    for (let i = 0; i < availableTargets.length; i++) {
+      targetItems.push(
+        { label: availableTargets[i], value: availableTargets[i]}
+      );
+    }
+    const currentTargetValue = this.state.targetValue ? {
+      label: this.state.targetValue,
+      value: this.state.targetValue,
+    } : null;
+
+    const fetchFunction = this.fetchFunction.bind(this);
+    const filterState = `${this.state.biosampleValue}|${this.state.targetValue}|${this.state.genomeTypeValue}`;
+
     return (
-      <div className="track-editor">
+      <div className="signal-track-editor">
+        <div style={{padding: 15}}>
         <Select
           value={currentValue}
           onChange={(d: any) => this.handleUpdateBiosample(d.value)}
           options={biosampleItems}
           placeholder='Choose a cell type'
-        />{" "}
-        <br />
+        />
         {
-          this.state.availableTypes.length ? (<SelectField
+          this.state.availableTypes.length > 1 ? (<SelectField
             value={this.state.genomeTypeValue}
-            floatingLabelText="Type"
-            onChange={this.handleUpdateType}
+            floatingLabelText="Choose Assay"
+            onChange={this.handleUpdateAssayType}
             maxHeight={200}
             errorText={this.state.genomeTypeValue === null ? "Pick one" : null}
           >
             {genomeTypeItems}
           </SelectField>) : null
         }
+        {
+          this.state.availableTargets.length > 1 ? (<Select
+            value={currentTargetValue}
+            onChange={(d: any) => this.handleUpdateTarget(d.value)}
+            options={targetItems}
+            placeholder='Choose experiment target'
+          />) : null
+        }
         {" "}
-        <br /> <br />
-        {targetCheckboxes.length > 0 && (
-          <div>
-            <div className="item-header"> Target </div>
-            <Divider />
-            <div className="target-selections">{targetCheckboxes}</div>
-          </div>
-        )}
-        <RaisedButton
-          label="Add Track"
-          primary={true}
-          onClick={() => this.addQueryTrack()}
-          disabled={this.state.biosampleValue === null || this.state.genomeTypeValue === null}
-          style={{ position: "absolute", bottom: "10px", width: "90%" }}
-        />
+        <br/>
+        </div>
+        <TableView fetchId={filterState} fetch={fetchFunction} rowRenderer={this.renderRow} onClick={this.clickRow}/>
       </div>
     );
   }
 }
 
-export default ENCODESelector;
+export default ENCODESignalSelector;

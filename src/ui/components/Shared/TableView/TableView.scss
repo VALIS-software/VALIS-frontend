@@ -2,18 +2,20 @@
 
 .table-view {
 	.table-item {
+		color: $valis-theme-dark-gray;
+		font-weight: bold;
 		.table-row {
 			padding: 32px;
 			height: auto;
 			&:hover {
-				background-color: lighten($valis-theme-light-green, 10%);
+				background-color: $valis-theme-light;
 				cursor: pointer;
 			}
 			
 		}
 
 		&:nth-child(even) {
-			background-color: lighten(lightgray, 15%);
+			background-color: lighten(lightgray, 14%);
 		}
 
 		&:nth-child(odd) {
@@ -22,7 +24,8 @@
 
 		.table-row-description {
 			font-size: 14px;
-			color: darkgray;
+			font-weight: 100;
+			color: lighten($valis-theme-dark-gray, 10%);
 		}
 	}
 

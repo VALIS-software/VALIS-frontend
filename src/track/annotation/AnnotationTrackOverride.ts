@@ -16,7 +16,7 @@ export class AnnotationTrackOverride extends AnnotationTrack {
         // 2. Open gene details when clicking on gene, transcript details when clicking transcript, exon details when clicking exon
         const builder = new QueryBuilder();
         builder.newGenomeQuery();
-        builder.filterName(gene.name.toUpperCase());
+        builder.filterName(gene.name);
         builder.setLimit(1);
         const geneQuery = builder.build();
         SiriusApi.getQueryResults(geneQuery, false).then(results => {

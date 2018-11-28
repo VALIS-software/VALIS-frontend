@@ -1,0 +1,34 @@
+@import "../../../variables.scss";
+
+.tutorial-dialog {
+    .token-box {
+        #search-box {
+            color: black !important,
+        }
+
+        & > div > div > div > div {
+            color: darken($valis-theme-light, 50%) !important;
+        }
+
+    }
+
+
+    @-webkit-keyframes pulse {
+    0% {
+        -webkit-box-shadow: 0 0 5px 0 $valis-theme-lightest;
+    }
+    70% {
+        -webkit-box-shadow: 0 0 10px 4px lighten($valis-theme-medium-blue, 40%);
+    }
+    100% {
+        -webkit-box-shadow: 0 0 10px 0 lighten($valis-theme-medium-blue, 40%);
+    }
+    }
+
+    .glow {
+        box-shadow: 0 0 2px $valis-theme-lightest;
+        -webkit-animation: pulse 1.5s infinite;
+        animation: pulse 1.5s infinite;
+    }
+
+}

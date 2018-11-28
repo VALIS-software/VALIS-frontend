@@ -4,12 +4,10 @@
     border-radius: 0px;
     margin: 0px;
     padding: 10px;
-    border: none;
     width: 100%;
-    background-color: $valis-theme-lightest;
 
     .option-title {
-        color: $valis-theme-dark-blue;
+        color: $valis-theme-dark-gray;
         font-size: 16px;
         font-weight: bold;
         padding: 2px;
@@ -17,12 +15,18 @@
     }
     .option-description {
         font-family: $valis-body-font;
-        color: $valis-theme-dark-gray;
+        color: lighten($valis-theme-dark-gray, 10%);
         font-size: 14px;
         padding: 12px;
         text-align: center;
     }
-    border-top: 1px solid $valis-theme-light;
+    &:nth-child(even) {
+        background-color: lighten(lightgray, 14%);
+    }
+
+    &:nth-child(odd) {
+        background-color: lighten(lightgray, 17%);
+    }
 }
 .data-list-item:hover {
     background-color: $valis-theme-light;

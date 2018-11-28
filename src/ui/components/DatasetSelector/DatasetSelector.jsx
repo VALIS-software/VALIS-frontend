@@ -1,3 +1,4 @@
+
 // Dependencies
 import * as React from "react";
 import * as PropTypes from "prop-types";
@@ -6,6 +7,7 @@ import GWASSelector from "../GWASSelector/GWASSelector";
 import GenomeSelector from "../GenomeSelector/GenomeSelector";
 import UserFilesPanel from "../UserFilesPanel/UserFilesPanel";
 import ENCODESelector from "../ENCODESelector/ENCODESelector";
+import ENCODESignalSelector from "../ENCODESignalSelector/ENCODESignalSelector";
 import RemoteSelector from "../RemoteSelector/RemoteSelector";
 import ImmuneAtlasSelector from "../ImmuneAtlasSelector/ImmuneAtlasSelector";
 import RoadmapSelector from "../RoadmapSelector/RoadmapSelector";
@@ -23,6 +25,7 @@ const TRACK_TYPE_TCGA = 'track_type_tcga';
 const TRACK_TYPE_EQTL = 'track_type_eqtl';
 const TRACK_TYPE_EXAC = 'track_type_exac';
 const TRACK_TYPE_ENCODE = 'track_type_encode';
+const TRACK_TYPE_ENCODE_SIGNAL = 'track_type_encode_signal';
 const TRACK_TYPE_ROADMAP = 'track_type_roadmap';
 const TRACK_TYPE_BOOLEAN = 'track_type_boolean';
 const TRACK_TYPE_SEQUENCE = 'track_type_sequence';
@@ -36,19 +39,9 @@ import GeneAnnotationSelector from "../GeneAnnotationSelector/GeneAnnotationSele
 
 const fixedTrackData = [
   {
-    "track_type": TRACK_TYPE_USER_FILE,
-    "title": "Uploaded files",
-    "description": "Browse, manage, or upload custom files in VCF, 23andMe or BED format."
-  },
-  {
-    "track_type": TRACK_TYPE_REMOTE_FILE,
-    "title": "Remote files",
-    "description": "Access files stored on a remote server (FTP) in Bigwig format."
-  },
-  {
-    "track_type": TRACK_TYPE_GWAS,
-    "title": "Genome Wide Associations",
-    "description": "Add variants related to traits or diseases from the EMBL-EBI GWAS database."
+    "track_type": TRACK_TYPE_ENCODE_SIGNAL,
+    "title": "ENCODE Functional Tracks",
+    "description": "View bigwig signal for ENCODE experiments."
   },
   {
     "track_type": TRACK_TYPE_ENCODE,
@@ -61,14 +54,19 @@ const fixedTrackData = [
     "description": "ChromHMM annotations for 127 reference epigenomes."
   },
   {
-    "track_type": TRACK_TYPE_IMMUNE_ATLAS,
-    "title": "Immune Atlas",
-    "description": "Landscape of stimulation-responsive chromatin across human immune cells. ATAC data for 25 cell types."
+    "track_type": TRACK_TYPE_REMOTE_FILE,
+    "title": "Remote hosted Bigwig",
+    "description": "Add a bigwig file by specifying an FTP or HTTP address."
   },
   {
-    "track_type": TRACK_TYPE_EXAC,
-    "title": "ExAC Variants",
-    "description": "Search labeled variants of over 60k exomes from the Exome Aggregation Consortium."
+    "track_type": TRACK_TYPE_USER_FILE,
+    "title": "Uploaded files",
+    "description": "Browse, manage, or upload custom files in VCF, 23andMe or BED format."
+  },
+  {
+    "track_type": TRACK_TYPE_GWAS,
+    "title": "Genome Wide Associations",
+    "description": "Add variants related to traits or diseases from the EMBL-EBI GWAS database."
   },
   {
     "track_type": TRACK_TYPE_EQTL,
@@ -76,20 +74,20 @@ const fixedTrackData = [
     "description": "Quantitative trait loci from 53 human tissues curated from the Genotype-Tissue Expression project."
   },
   {
+    "track_type": TRACK_TYPE_EXAC,
+    "title": "ExAC Variants",
+    "description": "Search labeled variants of over 60k exomes from the Exome Aggregation Consortium."
+  },
+  {
+    "track_type": TRACK_TYPE_IMMUNE_ATLAS,
+    "title": "Immune Atlas",
+    "description": "Landscape of stimulation-responsive chromatin across human immune cells. ATAC data for 25 cell types."
+  },
+  {
     "track_type": TRACK_TYPE_TCGA,
     "title": "TCGA Variants",
     "description": "Search germline and somatic mutations from The Cancer Genome Atlas."
   },
-  {
-    "track_type": TRACK_TYPE_SEQUENCE,
-    "title": "Sequence",
-    "description": "Nucleobase sequence of the forward strand (ENSEMBL)."
-  },
-  {
-    "track_type": TRACK_TYPE_GENES,
-    "title": "Gene Annotations",
-    "description": "Filterable gene annotation track. (ENSEMBL)"
-  }
 ];
 
 class DatasetSelector extends React.Component {
@@ -120,6 +118,12 @@ class DatasetSelector extends React.Component {
         "GWAS Track",
         null,
         <GWASSelector appModel={this.appModel} viewModel={this.viewModel} />
+      );
+    } else if (trackType === TRACK_TYPE_ENCODE_SIGNAL) {
+      this.viewModel.pushView(
+        "ENCODE Signal",
+        null,
+        <ENCODESignalSelector appModel={this.appModel} viewModel={this.viewModel} />
       );
     } else if (trackType === TRACK_TYPE_ENCODE) {
       this.viewModel.pushView(
@@ -209,8 +213,8 @@ class DatasetSelector extends React.Component {
         />
       );
     }
-    const dialog = this.state.showUpgrade ? (<UpgradeDialog open={true}/>) : (<span/>);
-    return <div className="dataset-selector">{dialog}{dataInfoBlocks}</div>;
+    const dialog = this.state.showUpgrade ? (<UpgradeDialog open={true}/>) : null;
+    return (<div className="dataset-selector">{dataInfoBlocks}</div>);
   }
 }
 

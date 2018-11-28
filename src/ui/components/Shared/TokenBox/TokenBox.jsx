@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { buildQuery } from './EncodeQueryBuilder';
 import * as PropTypes from 'prop-types';
 import Chip from 'material-ui/Chip';
 import AutoComplete from 'material-ui/AutoComplete';
@@ -6,21 +7,25 @@ import IconButton from 'material-ui/IconButton';
 import ActionSearch from 'material-ui/svg-icons/action/search';
 import SvgClose from "material-ui/svg-icons/navigation/close";
 import CircularProgress from "material-ui/CircularProgress";
+import TutorialIndicator from "../TutorialIndicator/TutorialIndicator";
 import ErrorDetails from "../ErrorDetails/ErrorDetails";
 import { SiriusApi, QueryBuilder, buildQueryParser } from 'valis';
+import { buildEncodeQueryParser } from './EncodeQueryParser';
 import { App } from '../../../../App';
 
 import './TokenBox.scss';
 
 const DEBOUNCE_TIME = 200;
 
+
 class TokenBox extends React.Component {
   constructor(props) {
     super(props);
     this.autoComplete = React.createRef();
+    this.tokenDiv = React.createRef();
     this.appModel = props.appModel;
 
-    this.queryParser = buildQueryParser(this.getSuggestionHandlers());
+    this.queryParser = buildEncodeQueryParser(this.getSuggestionHandlers(), true);
 
     this.timeOfLastRequest = null;
     this.lastRequest = null;
@@ -31,11 +36,32 @@ class TokenBox extends React.Component {
       open: false,
       searchString: '',
       query: null,
+      inputHidden: false,
     };
   }
 
+  resetState() {
+    this.setState({
+      tokens: [],
+      dataSource: [],
+      open: false,
+      searchString: '',
+      query: null,
+      inputHidden: false,
+    });
+  }
+
   componentDidMount() {
+    if (this.props.demo) {
+      setTimeout(() => {
+        this.runExample(this.props.demo);
+      }, 1500);
+    }
     this.getSuggestions([], false);
+  }
+
+  componentWillUnmount() {
+    this.resetState();
   }
 
   perfectMatch(dataSource, value) {
@@ -59,8 +85,8 @@ class TokenBox extends React.Component {
   clearSearchText() {
     this.autoComplete.current.setState({ searchText: '' });
     this.setState({
-      searchString: ''
-    })
+      searchString: '',
+    });
   }
 
   handleKeyDown = (evt) => {
@@ -105,7 +131,8 @@ class TokenBox extends React.Component {
     }
   };
 
-  handleSelectItem = (chosenRequest, index) => {
+  handleSelectItem = (chosenRequest, index, force=false) => {
+    if (this.props.demo && !force) return;
     // handle enter key event
     if (index === -1) {
       this.runCurrentSearch();
@@ -146,12 +173,14 @@ class TokenBox extends React.Component {
       const newString = this.buildQueryStringFromTokens(newTokens);
       // if query is ready, run search
       const testParse = this.queryParser.getSuggestions(newString);
-      if (testParse.query !== null) {
+      const currQuery = buildQuery(testParse.tokens);
+      if (currQuery !== null) {
         this.setState({
-          query: testParse.query
+          query: currQuery,
+          dataSource: []
         })
         // choose to display single result details or display search results
-        this.displaySearchResults(newTokens, testParse.query, true);
+        this.displaySearchResults(newTokens, currQuery, true);
       } else {
         this.getSuggestions(newTokens, true);
       }
@@ -176,7 +205,7 @@ class TokenBox extends React.Component {
 
   getSuggestionHandlers() {
     const suggestionMap = new Map();
-    ['TRAIT', 'GENE', 'CELL_TYPE_PROMOTER', 'CELL_TYPE_ENHANCER', 'TUMOR_SITE', 'TARGET', 'PATHWAY'].forEach(rule => {
+    ['TRAIT', 'GENE', 'CELL_TYPE', 'TUMOR_SITE', 'TARGET', 'PATHWAY', 'CELL_TYPE_EQTL', 'CELL_TYPE_PROMOTER', 'CELL_TYPE_ENHANCER'].forEach(rule => {
       suggestionMap.set(rule, (searchText, maxResults) => {
         return this.getThrottledResultPromise(rule, searchText, maxResults).then(d=> {
           return d;
@@ -193,7 +222,7 @@ class TokenBox extends React.Component {
     return pieces.join(' ');
   }
 
-  buildResultTitleFromTokens(tokens, searchString) {
+  buildResultTitleFromTokens(tokens) {
     let prefix = '';
     if (tokens && tokens.length) {
       if (tokens[0].value === 'eqtl') {
@@ -204,9 +233,10 @@ class TokenBox extends React.Component {
         prefix = 'variants→'
       }
     }
-    if (!tokens || tokens.length === 0) return prefix + searchString;
+    if (!tokens || tokens.length === 0) return prefi;
     let quotedStrs = tokens.filter(token => token.quoted);
-    let value = (quotedStrs.length > 0) ? quotedStrs.map(x => x.value).join(' | ') : searchString;
+    let value = (quotedStrs.length > 0) ? quotedStrs.map(x => x.value).join(' | ') : null;
+    if (!value) value = tokens[tokens.length - 1].value;
     value = value.length > 18 ? value.slice(0, 15) + '...' : value;
     return prefix + value;
   }
@@ -219,7 +249,6 @@ class TokenBox extends React.Component {
     const searchText = this.buildQueryStringFromTokens(tokens);
     this.searchText = searchText;
     const result = this.queryParser.getSuggestions(searchText);
-
     this.appModel.pushLoading();
     result.suggestions.then(results => {
       if (this.searchText !== searchText) return;
@@ -249,16 +278,18 @@ class TokenBox extends React.Component {
       }, err => {
       this.appModel.popLoading();
     });
-
+    const currQuery = buildQuery(result.tokens);
     this.setState({
-      query: result.query,
+      query: currQuery,
       quoteInput: result.isQuoted,
       open: openOnLoad,
     });
 
-    if (!result.query && openOnLoad) {
+    if (!currQuery && openOnLoad) {
       setTimeout(() => {
-        this.autoComplete.current.focus();
+        if (this.autoComplete.current) {
+          this.autoComplete.current.focus();
+        }
       }, 100);
     }
   }
@@ -299,6 +330,16 @@ class TokenBox extends React.Component {
   }
 
   displaySearchResults = (tokens, query, fromSelect = false) => {
+    if (this.props.demo) {
+      if (this.props.onFinishDemo) this.props.onFinishDemo();
+    }
+    if (this.props.onFinishCallback) {
+      this.setState({
+        inputHidden: true,
+      });
+      this.props.onFinishCallback(query);
+      return;
+    }
     // track queryStr
     const queryStr = this.buildQueryStringFromTokens(tokens);
     this.appModel.trackMixPanel("Run search", { 'queryStr': queryStr });
@@ -364,14 +405,16 @@ class TokenBox extends React.Component {
           this.pushSearchResultsView(tokens, traitQuery);
         }
       });
-    } else {
+    } else if (query) {
       this.pushSearchResultsView(tokens, query);
     }
+    this.setState({
+      inputHidden: true,
+    });
   }
 
-
   pushSearchResultsView = (tokens, query) => {
-    let queryTitle = this.buildResultTitleFromTokens(tokens, '');
+    let queryTitle = this.buildResultTitleFromTokens(tokens);
     App.displaySearchResults(query, queryTitle);
   }
 
@@ -382,6 +425,7 @@ class TokenBox extends React.Component {
       searchString: '',
       open: false,
       query: null,
+      inputHidden: false,
     });
     this.autoComplete.current.setState({ searchText: '' });
     this.getSuggestions([]);
@@ -405,11 +449,13 @@ class TokenBox extends React.Component {
     // remove tokens after clicked one
     this.setState({
       tokens: newTokens,
+      inputHidden: false,
       searchString: clickedToken.value
     })
     // convert the last token into search text
     this.autoComplete.current.setState({ searchText: clickedToken.value });
     this.autoComplete.current.focus();
+
     // the fakeToken here is a trick to get suggestions for the current editing token
     const fakeToken = {
       value: clickedToken.value.slice(0, -1),
@@ -424,7 +470,9 @@ class TokenBox extends React.Component {
     // remove tokens after clicked one
     this.setState({
       tokens: newTokens,
-      // dataSource: []
+      inputHidden: false,
+      query: null,
+      dataSource: []
     })
     this.clearSearchText();
     this.getSuggestions(newTokens, true);
@@ -432,7 +480,6 @@ class TokenBox extends React.Component {
 
   renderTokenChips() {
     const {tokens} = this.state;
-    if (tokens.length === 0) return [];
     const tokenChips = [];
     for (const i = 0; i < tokens.length; i++) {
       const token = tokens[i];
@@ -442,11 +489,22 @@ class TokenBox extends React.Component {
       const clickRemoveToken = () => {
         this.handleRemoveToken(i);
       }
-      tokenChips.push(<li key={i} className="token">
-        <Chip onClick={clickToken} onRequestDelete={clickRemoveToken}> {token.value} </Chip>
-      </li>);
+
+      if (this.props.demo) {
+          tokenChips.push(<li key={i} className="token">
+            <Chip> {token.value} </Chip>
+          </li>);
+      } else {
+        tokenChips.push(<li key={i} className="token">
+          <Chip onClick={clickToken} onRequestDelete={clickRemoveToken}> {token.value} </Chip>
+        </li>);
+      }
+
     }
-    return tokenChips;
+    // note by QYD: Here we use a trick to keep the scroll-x at the right.
+    // First we reserve the chips, then we use flex-direction: row-reverse in the css.
+    const reversedTokenChips = tokenChips.reverse();
+    return <div ref={this.tokenDiv} className="chips">{reversedTokenChips}</div>;
   }
 
   filter = (searchText, key) => {
@@ -465,49 +523,140 @@ class TokenBox extends React.Component {
     }
   }
 
+  getTokenHint(tokens) {
+    if (!tokens || !tokens.length) return 'search the genome';
+    const rootOptions = ['variants', 'gene', 'eqtl', 'enhancers', 'promoters', 'trait'];
+    const distances = ['1kbp of', '5kbp of', '10kbp of', '100kbp of', '1mbp of'];
+    let nestedTokens  = null;
+    for (let i = tokens.length - 1; i >= 0; i--) {
+      if (tokens[i].value === 'within') {
+        nestedTokens = tokens.slice(i);
+        break;
+      }
+      if (distances.indexOf(tokens[i].value) >= 0) {
+        nestedTokens = tokens.slice(i);
+        break;
+      }
+      if (rootOptions.indexOf(tokens[i].value) >= 0) {
+        nestedTokens =  tokens.slice(i);
+        break;
+      }
+    }
+    if (nestedTokens[0].value === 'variants') {
+      if (nestedTokens[1]) {
+        if (nestedTokens[1].value === 'named') {
+          return 'enter rs#';
+        } else if (nestedTokens[1].value === 'influencing') {
+          return 'enter trait name';
+        }
+      }
+    } else if (nestedTokens[0].value === 'gene') {
+      if (nestedTokens[1]) {
+        if (nestedTokens[1].value === 'named') {
+          return 'enter gene name';
+        } else if (nestedTokens[1].value === 'influencing') {
+          return 'enter trait name';
+        } else if (nestedTokens[1].value === 'in pathway') {
+          return 'enter pathway name';
+        }
+      }
+    } else if (nestedTokens[0].value === 'eqtl') {
+      if (nestedTokens[1]) {
+        if (nestedTokens[1].value === 'named') {
+          return 'enter rs#';
+        } else if (nestedTokens[1].value === 'in') {
+          return 'enter cell type';
+        }
+      }
+    } else if (nestedTokens[0].value === 'trait') {
+      return 'enter a trait name';
+    } else if (nestedTokens[0].value === 'enhancers' || nestedTokens[0].value === 'promoters') {
+      if (nestedTokens[1] && !nestedTokens[2]) {
+        return 'enter a cell type';
+      } else if (nestedTokens[3]) {
+        return 'choose a distance';
+      }
+    }
+
+    if (tokens.length > 1 && tokens[1].value === 'within') {
+      if (tokens.length < 3) {
+        return 'choose a distance'
+      }
+    }
+    return '';
+  }
+
+  runExample = (example, idx=0) => {
+    if (!this.autoComplete.current) return;
+    if (idx >= example[0].value.length ) {
+      this.handleSelectItem (example[0], undefined, true);
+      if (example.length > 0) {
+        setTimeout(() => {
+          this.runExample(example.slice(1), 0);
+        }, 500);
+      }
+    } else {
+      this.autoComplete.current.setState({ searchText:  example[0].value.slice(0, idx) });
+      this.getSuggestions(this.state.tokens, true);
+      setTimeout(() => {
+        this.runExample(example, idx + 1);
+      }, 100);
+    }
+  }
+
   render() {
     if (this.state.error) {
       return (<ErrorDetails error={this.state.error} />);
     }
     const tokenChips = this.renderTokenChips();
-
-    const hintText = this.state.tokens.length === 0 ? 'gene, trait or rs#' : '';
+    const hintText = this.state.inputHidden? '' : this.getTokenHint(this.state.tokens);
 
     // TODO: the AutoComplete component auto-closes when you click a menu item
     // to preven this I hacked in a very long menuCloseDelay time but we should fix that somehow.
-    const input = (<AutoComplete
-      id='search-box'
-      ref={this.autoComplete}
-      onKeyDown={this.handleKeyDown}
-      openOnFocus={true}
-      open={this.state.open}
-      filter={AutoComplete.fuzzyFilter}
-      hintText={hintText}
-      menuCloseDelay={0}
-      dataSource={this.state.dataSource}
-      dataSourceConfig={{text: 'value', value: 'value'}}
-      onUpdateInput={this.handleUpdateInput}
-      onNewRequest={this.handleSelectItem}
-      menuProps={{onKeyDown: this.handleMenuKeyDown}}
-    />);
+
+    let textBoxWidth = Math.min(500, window.innerWidth * 0.9 - 400);
+    if (this.tokenDiv.current) {
+      textBoxWidth = Math.max(textBoxWidth - this.tokenDiv.current.offsetWidth, 150);
+    }
+
+    const input = (<div className="textbox">
+      <AutoComplete
+        id='search-box'
+        ref={this.autoComplete}
+        onKeyDown={this.handleKeyDown}
+        openOnFocus={true}
+        open={this.state.open}
+        filter={AutoComplete.fuzzyFilter}
+        hintText={hintText}
+        menuCloseDelay={0}
+        dataSource={this.state.dataSource}
+        dataSourceConfig={{text: 'value', value: 'value'}}
+        onUpdateInput={this.handleUpdateInput}
+        onNewRequest={this.handleSelectItem}
+        menuProps={{onKeyDown: this.handleMenuKeyDown}}
+        style={this.state.inputHidden? {display: 'none'}: {width: textBoxWidth}}
+        textFieldStyle={{width: textBoxWidth}}
+      />
+    </div>);
 
     const drawClear = this.state.searchString.length > 0 || this.state.tokens.length > 0;
     const searchEnabled = this.state.query !== null;
-    const tooltip = searchEnabled ? 'Search' : 'Enter a valid search';
-    const clearButton = drawClear ? (<IconButton tooltip="Clear" onClick={this.clearSearch}><SvgClose color='white'/></IconButton>) : (<div />);
-    const searchButton = (<IconButton onClick={this.runCurrentSearch}  tooltip={tooltip}><ActionSearch color='white'/></IconButton>);
-    const progress = this.state.loading ? (<CircularProgress size={80} thickness={5} />) : null;
-    const status = (<div>
-      {progress}
+    const clearButton = drawClear ? (<IconButton tooltip="clear" onClick={this.clearSearch}><SvgClose color='white'/></IconButton>) : (<div />);
+    const searchTooltip = searchEnabled ? "Search" : "Enter a valid search";
+    const searchButton = (<IconButton onClick={searchEnabled? this.runCurrentSearch: undefined} tooltip={searchTooltip}><ActionSearch color={searchEnabled?'white':'gray'}/></IconButton>);
+    const status = (<div className="buttons">
       {clearButton}
-      {searchButton}
+      {this.state.inputHidden ? null : searchButton}
     </div>);
-    return (<div className="token-box">{tokenChips}<div>{input}</div>{status}</div>);
+    return (<div className="token-box">{tokenChips}{input}{status}</div>);
   }
 }
 
 TokenBox.propTypes = {
   appModel: PropTypes.object,
+  demo: PropTypes.array,
+  onFinishDemo: PropTypes.func,
+  onFinishCallback: PropTypes.func,
 };
 
 export default TokenBox;
