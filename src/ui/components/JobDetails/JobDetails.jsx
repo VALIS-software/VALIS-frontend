@@ -37,7 +37,7 @@ class JobDetails extends React.Component {
     } else if (job.jobType == 'ld_expansion') {
       resultFile = 'ld_expanded_results.vcf.gz';
     } else if (job.jobType == 'giggle') {
-      resultFile = 'giggle_heat_map.pdf';
+      resultFile = 'giggle_heatmap.pdf';
     }
     window.open(`${Canis.Api.apiUrl}/files/jobfiles/${job.id}/${resultFile}`);
   }
