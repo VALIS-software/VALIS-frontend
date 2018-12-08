@@ -24,6 +24,7 @@ import UserFilesPanel from '../UserFilesPanel/UserFilesPanel';
 import { App } from '../../../App';
 import AppModel from '../../../model/AppModel';
 import ViewModel from '../../../model/ViewModel';
+import Auth from '../../../auth/Auth';
 // Styles
 import './Header.scss';
 const logoPath = require('./valis-logo.png');
@@ -31,7 +32,7 @@ const logoPath = require('./valis-logo.png');
 type Props = {
   viewModel: ViewModel,
   appModel: AppModel,
-  userProfile: any // @! todo type
+  auth: Auth,
   // callbacks
   onShowShare: () => void,
   style?: React.CSSProperties,
@@ -150,7 +151,7 @@ class Header extends React.Component<Props, State> {
   openResults = () => {
     this.props.viewModel.pushView('My Results', '', (<AnalysisResultSelector appModel={this.props.appModel} />));
   }
-  
+
   openUserFiles = () => {
     this.props.viewModel.pushView('Uploaded Files', '', (<UserFilesPanel appModel={this.props.appModel} />));
   }
@@ -162,7 +163,7 @@ class Header extends React.Component<Props, State> {
     return (<div>
         <div className="header" style={{height: '56px', width: '100%'}}>
             <div className="header-item">
-            <img style={{ cursor: 'pointer', height: 45, marginTop: 6 }} src={logoPath}/> 
+            <img style={{ cursor: 'pointer', height: 45, marginTop: 6 }} src={logoPath}/>
             </div>
             <div className="header-search-box" style={{marginTop: -16}}>
               <TokenBox appModel={this.props.appModel} viewModel={this.props.viewModel} ref={(v) => {this.tokenBoxRef = v}}/>
@@ -176,9 +177,9 @@ class Header extends React.Component<Props, State> {
             </IconMenu>
             </div>
             <div className="header-button">{shareButton}</div>
-            <div className="header-item"><UserFeedBackButton userProfile={this.props.userProfile} /></div>
+            <div className="header-item"><UserFeedBackButton userProfile={this.props.auth.userProfile} /></div>
             <div className="header-item" style={{marginTop:2}}>
-              <UserProfileButton userProfile={this.props.userProfile} />
+              <UserProfileButton auth={this.props.auth} />
             </div>
       </div>
     </div>);

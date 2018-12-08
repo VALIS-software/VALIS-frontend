@@ -61,10 +61,11 @@
     "@fortawesome/react-fontawesome": "0.0.x",
     "@types/react-select": "^2.0.4",
     "@types/react-virtualized": "^9.18.7",
+    "auth0-js": "9.8.2",
     "axios": "0.18.x",
     "fast-deep-equal": "^2.0.1",
-    "genome-visualizer": "github:VALIS-software/VALIS-High-Performance-Genome-Visualizer",
-    "genomics-formats": "github:VALIS-software/Genomics-Formats",
+    "genome-visualizer": "github:VALIS-software/VALIS-High-Performance-Genome-Visualizer#58116dc739d97fc376e139f56dc627e73eddfa1f",
+    "genomics-formats": "github:VALIS-software/Genomics-Formats#1d3c5e117a296f678a8e165776dcfaa542e22512",
     "immutable": "3.8.x",
     "material-ui": "0.20.x",
     "mixpanel-browser": "2.22.x",
@@ -74,6 +75,6 @@
     "react-dom": "16.3.x",
     "react-select": "^2.1.0",
     "react-virtualized": "9.20.x",
-    "valis": "github:VALIS-software/valis-typescript-client"
+    "valis": "github:VALIS-software/valis-typescript-client#auth"
   }
 }

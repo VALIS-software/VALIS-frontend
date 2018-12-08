@@ -47,7 +47,7 @@ GenomeVisualizer.registerTrackType('interval', IntervalTileLoaderOverride, Inter
 (window as any).mixpanel = require('mixpanel-browser');
 
 type Props = {
-	apiBaseUrl: string
+	auth: any,
 }
 
 type State = {
@@ -135,9 +135,9 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 				alignItems: 'center',
 				justifyContent: 'flex-start'
 			};
-	
+
 			const ArrowElem = props.isExpanded ? ExpandLessIcon : ExpandMoreIcon;
-	
+
 			const headerClassName = this.trackHeaderClickable(props.model) ? 'track-header track-header-clickable' : 'track-header';
 			return (<div className={headerClassName}>
 				<div style={{
@@ -156,8 +156,12 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 		let initialBrowserConfiguration: GenomeVisualizerConfiguration;
 
-		if (!!window.location.hash) {
-			initialBrowserConfiguration = AppStatePersistence.parseUrlHash(window.location.hash).genomeVisualizer;
+		if (window.location.hash) {
+			if (/access_token|id_token|error/.test(window.location.hash)) {
+				this.props.auth.handleAuthentication();
+			} else {
+				initialBrowserConfiguration = AppStatePersistence.parseUrlHash(window.location.hash).genomeVisualizer;
+			}
 		} else {
 			// default configuration
 			initialBrowserConfiguration = {
@@ -310,26 +314,35 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		this.viewModel.addListener(this.onShowView, ViewEvent.SHOW_VIEW);
 		this.viewModel.addListener(this.onCloseView, ViewEvent.CLOSE_VIEW);
 
-		// Get User Profile, redirect if not logged in
-		// @! this isn't a good way to handle login – it causes a number of problems
-		// should be handled server-side instead
-		SiriusApi.getUserProfile().then((userProfile: any) => {
-			if (!userProfile.name) {
-				window.location.href = '/login';
+		// check log in and setup mixpanel
+		const { isAuthenticated, login, userProfile, getProfile } = this.props.auth;
+		if (isAuthenticated()) {
+			if (!userProfile) {
+				getProfile((err: any, profile: object) => {
+					if (err) alert(err);
+				  	this.setState({
+						userProfile: profile,
+						appReady: true,
+					});
+				});
+			} else {
+				this.setState({
+					userProfile: userProfile,
+					appReady: true,
+				});
 			}
+
+		} else {
+			login();
+		}
+		if (this.state.userProfile) {
 			// assign identity of mixpanel
-			mixpanel.identify(userProfile.name);
+			mixpanel.identify(this.state.userProfile.name);
 			mixpanel.people.set({
-				"$email": userProfile.name,
+				"$email": this.state.userProfile.name,
 				"$last_login": new Date(),
 			});
-			this.setState({
-				userProfile: userProfile,
-				appReady: true,
-			})
-		}, (err: object) => {
-			window.location.href = '/login';
-		});
+		}
 	}
 
 	componentWillUnmount() {
@@ -423,14 +436,14 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 					<Header
 						viewModel={this.viewModel}
 						appModel={this.appModel}
-						userProfile={this.state.userProfile}
+						auth={this.props.auth}
 						onShowShare={() => this.setState({ displayShareDialog: true })}
 						ref={(v) => this.headerRef = v}
 						style={{
 							display: headerVisible ? '' : 'none'
 						}}
 					/>
-					<button 
+					<button
 					onMouseEnter={()=> App.setHelpMessage(ADD_TRACK_TUTORIAL)} onMouseLeave={() => App.clearHelpMessage()}
 					onClick={() => this.displayDatasetBrowser()}
 						style={{
@@ -442,7 +455,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 							width: 175,
 							zIndex: 1
 						}}
-					>Add Track</button> 
+					>Add Track</button>
 					{this.genomeVisualizer.reactRender({
 						width: this.state.viewerWidth,
 						height: this.state.viewerHeight,
