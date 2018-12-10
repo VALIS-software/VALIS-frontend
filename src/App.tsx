@@ -317,10 +317,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		// check log in and setup mixpanel
 		const { isAuthenticated, login, userProfile, getProfile } = this.props.auth;
 		if (isAuthenticated()) {
-			// if we previously have a state hash URL, jump back now
-			const prevHashUrl = sessionStorage.getItem('ValisStateHashUrl');
-			sessionStorage.removeItem('ValisStateHashUrl');
-			if  (prevHashUrl) window.location.replace(prevHashUrl);
 			// get user profile
 			if (!userProfile) {
 				getProfile((err: any, profile: object) => {
@@ -337,10 +333,6 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 				});
 			}
 		} else {
-			// if we have a state hash URL, store it before jumping to auth0 login page
-			if (window.location.hash && !(/access_token|id_token|error/.test(window.location.hash))) {
-				sessionStorage.setItem('ValisStateHashUrl', window.location.hash);
-			}
 			login();
 		}
 		if (this.state.userProfile) {
@@ -380,12 +372,16 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	onMainAppReady() {
 		// on persistent state changed
 		// get app state from URL
-		if (!!window.location.hash) {
-			try {
+		try {
+			// check to see if a temporary callback state exists
+			if (sessionStorage.getItem('ValisStateHashUrl')) {
+				this.setPersistentState(AppStatePersistence.parseUrlHash(sessionStorage.getItem('ValisStateHashUrl')));
+				sessionStorage.removeItem('ValisStateHashUrl');
+			} else if (!!window.location.hash) {
 				this.setPersistentState(AppStatePersistence.parseUrlHash(window.location.hash));
-			} catch (e) {
-				console.warn(`State url is invalid: ${e}`);
 			}
+		} catch (e) {
+			console.warn(`State url is invalid: ${e}`);
 		}
 
 		this._currentPersistentState = this.getPersistentState();
