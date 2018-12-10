@@ -318,8 +318,8 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		const { isAuthenticated, login, userProfile, getProfile } = this.props.auth;
 		if (isAuthenticated()) {
 			// if we previously have a state hash URL, jump back now
-			const prevHashUrl = localStorage.getItem('ValisStateHashUrl');
-			localStorage.removeItem('ValisStateHashUrl');
+			const prevHashUrl = sessionStorage.getItem('ValisStateHashUrl');
+			sessionStorage.removeItem('ValisStateHashUrl');
 			if  (prevHashUrl) window.location.replace(prevHashUrl);
 			// get user profile
 			if (!userProfile) {
@@ -339,7 +339,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		} else {
 			// if we have a state hash URL, store it before jumping to auth0 login page
 			if (window.location.hash && !(/access_token|id_token|error/.test(window.location.hash))) {
-				localStorage.setItem('ValisStateHashUrl', window.location.hash);
+				sessionStorage.setItem('ValisStateHashUrl', window.location.hash);
 			}
 			login();
 		}
