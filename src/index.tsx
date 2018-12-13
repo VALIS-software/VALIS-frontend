@@ -42,12 +42,6 @@ Canis.Api.apiUrl = canisApiBaseUrl;
 SiriusApi.getAccessToken = auth.getAccessToken;
 Canis.Api.getAccessToken = auth.getAccessToken;
 
-if (!process.env.dev) {
-	SiriusApi.getCanisApiUrl().then(url => {
-		Canis.Api.apiUrl = url;
-	});
-}
-
 // render app
 ReactDOM.render(
 	<MuiThemeProvider muiTheme={BasicTheme}>
