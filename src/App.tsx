@@ -7,7 +7,7 @@ import IconButton from "material-ui/IconButton";
 import CircularProgress from "material-ui/CircularProgress";
 import { ContentReport } from "material-ui/svg-icons";
 import * as React from "react";
-import { EntityType, SiriusApi, AppStatePersistence } from "valis";
+import { EntityType, SiriusApi, Canis, AppStatePersistence } from "valis";
 import { ValisBrowserConfig } from "valis/lib/valis-browser/ValisBrowserConfig";
 
 import ExpandLessIcon from "material-ui/svg-icons/navigation/expand-less";
@@ -334,6 +334,12 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			}
 		} else {
 			login();
+		}
+		// set canis api url on cloud
+		if (!process.env.dev) {
+			SiriusApi.getCanisApiUrl().then(url => {
+				Canis.Api.apiUrl = url;
+			});
 		}
 		if (this.state.userProfile) {
 			// assign identity of mixpanel
