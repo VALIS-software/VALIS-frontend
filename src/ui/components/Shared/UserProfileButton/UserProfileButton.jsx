@@ -37,9 +37,10 @@ class UserProfileButton extends React.Component {
 
   render() {
     const { open, anchorEl } = this.state;
-    const userProfile = this.props.userProfile;
+    const { auth } = this.props;
+    const userProfile = auth.userProfile;
     if (!userProfile)
-      return (<IconButton href="login" tooltip="Log In">
+      return (<IconButton onClick={() => auth.login()} thistooltip="Log In">
         <Person />
       </IconButton>
       );
@@ -61,8 +62,8 @@ class UserProfileButton extends React.Component {
               avatar={userProfile.picture}
             />
             <CardActions>
-              <FlatButton href='logout' label='Switch User' />
-              <FlatButton href='logout' label='Log Out' />
+              <FlatButton onClick={() => auth.logout()} label='Switch User' />
+              <FlatButton onClick={() => auth.logout()} label='Log Out' />
             </CardActions>
           </Menu>
         </Popover>
@@ -72,7 +73,7 @@ class UserProfileButton extends React.Component {
 }
 
 UserProfileButton.propTypes = {
-  userProfile: PropTypes.object,
+  auth: PropTypes.object,
 };
 
 export default UserProfileButton;

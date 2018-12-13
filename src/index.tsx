@@ -4,10 +4,13 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import BasicTheme from "./ui/themes/BasicTheme";
 
 import App from "./App";
+import Auth from './auth/Auth';
 import { SiriusApi, Canis} from 'valis';
 
 import './index.html';
 import './index.scss';
+
+const auth = new Auth();
 
 // determine API url from environment
 const LOCAL_API_URL = 'http://127.0.0.1:5000';
@@ -34,8 +37,10 @@ if (process != null && process.env != null) {
 
 // set sirius API root
 SiriusApi.apiUrl = apiBaseUrl;
-
 Canis.Api.apiUrl = canisApiBaseUrl;
+// set getAccessToken method
+SiriusApi.getAccessToken = auth.getAccessToken;
+Canis.Api.getAccessToken = auth.getAccessToken;
 
 if (!process.env.dev) {
 	SiriusApi.getCanisApiUrl().then(url => {
@@ -46,7 +51,7 @@ if (!process.env.dev) {
 // render app
 ReactDOM.render(
 	<MuiThemeProvider muiTheme={BasicTheme}>
-		<App apiBaseUrl={apiBaseUrl}/>
+		<App auth={auth} />
 	</MuiThemeProvider>,
 	document.getElementById('root')
 );
