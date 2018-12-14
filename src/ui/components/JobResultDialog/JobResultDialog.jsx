@@ -3,20 +3,14 @@ import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import { Document, Page } from 'react-pdf/dist/entry.webpack';
 // Material-UI Components
-import FlatButton from 'material-ui/FlatButton';
 import IconButton from 'material-ui/IconButton';
 import Paper from 'material-ui/Paper';
 import Dialog from 'material-ui/Dialog';
-import NavigationRefresh from 'material-ui/svg-icons/navigation/refresh';
 // Icons
 import SaveIcon from 'material-ui/svg-icons/content/save';
 import CloseIcon from 'material-ui/svg-icons/content/clear';
-// Components
-import Collapsible from '../Shared/Collapsible/Collapsible';
 // API
 import { Canis } from 'valis';
-
-import axios from 'axios';
 
 class JobResultDialog extends React.Component {
   state = {
