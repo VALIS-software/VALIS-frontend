@@ -5,6 +5,7 @@ import * as PropTypes from 'prop-types';
 import Collapsible from '../Shared/Collapsible/Collapsible';
 import FlatButton from 'material-ui/FlatButton';
 import NavigationRefresh from 'material-ui/svg-icons/navigation/refresh';
+import JobResultDialog from '../JobResultDialog/JobResultDialog';
 import { Canis } from 'valis';
 
 class JobDetails extends React.Component {
@@ -13,6 +14,7 @@ class JobDetails extends React.Component {
     this.appModel = props.appModel;
     this.state = {
       job: null,
+      showResultDialog: false,
     };
   }
 
@@ -28,23 +30,22 @@ class JobDetails extends React.Component {
     });
   }
 
-  showResult = () => {
-    // QYD: We pre-define some filenames to show as result, fallback to output.txt if not specified
-    const { job } = this.state;
-    let resultFile = 'output.txt';
-    if (job.jobType == 'spark_kaplan_meier') {
-      resultFile = 'survival_curve.pdf';
-    } else if (job.jobType == 'ld_expansion') {
-      resultFile = 'ld_expanded_results.vcf.gz';
-    } else if (job.jobType == 'giggle') {
-      resultFile = 'giggle_heatmap.pdf';
-    }
-    window.open(`${Canis.Api.apiUrl}/files/jobfiles/${job.id}/${resultFile}`);
+  handleOpenDialog = () => {
+    this.setState({
+      showResultDialog: true,
+    })
+  }
+
+  handleCloseDialog = () => {
+    this.setState({
+      showResultDialog: false,
+    })
   }
 
   render() {
     let jobInfo = 'Loading job status...';
     let link = null;
+    let resultDialog = null;
     if (this.state.job) {
       jobInfo = (<span>
         Status: <b>{this.state.job.status}</b>
@@ -53,7 +54,8 @@ class JobDetails extends React.Component {
       </span>)
 
       if (this.state.job.status === 'DONE') {
-        link = (<Collapsible onClick={() => this.showResult()} title={'View results'}  isLink={true}/>);
+        link = (<Collapsible onClick={this.handleOpenDialog} title={'View results'}  isLink={true}/>);
+        resultDialog = <JobResultDialog job={this.state.job} open={this.state.showResultDialog} handleClose={this.handleCloseDialog} />;
       }
     }
     const header = (<div className="sidebar-header">
@@ -61,10 +63,15 @@ class JobDetails extends React.Component {
       <div className="sidebar-description">{jobInfo}</div>
     </div>);
 
-    return (<div className="job-details">
-      {header}
-      {link}
-    </div>);
+    return (
+      <div>
+        <div className="job-details">
+          {header}
+          {link}
+        </div>
+        {resultDialog}
+      </div>
+    );
   }
 }
 JobDetails.propTypes = {
