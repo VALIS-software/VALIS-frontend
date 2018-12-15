@@ -76,6 +76,6 @@
     "react-pdf": "^4.0.0",
     "react-select": "^2.1.0",
     "react-virtualized": "9.20.x",
-    "valis": "github:VALIS-software/valis-typescript-client#a3d17322276db09b5526647f67f8191b724f5a0d"
+    "valis": "github:VALIS-software/valis-typescript-client#fccd2e89ca9b63d254f80ad0f48b4142969896c0"
   }
 }

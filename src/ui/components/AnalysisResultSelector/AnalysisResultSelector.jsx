@@ -50,7 +50,7 @@ class AnalysisResultSelector extends React.Component {
       dataInfoBlocks.push(
         <DataListItem
           title={di.name}
-          description={'Created by ' + di.author}
+          description={di.timeCreated}
           onClick={() => this.handleOpen(di)}
           key={di.id}
         />
