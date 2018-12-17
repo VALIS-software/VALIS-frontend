@@ -12,9 +12,7 @@ class AnalysisResultSelector extends React.Component {
   constructor(props) {
     super(props);
     this.appModel = props.appModel;
-    this.viewModel = this.appModel.viewModel;
-    this.api = this.appModel.api;
-
+    this.justUpdated = false;
     this.state = {
       dataInfo: [],
       showUpgrade: false,
@@ -22,6 +20,21 @@ class AnalysisResultSelector extends React.Component {
   }
 
   componentDidMount() {
+    this.fetch();
+  }
+
+  componentDidUpdate() {
+    // QYD: we need this to update the jobList after a job is deleted
+    // break the infinite loop
+    if (!this.justUpdated) {
+      this.fetch();
+      this.justUpdated = true;
+    } else {
+      this.justUpdated = false;
+    }
+  }
+
+  fetch() {
     Canis.Api.getJobs('None').then((jobList) => {
       this.setState({
         dataInfo: jobList.reverse()
@@ -50,7 +63,7 @@ class AnalysisResultSelector extends React.Component {
       dataInfoBlocks.push(
         <DataListItem
           title={di.name}
-          description={'Created by ' + di.author}
+          description={di.timeCreated}
           onClick={() => this.handleOpen(di)}
           key={di.id}
         />
