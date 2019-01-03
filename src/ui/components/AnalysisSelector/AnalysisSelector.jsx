@@ -6,6 +6,7 @@ import BooleanTrackSelector from "../BooleanTrackSelector/BooleanTrackSelector";
 import EnrichmentAnalysis from "../EnrichmentAnalysis/EnrichmentAnalysis";
 import KaplanMeierAnalysis from "../KaplanMeierAnalysis/KaplanMeierAnalysis";
 import LDExpansionAnalysis from "../LDExpansionAnalysis/LDExpansionAnalysis";
+import KipoiAnalysis from "../KipoiAnalysis/KipoiAnalysis";
 import DataListItem from "../DataListItem/DataListItem";
 import ErrorDetails from "../Shared/ErrorDetails/ErrorDetails";
 
@@ -29,10 +30,15 @@ const fixedAnalysisData = [
     "description": "Expand a variant set by finding all variants in LD."
   },
   {
-    "track_type": 'premium',
+    "track_type": 'kipoiscore',
     "title": "Variant Effect Prediction",
-    "description": "Run the ENSEMBL VEP pipeline to label variants."
+    "description": "Convolutional neural network analysis for predicting DNA sequence activity."
   },
+  // {
+  //   "track_type": 'premium',
+  //   "title": "Variant Effect Prediction",
+  //   "description": "Run the ENSEMBL VEP pipeline to label variants."
+  // },
 ];
 
 class AnalysisSelector extends React.Component {
@@ -72,6 +78,12 @@ class AnalysisSelector extends React.Component {
         "Linkage Disequillibrium Expansion",
         null,
         <LDExpansionAnalysis appModel={this.appModel} />
+      );
+    } else if (trackType === 'kipoiscore') {
+      this.viewModel.pushView(
+        "Variant Effect Prediction",
+        null,
+        <KipoiAnalysis appModel={this.appModel} />
       );
     }
   }

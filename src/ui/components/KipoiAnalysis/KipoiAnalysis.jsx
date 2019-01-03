@@ -6,26 +6,23 @@ import RaisedButton from "material-ui/RaisedButton/RaisedButton";
 import TextField from 'material-ui/TextField';
 import MenuItem from 'material-ui/MenuItem';
 import SelectField from 'material-ui/SelectField';
-import Slider from "material-ui/Slider";
 import { App } from '../../../App';
 import { Canis } from 'valis';
-import './LDExpansionAnalysis.scss';
+import './KipoiAnalysis.scss';
 
-class LDExpansionAnalysis extends React.Component {
+class KipoiAnalysis extends React.Component {
   constructor(props) {
     super(props);
     if (props.appModel) {
       this.appModel = props.appModel;
-      this.api = this.appModel.api;
     }
 
     this.filters = new Map();
     this.state = {
-      title: "Untitled LD-Expansion Analysis",
+      title: "Untitiled Variant Effect Prediction",
       selectedTrack: 0,
       availableAnnotationTracks: [],
-      corrThresh: 0.4,
-      selectedLDSource: "EUR",
+      selectedKipoiModel: 'Basset',
     };
   }
 
@@ -42,27 +39,21 @@ class LDExpansionAnalysis extends React.Component {
     });
   }
 
-  handleUpdateCorrThresh = (event, value) => {
-    this.setState({
-      corrThresh: value? parseFloat(value): 0,
-    });
-  }
 
-  handleSelectLDSource = (event, index, value) => {
+  handleSelectKipoiModel = (event, index, value) => {
     this.setState({
-      selectedLDSource: value,
+      selectedKipoiModel: value,
     });
   }
 
   runAnalysis = () => {
-    Canis.Api.getApp('ld_expansion').then((app) => {
+    Canis.Api.getApp('kipoi_score').then((app) => {
       app.createJob({
         name: this.state.title,
         query: this.state.availableAnnotationTracks[this.state.selectedTrack].query,
-        corrThresh: this.state.corrThresh,
-        ldSource: this.state.selectedLDSource,
+        kipoiModel: this.state.selectedKipoiModel,
       }).then(job => {
-        this.props.appModel.viewModel.pushView(
+        this.appModel.viewModel.pushView(
           'Job Status',
           job.id,
           <JobDetails appModel={this.appModel} job={job}/>
@@ -92,8 +83,7 @@ class LDExpansionAnalysis extends React.Component {
       title,
       selectedTrack,
       availableAnnotationTracks,
-      corrThresh,
-      selectedLDSource,
+      selectedKipoiModel,
     } = this.state;
 
     const availableAnnotationTrackItems = [];
@@ -103,15 +93,13 @@ class LDExpansionAnalysis extends React.Component {
       availableAnnotationTrackItems.push(<MenuItem value={i} key={queryId} primaryText={queryTitle} />);
     }
 
-    const ldSources = ["EUR", "AMR", "AFR", "EAS", "SAS"]
-    const availableLDSourceItems = ldSources.map(s => {return (
+    const kipoiModels = ["Basset", "DeepSEA/variantEffects", "DeepBind/Homo_sapiens/TF/D00328.018_ChIP-seq_CTCF"]
+    const availableModelItems = kipoiModels.map(s => {return (
       <MenuItem value={s} key={s} primaryText={s} />
     );})
 
-    const corrThreshIsValid = (corrThresh >= 0.4 && corrThresh <= 1.0);
-
     return (
-      <div className="track-editor ld-expansion">
+      <div className="track-editor kipoi-score">
         <TextField
           value={title}
           floatingLabelText="Analysis Title"
@@ -129,43 +117,28 @@ class LDExpansionAnalysis extends React.Component {
           {availableAnnotationTrackItems}
         </SelectField><br /> <br />
         <SelectField
-          value={selectedLDSource}
-          floatingLabelText="LD Data Source"
-          onChange={this.handleSelectLDSource}
+          value={selectedKipoiModel}
+          floatingLabelText="CNN Model"
+          onChange={this.handleSelectKipoiModel}
           fullWidth={true}
           maxHeight={200}
         >
-          {availableLDSourceItems}
+          {availableModelItems}
         </SelectField><br /> <br />
-        <TextField
-          value={corrThresh}
-          floatingLabelText="Correlation Threshold"
-          onChange={this.handleUpdateCorrThresh}
-          fullWidth={true}
-          type="number"
-          errorText={corrThreshIsValid?null: "Threshold should be in range [0.4, 1.0]"}
-        />
-        <Slider
-          min={0.4}
-          max={1.0}
-          step={0.01}
-          value={Math.min(Math.max(0.4, corrThresh), 1.0)}
-          onChange={this.handleUpdateCorrThresh}
-        /><br /> <br />
         <RaisedButton
           label="Run Analysis"
           primary={true}
           onClick={() => this.runAnalysis()}
           style={{ position: "absolute", bottom: "10px", width: "90%" }}
-          disabled={!corrThreshIsValid || availableAnnotationTracks.length == 0 || !title}
+          disabled={availableAnnotationTracks.length == 0 || !title}
         />
       </div>
     );
   }
 }
 
-LDExpansionAnalysis.propTypes = {
+KipoiAnalysis.propTypes = {
   appModel: PropTypes.object
 };
 
-export default LDExpansionAnalysis;
+export default KipoiAnalysis;

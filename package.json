@@ -48,11 +48,11 @@
     "ts-loader": "4.2.x",
     "typescript": "2.9.2",
     "webpack": "4.4.x",
+    "webpack-bundle-analyzer": "^3.0.2",
     "webpack-cli": "2.0.x",
-    "webpack-dev-server": "3.1.x",
+    "webpack-dev-server": "^3.1.14",
     "webpack-google-cloud-storage-plugin": "0.8.x",
-    "zip-webpack-plugin": "3.0.x",
-    "webpack-bundle-analyzer": "^3.0.2"
+    "zip-webpack-plugin": "3.0.x"
   },
   "dependencies": {
     "@fortawesome/fontawesome": "1.1.x",
@@ -76,6 +76,6 @@
     "react-pdf": "^4.0.0",
     "react-select": "^2.1.0",
     "react-virtualized": "9.20.x",
-    "valis": "github:VALIS-software/valis-typescript-client#a6cec5b288d91f2a931b1eb99c96d19a33ab63f8"
+    "valis": "github:VALIS-software/valis-typescript-client#76a2637550ac4b5c787d669be53aaa9e69dc4785"
   }
 }
