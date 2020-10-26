@@ -61,7 +61,7 @@
     "@fortawesome/react-fontawesome": "0.0.x",
     "@types/react-select": "^2.0.4",
     "@types/react-virtualized": "^9.18.7",
-    "auth0-js": "9.8.2",
+    "auth0-js": "9.13.2",
     "axios": "0.18.x",
     "fast-deep-equal": "^2.0.1",
     "genome-visualizer": "github:VALIS-software/VALIS-High-Performance-Genome-Visualizer#58116dc739d97fc376e139f56dc627e73eddfa1f",
