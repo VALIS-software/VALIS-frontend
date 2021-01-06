@@ -62,7 +62,7 @@
     "@types/react-select": "^2.0.4",
     "@types/react-virtualized": "^9.18.7",
     "auth0-js": "9.8.2",
-    "axios": "0.18.x",
+    "axios": "0.21.x",
     "fast-deep-equal": "^2.0.1",
     "genome-visualizer": "github:VALIS-software/VALIS-High-Performance-Genome-Visualizer#58116dc739d97fc376e139f56dc627e73eddfa1f",
     "genomics-formats": "github:VALIS-software/Genomics-Formats#1d3c5e117a296f678a8e165776dcfaa542e22512",
