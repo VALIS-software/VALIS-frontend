@@ -158,7 +158,7 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 
 		if (window.location.hash) {
 			if (/access_token|id_token|error/.test(window.location.hash)) {
-				this.props.auth.handleAuthentication();
+				// this.props.auth.handleAuthentication();
 			} else {
 				initialBrowserConfiguration = AppStatePersistence.parseUrlHash(window.location.hash).genomeVisualizer;
 			}
@@ -202,9 +202,11 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 			displayErrorDialog: false,
 			errors: [],
 			displayShareDialog: false,
-			userProfile: null,
+			userProfile: {
+				name: "admin"
+			},
 			sidebarVisible: false,
-			appReady: false,
+			appReady: true,
 			helpMessage: '',
 			helpMessageVisible: false,
 			showTutorialDialog: false,
@@ -315,26 +317,26 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 		this.viewModel.addListener(this.onCloseView, ViewEvent.CLOSE_VIEW);
 
 		// check log in and setup mixpanel
-		const { isAuthenticated, login, userProfile, getProfile } = this.props.auth;
-		if (isAuthenticated()) {
-			// get user profile
-			if (!userProfile) {
-				getProfile((err: any, profile: object) => {
-					if (err) alert(err);
-				  	this.setState({
-						userProfile: profile,
-						appReady: true,
-					});
-				});
-			} else {
-				this.setState({
-					userProfile: userProfile,
-					appReady: true,
-				});
-			}
-		} else {
-			login();
-		}
+		// const { isAuthenticated, login, userProfile, getProfile } = this.props.auth;
+		// if (isAuthenticated()) {
+		// 	// get user profile
+		// 	if (!userProfile) {
+		// 		getProfile((err: any, profile: object) => {
+		// 			if (err) alert(err);
+		// 		  	this.setState({
+		// 				userProfile: profile,
+		// 				appReady: true,
+		// 			});
+		// 		});
+		// 	} else {
+		// 		this.setState({
+		// 			userProfile: userProfile,
+		// 			appReady: true,
+		// 		});
+		// 	}
+		// } else {
+		// 	login();
+		// }
 		// set canis api url on cloud
 		if (!process.env.dev) {
 			SiriusApi.getCanisApiUrl().then(url => {
@@ -400,11 +402,11 @@ export class App extends React.Component<Props, State> implements Persistable<Pe
 	}
 
 	render() {
-		if (this.state.userProfile === null) {
-			return (<div className="centered">
-						<CircularProgress size={150} thickness={10} />
-					</div>);
-		}
+		// if (this.state.userProfile === null) {
+		// 	return (<div className="centered">
+		// 				<CircularProgress size={150} thickness={10} />
+		// 			</div>);
+		// }
 
 		const errorButton = this.state.errors.length > 0 ? (
 				<IconButton onClick={this.displayErrors} tooltip="Errors" tooltipPosition="top-center">

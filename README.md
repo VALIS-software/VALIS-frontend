@@ -12,6 +12,8 @@ git clone git@github.com:VALIS-software/VALIS-frontend.git
 cd VALIS-frontend
 npm install
 ```
+Note: build might require an old Node version to work, e.g. Node 10, downloaded from https://nodejs.org/download/release/v10.24.1/node-v10.24.1-linux-x64.tar.gz
+
 There is a test server located in the `tools` directory. The server requires the following libraries, which are installable using pip.
 * [PyEnsembl](https://github.com/hammerlab/pyensembl)
 * [Flask](http://flask.pocoo.org/)
